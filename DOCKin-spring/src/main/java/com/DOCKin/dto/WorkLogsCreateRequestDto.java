@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 
 @Data
 @Builder
+//작업일지 생성용
 public class WorkLogsCreateRequestDto {
     private String title;
     private String log_text;
