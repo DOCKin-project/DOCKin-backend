@@ -3,7 +3,9 @@ package com.DOCKin.controller;
 import com.DOCKin.dto.LoginRequestDto;
 import com.DOCKin.dto.MemberRequestDto;
 import com.DOCKin.model.Member;
+import com.DOCKin.repository.MemberRepository;
 import com.DOCKin.service.MemberService;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -21,7 +23,8 @@ public class MemberController {
     private final MemberService memberService;
     private final ModelMapper modelMapper;
 
-    @PostMapping("login")
+    //로그인
+    @PostMapping("/login")
     public ResponseEntity<String> getMemberProfile(
             @Valid @RequestBody LoginRequestDto request
             ){
@@ -29,11 +32,13 @@ public class MemberController {
         return ResponseEntity.status(HttpStatus.OK).body(token);
     }
 
-    @PostMapping("signup")
-    public ResponseEntity<String> signup(@Valid @RequestBody MemberRequestDto member) {
-        Member entity = modelMapper.map(member, Member.class);
-        String id = memberService.signup(entity);
+    //회원가입
+    @PostMapping("/signup")
+    public ResponseEntity<String> signup(@Valid @RequestBody MemberRequestDto dto) {
+        //Member entity = modelMapper.map(member, Member.class);
+        String id = memberService.signup(dto);
         return ResponseEntity.status(HttpStatus.OK).body(id);
         }
+
     }
 
