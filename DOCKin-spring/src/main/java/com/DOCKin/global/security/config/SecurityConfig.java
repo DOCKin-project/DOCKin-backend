@@ -27,7 +27,10 @@ public class SecurityConfig {
     private final CustomAccessDeniedHandler accessDeniedHandler;
     private final CustomAuthenticationEntryPoint authenticationEntryPoint;
 
-    private static final String[] AUTH_WHITELIST = {"/v3/api-docs/**",
+    private static final String[] AUTH_WHITELIST = {
+            "/",
+            "/favicon.ico",
+            "/v3/api-docs/**",
             "/swagger-ui/**",
             "/swagger-ui.html",
             "/swagger-resources/**",
@@ -56,7 +59,8 @@ public class SecurityConfig {
                 authenticationEntryPoint).accessDeniedHandler(accessDeniedHandler));
 
         http.authorizeHttpRequests(authorize -> authorize
-                .requestMatchers(AUTH_WHITELIST).permitAll());
+                .requestMatchers(AUTH_WHITELIST).permitAll()
+                .anyRequest().authenticated());
         return http.build();
     }
 }
