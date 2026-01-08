@@ -9,9 +9,18 @@ services:
       - ./nginx/conf.d:/etc/nginx/conf.d
     depends_on:
       - dockin-app
+    networks:
+      - dockin-network
 
   dockin-app:
     build: .
+    image: khyojae/dockin-app:latest
+    container_name: dockin-app-1
+    restart: on-failure
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_HOST=DOCKin-DB
     develop:
       watch:
         - action: rebuild
@@ -19,16 +28,15 @@ services:
         - action: sync
           path: ./src/main/resources
           target: /app/resources
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://DOCKin-DB:3306/Dockin?serverTimezone=Asia/Seoul
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=1234
     depends_on:
       DOCKin-DB:
         condition: service_healthy
+    networks:
+      - dockin-network
 
   DOCKin-DB:
     image: mysql:8.0.44
+    container_name: dockin-db
     environment:
       MYSQL_ROOT_PASSWORD: "1234"
       MYSQL_DATABASE: "Dockin"
@@ -36,11 +44,18 @@ services:
       - "3306:3306"
     volumes:
       - dockin_db_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p1234" ]
       timeout: 5s
       retries: 10
       interval: 5s
+    networks:
+      - dockin-network
+
+networks:
+  dockin-network:
+    driver: bridge
 
 volumes:
   dockin_db_data:

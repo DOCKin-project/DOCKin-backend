@@ -28,7 +28,7 @@ public class MemberService{
 
     @Transactional
     public String login(LoginRequestDto dto){
-        String email = dto.getUserId();
+        String userId = dto.getUserId();
         String password = dto.getPassword();
         Optional<Member> member = memberRepository.findByUserId(dto.getUserId());
     if(member.isEmpty()){
@@ -40,18 +40,6 @@ public class MemberService{
         CustomUserInfoDto info = modelMapper.map(member,CustomUserInfoDto.class);
     return jwtUtil.createAccessToken(info);
     }
-
-    /*@Transactional
-    public String signup(Member member){
-        Optional<Member> validMember = memberRepository.findByUserId(member.getUserId());
-
-        if(validMember.isPresent()){
-            throw new ValidateMemberException("this member email is already exist. " + member.getUserId());
-    }
-        member.updatePassword(encoder.encode(member.getPassword()));
-        memberRepository.save(member);
-        return  member.getUserId();
-}*/
 
     @Transactional
     public String signup(MemberRequestDto dto) {
