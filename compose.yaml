@@ -40,7 +40,7 @@ services:
     image: mysql:8.0.44
     container_name: dockin-db
     environment:
-      MYSQL_ROOT_PASSWORD: "1234"
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
       MYSQL_DATABASE: "Dockin"
     ports:
       - "3306:3306"
@@ -48,7 +48,7 @@ services:
       - dockin_db_data:/var/lib/mysql
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p1234" ]
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD}" ]
       timeout: 5s
       retries: 10
       interval: 5s
