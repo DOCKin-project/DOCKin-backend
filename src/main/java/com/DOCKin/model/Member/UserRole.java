@@ -1,4 +1,4 @@
-package com.DOCKin.model;
+package com.DOCKin.model.Member;
 
 public enum UserRole {
     USER,

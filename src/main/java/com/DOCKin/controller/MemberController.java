@@ -1,22 +1,16 @@
 package com.DOCKin.controller;
 
-import com.DOCKin.dto.LoginRequestDto;
-import com.DOCKin.dto.MemberRequestDto;
-import com.DOCKin.model.Member;
-import com.DOCKin.repository.MemberRepository;
+import com.DOCKin.dto.Member.LoginRequestDto;
+import com.DOCKin.dto.Member.MemberRequestDto;
 import com.DOCKin.service.MemberService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Tag(name="인증/인가", description="로그인/회원가입")
 @RestController
@@ -41,6 +35,12 @@ public class MemberController {
         String id = memberService.signup(dto);
         return ResponseEntity.status(HttpStatus.OK).body(id);
         }
+
+    @Operation(summary="회원탈퇴", description = "회원탈퇴를 할 수 있음")
+    @DeleteMapping("/{logId}")
+    public ResponseEntity<String> DeleteMember(@PathVariable("logId") Long logId){
+        return ResponseEntity.noContent().build();
+    }
 
     }
 

@@ -1,11 +1,11 @@
 package com.DOCKin.service;
 
-import com.DOCKin.dto.CustomUserInfoDto;
-import com.DOCKin.dto.LoginRequestDto;
-import com.DOCKin.dto.MemberRequestDto;
+import com.DOCKin.dto.Member.CustomUserInfoDto;
+import com.DOCKin.dto.Member.LoginRequestDto;
+import com.DOCKin.dto.Member.MemberRequestDto;
 import com.DOCKin.global.error.ValidateMemberException;
 import com.DOCKin.global.security.jwt.JwtUtil;
-import com.DOCKin.model.Member;
+import com.DOCKin.model.Member.Member;
 import com.DOCKin.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;

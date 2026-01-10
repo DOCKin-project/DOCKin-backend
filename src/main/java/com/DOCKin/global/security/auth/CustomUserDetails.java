@@ -1,6 +1,6 @@
 package com.DOCKin.global.security.auth;
 
-import com.DOCKin.dto.CustomUserInfoDto;
+import com.DOCKin.dto.Member.CustomUserInfoDto;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;

@@ -1,10 +1,9 @@
-package com.DOCKin.dto;
+package com.DOCKin.dto.SafetyCourse;
 
 import lombok.Getter;
 
 @Getter
-
-public class SafetyCourseResponse {
+public class SafetyCourseCreateRequest {
     private Integer courseId;
     private String title;
     private String description;

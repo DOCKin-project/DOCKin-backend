@@ -1,8 +1,8 @@
-package com.DOCKin.model;
+package com.DOCKin.model.SafetyCourse;
 
+import com.DOCKin.model.Member.User;
 import jakarta.persistence.*;
 import lombok.*;
-import com.DOCKin.model.User;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
