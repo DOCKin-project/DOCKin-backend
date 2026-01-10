@@ -1,14 +1,10 @@
-package com.DOCKin.dto;
+package com.DOCKin.dto.Member;
 
-import com.DOCKin.model.Member;
-import com.DOCKin.model.UserRole;
-import com.DOCKin.repository.MemberRepository;
-import com.DOCKin.service.MemberService;
+import com.DOCKin.model.Member.UserRole;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 //회원가입용 Dto
 @Data

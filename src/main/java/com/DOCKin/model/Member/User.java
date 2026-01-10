@@ -1,4 +1,4 @@
-package com.DOCKin.model;
+package com.DOCKin.model.Member;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;

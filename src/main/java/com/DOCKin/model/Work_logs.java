@@ -1,5 +1,6 @@
 package com.DOCKin.model;
 
+import com.DOCKin.model.Member.Member;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;

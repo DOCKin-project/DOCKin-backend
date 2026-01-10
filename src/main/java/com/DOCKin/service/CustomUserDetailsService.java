@@ -1,6 +1,6 @@
 package com.DOCKin.service;
 
-import com.DOCKin.model.Member;
+import com.DOCKin.model.Member.Member;
 import com.DOCKin.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.User;

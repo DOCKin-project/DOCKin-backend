@@ -1,6 +1,6 @@
 package com.DOCKin.repository;
 
-import com.DOCKin.model.SafetyCourse;
+import com.DOCKin.model.SafetyCourse.SafetyCourse;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

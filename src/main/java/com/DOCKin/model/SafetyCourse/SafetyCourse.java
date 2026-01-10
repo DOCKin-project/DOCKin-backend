@@ -1,4 +1,4 @@
-package com.DOCKin.model;
+package com.DOCKin.model.SafetyCourse;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;

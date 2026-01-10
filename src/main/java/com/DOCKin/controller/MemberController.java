@@ -1,13 +1,10 @@
 package com.DOCKin.controller;
 
-import com.DOCKin.dto.LoginRequestDto;
-import com.DOCKin.dto.MemberRequestDto;
-import com.DOCKin.model.Member;
-import com.DOCKin.repository.MemberRepository;
+import com.DOCKin.dto.Member.LoginRequestDto;
+import com.DOCKin.dto.Member.MemberRequestDto;
 import com.DOCKin.service.MemberService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;

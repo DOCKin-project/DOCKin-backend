@@ -1,6 +1,6 @@
 package com.DOCKin.global.security.jwt;
 
-import com.DOCKin.dto.CustomUserInfoDto;
+import com.DOCKin.dto.Member.CustomUserInfoDto;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;

@@ -1,7 +1,7 @@
 package com.DOCKin.repository;
 
-import com.DOCKin.model.Attendance;
-import com.DOCKin.model.Member;
+import com.DOCKin.model.Attendance.Attendance;
+import com.DOCKin.model.Member.Member;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
