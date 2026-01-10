@@ -1,7 +1,7 @@
 package com.DOCKin.controller;
 
-import com.DOCKin.dto.SafetyCourseCreateRequest;
-import com.DOCKin.dto.SafetyCourseResponse;
+import com.DOCKin.dto.SafetyCourse.SafetyCourseCreateRequest;
+import com.DOCKin.dto.SafetyCourse.SafetyCourseResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

@@ -1,8 +1,8 @@
 package com.DOCKin.controller;
 
-import com.DOCKin.dto.AttendanceDto;
-import com.DOCKin.dto.ClockInRequestDto;
-import com.DOCKin.dto.ClockOutRequestDto;
+import com.DOCKin.dto.Attendance.AttendanceDto;
+import com.DOCKin.dto.Attendance.ClockInRequestDto;
+import com.DOCKin.dto.Attendance.ClockOutRequestDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

@@ -1,4 +1,4 @@
-package com.DOCKin.dto;
+package com.DOCKin.dto.Attendance;
 
 import lombok.Builder;
 import lombok.Data;

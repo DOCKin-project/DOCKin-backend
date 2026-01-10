@@ -1,8 +1,8 @@
 package com.DOCKin.controller;
 
-import com.DOCKin.dto.WorkLogsCreateRequestDto;
-import com.DOCKin.dto.WorkLogsUpdateRequestDto;
-import com.DOCKin.dto.Work_logsDto;
+import com.DOCKin.dto.WorkLogs.WorkLogsCreateRequestDto;
+import com.DOCKin.dto.WorkLogs.WorkLogsUpdateRequestDto;
+import com.DOCKin.dto.WorkLogs.Work_logsDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

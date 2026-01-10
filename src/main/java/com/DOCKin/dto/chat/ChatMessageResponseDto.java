@@ -1,4 +1,4 @@
-package com.DOCKin.dto;
+package com.DOCKin.dto.chat;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
