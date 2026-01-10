@@ -7,12 +7,15 @@
         <processorPath useClasspath="false">
           <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/1.18.42/8365263844ebb62398e0dc33057ba10ba472d3b8/lombok-1.18.42.jar" />
         </processorPath>
-        <module name="com.DOCKin.DOCKin-spring.main" />
+        <module name="DOCKin-spring.main" />
       </profile>
     </annotationProcessing>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="DOCKin-spring" options="-parameters" />
+      <module name="DOCKin-spring.main" options="-parameters" />
+      <module name="DOCKin-spring.test" options="-parameters" />
       <module name="com.DOCKin.DOCKin-spring" options="-parameters" />
       <module name="com.DOCKin.DOCKin-spring.main" options="-parameters" />
       <module name="com.DOCKin.DOCKin-spring.test" options="-parameters" />
