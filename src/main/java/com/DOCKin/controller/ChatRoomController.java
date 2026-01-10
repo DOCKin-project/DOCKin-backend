@@ -21,7 +21,7 @@ import java.util.List;
 public class ChatRoomController {
     @Operation(summary="채팅방 생성", description = "새로운 채팅방을 생성함")
     @PostMapping("/room")
-    public ResponseEntity<ChatRoomRequestDto> createRoom(@RequestBody String name){
+    public ResponseEntity<ChatRoomRequestDto> createRoom(@RequestBody ChatRoomRequestDto chatRoomRequestDto){
         ChatRoomRequestDto room = new ChatRoomRequestDto();
         return ResponseEntity.ok(new ChatRoomRequestDto());
     }
