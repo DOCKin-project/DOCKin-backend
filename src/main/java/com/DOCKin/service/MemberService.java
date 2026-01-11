@@ -42,7 +42,7 @@ public class MemberService{
                 .userId(member.getUserId())
                 .token(refreshToken)
                 .build();
-
+        refreshTokenRepository.save(refreshTokenEntity);
     return new LoginResponseDto(accessToken,refreshToken);
     }
 

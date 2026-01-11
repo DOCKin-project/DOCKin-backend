@@ -13,7 +13,7 @@ import java.util.List;
 
 @Tag(name="채팅방 관리", description = "채팅방 관리")
 @RestController
-@RequestMapping("api/chat")
+@RequestMapping("/api/chat")
 @RequiredArgsConstructor
 public class ChatRoomController {
     @Operation(summary="채팅방 생성", description = "새로운 채팅방을 생성함")
