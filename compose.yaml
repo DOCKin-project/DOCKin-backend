@@ -23,13 +23,7 @@ services:
       - "8080:8080"
     environment:
       - DB_HOST=DOCKin-DB
-    develop:
-      watch:
-        - action: rebuild
-          path: ./src
-        - action: sync
-          path: ./src/main/resources
-          target: /app/resources
+      - SPRING_DATASOURCE_URL=jdbc:mysql://DOCKin-DB:3306/dockindb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
     depends_on:
       DOCKin-DB:
         condition: service_healthy
@@ -41,12 +35,13 @@ services:
     container_name: dockin-db
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-      MYSQL_DATABASE: "Dockin"
+      MYSQL_DATABASE: "dockindb"  # 소문자 dockindb로 수정
     ports:
       - "3306:3306"
     volumes:
       - dockin_db_data:/var/lib/mysql
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      # 테이블 충돌 방지를 위해 초기화 SQL은 일단 주석 처리했습니다.
+      # - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD}" ]
       timeout: 5s
