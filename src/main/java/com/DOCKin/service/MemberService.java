@@ -37,10 +37,15 @@ public class MemberService{
     if(member.isEmpty()){
         throw new BusinessException(ErrorCode.USER_NOT_FOUND);
     }
+
     if(!encoder.matches(password,member.get().getPassword())){
         throw new BusinessException(ErrorCode.LOGIN_INPUT_INVALID);
     }
         CustomUserInfoDto info = modelMapper.map(member,CustomUserInfoDto.class);
+
+    String accessToken=jwtUtil.createAccessToken(info);
+    String refreshToken=jwtUtil.createRefreshToken(info);
+
     return jwtUtil.createAccessToken(info);
     }
 

@@ -17,14 +17,17 @@ import java.util.Date;
 public class JwtUtil {
     private final Key key;
     private final long accessTokenExpTime;
+    private final long refreshTokenExpTime;
 
     public JwtUtil(
             @Value("${jwt.secret}") final String secretKey,
-            @Value("${jwt.expiration_time}") final long accessTokenExpTime)
+            @Value("${jwt.expiration_time}") final long accessTokenExpTime,
+            @Value("${jwt.refresh_expiration_time}") final long refreshTokenExpTime)
     {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         this.key= Keys.hmacShaKeyFor(keyBytes);
         this.accessTokenExpTime=accessTokenExpTime;
+        this.refreshTokenExpTime = refreshTokenExpTime;
     }
 
     //Access Token 생성
@@ -47,6 +50,10 @@ public class JwtUtil {
                 .setExpiration(Date.from(tokenValidity.toInstant()))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
+    }
+
+    public String createRefreshToken(CustomUserInfoDto member) {
+        return createToken(member, refreshTokenExpTime);
     }
 
     //Token에서 UserId 추출
