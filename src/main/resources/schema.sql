@@ -32,10 +32,11 @@ DROP TABLE IF EXISTS refresh_token;
 SET FOREIGN_KEY_CHECKS = 1;
 -- 1. 사용자
 CREATE TABLE users (
-                       user_id VARCHAR(50) PRIMARY KEY, -- String PK (사번)
+                       user_id VARCHAR(50) PRIMARY KEY,
                        name VARCHAR(10) NOT NULL,
                        password VARCHAR(256) NOT NULL,
                        role ENUM('ADMIN','USER'),
+                       work_shift ENUM('MORNING', 'AFTERNOON', 'NIGHT') DEFAULT 'MORNING',
                        language_code VARCHAR(10) DEFAULT 'ko',
                        tts_enabled BOOLEAN DEFAULT TRUE,
                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -122,14 +123,13 @@ CREATE TABLE attendance (
                             id BIGINT PRIMARY KEY AUTO_INCREMENT,
                             user_id VARCHAR(50) NOT NULL,
                             clock_in_time DATETIME NOT NULL,
-                            clock_out_time DATETIME, -- 퇴근 시간 (nullable)
+                            clock_out_time DATETIME,
                             work_date DATE NOT NULL,
                             role ENUM('NORMAL','LATE','ABSENT','VACATION','SICK'),
-                            in_location VARCHAR(255),    -- 출근 시 위치/리더기 정보
-                            out_location VARCHAR(255),   -- 퇴근 시 위치/리더기 정보
-                            CONSTRAINT fk_attendance_member
-                                FOREIGN KEY (user_id)
-                                    REFERENCES users (user_id),
+                            work_shift ENUM('MORNING', 'AFTERNOON', 'NIGHT'),
+                            in_location VARCHAR(255),
+                            out_location VARCHAR(255),
+                            CONSTRAINT fk_attendance_member FOREIGN KEY (user_id) REFERENCES users (user_id),
                             INDEX idx_work_date (work_date)
 );
 
@@ -215,7 +215,7 @@ CREATE TABLE safety_enrollments (
                                     UNIQUE KEY uk_user_course (user_id, course_id)
 );
 
---17. refresh_token
+-- 17. refresh_token
 CREATE TABLE refresh_token (
                                user_id VARCHAR(255) NOT NULL,
                                token VARCHAR(512) NOT NULL, -- JWT는 길기 때문에 길이를 충분히 줍니다.

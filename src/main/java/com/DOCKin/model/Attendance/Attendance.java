@@ -41,6 +41,10 @@ public class Attendance {
     @Column(name="out_location")
     private String outLocation;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "work_shift")
+    private WorkShift workshift;
+
     public void recordClockOut(LocalDateTime outTime, String location, AttendanceStatus status){
         this.clockOutTime = outTime;
         this.outLocation = location;
