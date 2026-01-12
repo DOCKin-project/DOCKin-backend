@@ -1,5 +1,7 @@
 package com.DOCKin.dto.chat;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -12,9 +14,18 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Schema(description = "채팅방 res dto")
 public class ChatRoomResponseDto {
+    @Schema(description = "채팅방 이름", requiredMode = Schema.RequiredMode.REQUIRED)
     private String room_name;
+
+    @Schema(description = "그룹채팅방인지 그냥 1대1채팅방인지", requiredMode = Schema.RequiredMode.REQUIRED)
     private Boolean is_group;
+
+    @Schema(description = "참가하는 인원의 사원번호", requiredMode = Schema.RequiredMode.REQUIRED)
     private List<String> participantIds;
+
+    @Schema(description = "만든 시각", requiredMode = Schema.RequiredMode.REQUIRED)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
     private LocalDateTime createdAt;
 }

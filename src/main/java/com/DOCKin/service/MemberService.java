@@ -1,9 +1,6 @@
 package com.DOCKin.service;
 
-import com.DOCKin.dto.Member.CustomUserInfoDto;
-import com.DOCKin.dto.Member.LoginRequestDto;
-import com.DOCKin.dto.Member.LoginResponseDto;
-import com.DOCKin.dto.Member.MemberRequestDto;
+import com.DOCKin.dto.Member.*;
 import com.DOCKin.global.error.BusinessException;
 import com.DOCKin.global.error.ErrorCode;
 import com.DOCKin.global.security.jwt.JwtUtil;
@@ -16,8 +13,6 @@ import org.modelmapper.ModelMapper;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -47,8 +42,15 @@ public class MemberService{
                 .userId(member.getUserId())
                 .token(refreshToken)
                 .build();
-
+        refreshTokenRepository.save(refreshTokenEntity);
     return new LoginResponseDto(accessToken,refreshToken);
+    }
+
+    //로그아웃 로직
+    @Transactional
+    public void logout(LogOutRequestDto dto){
+        refreshTokenRepository.deleteByToken(dto.getRefreshToken());
+        //access toekn black list 추후 구현
     }
 
     //회원가입 로직

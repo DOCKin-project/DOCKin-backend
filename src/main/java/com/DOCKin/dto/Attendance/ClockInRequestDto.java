@@ -1,10 +1,15 @@
 package com.DOCKin.dto.Attendance;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;
 import lombok.Data;
 
 @Data
 @Builder
+@Schema(description = "출근지역 표시")
 public class ClockInRequestDto {
+    @Schema(description = "출근지역 표시",example = "제1조선소", requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotBlank(message = "출근 장소는 필수 입력 사항입니다.")
     private String inLocation;
 }

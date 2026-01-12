@@ -41,7 +41,9 @@ public class SecurityConfig {
             "/member/signup",
             "/api/safety/**",
             "/api/work-logs/**",
-            "/api/attendance/**"
+            "/api/attendance/**",
+            "/api/chat/**"
+
     };
 
     @Bean

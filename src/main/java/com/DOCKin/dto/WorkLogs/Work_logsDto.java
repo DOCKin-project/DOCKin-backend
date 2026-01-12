@@ -1,5 +1,6 @@
 package com.DOCKin.dto.WorkLogs;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,14 +12,29 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-//작업일지 조회용
+@Schema(description = "작업 일지 조회 res dto")
 public class Work_logsDto {
+    @Schema(description = "작업 일지 고유 ID", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
     private Long log_id;
+
+    @Schema(description = "작성자 사원번호",requiredMode = Schema.RequiredMode.REQUIRED)
     private String user_id;
+
+    @Schema(description = "관련 장비 ID", example = "50")
     private Long equipment_id;
+
+    @Schema(description = "일지 제목",requiredMode = Schema.RequiredMode.REQUIRED)
     private String title;
+
+    @Schema(description = "일지 상세 내용")
     private String log_text;
+
+    @Schema(description = "첨부 이미지 URL")
     private String image_url;
+
+    @Schema(description = "작성 일시", example = "2026-01-12T10:00:00", requiredMode = Schema.RequiredMode.REQUIRED)
     private LocalDateTime created_at;
+
+    @Schema(description = "수정 일시", example = "2026-01-12T15:30:00")
     private LocalDateTime updated_at;
 }

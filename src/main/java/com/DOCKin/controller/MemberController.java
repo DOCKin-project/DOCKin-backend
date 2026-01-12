@@ -1,5 +1,6 @@
 package com.DOCKin.controller;
 
+import com.DOCKin.dto.Member.LogOutRequestDto;
 import com.DOCKin.dto.Member.LoginRequestDto;
 import com.DOCKin.dto.Member.LoginResponseDto;
 import com.DOCKin.dto.Member.MemberRequestDto;
@@ -28,6 +29,13 @@ public class MemberController {
             @Valid @RequestBody LoginRequestDto request){
         LoginResponseDto response = memberService.login(request);
         return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @Operation(summary="로그아웃",description = "로그아웃을 할 수 있음")
+    @PostMapping("/logout")
+    public ResponseEntity<Void> Logout(@RequestBody LogOutRequestDto dto){
+        memberService.logout(dto);
+        return ResponseEntity.noContent().build();
     }
 
     @Operation(summary="회원가입",description = "회원가입을 할 수 있음")
