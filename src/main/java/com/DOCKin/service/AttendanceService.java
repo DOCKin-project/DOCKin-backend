@@ -87,6 +87,7 @@ public class AttendanceService {
         return fromEntity(attendance);
     }
 
+    //개인 출퇴 기록 조회
     @Transactional(readOnly = true)
     public List<AttendanceDto> getMyAttendanceRecords(String userId){
         Member member = memberRepository.findByUserId(userId)
