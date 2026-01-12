@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -38,17 +39,18 @@ public class AttendanceService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         // 날짜 갱신
-        LocalDate today = LocalDate.now();
         LocalDateTime now = LocalDateTime.now();
+        LocalDate workDate = now.toLocalDate();
+        LocalTime scheduledStartTime = member.getWorkShift().getStartTime();
 
         //오류
-        if(attendanceRepository.findByMemberAndWorkDate(member,today).isPresent()){
+        if(attendanceRepository.findByMemberAndWorkDate(member,workDate).isPresent()){
             throw new IllegalArgumentException("이미 오늘 출근 처리가 완료되었습니다");
         }
 
         // 출근 상태 수정
         AttendanceStatus status = AttendanceStatus.NORMAL;
-        if (now.toLocalTime().isAfter(java.time.LocalTime.of(9, 0))) {
+        if (now.toLocalTime().isAfter(scheduledStartTime)) {
             status = AttendanceStatus.LATE;
         }
 
@@ -56,7 +58,7 @@ public class AttendanceService {
         Attendance attendance = Attendance.builder()
                 .member(member)
                 .clockInTime(now)
-                .workDate(today)
+                .workDate(workDate)
                 .status(status)
                 .inLocation(dto.getInLocation())
                 .build();
@@ -73,7 +75,8 @@ public class AttendanceService {
                 .orElseThrow(()-> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         //가장 마지막의 출근 기록을 가져옴
-        Attendance attendance = attendanceRepository.findFirstByMemberOrderByClockInTimeDesc(member)
+        LocalDate today = LocalDate.now();
+        Attendance attendance = attendanceRepository.findByMemberAndWorkDate(member,today)
                 .orElseThrow(()->new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         if(attendance.getClockOutTime()!=null){
