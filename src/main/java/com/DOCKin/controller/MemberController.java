@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/member")
 public class MemberController {
     private final MemberService memberService;
-    private final ModelMapper modelMapper;
 
     @Operation(summary="로그인",description = "로그인을 할 수 있음")
     @PostMapping("/login")

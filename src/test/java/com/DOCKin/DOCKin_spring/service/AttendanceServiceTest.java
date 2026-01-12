@@ -33,4 +33,5 @@ public class AttendanceServiceTest {
 
     assertEquals(AttendanceStatus.LATE, result.getStatus());
   }
+
 }
