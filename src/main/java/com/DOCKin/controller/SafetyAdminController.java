@@ -5,6 +5,7 @@ import com.DOCKin.dto.SafetyCourse.SafetyCourseResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @Tag(name="관리자용 안전교육 관리", description="안전교육을 관리할 수 있는 api")
+@Slf4j
 @RestController
 @RequestMapping("/api/safety/admin")
 @RequiredArgsConstructor

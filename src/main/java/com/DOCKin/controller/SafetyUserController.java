@@ -4,12 +4,14 @@ import com.DOCKin.dto.SafetyCourse.SafetyCourseResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @Tag(name="사용자 안전교육",description = "사용자 안전교육 담당 api")
+@Slf4j
 @RestController
 @RequestMapping("/api/safety/user")
 @RequiredArgsConstructor

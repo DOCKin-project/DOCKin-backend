@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 @Entity
 @Builder
 @Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EntityListeners(AuditingEntityListener.class)
@@ -29,6 +30,8 @@ public class Work_logs {
     private String log_text;
 
     private String audio_file_url;
+
+    private String image_url;
 
     @CreatedDate
     @Column(name = "created_at", updatable = false, nullable = false)
