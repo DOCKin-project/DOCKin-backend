@@ -86,13 +86,13 @@ public class WorkLogsService {
 
     //게시물 수정
     @Transactional
-    public Work_logsDto updateWorklog(String userId, Long logId, WorkLogsCreateRequestDto dto){
+    public Work_logsDto updateWorklog(String userId, Long logId, WorkLogsUpdateRequestDto dto){
         Work_logs logs = workLogsRepository.findById(logId)
-                .orElseThrow(()->new BusinessException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(()->new BusinessException(ErrorCode.LOG_NOT_FOUND));
 
         //작성자와 수정자가 같은지 확인
         if(!logs.getMember().getUserId().equals(userId)){
-            throw new BusinessException(ErrorCode.ACCESS_DENIED);
+            throw new BusinessException(ErrorCode.NOT_LOG_AUTHOR);
         }
 
         if(dto.getTitle()!=null) logs.setTitle(dto.getTitle());
@@ -111,11 +111,11 @@ public class WorkLogsService {
     @Transactional
     public void deleteWorklog(String userId, Long logId){
         Work_logs log = workLogsRepository.findById(logId)
-                .orElseThrow(()->new BusinessException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(()->new BusinessException(ErrorCode.LOG_NOT_FOUND));
 
        //작성자와 같은지 확인
         if(!log.getMember().getUserId().equals(userId)){
-            throw new BusinessException(ErrorCode.ACCESS_DENIED);
+            throw new BusinessException(ErrorCode.NOT_LOG_AUTHOR);
         }
 
       workLogsRepository.delete(log);

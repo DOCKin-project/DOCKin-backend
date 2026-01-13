@@ -8,6 +8,7 @@ import com.DOCKin.service.AttendanceService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @Tag(name="근태관리",description = "근무자의 근태를 확인할 수 있음")
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/attendance")
