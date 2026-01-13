@@ -3,7 +3,6 @@ package com.DOCKin.service;
 import com.DOCKin.dto.Attendance.AttendanceDto;
 import com.DOCKin.dto.Attendance.ClockInRequestDto;
 import com.DOCKin.dto.Attendance.ClockOutRequestDto;
-import com.DOCKin.global.enums.Status;
 import com.DOCKin.global.error.BusinessException;
 import com.DOCKin.global.error.ErrorCode;
 import com.DOCKin.model.Attendance.Attendance;
