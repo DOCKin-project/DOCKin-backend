@@ -12,6 +12,8 @@ import com.DOCKin.repository.MemberRepository;
 import com.DOCKin.repository.Work_logsRepository;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,15 +51,13 @@ public class WorkLogsService {
 
     //게시물 조회
     @Transactional(readOnly = true)
-    public List<Work_logsDto> readWorklog(String userId){
+    public Page<Work_logsDto> readWorklog(String userId, Pageable pageable){
         Member member = memberRepository.findByUserId(userId)
                 .orElseThrow(()->new BusinessException(ErrorCode.USER_NOT_FOUND));
         String area = member.getShipYardArea();
        List<Member> areaMembers= memberRepository.findByShipYardArea(area);
-       List<Work_logs> logs = workLogsRepository.findByMemberIn(areaMembers);
+       Page<Work_logs> logs = workLogsRepository.findByMemberIn(areaMembers,pageable);
 
-       return logs.stream()
-               .map(Work_logsDto::from)
-               .collect(Collectors.toList());
+       return logs.map(Work_logsDto::from);
     }
 }
