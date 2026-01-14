@@ -14,6 +14,7 @@ import static java.time.Period.between;
 @Table(name="attendance")
 @Builder
 @Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor(access= AccessLevel.PROTECTED)
 public class Attendance {
