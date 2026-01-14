@@ -1,0 +1,42 @@
+package com.DOCKin.model.Chat;
+
+import com.DOCKin.model.Member.Member;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(name="chat_members")
+public class ChatMembers {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name="id")
+    private Integer id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "room_id", nullable = false)
+    private ChatRoom chatRoom;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id",nullable = false)
+    private Member member;
+
+    @Column(name="joined_at")
+    private LocalDateTime joinedAt;
+
+    @Column(name="last_read_time")
+    private LocalDateTime lastReadTime;
+
+    @PrePersist
+    public void prePersist(){
+        this.joinedAt=LocalDateTime.now();
+        this.lastReadTime= LocalDateTime.now();
+    }
+
+}
