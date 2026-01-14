@@ -11,9 +11,4 @@ public class PasswordEncoderConfig {
     public BCryptPasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder();
     }
-
-    /*@Bean
-    public PasswordEncoder passwordEncoder(){
-        return org.springframework.security.crypto.password.NoOpPasswordEncoder.getInstance();
-    }*/
 }
