@@ -36,7 +36,11 @@ public class MemberService{
     if(!passwordEncoder.matches(dto.getPassword(), member.getPassword())){
         throw new BusinessException(ErrorCode.LOGIN_INPUT_INVALID);
     }
-        CustomUserInfoDto info = modelMapper.map(member,CustomUserInfoDto.class);
+        CustomUserInfoDto info = CustomUserInfoDto.builder()
+                .userId(member.getUserId())
+                .name(member.getName())
+                .role(member.getRole())
+                .build();
 
     String accessToken=jwtUtil.createAccessToken(info);
     String refreshToken=jwtUtil.createRefreshToken(info);
