@@ -43,7 +43,7 @@ public class WorkLogsController {
     @GetMapping
     public ResponseEntity<Page<Work_logsDto>> getWorkLog(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
-            @PageableDefault(size = 10,sort="created_at",direction = Sort.Direction.DESC)Pageable pageable
+            @PageableDefault(size = 10,direction = Sort.Direction.DESC)Pageable pageable
             ){
         String userId = customUserDetails.getMember().getUserId();
         return ResponseEntity.ok(workLogsService.readWorklog(userId,pageable));
@@ -53,7 +53,7 @@ public class WorkLogsController {
     @GetMapping("/others/{targetUserId}")
     public ResponseEntity<Page<Work_logsDto>> getMyWorkLog(@PathVariable String targetUserId,
                                                            @AuthenticationPrincipal CustomUserDetails customUserDetails,
-                                                           @PageableDefault(size=10,sort="created_at",direction = Sort.Direction.DESC)Pageable pageable){
+                                                           @PageableDefault(size=10, direction = Sort.Direction.DESC)Pageable pageable){
         String userId = customUserDetails.getMember().getUserId();
         return ResponseEntity.ok(workLogsService.readOtherWorklog(userId,targetUserId,pageable));
     }

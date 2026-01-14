@@ -27,7 +27,7 @@ DROP TABLE IF EXISTS equipment;
 DROP TABLE IF EXISTS Authority;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS refresh_token;
-
+ALTER TABLE attendance ADD COLUMN total_work_time VARCHAR(20) DEFAULT NULL;
 
 SET FOREIGN_KEY_CHECKS = 1;
 -- 1. 사용자

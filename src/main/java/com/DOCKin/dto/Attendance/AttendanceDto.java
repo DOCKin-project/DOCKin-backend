@@ -35,7 +35,7 @@ public class AttendanceDto {
 
     //근무시간
     @Schema(description = "총 근무 시간 (HH:mm:ss 형식)", example = "08:30:00")
-    private Duration totalWorkTime;
+    private String totalWorkTime;
 
     //근로자 상태
     @Schema(description = "근태 상태 (NORMAL, LATE, EARLY_LEAVE 등)", example = "NORMAL")
@@ -54,6 +54,7 @@ public class AttendanceDto {
                 .userId(saved.getMember().getUserId())
                 .clockInTime(saved.getClockInTime())
                 .clockOutTime(saved.getClockOutTime())
+                .totalWorkTime(saved.getTotalWorkTime())
                 .status(saved.getStatus().name())
                 .inLocation(saved.getInLocation())
                 .OutLocation(saved.getOutLocation())
