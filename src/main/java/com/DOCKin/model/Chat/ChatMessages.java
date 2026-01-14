@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "chat_messages",
 indexes = {@Index(name="idx_room_sent",columnList = "room_id, sent_at")})
-public class ChatMessage {
+public class ChatMessages {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "message_id")
@@ -25,7 +25,7 @@ public class ChatMessage {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "room_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
-    private ChatRoom chatRoom;
+    private ChatRooms chatRooms;
 
     @Column(name = "sender_id")
     @NotNull
