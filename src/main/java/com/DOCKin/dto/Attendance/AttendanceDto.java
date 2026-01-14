@@ -35,7 +35,7 @@ public class AttendanceDto {
 
     //근무시간
     @Schema(description = "총 근무 시간 (HH:mm:ss 형식)", example = "08:30:00")
-    private Duration totalWorkTime;
+    private String totalWorkTime;
 
     //근로자 상태
     @Schema(description = "근태 상태 (NORMAL, LATE, EARLY_LEAVE 등)", example = "NORMAL")
@@ -46,7 +46,7 @@ public class AttendanceDto {
     private String inLocation;
 
     @Schema(description = "퇴근 장소", example = "제1조선소")
-    private String OutLocation;
+    private String outLocation;
 
     public static AttendanceDto fromEntity(Attendance saved) {
         return AttendanceDto.builder()
@@ -54,9 +54,10 @@ public class AttendanceDto {
                 .userId(saved.getMember().getUserId())
                 .clockInTime(saved.getClockInTime())
                 .clockOutTime(saved.getClockOutTime())
+                .totalWorkTime(saved.getTotalWorkTime())
                 .status(saved.getStatus().name())
                 .inLocation(saved.getInLocation())
-                .OutLocation(saved.getOutLocation())
+                .outLocation(saved.getOutLocation())
                 .build();
     }
 }

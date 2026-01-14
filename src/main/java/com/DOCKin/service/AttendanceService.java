@@ -28,7 +28,7 @@ import static com.DOCKin.dto.Attendance.AttendanceDto.fromEntity;
 public class AttendanceService {
     private final AttendanceRepository attendanceRepository;
     private final MemberRepository memberRepository;
-    // 교대 근무 가정
+
 
     //출근로직
     @Transactional
@@ -38,26 +38,24 @@ public class AttendanceService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         // 날짜 갱신
+        LocalDate today = LocalDate.now();
         LocalDateTime now = LocalDateTime.now();
-        LocalDate workDate = now.toLocalDate();
-        LocalTime scheduledStartTime = member.getWorkShift().getStartTime();
-
         //오류
-        if(attendanceRepository.findByMemberAndWorkDate(member,workDate).isPresent()){
-            throw new IllegalArgumentException("이미 오늘 출근 처리가 완료되었습니다");
+        if(attendanceRepository.findByMemberAndWorkDate(member,today).isPresent()){
+            throw new IllegalArgumentException("이미 오늘 출근 처리가 완료되었습니다.");
         }
 
         // 출근 상태 수정
         AttendanceStatus status = AttendanceStatus.NORMAL;
-        if (now.toLocalTime().isAfter(scheduledStartTime)) {
-            status = AttendanceStatus.LATE;
+        if(now.toLocalTime().isAfter(java.time.LocalTime.of(9,0))){
+            status=AttendanceStatus.LATE;
         }
 
         // 객체 생성
         Attendance attendance = Attendance.builder()
                 .member(member)
                 .clockInTime(now)
-                .workDate(workDate)
+                .workDate(today)
                 .status(status)
                 .inLocation(dto.getInLocation())
                 .build();
@@ -83,8 +81,17 @@ public class AttendanceService {
         }
 
         //시간 갱신
-        LocalDateTime now =LocalDateTime.now();
-        attendance.recordClockOut(now,dto.getOutLocation(),attendance.getStatus());
+        LocalDateTime now = LocalDateTime.now();
+        attendance.setClockOutTime(LocalDateTime.now());
+        attendance.setOutLocation(dto.getOutLocation());
+
+        java.time.Duration duration = java.time.Duration.between(attendance.getClockInTime(),now);
+        long h = duration.toHours();
+        long m = duration.toMinutesPart();
+        long s = duration.toSecondsPart();
+
+        String timeString = String.format("%02d:%02d:%02d", h, m, s);
+        attendance.setTotalWorkTime(timeString);
 
         return fromEntity(attendance);
     }

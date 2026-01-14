@@ -27,7 +27,7 @@ DROP TABLE IF EXISTS equipment;
 DROP TABLE IF EXISTS Authority;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS refresh_token;
-
+ALTER TABLE attendance ADD COLUMN total_work_time VARCHAR(20) DEFAULT NULL;
 
 SET FOREIGN_KEY_CHECKS = 1;
 -- 1. 사용자
@@ -126,7 +126,7 @@ CREATE TABLE attendance (
                             clock_out_time DATETIME,
                             work_date DATE NOT NULL,
                             role ENUM('NORMAL','LATE','ABSENT','VACATION','SICK'),
-                            work_shift ENUM('MORNING', 'AFTERNOON', 'NIGHT'),
+
                             in_location VARCHAR(255),
                             out_location VARCHAR(255),
                             CONSTRAINT fk_attendance_member FOREIGN KEY (user_id) REFERENCES users (user_id),
