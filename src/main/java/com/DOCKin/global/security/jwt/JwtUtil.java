@@ -58,7 +58,7 @@ public class JwtUtil {
                 .compact();
     }
 
-    // [핵심 수정] 문자열 userId를 반환하도록 추출 로직 변경
+    // 문자열 userId를 반환하도록 추출 로직 변경
     public String getUserId(String token){
         return parseClaims(token).getSubject();
     }

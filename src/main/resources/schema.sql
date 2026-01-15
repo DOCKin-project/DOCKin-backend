@@ -107,16 +107,6 @@ CREATE TABLE checklist_results (
                                    FOREIGN KEY (equipment_id) REFERENCES equipment(equipment_id)
 );
 
--- 8. 푸시 알림
-CREATE TABLE notifications (
-                               notification_id INT PRIMARY KEY AUTO_INCREMENT,
-                               title VARCHAR(255) NOT NULL,
-                               message TEXT NOT NULL,
-                               target_user_id VARCHAR(50) NOT NULL,
-                               due_at DATETIME,
-                               sent BOOLEAN DEFAULT FALSE,
-                               FOREIGN KEY (target_user_id) REFERENCES users(user_id)
-);
 
 -- 9. 근태 관리 테이블
 CREATE TABLE attendance (
@@ -182,14 +172,7 @@ CREATE TABLE chat_messages (
                                INDEX idx_room_sent (room_id,sent_at)
 );
 
--- 14. 긴급 연락처
-CREATE TABLE emergency_contacts (
-                                    contact_id INT PRIMARY KEY AUTO_INCREMENT,
-                                    team_name VARCHAR(50) NOT NULL,
-                                    contact_number VARCHAR(20) NOT NULL,
-                                    is_primary BOOLEAN DEFAULT FALSE,
-                                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+
 
 -- 15. 안전 교육 과정 정보
 CREATE TABLE safety_courses (
