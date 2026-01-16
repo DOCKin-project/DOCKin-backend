@@ -51,10 +51,39 @@ public class ChatRoomService {
 
     //채팅방 수정
     @Transactional
-    public Integer reviseChatRoom(ChatRoomUpdateRequestDto dto,String creatorId){
-        ChatRooms rooms = ChatRooms.builder()
-                .roomName(dto.getRoom_name())
-                .
+    public Integer reviseChatRoom(ChatRoomUpdateRequestDto dto,String creatorId,Integer chatRoomId){
+        ChatRooms rooms = chatRoomsRepository.findById(chatRoomId)
+                .orElseThrow(()->new BusinessException(ErrorCode.CHATROOM_NOT_FOUND));
+
+        // 권한 확인
+        if(!rooms.getCreatorId().equals(creatorId)){
+            throw new BusinessException(ErrorCode.CHATROOM_AUTHOR);
+        }
+
+        //방 이름 수정
+        if(dto.getRoom_name()!=null){
+            rooms.updateRoomName(dto.getRoom_name());
+        }
+
+        //새로운 멤버 추가
+        if(dto.getAddParticipantIds()!=null){
+            dto.getAddParticipantIds().forEach(addId->{
+                boolean isAlreadyMember = chatMembersRepository.existsByChatRoomsAndMember_UserId(rooms,addId);
+                if(!isAlreadyMember){
+                    saveMember(rooms,addId);
+                }
+            });
+        }
+
+        //멤버 삭제
+        if(dto.getRemoveParticipantIds()!=null){
+            dto.getRemoveParticipantIds().forEach(removeId->{
+                if(!removeId.equals(rooms.getCreatorId())){
+                    chatMembersRepository.deleteByChatRoomsAndMember_UserId(rooms,removeId);
+                }
+            });
+        }
+        return rooms.getRoomId();
     }
 
     //채팅방 삭제 (말그대로 채팅방 삭제)

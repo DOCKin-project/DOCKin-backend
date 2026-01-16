@@ -1,10 +1,7 @@
 package com.DOCKin.dto.chat;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.List;
 
@@ -12,6 +9,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Setter
 @Schema(description = "채팅방 정보 수정 요청")
 public class ChatRoomUpdateRequestDto {
 
@@ -23,4 +21,5 @@ public class ChatRoomUpdateRequestDto {
 
     @Schema(description = "제외할 참여자 ID 리스트", example = "['user_02']")
     private List<String> removeParticipantIds;
+
 }
