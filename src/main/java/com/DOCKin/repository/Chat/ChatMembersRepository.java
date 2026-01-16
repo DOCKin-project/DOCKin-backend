@@ -15,5 +15,4 @@ boolean existsByChatRoomsAndMember_UserId(ChatRooms chatRooms, String userId);
     @Transactional
     void deleteByChatRoomsAndMember_UserId(ChatRooms chatRooms,String userId);
 
-Optional<ChatMembers> findByChatRoomsAndMember_UserId(ChatRooms chatRooms,String userId);
 }

@@ -34,7 +34,7 @@ public class ChatRoomService {
         ChatRooms rooms = ChatRooms.builder()
                 .roomName(dto.getRoom_name())
                 .isGroup(dto.getIs_group())
-                .creatorId(dto.getCreatorId())
+                .creatorId(creatorId)
                 .build();
 
         ChatRooms savedRoom = chatRoomsRepository.save(rooms);
@@ -65,17 +65,12 @@ public class ChatRoomService {
 
     //특정 채팅방 목록 가져오기
     @Transactional(readOnly = true)
-    public  Page<ChatRoomResponseDto> getOtherChatRooms(String userId, Pageable pageable,String targetUserId){
-        //내 아이디
-        Member member =memberRepository.findByUserId(userId)
-                .orElseThrow(()->new BusinessException(ErrorCode.USER_NOT_FOUND));
+    public ChatRoomResponseDto getChatRoomsInfo(Integer roomId){
 
-        //타깃 아이디
-        Member target=memberRepository.findByUserId(targetUserId)
-                .orElseThrow(()->new BusinessException(ErrorCode.USER_NOT_FOUND));
+        ChatRooms rooms = chatRoomsRepository.findById(roomId)
+                .orElseThrow(()->new BusinessException(ErrorCode.CHATROOM_NOT_FOUND));
 
-        Page<ChatRooms> chatRooms = chatRoomsRepository.findByMembers(target,pageable);
-        return  chatRooms.map(ChatRoomResponseDto::from);
+        return  ChatRoomResponseDto.from(rooms);
     }
 
 
