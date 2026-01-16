@@ -1,6 +1,7 @@
 package com.DOCKin.service;
 
 import com.DOCKin.dto.chat.ChatRoomRequestDto;
+import com.DOCKin.dto.chat.ChatRoomResponseDto;
 import com.DOCKin.dto.chat.ChatRoomUpdateRequestDto;
 import com.DOCKin.global.error.BusinessException;
 import com.DOCKin.global.error.ErrorCode;
@@ -12,6 +13,8 @@ import com.DOCKin.repository.ChatRoomsRepository;
 import com.DOCKin.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,7 +30,7 @@ public class ChatRoomService {
 
     //채팅방 개설 (처음 채팅방 만들 때 해당)
     @Transactional
-    public Integer createChatRoom(ChatRoomRequestDto dto,String creatorId){
+    public ChatRoomResponseDto createChatRoom(ChatRoomRequestDto dto, String creatorId){
         ChatRooms rooms = ChatRooms.builder()
                 .roomName(dto.getRoom_name())
                 .isGroup(dto.getIs_group())
@@ -46,12 +49,23 @@ public class ChatRoomService {
                     .forEach(userId->saveMember(savedRoom,userId));
 
         }
-        return  savedRoom.getRoomId();
+        return ChatRoomResponseDto.from(savedRoom);
     }
+
+    //채팅방 목록 가져오기
+    @Transactional(readOnly = true)
+    public Page<ChatRoomResponseDto> getChatRoom(String userId, Pageable pageable){
+        Member member = memberRepository.findByUserId(userId)
+                .orElseThrow(()->new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        String area = chatRoomsRepository.fin
+
+    }
+
 
     //채팅방 수정
     @Transactional
-    public Integer reviseChatRoom(ChatRoomUpdateRequestDto dto,String creatorId,Integer chatRoomId){
+    public ChatRoomResponseDto reviseChatRoom(ChatRoomUpdateRequestDto dto,String creatorId,Integer chatRoomId){
         ChatRooms rooms = chatRoomsRepository.findById(chatRoomId)
                 .orElseThrow(()->new BusinessException(ErrorCode.CHATROOM_NOT_FOUND));
 
@@ -83,7 +97,7 @@ public class ChatRoomService {
                 }
             });
         }
-        return rooms.getRoomId();
+        return ChatRoomResponseDto.from(rooms);
     }
 
     //채팅방 삭제 (말그대로 채팅방 삭제)
