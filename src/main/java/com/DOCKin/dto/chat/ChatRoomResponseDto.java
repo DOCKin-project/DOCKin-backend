@@ -25,7 +25,16 @@ public class ChatRoomResponseDto {
     @Schema(description = "참가하는 인원의 사원번호", requiredMode = Schema.RequiredMode.REQUIRED)
     private List<String> participantIds;
 
+    @Schema(description = "방장id",requiredMode = Schema.RequiredMode.REQUIRED)
+    private String creatorId;
+
     @Schema(description = "만든 시각", requiredMode = Schema.RequiredMode.REQUIRED)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
     private LocalDateTime createdAt;
+
+    @Schema(description = "마지막 메시지 내용")
+    private String lastMessageContent;
+
+    @Schema(description = "마지막 메시지 시간")
+    private LocalDateTime lastMessageAt;
 }
