@@ -8,8 +8,8 @@ import com.DOCKin.global.error.ErrorCode;
 import com.DOCKin.model.Chat.ChatMembers;
 import com.DOCKin.model.Chat.ChatRooms;
 import com.DOCKin.model.Member.Member;
-import com.DOCKin.repository.ChatMembersRepository;
-import com.DOCKin.repository.ChatRoomsRepository;
+import com.DOCKin.repository.Chat.ChatMembersRepository;
+import com.DOCKin.repository.Chat.ChatRoomsRepository;
 import com.DOCKin.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +34,7 @@ public class ChatRoomService {
         ChatRooms rooms = ChatRooms.builder()
                 .roomName(dto.getRoom_name())
                 .isGroup(dto.getIs_group())
-                .creatorId(dto.getCreatorId())
+                .creatorId(creatorId)
                 .build();
 
         ChatRooms savedRoom = chatRoomsRepository.save(rooms);
@@ -54,18 +54,29 @@ public class ChatRoomService {
 
     //채팅방 목록 가져오기
     @Transactional(readOnly = true)
-    public Page<ChatRoomResponseDto> getChatRoom(String userId, Pageable pageable){
+    public Page<ChatRoomResponseDto> getChatRooms(String userId, Pageable pageable){
         Member member = memberRepository.findByUserId(userId)
                 .orElseThrow(()->new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        String area = chatRoomsRepository.fin
+        Page<ChatRooms> chatRoomsPage = chatRoomsRepository.findByMembers(member,pageable);
 
+        return chatRoomsPage.map(ChatRoomResponseDto::from);
+    }
+
+    //특정 채팅방 목록 가져오기
+    @Transactional(readOnly = true)
+    public ChatRoomResponseDto getChatRoomsInfo(Integer roomId){
+
+        ChatRooms rooms = chatRoomsRepository.findById(roomId)
+                .orElseThrow(()->new BusinessException(ErrorCode.CHATROOM_NOT_FOUND));
+
+        return  ChatRoomResponseDto.from(rooms);
     }
 
 
     //채팅방 수정
     @Transactional
-    public ChatRoomResponseDto reviseChatRoom(ChatRoomUpdateRequestDto dto,String creatorId,Integer chatRoomId){
+    public ChatRoomResponseDto reviseChatRoom(Integer chatRoomId,String creatorId,ChatRoomUpdateRequestDto dto){
         ChatRooms rooms = chatRoomsRepository.findById(chatRoomId)
                 .orElseThrow(()->new BusinessException(ErrorCode.CHATROOM_NOT_FOUND));
 

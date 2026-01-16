@@ -1,4 +1,4 @@
-package com.DOCKin.repository;
+package com.DOCKin.repository.Chat;
 
 import com.DOCKin.model.Chat.ChatMembers;
 import com.DOCKin.model.Chat.ChatRooms;
@@ -15,5 +15,4 @@ boolean existsByChatRoomsAndMember_UserId(ChatRooms chatRooms, String userId);
     @Transactional
     void deleteByChatRoomsAndMember_UserId(ChatRooms chatRooms,String userId);
 
-Optional<ChatMembers> findByChatRoomsAndMember_UserId(ChatRooms chatRooms,String userId);
 }
