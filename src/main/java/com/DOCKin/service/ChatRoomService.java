@@ -65,7 +65,7 @@ public class ChatRoomService {
 
     //채팅방 수정
     @Transactional
-    public ChatRoomResponseDto reviseChatRoom(ChatRoomUpdateRequestDto dto,String creatorId,Integer chatRoomId){
+    public ChatRoomResponseDto reviseChatRoom(Integer chatRoomId,String creatorId,ChatRoomUpdateRequestDto dto){
         ChatRooms rooms = chatRoomsRepository.findById(chatRoomId)
                 .orElseThrow(()->new BusinessException(ErrorCode.CHATROOM_NOT_FOUND));
 

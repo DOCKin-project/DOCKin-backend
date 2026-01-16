@@ -1,12 +1,19 @@
 package com.DOCKin.controller;
 
 import com.DOCKin.dto.chat.*;
+import com.DOCKin.global.security.auth.CustomUserDetails;
+import com.DOCKin.model.Chat.ChatRooms;
+import com.DOCKin.service.ChatRoomService;
+import com.DOCKin.service.ChatService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
@@ -18,11 +25,15 @@ import java.util.List;
 @RequestMapping("/api/chat")
 @RequiredArgsConstructor
 public class ChatRoomController {
+    private final ChatRoomService chatRoomService;
+    private final ChatService chatService;
+
     @Operation(summary="채팅방 생성", description = "새로운 채팅방을 생성함")
     @PostMapping("/room")
-    public ResponseEntity<ChatRoomRequestDto> createRoom(@RequestBody ChatRoomRequestDto chatRoomRequestDto){
-        ChatRoomRequestDto room = new ChatRoomRequestDto();
-        return ResponseEntity.ok(new ChatRoomRequestDto());
+    public ResponseEntity<ChatRoomResponseDto> createRoom(@Valid @RequestBody ChatRoomRequestDto dto, @AuthenticationPrincipal CustomUserDetails customUserDetails){
+        String creatorId = customUserDetails.getMember().getUserId();
+        ChatRoomResponseDto chatRooms = chatRoomService.createChatRoom(dto,creatorId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(chatRooms);
     }
 
     @Operation(summary="채팅방 전체 목록 조회",description = "모든 채팅방 목록을 조회함")
@@ -37,17 +48,25 @@ public class ChatRoomController {
         return ResponseEntity.ok(null);
     }
 
+
     @Operation(summary="채팅방 수정", description ="특정 채팅방 이름 수정")
     @PutMapping("/room/{roomId}")
-    public ResponseEntity<ChatRoomUpdateRequestDto> updateRoom(
-            @PathVariable String roomId,
-            @RequestBody ChatRoomRequestDto updateDto){
-        return ResponseEntity.ok(null);
+    public ResponseEntity<ChatRoomResponseDto> updateRoom(
+            @PathVariable Integer roomId,
+           @Valid @RequestBody ChatRoomUpdateRequestDto updateDto,
+            @AuthenticationPrincipal CustomUserDetails customUserDetails){
+        String creatorId = customUserDetails.getMember().getUserId();
+        ChatRoomResponseDto dto =chatRoomService.reviseChatRoom(roomId,creatorId,updateDto);
+
+        return ResponseEntity.ok(dto);
     }
 
-    @Operation(summary="채팅방 삭제/나가기",description = "채팅방을 삭제/나감")
+    @Operation(summary="채팅방 삭제",description = "채팅방을 삭제")
     @DeleteMapping("/room/{roomId}")
-    public ResponseEntity<Void> deleteRoom(@PathVariable String roomId){
+    public ResponseEntity<Void> deleteRoom(@PathVariable Integer roomId,
+                                           @AuthenticationPrincipal CustomUserDetails customUserDetails){
+        String creatorId = customUserDetails.getMember().getUserId();
+        chatRoomService.deleteChatRoom(roomId,creatorId);
         return ResponseEntity.noContent().build();
     }
 
