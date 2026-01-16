@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -34,6 +36,9 @@ public class ChatRooms {
 
     @Column(name = "last_message_at")
     private LocalDateTime lastMessageAt;
+
+    @OneToMany(mappedBy = "chatRoom",cascade = CascadeType.ALL,orphanRemoval = true)
+    private List<ChatMembers> members = new ArrayList<>();
 
     @PrePersist
     public void prePersist(){

@@ -1,13 +1,13 @@
 package com.DOCKin.service;
 
 import com.DOCKin.dto.chat.ChatRoomRequestDto;
+import com.DOCKin.dto.chat.ChatRoomUpdateRequestDto;
 import com.DOCKin.global.error.BusinessException;
 import com.DOCKin.global.error.ErrorCode;
 import com.DOCKin.model.Chat.ChatMembers;
 import com.DOCKin.model.Chat.ChatRooms;
 import com.DOCKin.model.Member.Member;
 import com.DOCKin.repository.ChatMembersRepository;
-import com.DOCKin.repository.ChatMessagesRepository;
 import com.DOCKin.repository.ChatRoomsRepository;
 import com.DOCKin.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +25,7 @@ public class ChatRoomService {
     private final ChatMembersRepository chatMembersRepository;
     private final MemberRepository memberRepository;
 
-    //채팅방 개설
+    //채팅방 개설 (처음 채팅방 만들 때 해당)
     @Transactional
     public Integer createChatRoom(ChatRoomRequestDto dto,String creatorId){
         ChatRooms rooms = ChatRooms.builder()
@@ -49,7 +49,27 @@ public class ChatRoomService {
         return  savedRoom.getRoomId();
     }
 
+    //채팅방 수정
+    @Transactional
+    public Integer reviseChatRoom(ChatRoomUpdateRequestDto dto,String creatorId){
+        ChatRooms rooms = ChatRooms.builder()
+                .roomName(dto.getRoom_name())
+                .
+    }
 
+    //채팅방 삭제
+    @Transactional
+    public void deleteChatRoom(Integer chatRoomId, String userId){
+        ChatRooms chatRooms = chatRoomsRepository.findById(chatRoomId)
+                .orElseThrow(()->new BusinessException(ErrorCode.CHATROOM_NOT_FOUND));
+
+        if(!chatRooms.getCreatorId().equals(userId)){
+            throw new BusinessException(ErrorCode.CHATROOM_AUTHOR);
+        }
+        chatRoomsRepository.delete(chatRooms);
+    }
+
+    //멤버 초대
     private void saveMember(ChatRooms rooms, String userId){
         Member memberEntity = memberRepository.findById(userId)
                 .orElseThrow(()->new BusinessException(ErrorCode.USER_NOT_FOUND));
@@ -61,4 +81,6 @@ public class ChatRoomService {
                 .build();
         chatMembersRepository.save(chatMember);
     }
+
+
 }
