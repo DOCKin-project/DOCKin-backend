@@ -57,7 +57,7 @@ public class ChatRoomService {
                 .
     }
 
-    //채팅방 삭제
+    //채팅방 삭제 (말그대로 채팅방 삭제)
     @Transactional
     public void deleteChatRoom(Integer chatRoomId, String userId){
         ChatRooms chatRooms = chatRoomsRepository.findById(chatRoomId)
