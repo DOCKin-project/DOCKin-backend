@@ -1,4 +1,4 @@
-package com.DOCKin.repository;
+package com.DOCKin.repository.Member;
 
 import com.DOCKin.model.Member.Member;
 import org.springframework.data.jpa.repository.JpaRepository;

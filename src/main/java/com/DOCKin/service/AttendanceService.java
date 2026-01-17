@@ -8,15 +8,14 @@ import com.DOCKin.global.error.ErrorCode;
 import com.DOCKin.model.Attendance.Attendance;
 import com.DOCKin.model.Attendance.AttendanceStatus;
 import com.DOCKin.model.Member.Member;
-import com.DOCKin.repository.AttendanceRepository;
-import com.DOCKin.repository.MemberRepository;
+import com.DOCKin.repository.Attendance.AttendanceRepository;
+import com.DOCKin.repository.Member.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
 

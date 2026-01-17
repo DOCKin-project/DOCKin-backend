@@ -1,4 +1,4 @@
-package com.DOCKin.model;
+package com.DOCKin.model.WorkLogs;
 
 import com.DOCKin.model.Member.Member;
 import jakarta.persistence.*;

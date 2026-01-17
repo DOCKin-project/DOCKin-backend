@@ -10,7 +10,7 @@ import com.DOCKin.model.Chat.ChatRooms;
 import com.DOCKin.model.Member.Member;
 import com.DOCKin.repository.Chat.ChatMembersRepository;
 import com.DOCKin.repository.Chat.ChatRoomsRepository;
-import com.DOCKin.repository.MemberRepository;
+import com.DOCKin.repository.Member.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;

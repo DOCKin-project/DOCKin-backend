@@ -1,4 +1,4 @@
-package com.DOCKin.repository;
+package com.DOCKin.repository.Member;
 
 import com.DOCKin.model.Member.Authority;
 import com.DOCKin.model.Member.Member;
