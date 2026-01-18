@@ -114,9 +114,11 @@ public class ChatRoomService {
         if(finalMemberCount<2){
             throw new IllegalArgumentException("채팅방에서는 최소 2명의 참가자가 있어야 합니다.");
         }
+        chatMembersRepository.flush();
+        ChatRooms updatedRoom = chatRoomsRepository.findById(chatRoomId)
+                .orElseThrow(()->new BusinessException(ErrorCode.CHATROOM_NOT_FOUND));
 
-
-        return ChatRoomResponseDto.from(rooms);
+        return ChatRoomResponseDto.from(updatedRoom);
     }
 
     //채팅방 삭제 (말그대로 채팅방 삭제)
