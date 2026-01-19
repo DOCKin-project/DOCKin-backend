@@ -79,6 +79,16 @@ public class ChatRoomController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary="채팅방 나가기",description = "채팅방을 나간다")
+    @DeleteMapping("/room/leave/{roomId}")
+    public ResponseEntity<Void> leaveRoom(@PathVariable Integer roomId,
+                                           @AuthenticationPrincipal CustomUserDetails customUserDetails){
+        String userId = customUserDetails.getMember().getUserId();
+        chatRoomService.leaveChatRoom(roomId,userId);
+
+        return ResponseEntity.noContent().build();
+    }
+
    @Operation(summary="채팅 내역 조회",description = "특정 채팅방의 이전에 보냈던 메시지 조회")
     @GetMapping("/room/{roomId}/messages")
     public ResponseEntity<Slice<ChatMessageResponseDto>> getChatMessages(@PathVariable Integer roomId,
