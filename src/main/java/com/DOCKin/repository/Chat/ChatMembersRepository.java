@@ -4,6 +4,8 @@ import com.DOCKin.model.Chat.ChatMembers;
 import com.DOCKin.model.Chat.ChatRooms;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
@@ -24,4 +26,8 @@ boolean existsByChatRoomsAndMember_UserId(ChatRooms chatRooms, String userId);
     boolean existsByChatRooms_RoomIdAndMember_UserId(Integer roomId, String userId);
 
     List<ChatMembers> findByChatRooms_RoomId(Integer roomId);
+
+    @Modifying
+    @Query("UPDATE ChatMembers cm SET cm.lastReadTime=CURRENT_TIMESTAMP WHERE cm.chatRooms.roomId = :roomId AND cm.member.userId = :userId")
+    void updateLastReadTime(@Param("roomId") Integer roomId, @Param("userId")String userId);
 }

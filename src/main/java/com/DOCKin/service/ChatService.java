@@ -45,7 +45,7 @@ public class ChatService {
 
             chatMessagesRepository.save(messages);
             room.updateLastMessage(dto.getContent(), LocalDateTime.now());
-
+            chatMembersRepository.updateLastReadTime(dto.getRoomId(),dto.getSenderId());
         } catch (Exception e){
             log.error("메시지 저장 실패: {}",e.getMessage());
         }
