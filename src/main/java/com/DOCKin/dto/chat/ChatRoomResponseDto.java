@@ -27,7 +27,7 @@ public class ChatRoomResponseDto {
     @Schema(description = "그룹채팅방인지 그냥 1대1채팅방인지", requiredMode = Schema.RequiredMode.REQUIRED)
     private Boolean is_group;
 
-    @Schema(description = "참가하는 인원의 사원번호", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "참가하는 인원의 사원번호", minLength = 2, requiredMode = Schema.RequiredMode.REQUIRED)
     private List<String> participantIds;
 
     @Schema(description = "방장id",requiredMode = Schema.RequiredMode.REQUIRED)
@@ -43,8 +43,10 @@ public class ChatRoomResponseDto {
     @Schema(description = "마지막 메시지 시간")
     private LocalDateTime lastMessageAt;
 
+    @Schema(description = "안 읽은 메시지 수")
+    private long unreadCount;
 
-    public static ChatRoomResponseDto from(ChatRooms entity){
+    public static ChatRoomResponseDto from(ChatRooms entity, long unreadCount){
         return ChatRoomResponseDto.builder()
                 .room_Id(entity.getRoomId())
                 .room_name(entity.getRoomName())
@@ -54,6 +56,7 @@ public class ChatRoomResponseDto {
                 .participantIds(entity.getMembers().stream().map(member->member.getMember().getUserId()).collect(Collectors.toList()))
                 .lastMessageContent(entity.getLastMessageContent())
                 .lastMessageAt(entity.getLastMessageAt())
+                .unreadCount(unreadCount)
                 .build();
     }
 }

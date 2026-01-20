@@ -38,4 +38,7 @@ public class ChatMembers {
         this.lastReadTime= LocalDateTime.now();
     }
 
+    public void updateLastReadTime(LocalDateTime lastReadTime) {
+        this.lastReadTime = lastReadTime;
+    }
 }

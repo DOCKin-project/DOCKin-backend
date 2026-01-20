@@ -1,13 +1,12 @@
-package com.DOCKin.repository;
+package com.DOCKin.repository.WorkLogs;
 
 import com.DOCKin.model.Member.Member;
-import com.DOCKin.model.Work_logs;
+import com.DOCKin.model.WorkLogs.Work_logs;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.Collection;
 import java.util.List;
 
 public interface Work_logsRepository extends JpaRepository<Work_logs, Long> {

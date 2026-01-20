@@ -38,7 +38,7 @@ public class ChatRooms {
     private LocalDateTime lastMessageAt;
 
     @Builder.Default
-    @OneToMany(mappedBy = "chatRooms",cascade = CascadeType.ALL,orphanRemoval = true)
+    @OneToMany(mappedBy = "chatRooms", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true)
     private List<ChatMembers> members = new ArrayList<>();
 
     @PrePersist
@@ -59,6 +59,9 @@ public class ChatRooms {
         this.roomName=room_name;
     }
 
+    public void removeMember(String userId){
+        this.members.removeIf(m->m.getMember().getUserId().equals(userId));
+    }
 
 
 }

@@ -1,4 +1,4 @@
-package com.DOCKin.repository;
+package com.DOCKin.repository.Attendance;
 
 import com.DOCKin.model.Attendance.Attendance;
 import com.DOCKin.model.Member.Member;

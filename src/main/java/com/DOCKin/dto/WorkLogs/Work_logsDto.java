@@ -1,6 +1,6 @@
 package com.DOCKin.dto.WorkLogs;
 
-import com.DOCKin.model.Work_logs;
+import com.DOCKin.model.WorkLogs.Work_logs;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

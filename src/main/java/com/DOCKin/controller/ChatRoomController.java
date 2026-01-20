@@ -2,13 +2,11 @@ package com.DOCKin.controller;
 
 import com.DOCKin.dto.chat.*;
 import com.DOCKin.global.security.auth.CustomUserDetails;
-import com.DOCKin.model.Chat.ChatRooms;
 import com.DOCKin.service.ChatRoomService;
 import com.DOCKin.service.ChatService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -21,8 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
-import java.util.List;
+
 
 @Tag(name="채팅방 관리", description = "채팅방 관리")
 @Slf4j
@@ -53,8 +50,10 @@ public class ChatRoomController {
 
     @Operation(summary="채팅방 상세 조회", description="특정 채팅방 상세 조회")
     @GetMapping("/room/{roomId}")
-    public ResponseEntity<ChatRoomResponseDto> roomInfo(@PathVariable Integer roomId){
-        return ResponseEntity.ok(chatRoomService.getChatRoomsInfo(roomId));
+    public ResponseEntity<ChatRoomResponseDto> roomInfo(@PathVariable Integer roomId,
+                                                        @AuthenticationPrincipal CustomUserDetails customUserDetails){
+        String userId = customUserDetails.getMember().getUserId();
+        return ResponseEntity.ok(chatRoomService.getChatRoomsInfo(userId,roomId));
     }
 
 
@@ -79,10 +78,35 @@ public class ChatRoomController {
         return ResponseEntity.noContent().build();
     }
 
-   /* @Operation(summary="채팅 내역 조회",description = "특정 채팅방의 이전에 보냈던 메시지 조회")
-    @GetMapping("/room/{roomId}/messages")
-    public ResponseEntity<Slice<ChatMessageResponseDto>> getChatMessages(@PathVariable String roomId){
-        return ResponseEntity.ok(Collections.emptyList());
-    } */
+    @Operation(summary="채팅방 나가기",description = "채팅방을 나간다")
+    @DeleteMapping("/room/leave/{roomId}")
+    public ResponseEntity<Void> leaveRoom(@PathVariable Integer roomId,
+                                           @AuthenticationPrincipal CustomUserDetails customUserDetails){
+        String userId = customUserDetails.getMember().getUserId();
+        chatRoomService.leaveChatRoom(roomId,userId);
 
+        return ResponseEntity.noContent().build();
+    }
+
+   @Operation(summary="채팅 내역 조회",description = "특정 채팅방의 메시지를 조회 (입장 시점 이후 메시지만 조회 가능), 무한 스크롤 가능")
+    @GetMapping("/room/{roomId}/messages")
+    public ResponseEntity<Slice<ChatMessageResponseDto>> getChatMessages(@PathVariable Integer roomId,
+                                                                         @AuthenticationPrincipal CustomUserDetails customUserDetails,
+                                                                         @RequestParam(required = false) Long lastMessageId,
+                                                                         @PageableDefault(size = 20, sort = "messageId", direction = Sort.Direction.DESC) Pageable pageable){
+       String userId = customUserDetails.getMember().getUserId();
+        Slice<ChatMessageResponseDto> chatHistory= chatService.getChatHistory(roomId,userId,lastMessageId,pageable);
+        return ResponseEntity.ok(chatHistory);
+    }
+
+    @Operation(summary ="채팅방에서 특정 키워드 조회")
+    @GetMapping("/room/{roomId}/messages/search")
+    public ResponseEntity<Slice<ChatMessageResponseDto>> searchMessages(@PathVariable Integer roomId,
+                                                                        @RequestParam String keyword,
+                                                                        @AuthenticationPrincipal CustomUserDetails customUserDetails,
+                                                                        @PageableDefault(sort = "messageId", direction = Sort.Direction.DESC) Pageable pageable){
+
+        String userId = customUserDetails.getMember().getUserId();
+        return ResponseEntity.ok(chatService.searchMessage(roomId,userId,keyword,pageable));
+    }
 }
