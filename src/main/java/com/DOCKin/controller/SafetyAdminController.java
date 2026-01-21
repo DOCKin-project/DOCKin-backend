@@ -77,4 +77,14 @@ public class SafetyAdminController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "키워드로 검색하기",description = "키워드로 제목이나 내용을 검색할 수 있음")
+    @GetMapping("/courses/search")
+    public ResponseEntity<Page<SafetyCourseResponseDto>> searchByKeyword(String keyword,
+                                                                         @PageableDefault(size= 10,
+                                                                         sort="courseId",
+                                                                         direction=Sort.Direction.DESC)Pageable pageable){
+        return ResponseEntity.ok(safetyCourseService.searchSafetyCourse(keyword,pageable));
+
+    }
+
 }
