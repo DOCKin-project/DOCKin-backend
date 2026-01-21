@@ -2,12 +2,14 @@ package com.DOCKin.controller;
 
 import com.DOCKin.dto.SafetyCourse.SafetyCourseCreateRequestDto;
 import com.DOCKin.dto.SafetyCourse.SafetyCourseResponseDto;
+import com.DOCKin.service.CustomUserDetailsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -32,9 +34,10 @@ public class SafetyAdminController {
     }
 
 
-    @Operation(summary="특정 교육 상세 조회",description = "특정 교육 자료를 조회할 수 있음")
-    @GetMapping("/courses/{courseId}")
-    public ResponseEntity<SafetyCourseResponseDto> getCourseDetail(@PathVariable Integer courseId) {
+    @Operation(summary="특정 작성자가 쓴 교육 상세 조회",description = "특정 작성자가 쓴 교육 자료를 조회할 수 있음")
+    @GetMapping("/courses/{userId}")
+    public ResponseEntity<SafetyCourseResponseDto> getCourseDetail(@PathVariable String userId,
+                                                                   @AuthenticationPrincipal CustomUserDetailsService customUserDetailsService) {
         return ResponseEntity.ok(new SafetyCourseResponseDto());
     }
 
