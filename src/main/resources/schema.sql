@@ -187,6 +187,7 @@ CREATE TABLE safety_courses (
                                 description TEXT NOT NULL,
                                 video_url VARCHAR(255) NOT NULL,
                                 duration_minutes INT DEFAULT 0,
+
                                 is_mandatory BOOLEAN DEFAULT TRUE, -- 필수 이수 여부
                                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );

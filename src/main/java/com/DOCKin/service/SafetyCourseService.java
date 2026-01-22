@@ -52,14 +52,16 @@ public class SafetyCourseService {
     //교육 자료 수정
     @Transactional
     public SafetyCourseResponseDto reviseSafetyCourse(SafetyCourseUpdateRequestDto dto, String userId,Integer courseId){
+        Member member = memberRepository.findByUserId(userId)
+                .orElseThrow(()->new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         SafetyCourse logs = safetyCourseRepository.findById(courseId)
                 .orElseThrow(()->new BusinessException(ErrorCode.SAFETYCOURSE_NOT_FOUND));
 
-               //같은 수정자 인지 확인
-       if(!logs.getCreatedBy().equals(userId)){
-           throw new BusinessException(ErrorCode.SAFETYCOURSE_AUTHOR);
-       }
+        //관리자만 안전교육 수정 가능
+        if(member.getRole()!= UserRole.ADMIN){
+            throw new BusinessException(ErrorCode.SAFETYCOURSE_AUTHOR);
+        }
 
         if(dto.getTitle()!=null){
             logs.setTitle(dto.getTitle());
