@@ -23,16 +23,8 @@ public class ChatRoomRequestDto {
     @NotBlank(message = "채팅방 이름은 필수입니다.")
     private String room_name;
 
-    @Schema(description = "그룹채팅방인지 그냥 1대1채팅방인지", requiredMode = Schema.RequiredMode.REQUIRED)
-    @NotNull
-    private Boolean is_group;
-
-    @Schema(description = "방장 id", requiredMode = Schema.RequiredMode.REQUIRED)
-    @NotNull
-    private String creatorId;
-
     @Schema(description = "참가하는 인원의 사원번호", requiredMode = Schema.RequiredMode.REQUIRED)
-    @Size(min=2, message="채팅방을 생성하려면 본인을 포함해 최소 2명의 참가자가 필요합니다.")
+    @Size(min=1, message="채팅방을 생성하려면 본인을 포함해 최소 1명의 참가자가 필요합니다.")
     private List<String> participantIds;
 
 

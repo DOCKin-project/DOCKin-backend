@@ -12,6 +12,4 @@ public class SafetyWatchStatusRequestDto {
     @Schema(description = "교육 자료 id", example = "101", requiredMode = Schema.RequiredMode.REQUIRED)
     private Integer courseId;
 
-    @Schema(description = "변경할 상태 (WATCHING, WATCHED)", example = "WATCHED", requiredMode = Schema.RequiredMode.REQUIRED)
-    private CompletedLabel status;
 }

@@ -37,7 +37,6 @@ public class ChatRoomService {
     public ChatRoomResponseDto createChatRoom(ChatRoomRequestDto dto, String creatorId){
         ChatRooms rooms = ChatRooms.builder()
                 .roomName(dto.getRoom_name())
-                .isGroup(dto.getIs_group())
                 .creatorId(creatorId)
                 .build();
 

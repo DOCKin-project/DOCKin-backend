@@ -39,7 +39,7 @@ public class SafetyAdminController {
 
     @Operation(summary="전체 교육 자료 조회",description = "전체 교육 자료를 조회할 수 있음")
     @GetMapping("/courses")
-    public ResponseEntity<Page<SafetyCourseResponseDto>> getAllCourses(@PageableDefault(size = 10,
+    public ResponseEntity<Page<SafetyCourseResponseDto>> getAllCourses(@PageableDefault(size = 20,
             sort = "courseId",direction = Sort.Direction.DESC) Pageable pageable) {
         return ResponseEntity.ok(safetyCourseService.readSafetyCourse(pageable));
     }
@@ -49,7 +49,7 @@ public class SafetyAdminController {
     @GetMapping("/courses/user/{userId}")
     public ResponseEntity<Page<SafetyCourseResponseDto>> getCourseDetail(
                                                                    @PathVariable String userId,
-                                                                   @PageableDefault(size = 10,
+                                                                   @PageableDefault(size = 20,
                                                                            sort = "courseId",
                                                                            direction = Sort.Direction.DESC) Pageable pageable) {
         return ResponseEntity.ok(safetyCourseService.searchOtherSafetyCourse(userId,pageable));
@@ -60,9 +60,8 @@ public class SafetyAdminController {
     public ResponseEntity<SafetyCourseResponseDto> updateCourse(@PathVariable Integer courseId,
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
                                                                 @RequestBody SafetyCourseUpdateRequestDto dto) {
-        dto.setCourseId(courseId);
         String userId = customUserDetails.getMember().getUserId();
-        SafetyCourseResponseDto safetyCourse = safetyCourseService.reviseSafetyCourseResponseDto(dto,userId);
+        SafetyCourseResponseDto safetyCourse = safetyCourseService.reviseSafetyCourse(dto,userId,courseId);
         return ResponseEntity.ok(safetyCourse);
     }
 
@@ -78,7 +77,7 @@ public class SafetyAdminController {
     @Operation(summary = "키워드로 검색하기",description = "키워드로 제목이나 내용을 검색할 수 있음")
     @GetMapping("/courses/search")
     public ResponseEntity<Page<SafetyCourseResponseDto>> searchByKeyword(String keyword,
-                                                                         @PageableDefault(size= 10,
+                                                                         @PageableDefault(size= 20,
                                                                          sort="courseId",
                                                                          direction=Sort.Direction.DESC)Pageable pageable){
         return ResponseEntity.ok(safetyCourseService.searchSafetyCourse(keyword,pageable));

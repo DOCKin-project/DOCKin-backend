@@ -1,7 +1,6 @@
 package com.DOCKin.service;
 
 import com.DOCKin.dto.SafetyCourse.CompletedLabel;
-import com.DOCKin.dto.SafetyCourse.SafetyCourseResponseDto;
 import com.DOCKin.dto.SafetyCourse.SafetyCourseWorkerResponseDto;
 import com.DOCKin.dto.SafetyCourse.SafetyWatchStatusRequestDto;
 import com.DOCKin.global.error.BusinessException;
@@ -62,7 +61,7 @@ public class SafetyTrainingService {
                             .status(CompletedLabel.UNWATCHED)
                             .build();
                 });
-        enrollment.updateStatus(dto.getStatus());
+        enrollment.updateStatus();
         safetyEnrollmentRepository.save(enrollment);
 
     }

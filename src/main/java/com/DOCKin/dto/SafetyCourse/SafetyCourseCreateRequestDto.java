@@ -14,11 +14,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Schema(description = "안전 교육 생성 req dto")
 public class SafetyCourseCreateRequestDto {
-    @Schema(description = "교육 자료 id", requiredMode = Schema.RequiredMode.REQUIRED)
-    private Integer courseId;
-
-    @Schema(description = "작성자 id", requiredMode = Schema.RequiredMode.REQUIRED)
-    private String userId;
 
     @Schema(description = "교육 제목", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "교육 제목은 필수입니다.")

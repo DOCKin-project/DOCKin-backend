@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "safety_enrollments")
 @Getter
+@Setter
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
@@ -34,17 +35,16 @@ public class SafetyEnrollment {
     private CompletedLabel status = CompletedLabel.UNWATCHED;
 
     @Column(name = "completion_date")
-    private LocalDateTime completion_date;
+    private LocalDateTime completionDate;
 
     @CreationTimestamp
     @Column(name = "enrolled_at", updatable = false)
     private LocalDateTime enrolledAt;
 
 
-    public void updateStatus(CompletedLabel status){
-        this.status = status;
-        if (status == CompletedLabel.WATCHED) {
-            this.completion_date = LocalDateTime.now();
-        }
+    public void updateStatus(){
+        status = CompletedLabel.WATCHED;
+            this.completionDate = LocalDateTime.now();
+
     }
 }

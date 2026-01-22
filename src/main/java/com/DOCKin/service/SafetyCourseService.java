@@ -10,7 +10,6 @@ import com.DOCKin.model.Member.UserRole;
 import com.DOCKin.model.SafetyCourse.SafetyCourse;
 import com.DOCKin.repository.Member.MemberRepository;
 import com.DOCKin.repository.SafetyCourse.SafetyCourseRepository;
-import com.DOCKin.repository.SafetyCourse.SafetyEnrollmentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -24,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class SafetyCourseService {
     private final SafetyCourseRepository safetyCourseRepository;
-    private final SafetyEnrollmentRepository safetyEnrollmentRepository;
     private final MemberRepository memberRepository;
 
     //교육 자료 등록
@@ -53,15 +51,17 @@ public class SafetyCourseService {
 
     //교육 자료 수정
     @Transactional
-    public SafetyCourseResponseDto reviseSafetyCourseResponseDto(SafetyCourseUpdateRequestDto dto, String userId){
+    public SafetyCourseResponseDto reviseSafetyCourse(SafetyCourseUpdateRequestDto dto, String userId,Integer courseId){
+        Member member = memberRepository.findByUserId(userId)
+                .orElseThrow(()->new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-       SafetyCourse logs = safetyCourseRepository.findById(dto.getCourseId())
-               .orElseThrow(()->new BusinessException(ErrorCode.SAFETYCOURSE_NOT_FOUND));
+        SafetyCourse logs = safetyCourseRepository.findById(courseId)
+                .orElseThrow(()->new BusinessException(ErrorCode.SAFETYCOURSE_NOT_FOUND));
 
-               //같은 수정자 인지 확인
-       if(!dto.getUserId().equals(userId)){
-           throw new BusinessException(ErrorCode.SAFETYCOURSE_AUTHOR);
-       }
+        //관리자만 안전교육 수정 가능
+        if(member.getRole()!= UserRole.ADMIN){
+            throw new BusinessException(ErrorCode.SAFETYCOURSE_AUTHOR);
+        }
 
         if(dto.getTitle()!=null){
             logs.setTitle(dto.getTitle());
