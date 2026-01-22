@@ -56,6 +56,7 @@ CREATE TABLE Authority(
 CREATE TABLE equipment (
                            equipment_id INT PRIMARY KEY AUTO_INCREMENT,
                            name VARCHAR(100),
+                           nfc_tag VARCHAR(100) UNIQUE,
                            qr_code VARCHAR(100) UNIQUE,
                            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -148,6 +149,8 @@ CREATE TABLE chat_rooms (
                             room_name VARCHAR(100), -- 단체방 이름 (1:1 방은 NULL 가능)
                             is_group BOOLEAN DEFAULT FALSE, -- 단체방 여부 (TRUE: 단체, FALSE: 1:1),
                             creator_id VARCHAR(50),
+                            last_message_content TEXT,
+                            last_message_at DATETIME,
                             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -193,7 +196,7 @@ CREATE TABLE safety_enrollments (
                                     enrollment_id INT PRIMARY KEY AUTO_INCREMENT,
                                     user_id VARCHAR(50) NOT NULL,
                                     course_id INT NOT NULL,
-                                    is_completed BOOLEAN DEFAULT FALSE,
+                                    status VARCHAR(20) NOT NULL DEFAULT 'UNWATCHED',
                                     completion_date DATETIME, -- 이수 완료 시각 (NULL이면 미이수)
                                     enrolled_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                                     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
