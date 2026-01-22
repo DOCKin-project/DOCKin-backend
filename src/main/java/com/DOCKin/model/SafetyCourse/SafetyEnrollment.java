@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "safety_enrollments")
 @Getter
+@Setter
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
@@ -41,10 +42,9 @@ public class SafetyEnrollment {
     private LocalDateTime enrolledAt;
 
 
-    public void updateStatus(CompletedLabel status){
-        this.status = status;
-        if (status == CompletedLabel.WATCHED) {
+    public void updateStatus(){
+        status = CompletedLabel.WATCHED;
             this.completionDate = LocalDateTime.now();
-        }
+
     }
 }

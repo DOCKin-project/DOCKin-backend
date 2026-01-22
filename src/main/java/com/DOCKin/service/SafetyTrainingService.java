@@ -61,7 +61,7 @@ public class SafetyTrainingService {
                             .status(CompletedLabel.UNWATCHED)
                             .build();
                 });
-        enrollment.updateStatus(dto.getStatus());
+        enrollment.updateStatus();
         safetyEnrollmentRepository.save(enrollment);
 
     }
