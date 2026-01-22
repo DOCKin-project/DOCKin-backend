@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(description = "안전 교육 상세 정보 rse dto")
+@Schema(description = "안전 교육 상세 정보 res dto")
 public class SafetyCourseResponseDto {
     @Schema(description = "교육 자료 id", example = "101", requiredMode = Schema.RequiredMode.REQUIRED)
     private Integer courseId;
