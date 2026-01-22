@@ -60,9 +60,8 @@ public class SafetyAdminController {
     public ResponseEntity<SafetyCourseResponseDto> updateCourse(@PathVariable Integer courseId,
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
                                                                 @RequestBody SafetyCourseUpdateRequestDto dto) {
-        dto.setCourseId(courseId);
         String userId = customUserDetails.getMember().getUserId();
-        SafetyCourseResponseDto safetyCourse = safetyCourseService.reviseSafetyCourseResponseDto(dto,userId);
+        SafetyCourseResponseDto safetyCourse = safetyCourseService.reviseSafetyCourse(dto,userId,courseId);
         return ResponseEntity.ok(safetyCourse);
     }
 

@@ -51,13 +51,13 @@ public class SafetyCourseService {
 
     //교육 자료 수정
     @Transactional
-    public SafetyCourseResponseDto reviseSafetyCourseResponseDto(SafetyCourseUpdateRequestDto dto, String userId){
+    public SafetyCourseResponseDto reviseSafetyCourse(SafetyCourseUpdateRequestDto dto, String userId,Integer courseId){
 
-       SafetyCourse logs = safetyCourseRepository.findById(dto.getCourseId())
-               .orElseThrow(()->new BusinessException(ErrorCode.SAFETYCOURSE_NOT_FOUND));
+        SafetyCourse logs = safetyCourseRepository.findById(courseId)
+                .orElseThrow(()->new BusinessException(ErrorCode.SAFETYCOURSE_NOT_FOUND));
 
                //같은 수정자 인지 확인
-       if(!dto.getUserId().equals(userId)){
+       if(!logs.getCreatedBy().equals(userId)){
            throw new BusinessException(ErrorCode.SAFETYCOURSE_AUTHOR);
        }
 
