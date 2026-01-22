@@ -1,7 +1,12 @@
 package com.DOCKin.controller;
 
 import com.DOCKin.dto.SafetyCourse.SafetyCourseResponseDto;
+import com.DOCKin.dto.SafetyCourse.SafetyCourseWorkerResponseDto;
+import com.DOCKin.dto.SafetyCourse.SafetyWatchStatusRequestDto;
+import com.DOCKin.global.security.auth.CustomUserDetails;
+import com.DOCKin.repository.SafetyCourse.SafetyEnrollmentRepository;
 import com.DOCKin.service.SafetyCourseService;
+import com.DOCKin.service.SafetyTrainingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,16 +29,21 @@ import java.util.List;
 public class SafetyUserController {
 
     private final SafetyCourseService safetyCourseService;
+    private final SafetyTrainingService safetyTrainingService;
 
     @Operation(summary="미이수 영상 조회", description = "사용자의 미이수 영상을 조회해줌")
     @GetMapping("/training/uncompleted")
-    public ResponseEntity<List<SafetyCourseResponseDto>> getUncompletedVideos() {
-        return ResponseEntity.ok(null);
+    public ResponseEntity<List<SafetyCourseWorkerResponseDto>> getUncompletedVideos(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
+        String userId = customUserDetails.getMember().getUserId();
+        return ResponseEntity.ok(safetyTrainingService.searchUnwatchedVideo(userId));
     }
 
     @Operation(summary="영상 조회 완료", description="사용자가 영상 조회를 완료했는지 확인해줌")
-    @PostMapping("/training/complete/{videoId}")
-    public ResponseEntity<Void> completeCourse(@PathVariable("videoId") Long videoId) {
+    @PutMapping("/training/complete/{videoId}")
+    public ResponseEntity<Void> completeCourse(@AuthenticationPrincipal CustomUserDetails customUserDetails,
+                                               @RequestBody SafetyWatchStatusRequestDto dto) {
+        String userId = customUserDetails.getMember().getUserId();
+        safetyTrainingService.completedViewVideo(userId,dto);
         return ResponseEntity.noContent().build();
     }
 
