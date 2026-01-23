@@ -34,7 +34,10 @@ public enum ErrorCode {
 
     // Worklog
     LOG_NOT_FOUND(404, "W001", "존재하지 않는 작업 일지입니다."),
-    NOT_LOG_AUTHOR(403, "W002", "해당 일지의 작성자가 아닙니다.");
+    NOT_LOG_AUTHOR(403, "W002", "해당 일지의 작성자가 아닙니다."),
+    NOT_COMMENT_AUTHOR(403, "W003", "해당 댓글의 권한이 아닙니다."),
+    COMMENT_NOT_FOUND(404, "W004", "존재하지 않는 댓글입니다.");
+
 
     private final int status;
     private final String code;

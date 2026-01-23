@@ -1,11 +1,13 @@
 package com.DOCKin.model.WorkLogs;
 
+import com.DOCKin.model.Member.Member;
 import jakarta.persistence.*;
 import lombok.*;
-import org.joda.time.LocalDateTime;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Builder
@@ -21,12 +23,12 @@ public class Comment {
     private Long commentId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @Column(name = "log_id",nullable = false)
-    private Integer logId;
+    @JoinColumn(name = "log_id",nullable = false)
+    private Work_logs logId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @Column(name = "user_id",nullable = false)
-    private String userId;
+    @JoinColumn(name = "user_id",nullable = false)
+    private Member userId;
 
     @Column(name="content", nullable = false, columnDefinition = "TEXT")
     private String content;
@@ -39,4 +41,7 @@ public class Comment {
     @Column(name="updated_at")
     private LocalDateTime updatedAt;
 
+    public void updateContent(String content){
+        this.content = content;
+    }
 }
