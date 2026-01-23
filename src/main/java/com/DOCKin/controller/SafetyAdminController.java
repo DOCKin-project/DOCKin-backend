@@ -7,6 +7,7 @@ import com.DOCKin.global.security.auth.CustomUserDetails;
 import com.DOCKin.service.SafetyCourseService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -30,7 +31,7 @@ public class SafetyAdminController {
 
     @Operation(summary="교육 자료 등록",description = "교육 자료를 등록할 수 있음")
     @PostMapping("/courses")
-    public ResponseEntity<SafetyCourseResponseDto> createCourse(@RequestBody SafetyCourseCreateRequestDto dto,
+    public ResponseEntity<SafetyCourseResponseDto> createCourse(@Valid @RequestBody SafetyCourseCreateRequestDto dto,
                                                                 @AuthenticationPrincipal CustomUserDetails customUserDetails) {
         String creatorId = customUserDetails.getMember().getUserId();
         SafetyCourseResponseDto safetyCourse = safetyCourseService.createSafetyCourseResponse(dto,creatorId);
@@ -59,7 +60,7 @@ public class SafetyAdminController {
     @PutMapping("/courses/{courseId}")
     public ResponseEntity<SafetyCourseResponseDto> updateCourse(@PathVariable Integer courseId,
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
-                                                                @RequestBody SafetyCourseUpdateRequestDto dto) {
+                                                               @Valid @RequestBody SafetyCourseUpdateRequestDto dto) {
         String userId = customUserDetails.getMember().getUserId();
         SafetyCourseResponseDto safetyCourse = safetyCourseService.reviseSafetyCourse(dto,userId,courseId);
         return ResponseEntity.ok(safetyCourse);

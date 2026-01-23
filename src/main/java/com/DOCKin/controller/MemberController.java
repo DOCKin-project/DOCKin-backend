@@ -32,7 +32,7 @@ public class MemberController {
 
     @Operation(summary="로그아웃",description = "로그아웃을 할 수 있음")
     @PostMapping("/logout")
-    public ResponseEntity<Void> Logout(@RequestBody LogOutRequestDto dto){
+    public ResponseEntity<Void> Logout(@Valid @RequestBody LogOutRequestDto dto){
         memberService.logout(dto);
         return ResponseEntity.noContent().build();
     }

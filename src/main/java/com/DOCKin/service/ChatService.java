@@ -57,7 +57,7 @@ public class ChatService {
     //이전 채팅 내역 불러오기
     @Transactional(readOnly = true)
     public Slice<ChatMessageResponseDto> getChatHistory(Integer roomId,String userId, Long lastMessageId,Pageable pageable){
-       ChatMembers memberInfo = chatMembersRepository.findByChatRooms_RoomIdAndMember_UserId(roomId,userId)
+       ChatMembers memberInfo = chatMembersRepository.findByChatRoomsRoomIdAndMemberUserId(roomId,userId)
                .orElseThrow(()->new BusinessException(ErrorCode.CHATROOM_NOT_FOUND));
 
        Slice<ChatMessages> messages = chatMessagesRepository.findChatHistory(
@@ -72,7 +72,7 @@ public class ChatService {
     //메시지 검색
     @Transactional(readOnly = true)
     public Slice<ChatMessageResponseDto> searchMessage(Integer roomId, String userId ,String keyword ,Pageable pageable){
-        ChatMembers members = chatMembersRepository.findByChatRooms_RoomIdAndMember_UserId(roomId,userId)
+        ChatMembers members = chatMembersRepository.findByChatRoomsRoomIdAndMemberUserId(roomId,userId)
                 .orElseThrow(()->new BusinessException(ErrorCode.CHATMEMBER_NOT_FOUND));
 
         Slice<ChatMessages> messages = chatMessagesRepository

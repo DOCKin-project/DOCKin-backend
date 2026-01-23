@@ -8,6 +8,7 @@ import com.DOCKin.service.SafetyCourseService;
 import com.DOCKin.service.SafetyTrainingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -40,7 +41,7 @@ public class SafetyUserController {
     @Operation(summary="영상 조회 완료", description="사용자가 영상 조회를 완료했는지 확인해줌")
     @PatchMapping("/training/complete")
     public ResponseEntity<Void> completeCourse(@AuthenticationPrincipal CustomUserDetails customUserDetails,
-                                               @RequestBody SafetyWatchStatusRequestDto dto) {
+                                               @Valid @RequestBody SafetyWatchStatusRequestDto dto) {
         String userId = customUserDetails.getMember().getUserId();
         safetyTrainingService.completedViewVideo(userId,dto);
         return ResponseEntity.noContent().build();

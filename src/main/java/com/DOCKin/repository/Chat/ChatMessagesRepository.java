@@ -38,6 +38,6 @@ public interface ChatMessagesRepository extends JpaRepository<ChatMessages, Long
     @Query("SELECT COUNT(m) FROM ChatMessages m "+
     "WHERE m.chatRooms.roomId = :roomId "+
     "AND m.sentAt > :lastReadTime")
-    long countByChatRooms_RoomIdAndCreatedAtAfter(@Param("roomId") Integer roomId,
+    long countByChatRoomsRoomIdAndCreatedAtAfter(@Param("roomId") Integer roomId,
                                                   @Param("lastReadTime") LocalDateTime lastReadTime);
 }

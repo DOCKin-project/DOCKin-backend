@@ -7,6 +7,7 @@ import com.DOCKin.global.security.auth.CustomUserDetails;
 import com.DOCKin.service.AttendanceService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +27,7 @@ public class AttendanceController {
     @Operation(summary="출근하기",description = "근무자가 어디서 출근했는지 찍힘")
     @PostMapping("/in")
     public ResponseEntity<AttendanceDto>ClockIn(@AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestBody ClockInRequestDto request){
+           @Valid @RequestBody ClockInRequestDto request){
         String userId = userDetails.getMember().getUserId();
         AttendanceDto response =attendanceService.clockin(userId,request);
         return ResponseEntity.ok(response);
@@ -35,7 +36,7 @@ public class AttendanceController {
     @Operation(summary="퇴근하기",description = "근무자가 어디서 퇴근했는지 찍힘")
     @PostMapping("/out")
     public ResponseEntity<AttendanceDto>ClockOut(@AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestBody ClockOutRequestDto request){
+            @Valid @RequestBody ClockOutRequestDto request){
       String userId = userDetails.getMember().getUserId();
         AttendanceDto response = attendanceService.clockout(userId,request);
         return ResponseEntity.ok(response);
