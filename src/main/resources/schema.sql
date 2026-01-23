@@ -75,7 +75,34 @@ CREATE TABLE work_logs (
                            FOREIGN KEY (user_id) REFERENCES users(user_id),
                            FOREIGN KEY (equipment_id) REFERENCES equipment(equipment_id)
 );
--- 5. 체크리스트
+
+-- 5. 작업 일지 댓글
+-- 현장 파트장이나 동료가 작업 일지에 피드백이나 지시사항을 남길 때 사용
+CREATE TABLE work_log_comments (
+                                   comment_id INT PRIMARY KEY AUTO_INCREMENT,
+                                   log_id INT NOT NULL,               -- 어떤 일지의 댓글인지
+                                   user_id VARCHAR(50) NOT NULL,      -- 작성자
+                                   content TEXT NOT NULL,             -- 댓글 내용
+                                   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                                   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                                   FOREIGN KEY (log_id) REFERENCES work_logs(log_id) ON DELETE CASCADE,
+                                   FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
+-- 6. 작업 일지 열람 기록
+-- 조선소 현장에서 누가 이 일지를 확인했는지 체크
+CREATE TABLE work_log_views (
+                                view_id INT PRIMARY KEY AUTO_INCREMENT,
+                                log_id INT NOT NULL,               -- 읽은 일지 ID
+                                user_id VARCHAR(50) NOT NULL,      -- 읽은 사람 ID
+                                viewed_at DATETIME DEFAULT CURRENT_TIMESTAMP, -- 읽은 시간
+                                FOREIGN KEY (log_id) REFERENCES work_logs(log_id) ON DELETE CASCADE,
+                                FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    -- 동일인이 한 일지를 여러 번 읽어도 기록은 하나만 남도록 유니크 설정
+                                UNIQUE KEY uk_user_log_view (log_id, user_id)
+);
+
+-- 7. 체크리스트
 CREATE TABLE checklists (
                             checklist_id INT PRIMARY KEY AUTO_INCREMENT,
                             equipment_id INT NOT NULL,
@@ -86,7 +113,7 @@ CREATE TABLE checklists (
                             FOREIGN KEY (equipment_id) REFERENCES equipment(equipment_id)
 );
 
--- 6. 체크리스트 항목
+-- 8. 체크리스트 항목
 CREATE TABLE checklist_items (
                                  item_id INT PRIMARY KEY AUTO_INCREMENT,
                                  checklist_id INT NOT NULL,
@@ -95,7 +122,7 @@ CREATE TABLE checklist_items (
                                  FOREIGN KEY (checklist_id) REFERENCES checklists(checklist_id)
 );
 
--- 7. 체크리스트 결과
+-- 9. 체크리스트 결과
 CREATE TABLE checklist_results (
                                    result_id INT PRIMARY KEY AUTO_INCREMENT,
                                    checklist_id INT NOT NULL,
@@ -109,7 +136,7 @@ CREATE TABLE checklist_results (
 );
 
 
--- 9. 근태 관리 테이블
+-- 10. 근태 관리 테이블
 CREATE TABLE attendance (
                             id BIGINT PRIMARY KEY AUTO_INCREMENT,
                             user_id VARCHAR(50) NOT NULL,
@@ -124,7 +151,7 @@ CREATE TABLE attendance (
                             INDEX idx_work_date (work_date)
 );
 
--- 10. 근태 요청 (병결/휴가 서류 등록)
+-- 11. 근태 요청 (병결/휴가 서류 등록)
 CREATE TABLE absence_requests (
                                   request_id INT PRIMARY KEY AUTO_INCREMENT,
                                   user_id VARCHAR(50) NOT NULL,
@@ -143,7 +170,7 @@ CREATE TABLE absence_requests (
                                   FOREIGN KEY (processed_by) REFERENCES users(user_id)
 );
 
--- 11. 채팅방 정보
+-- 12. 채팅방 정보
 CREATE TABLE chat_rooms (
                             room_id INT PRIMARY KEY AUTO_INCREMENT,
                             room_name VARCHAR(100), -- 단체방 이름 (1:1 방은 NULL 가능)
@@ -154,7 +181,7 @@ CREATE TABLE chat_rooms (
                             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- 12. 채팅방 참여자
+-- 13. 채팅방 참여자
 CREATE TABLE chat_members (
                               id INT PRIMARY KEY AUTO_INCREMENT,
                               room_id INT NOT NULL,
@@ -165,7 +192,7 @@ CREATE TABLE chat_members (
                               FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
--- 13. 채팅 메시지
+-- 14. 채팅 메시지
 CREATE TABLE chat_messages (
                                message_id BIGINT PRIMARY KEY AUTO_INCREMENT,
                                room_id INT NOT NULL,
