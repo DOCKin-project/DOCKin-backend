@@ -14,19 +14,19 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ChatMembersRepository extends JpaRepository<ChatMembers,Integer> {
-boolean existsByChatRoomsAndMember_UserId(ChatRooms chatRooms, String userId);
+boolean existsByChatRoomsAndMemberUserId(ChatRooms chatRooms, String userId);
 
 @Modifying
     @Transactional
-    void deleteByChatRoomsAndMember_UserId(ChatRooms chatRooms,String userId);
+    void deleteByChatRoomsAndMemberUserId(ChatRooms chatRooms,String userId);
 
     long countByChatRooms(ChatRooms rooms);
 
-    Optional<ChatMembers> findByChatRooms_RoomIdAndMember_UserId(Integer roomId, String userId);
+    Optional<ChatMembers> findByChatRoomsRoomIdAndMemberUserId(Integer roomId, String userId);
 
-    boolean existsByChatRooms_RoomIdAndMember_UserId(Integer roomId, String userId);
+    boolean existsByChatRoomsRoomIdAndMemberUserId(Integer roomId, String userId);
 
-    List<ChatMembers> findByChatRooms_RoomId(Integer roomId);
+    List<ChatMembers> findByChatRoomsRoomId(Integer roomId);
 
     @Modifying @Transactional
     @Query(value = "UPDATE chat_members SET last_read_time = NOW() WHERE room_id = :roomId AND user_id = :userId", nativeQuery = true)

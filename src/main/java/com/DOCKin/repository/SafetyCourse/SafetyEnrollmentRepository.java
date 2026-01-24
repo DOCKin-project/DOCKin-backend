@@ -9,7 +9,7 @@ import java.util.Optional;
 
 public interface SafetyEnrollmentRepository extends JpaRepository<SafetyEnrollment, Integer> {
 
-    List<SafetyEnrollment> findAllByUserId_UserId(String userId);
+    List<SafetyEnrollment> findAllByUserIdUserId(String userId);
 
-    Optional<SafetyEnrollment> findByUserId_UserIdAndCourseId_CourseId(String userId, Integer courseId);
+    Optional<SafetyEnrollment> findByUserIdUserIdAndCourseIdCourseId(String userId, Integer courseId);
 }

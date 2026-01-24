@@ -69,10 +69,10 @@ public class ChatRoomService {
         Page<ChatRooms> chatRoomsPage = chatRoomsRepository.findByMembers(member,pageable);
 
         return chatRoomsPage.map(room ->{
-            ChatMembers participant = chatMembersRepository.findByChatRooms_RoomIdAndMember_UserId(room.getRoomId(),userId)
+            ChatMembers participant = chatMembersRepository.findByChatRoomsRoomIdAndMemberUserId(room.getRoomId(),userId)
                     .orElseThrow(()->new BusinessException(ErrorCode.CHATMEMBER_NOT_FOUND));
 
-            long unreadCount = chatMessagesRepository.countByChatRooms_RoomIdAndCreatedAtAfter(
+            long unreadCount = chatMessagesRepository.countByChatRoomsRoomIdAndCreatedAtAfter(
                     room.getRoomId(),
                     participant.getLastReadTime()
             );
@@ -94,7 +94,7 @@ public class ChatRoomService {
                 .orElseThrow(()->new BusinessException(ErrorCode.CHATROOM_NOT_FOUND));
 
         //읽음 처리 업데이트
-        ChatMembers participant = chatMembersRepository.findByChatRooms_RoomIdAndMember_UserId(roomId, userId)
+        ChatMembers participant = chatMembersRepository.findByChatRoomsRoomIdAndMemberUserId(roomId, userId)
                 .orElseThrow(()->new BusinessException(ErrorCode.CHATMEMBER_NOT_FOUND));
 
         participant.updateLastReadTime(LocalDateTime.now());
@@ -106,7 +106,7 @@ public class ChatRoomService {
     @Transactional(readOnly = true)
     public void validChatRoomMember(String userId, Integer roomId){
 
-        boolean isMember = chatMembersRepository.existsByChatRooms_RoomIdAndMember_UserId(roomId, userId);
+        boolean isMember = chatMembersRepository.existsByChatRoomsRoomIdAndMemberUserId(roomId, userId);
         if(!isMember){
             throw new BusinessException(ErrorCode.CHATROOM_AUTHOR);
         }
@@ -134,7 +134,7 @@ public class ChatRoomService {
         if(dto.getRemoveParticipantIds()!=null){
             dto.getRemoveParticipantIds().forEach(removeId->{
                 if(!removeId.equals(rooms.getCreatorId())){
-                    chatMembersRepository.deleteByChatRoomsAndMember_UserId(rooms,removeId);
+                    chatMembersRepository.deleteByChatRoomsAndMemberUserId(rooms,removeId);
                     rooms.removeMember(removeId);
                 }
                 rooms.getMembers().removeIf(m -> m.getMember().getUserId().equals(removeId));
@@ -145,7 +145,7 @@ public class ChatRoomService {
         //새로운 멤버 추가
         if(dto.getAddParticipantIds()!=null){
             dto.getAddParticipantIds().forEach(addId->{
-                boolean isAlreadyMember = chatMembersRepository.existsByChatRoomsAndMember_UserId(rooms,addId);
+                boolean isAlreadyMember = chatMembersRepository.existsByChatRoomsAndMemberUserId(rooms,addId);
                 if(!isAlreadyMember){
                     saveMember(rooms,addId);
                 }
@@ -181,7 +181,7 @@ public class ChatRoomService {
     public void leaveChatRoom(Integer chatRoomId, String userId){
         ChatRooms room = chatRoomsRepository.findById(chatRoomId)
                 .orElseThrow(()->new BusinessException(ErrorCode.CHATROOM_NOT_FOUND));
-        chatMembersRepository.deleteByChatRoomsAndMember_UserId(room,userId);
+        chatMembersRepository.deleteByChatRoomsAndMemberUserId(room,userId);
         long memberCount = chatMembersRepository.countByChatRooms(room);
         if(memberCount==0){
             chatRoomsRepository.delete(room);
@@ -208,7 +208,7 @@ public class ChatRoomService {
     //각 멤버에게 라우팅
     @Transactional(readOnly = true)
     public List<String> getParticipantsIds(Integer roomId){
-        return chatMembersRepository.findByChatRooms_RoomId(roomId)
+        return chatMembersRepository.findByChatRoomsRoomId(roomId)
                 .stream()
                 .map(chatMember->chatMember.getMember().getUserId())
                 .collect(Collectors.toList());

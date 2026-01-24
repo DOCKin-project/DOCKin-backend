@@ -29,7 +29,7 @@ public class SafetyTrainingService {
     @Transactional(readOnly = true)
     public List<SafetyCourseWorkerResponseDto> searchUnwatchedVideo(String userId){
         List<SafetyCourse> safetyCourses= safetyCourseRepository.findAll();
-        List<SafetyEnrollment> safetyEnrollments= safetyEnrollmentRepository.findAllByUserId_UserId(userId);
+        List<SafetyEnrollment> safetyEnrollments= safetyEnrollmentRepository.findAllByUserIdUserId(userId);
 
         return safetyCourses.stream().map(
                 course->{
@@ -48,7 +48,7 @@ public class SafetyTrainingService {
     @Transactional
     public void completedViewVideo(String userId,SafetyWatchStatusRequestDto dto){
         SafetyEnrollment enrollment =safetyEnrollmentRepository.
-                findByUserId_UserIdAndCourseId_CourseId(userId,dto.getCourseId())
+                findByUserIdUserIdAndCourseIdCourseId(userId,dto.getCourseId())
                 .orElseGet(()->{
                     Member member =memberRepository.findByUserId(userId)
                             .orElseThrow(()->new BusinessException(ErrorCode.USER_NOT_FOUND));
