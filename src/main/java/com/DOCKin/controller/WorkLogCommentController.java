@@ -4,7 +4,6 @@ import com.DOCKin.dto.WorkLogs.comment.CommentCreateRequestDto;
 import com.DOCKin.dto.WorkLogs.comment.CommentResponseDto;
 import com.DOCKin.dto.WorkLogs.comment.CommentUpdateRequestDto;
 import com.DOCKin.global.security.auth.CustomUserDetails;
-import com.DOCKin.model.WorkLogs.Comment;
 import com.DOCKin.service.CommentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -49,8 +48,8 @@ public class WorkLogCommentController {
     @Operation(summary="관리자 댓글 조회",description = "관리자가 쓴 댓글을 볼 수 있음")
     @GetMapping
     public ResponseEntity<List<CommentResponseDto>> getComment(@AuthenticationPrincipal CustomUserDetails customUserDetails,
-                                                               @PathVariable Long lodId){
-        List<CommentResponseDto> comment = commentService.readComment(lodId);
+                                                               @PathVariable Long logId){
+        List<CommentResponseDto> comment = commentService.readComment(logId);
         return ResponseEntity.ok(comment);
     }
 
