@@ -238,3 +238,14 @@ CREATE TABLE refresh_token (
                                token VARCHAR(512) NOT NULL, -- JWT는 길기 때문에 길이를 충분히 줍니다.
                                PRIMARY KEY (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 18. 챗봇
+CREATE TABLE chat_history (
+                              id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                              user_id VARCHAR(50),                  -- 어떤 사용자가 질문했는지 (추가 권장)
+                              trace_id VARCHAR(255),                -- API 추적용 ID
+                              user_query TEXT NOT NULL,             -- 사용자의 질문 내용 (추가 필수)
+                              reply TEXT,                           -- 챗봇의 답변 내용
+                              created_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
+                              FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);

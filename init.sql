@@ -496,3 +496,22 @@ UNLOCK TABLES;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
 -- Dump completed on 2026-01-08  8:37:53
+
+       --
+-- Table structure for table `chat_history`
+--
+
+DROP TABLE IF EXISTS `chat_history`;
+
+CREATE TABLE `chat_history` (
+                                `id` bigint NOT NULL AUTO_INCREMENT,
+                                `user_id` varchar(50) DEFAULT NULL,        -- 질문한 사용자 ID
+                                `trace_id` varchar(255) DEFAULT NULL,      -- 대화 추적용 ID
+                                `user_query` text NOT NULL,                -- 사용자가 보낸 질문 내용 (추가)
+                                `reply` text NOT NULL,                     -- 챗봇이 보낸 답변 내용
+                                `created_at` datetime(6) DEFAULT CURRENT_TIMESTAMP(6), -- 정확한 시각을 위해 (6) 권장
+                                PRIMARY KEY (`id`),
+                                KEY `fk_chat_user` (`user_id`),
+    -- 사용자가 삭제되면 해당 사용자의 대화 내역도 삭제되도록 설정
+                                CONSTRAINT `fk_chat_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
