@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Mono;
 
 @Tag(name = "Fast api 통신용")
 @RequiredArgsConstructor
@@ -25,12 +26,13 @@ public class AiController {
 
     @Operation(summary = "챗봇",description = "fast api에서 챗봇 json을 받는다")
     @PostMapping("/chatbot")
-    public ResponseEntity<ChatDomain.Response> chatBot(@AuthenticationPrincipal CustomUserDetails customUserDetails,
-                                                       @Valid @RequestBody ChatDomain.Request request){
+    public Mono<ChatDomain.Response> chatBot(@AuthenticationPrincipal CustomUserDetails customUserDetails,
+                                             @Valid @RequestBody ChatDomain.Request request){
         String userId = customUserDetails.getMember().getUserId();
-        ChatDomain.Response response = chatBotService.chatBotFromSpringToFastApi(request,userId);
-        return ResponseEntity.ok(response);
+        return chatBotService.chatBotFromSpringToFastApi(request,userId);
     }
+
+
 
 
 }
