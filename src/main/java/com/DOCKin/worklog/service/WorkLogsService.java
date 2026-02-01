@@ -42,6 +42,7 @@ public class WorkLogsService {
                 .logText(dto.getLogText())
                 .imageUrl(dto.getImageUrl())
                 .equipment(equipment)
+                .audioFileUrl(dto.getAudioFileUrl())
                 .member(member)
                 .build();
 

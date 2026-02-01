@@ -1,5 +1,7 @@
 package com.DOCKin.worklog.controller;
 
+import com.DOCKin.ai.dto.SttDomain;
+import com.DOCKin.ai.service.SttService;
 import com.DOCKin.worklog.dto.WorkLogsCreateRequestDto;
 import com.DOCKin.worklog.dto.WorkLogsUpdateRequestDto;
 import com.DOCKin.worklog.dto.Work_logsDto;
@@ -14,10 +16,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import reactor.core.publisher.Mono;
 
 
 @Tag(name="작업일지 CRUD",description = "작업일지 CRUD가 가능함")
@@ -27,6 +33,19 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/work-logs")
 public class WorkLogsController {
     private final WorkLogsService workLogsService;
+    private final SttService sttService;
+
+    @Operation(summary="작업일지 stt 전달용",description = "음성을 text로 변경")
+    @PostMapping(value="/speech-to-text", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public Mono<SttDomain.Response> convertSpeech(
+            @RequestPart("file")MultipartFile file,
+            @RequestParam("traceID") String traceId,
+            @AuthenticationPrincipal CustomUserDetails customUserDetails,
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String token){
+        log.info("STT 요청자: {}",customUserDetails.getUsername());
+
+        return sttService.processStt(file,traceId,token,"ko");
+    }
 
     @Operation(summary="특정 작업자 작업일지 생성",description = "특정 작업자의 작업일지를 생성해줌")
     @PostMapping
