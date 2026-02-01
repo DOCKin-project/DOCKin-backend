@@ -1,15 +1,22 @@
 package com.DOCKin.ai.dto;
 
 public class TranslateDomain{
-    public record Request(   String text,
+    public record Request(
                              String source,
                              String target,
                              String traceId){}
 
+    public record ApiRequest(
+            String text,
+            String source,
+            String target,
+            String traceId
+    ){}
+
     public record Response(
-            String traceId,
-            Result result
-    ){
-        public record Result(String translated){}
-    }
+            String title,
+            String content,
+            String model,
+            String traceId
+    ){}
 }

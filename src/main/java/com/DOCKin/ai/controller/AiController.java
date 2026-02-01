@@ -23,27 +23,34 @@ import reactor.core.publisher.Mono;
 public class AiController {
     private final fastApiService chatBotService;
 
-    @Operation(summary = "챗봇",description = "fast api에서 챗봇 json을 받는다")
+    @Operation(summary = "챗봇", description = "fast api에서 챗봇 json을 받는다")
     @PostMapping("/chatbot")
     public ChatDomain.Response chatBot(@AuthenticationPrincipal CustomUserDetails customUserDetails,
-                                             @Valid @RequestBody ChatDomain.Request request){
+                                       @Valid @RequestBody ChatDomain.Request request) {
 
-        if (customUserDetails == null) {
-            throw new BusinessException(ErrorCode.UNAUTHORIZED);
-        }
+        if (customUserDetails == null) throw new BusinessException(ErrorCode.UNAUTHORIZED);
         String userId = customUserDetails.getMember().getUserId();
-        return chatBotService.chatBotFromSpringToFastApi(request,userId).block();
+
+        // 1. 통신 결과 대기 (.block)
+        ChatDomain.Response response = chatBotService.chatBotFromSpringToFastApi(request, userId).block();
+
+        // 2. 현재 스레드(인증정보 있음)에서 DB 저장 호출
+        chatBotService.saveChatLog(request, response, userId);
+
+        return response;
     }
 
-    @Operation(summary="작업일지 번역",description = "fast api에서 작업일지 번역을 받는다")
+    @Operation(summary = "작업일지 번역", description = "fast api에서 작업일지 번역을 받는다")
     @PostMapping("/translate/{logId}")
     public TranslateDomain.Response translateWorklog(@AuthenticationPrincipal CustomUserDetails customUserDetails,
-                                                           @Valid @RequestBody TranslateDomain.Request request,
-                                                           @PathVariable Long logId){
+                                                     @Valid @RequestBody TranslateDomain.Request request,
+                                                     @PathVariable Long logId) {
+
+        if (customUserDetails == null) throw new BusinessException(ErrorCode.UNAUTHORIZED);
         String userId = customUserDetails.getMember().getUserId();
-        return  chatBotService.translateLogFromSpringToFastApi(logId,request,userId).block();
+
+        TranslateDomain.Response response = chatBotService.saveTranslateLog(logId,request,userId);
+
+        return response;
     }
-
-
-
 }

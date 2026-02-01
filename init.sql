@@ -505,13 +505,33 @@ DROP TABLE IF EXISTS `chat_history`;
 
 CREATE TABLE `chat_history` (
                                 `id` bigint NOT NULL AUTO_INCREMENT,
-                                `user_id` varchar(50) DEFAULT NULL,        -- 질문한 사용자 ID
-                                `trace_id` varchar(255) DEFAULT NULL,      -- 대화 추적용 ID
-                                `user_query` text NOT NULL,                -- 사용자가 보낸 질문 내용 (추가)
-                                `reply` text NOT NULL,                     -- 챗봇이 보낸 답변 내용
-                                `created_at` datetime(6) DEFAULT CURRENT_TIMESTAMP(6), -- 정확한 시각을 위해 (6) 권장
+                                `user_id` varchar(50) DEFAULT NULL,
+                                `trace_id` varchar(255) DEFAULT NULL,
+                                `user_query` text NOT NULL,
+                                `reply` text NOT NULL,
+                                `created_at` datetime(6) DEFAULT CURRENT_TIMESTAMP(6),
                                 PRIMARY KEY (`id`),
                                 KEY `fk_chat_user` (`user_id`),
-    -- 사용자가 삭제되면 해당 사용자의 대화 내역도 삭제되도록 설정
+                                KEY `idx_trace_id` (`trace_id`), -- 추적용 ID로 빠르게 찾기 위해 추가
                                 CONSTRAINT `fk_chat_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+DROP TABLE IF EXISTS `translate_logs`;
+
+CREATE TABLE `translate_logs` (
+                                  `id` bigint NOT NULL AUTO_INCREMENT,
+                                  `log_id` int NOT NULL,                   -- work_logs 테이블 참조
+                                  `user_id` varchar(50) DEFAULT NULL,      -- 번역 요청자
+                                  `trace_id` varchar(255) DEFAULT NULL,    -- 로그 추적 ID
+                                  `target_lang` varchar(10) NOT NULL,      -- 목적 언어 (en, th 등)
+                                  `original_title` varchar(256),           -- 원문 제목 (추가)
+                                  `translated_title` varchar(256),         -- 번역된 제목 (추가)
+                                  `original_text` text NOT NULL,           -- 원문 본문
+                                  `translated_text` text NOT NULL,         -- 번역된 본문
+                                  `created_at` datetime(6) DEFAULT CURRENT_TIMESTAMP(6),
+                                  PRIMARY KEY (`id`),
+                                  KEY `fk_trans_log` (`log_id`),
+                                  KEY `fk_trans_user` (`user_id`),
+                                  CONSTRAINT `fk_trans_log` FOREIGN KEY (`log_id`) REFERENCES `work_logs` (`log_id`) ON DELETE CASCADE,
+                                  CONSTRAINT `fk_trans_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

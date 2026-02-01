@@ -24,6 +24,12 @@ public class TranslateLog {
     private String traceId;
 
     @Column(columnDefinition = "TEXT")
+    private String originalTitle;
+
+    @Column(columnDefinition = "TEXT")
+    private String translatedTitle;
+
+    @Column(columnDefinition = "TEXT")
     private String originalText;
 
     @Column(columnDefinition = "TEXT")

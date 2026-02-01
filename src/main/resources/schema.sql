@@ -28,6 +28,9 @@ DROP TABLE IF EXISTS Authority;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS refresh_token;
 ALTER TABLE attendance ADD COLUMN total_work_time VARCHAR(20) DEFAULT NULL;
+ALTER TABLE translate_logs
+    ADD COLUMN original_title VARCHAR(256) AFTER trace_id,
+ADD COLUMN translated_title VARCHAR(256) AFTER original_title;
 
 SET FOREIGN_KEY_CHECKS = 1;
 -- 1. 사용자

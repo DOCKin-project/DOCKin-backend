@@ -50,6 +50,12 @@ public class SecurityConfig {
             "/ws-stomp/**"
     };
 
+    @PostConstruct
+    public void setupSecurityContext() {
+        // 비동기 스레드(워커 스레드)로 SecurityContext를 전파하는 설정
+        SecurityContextHolder.setStrategyName(SecurityContextHolder.MODE_INHERITABLETHREADLOCAL);
+    }
+
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
         // 경로를 배열로 명시적으로 선언하여 모호성을 제거합니다.
