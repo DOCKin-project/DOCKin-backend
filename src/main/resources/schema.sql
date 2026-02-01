@@ -28,6 +28,9 @@ DROP TABLE IF EXISTS Authority;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS refresh_token;
 ALTER TABLE attendance ADD COLUMN total_work_time VARCHAR(20) DEFAULT NULL;
+ALTER TABLE translate_logs
+    ADD COLUMN original_title VARCHAR(256) AFTER trace_id,
+ADD COLUMN translated_title VARCHAR(256) AFTER original_title;
 
 SET FOREIGN_KEY_CHECKS = 1;
 -- 1. 사용자
@@ -238,3 +241,26 @@ CREATE TABLE refresh_token (
                                token VARCHAR(512) NOT NULL, -- JWT는 길기 때문에 길이를 충분히 줍니다.
                                PRIMARY KEY (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 18. 챗봇
+CREATE TABLE chat_history (
+                              id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                              user_id VARCHAR(50),                  -- 어떤 사용자가 질문했는지 (추가 권장)
+                              trace_id VARCHAR(255),                -- API 추적용 ID
+                              user_query TEXT NOT NULL,             -- 사용자의 질문 내용 (추가 필수)
+                              reply TEXT,                           -- 챗봇의 답변 내용
+                              created_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
+                              FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
+-- 19. 번역된 작업 일지 테이블
+CREATE TABLE work_log_translations (
+                                       translation_id INT PRIMARY KEY AUTO_INCREMENT,
+                                       log_id INT NOT NULL,                    -- 원본 작업 일지 ID
+                                       language_code VARCHAR(10) NOT NULL,     -- 언어 코드 (th, vi, en 등)
+                                       translated_title VARCHAR(256),          -- 번역된 제목
+                                       translated_text TEXT NOT NULL,          -- 번역된 본문 내용
+                                       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                                       FOREIGN KEY (log_id) REFERENCES work_logs(log_id) ON DELETE CASCADE,
+                                       UNIQUE KEY uk_log_lang (log_id, language_code)
+);
