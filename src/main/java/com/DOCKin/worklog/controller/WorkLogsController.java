@@ -33,27 +33,27 @@ import reactor.core.publisher.Mono;
 @RequestMapping("/api/work-logs")
 public class WorkLogsController {
     private final WorkLogsService workLogsService;
-    private final SttService sttService;
-
-    @Operation(summary="작업일지 stt 전달용",description = "음성을 text로 변경")
-    @PostMapping(value="/speech-to-text", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public Mono<SttDomain.Response> convertSpeech(
-            @RequestPart("file")MultipartFile file,
-            @RequestParam("traceID") String traceId,
-            @AuthenticationPrincipal CustomUserDetails customUserDetails,
-            @RequestHeader(HttpHeaders.AUTHORIZATION) String token){
-        log.info("STT 요청자: {}",customUserDetails.getUsername());
-
-        return sttService.processStt(file,traceId,token,"ko");
-    }
 
     @Operation(summary="특정 작업자 작업일지 생성",description = "특정 작업자의 작업일지를 생성해줌")
     @PostMapping
     public ResponseEntity<Work_logsDto> createWorkLog( @AuthenticationPrincipal CustomUserDetails customUserDetails,
-          @Valid @RequestBody WorkLogsCreateRequestDto requestDto
+                                                       @Valid @RequestBody WorkLogsCreateRequestDto requestDto
     ){
         String userId = customUserDetails.getMember().getUserId();
-      Work_logsDto response =  workLogsService.createWorklog(userId,requestDto);
+        Work_logsDto response =  workLogsService.createWorklog(userId,requestDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+
+    @Operation(summary="Stt용 특정 작업자 작업일지 생성",description = "특정 작업자의 작업일지를 생성해줌")
+    @PostMapping(value= "/stt",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Work_logsDto> createWorkLog( @AuthenticationPrincipal CustomUserDetails customUserDetails,
+        @RequestPart(value="request") @Valid WorkLogsCreateRequestDto requestDto,
+                                                       @RequestPart(value="file",required = false) MultipartFile file,
+                                                       @RequestHeader(HttpHeaders.AUTHORIZATION) String token
+    ){
+        String userId = customUserDetails.getMember().getUserId();
+      Work_logsDto response =  workLogsService.createSttWorklog(userId,requestDto,file,token);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

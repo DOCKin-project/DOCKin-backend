@@ -8,10 +8,6 @@ public class SttDomain {
 
     public record Response(
             String traceId,
-            Result result
-    ){
-        public record Result(
-                String result
-        ){}
-    }
+            String text
+    ){}
 }
