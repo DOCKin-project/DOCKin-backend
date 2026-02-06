@@ -14,9 +14,13 @@ services:
       - dockin-app
     networks:
       - dockin-network
+    deploy:
+      resources:
+        limits:
+          memory: 100M
 
   dockin-app:
-    build: .
+    #build: .
     env_file:
       - .env
     image: khyojae/dockin-app:latest
@@ -29,6 +33,8 @@ services:
       - SPRING_PROFILES_ACTIVE=secret
       - TZ=Asia/Seoul
       - RACK_ENV=development
+      - JAVA_OPTS=-Xmx400M -Xms256M
+      - AI_SERVER_URL=${AI_SERVER_URL}
     volumes:
       - /etc/localtime:/etc/localtime:ro
     depends_on:
@@ -36,9 +42,13 @@ services:
         condition: service_healthy
     networks:
       - dockin-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M # Spring Boot 최대치 제한
 
   DOCKin-DB:
-    image: mysql:8.0.44
+    image: mysql:8.0-alpine
     container_name: dockin-db
     command:
       - --default-time-zone=+09:00
@@ -55,11 +65,15 @@ services:
       - /etc/localtime:/etc/localtime:ro
     healthcheck:
       test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD}" ]
-      timeout: 5s
+      timeout: 10s
       retries: 10
       interval: 5s
     networks:
       - dockin-network
+    deploy:
+      resources:
+        limits:
+          memory: 300M # MySQL 메모리 점유 제한
 
 networks:
   dockin-network:
