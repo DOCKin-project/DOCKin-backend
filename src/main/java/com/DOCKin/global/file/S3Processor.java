@@ -7,8 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.InputStream;
-import java.net.URL;
-import java.util.Date;
 
 @Component
 @RequiredArgsConstructor
@@ -22,18 +20,6 @@ public class S3Processor {
         return amazonS3.getObject(bucketName,objectKey)
                 .getObjectContent()
                 .getDelegateStream();
-    }
-
-    public String getPresignedUrl(String bucketName, String objectKey){
-        Date date= new Date();
-        long time = date.getTime() + 1000*60*5;
-        date.setTime(time);
-
-        URL presignedUrl = amazonS3.generatePresignedUrl(bucketName,
-                objectKey,
-                date);
-
-        return presignedUrl.toString();
     }
 
     public String uploadFile(String bucketName, String objectKey, MultipartFile file){

@@ -177,6 +177,8 @@ public class WorkLogsService {
         if(dto.getTitle()!=null) logs.setTitle(dto.getTitle());
         if(dto.getLogText()!=null) logs.setLogText(dto.getLogText());
         if(images !=null && !images.isEmpty()){
+            logs.getImages().clear();
+
             images.forEach(imagefile->{
 
                 String uploadedUrl = s3PresignedService.uploadImage(imagefile);
