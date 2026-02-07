@@ -30,6 +30,9 @@ services:
       - "8080:8080"
     environment:
       - DB_HOST=DOCKin-DB
+      - DB_NAME=dockindb
+      - DB_USERNAME=root
+      - DB_PASSWORD=${DB_PASSWORD}
       - SPRING_PROFILES_ACTIVE=secret
       - TZ=Asia/Seoul
       - RACK_ENV=development
