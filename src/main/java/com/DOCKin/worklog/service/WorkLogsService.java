@@ -36,7 +36,7 @@ public class WorkLogsService {
 
     //게시물 작성
     @Transactional
-    public Work_logsDto createWorklog(String userId,WorkLogsCreateRequestDto dto){
+    public Work_logsDto createWorklog(String userId,WorkLogsCreateRequestDto dto,List<MultipartFile> images){
         Member member = memberRepository.findByUserId(userId)
                 .orElseThrow(()->new BusinessException(ErrorCode.USER_NOT_FOUND));
 
@@ -50,7 +50,7 @@ public class WorkLogsService {
                 .member(member)
                 .build();
 
-        if(dto.getImageUrls()!=null){
+        if(images !=null & images.isEmpty()){
             dto.getImageUrls().forEach(url->{
                 WorkLogImage image = WorkLogImage.builder()
                         .imageUrl(url)
@@ -67,7 +67,7 @@ public class WorkLogsService {
 
     //stt용게시물 작성
     @Transactional
-    public Work_logsDto createSttWorklog(String userId, WorkLogsCreateRequestDto dto, MultipartFile file,String token){
+    public Work_logsDto createSttWorklog(String userId, WorkLogsCreateRequestDto dto, MultipartFile file,String token, List<MultipartFile> images){
         Member member = memberRepository.findByUserId(userId)
                 .orElseThrow(()->new BusinessException(ErrorCode.USER_NOT_FOUND));
 
@@ -100,7 +100,7 @@ public class WorkLogsService {
                 .member(member)
                 .build();
 
-        if(dto.getImageUrls()!=null){
+        if(images !=null & images.isEmpty()){
             dto.getImageUrls().forEach(url->{
                 WorkLogImage image = WorkLogImage.builder()
                         .imageUrl(url)
@@ -157,7 +157,7 @@ public class WorkLogsService {
 
     //게시물 수정
     @Transactional
-    public Work_logsDto updateWorklog(String userId, Long logId, WorkLogsUpdateRequestDto dto){
+    public Work_logsDto updateWorklog(String userId, Long logId, WorkLogsUpdateRequestDto dto, List<MultipartFile> images){
         Work_logs logs = workLogsRepository.findById(logId)
                 .orElseThrow(()->new BusinessException(ErrorCode.LOG_NOT_FOUND));
 
@@ -168,7 +168,7 @@ public class WorkLogsService {
 
         if(dto.getTitle()!=null) logs.setTitle(dto.getTitle());
         if(dto.getLogText()!=null) logs.setLogText(dto.getLogText());
-        if(dto.getImageUrls()!=null){
+        if(images !=null & images.isEmpty()){
             dto.getImageUrls().forEach(url->{
                 WorkLogImage image = WorkLogImage.builder()
                         .imageUrl(url)
