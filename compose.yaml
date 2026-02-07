@@ -33,6 +33,10 @@ services:
       - DB_NAME=dockindb
       - DB_USERNAME=root
       - DB_PASSWORD=${DB_PASSWORD}
+      - S3_BUCKET_NAME=${S3_BUCKET_NAME}
+      - AWS_ACCESS_KEY=${AWS_ACCESS_KEY}
+      - AWS_SECRET_KEY=${AWS_SECRET_KEY}
+      - AWS_REGION=${AWS_REGION}
       - SPRING_PROFILES_ACTIVE=secret
       - TZ=Asia/Seoul
       - RACK_ENV=development
