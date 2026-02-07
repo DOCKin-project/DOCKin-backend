@@ -83,7 +83,7 @@ public class WorkLogsController {
     @Operation(summary="특정 작업자 작업일지 수정",description = "특정 작업자의 작업일지를 수정해줌")
     @PutMapping("/{logId}")
     public ResponseEntity<Work_logsDto> PutMyWorkLog(@PathVariable Long logId,
-                                                     @Valid @RequestPart(value = "request") WorkLogsUpdateRequestDto request,
+                                                     @Valid @RequestPart(value = "requestDto") WorkLogsUpdateRequestDto request,
                                                      @AuthenticationPrincipal CustomUserDetails customUserDetails,
                                                      @RequestPart(value="images", required = false) List<MultipartFile> images){
         String userId = customUserDetails.getMember().getUserId();

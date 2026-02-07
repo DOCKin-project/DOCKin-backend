@@ -1,6 +1,7 @@
 package com.DOCKin.worklog.service;
 
 import com.DOCKin.ai.service.SttService;
+import com.DOCKin.global.file.S3PresignedService;
 import com.DOCKin.worklog.dto.WorkLogsCreateRequestDto;
 import com.DOCKin.worklog.dto.WorkLogsUpdateRequestDto;
 import com.DOCKin.worklog.dto.Work_logsDto;
@@ -33,6 +34,7 @@ public class WorkLogsService {
     private final MemberRepository memberRepository;
     private final EquipmentRepository equipmentRepository;
     private final SttService sttService;
+    private final S3PresignedService s3PresignedService;
 
     //게시물 작성
     @Transactional
@@ -50,10 +52,13 @@ public class WorkLogsService {
                 .member(member)
                 .build();
 
-        if(images !=null & images.isEmpty()){
-            dto.getImageUrls().forEach(url->{
+        if(images !=null && !images.isEmpty()){
+            images.forEach(file->{
+
+                String uploadedUrl = s3PresignedService.uploadImage(file);
+
                 WorkLogImage image = WorkLogImage.builder()
-                        .imageUrl(url)
+                        .imageUrl(uploadedUrl)
                         .workLog(work_logs)
                         .build();
 
@@ -100,10 +105,13 @@ public class WorkLogsService {
                 .member(member)
                 .build();
 
-        if(images !=null & images.isEmpty()){
-            dto.getImageUrls().forEach(url->{
+        if(images !=null && !images.isEmpty()){
+            images.forEach(imagefile->{
+
+                String uploadedUrl = s3PresignedService.uploadImage(imagefile);
+
                 WorkLogImage image = WorkLogImage.builder()
-                        .imageUrl(url)
+                        .imageUrl(uploadedUrl)
                         .workLog(work_logs)
                         .build();
 
@@ -168,10 +176,13 @@ public class WorkLogsService {
 
         if(dto.getTitle()!=null) logs.setTitle(dto.getTitle());
         if(dto.getLogText()!=null) logs.setLogText(dto.getLogText());
-        if(images !=null & images.isEmpty()){
-            dto.getImageUrls().forEach(url->{
+        if(images !=null && !images.isEmpty()){
+            images.forEach(imagefile->{
+
+                String uploadedUrl = s3PresignedService.uploadImage(imagefile);
+
                 WorkLogImage image = WorkLogImage.builder()
-                        .imageUrl(url)
+                        .imageUrl(uploadedUrl)
                         .workLog(logs)
                         .build();
 

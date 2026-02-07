@@ -17,7 +17,7 @@ import java.net.URLDecoder;
 public class SpringFileDownloadService {
     private final S3Processor s3Processor;
 
-    @Value("${AWS_REGION}")
+    @Value("${S3_BUCKET_NAME}")
     private String bucketName;
 
     public Resource getFileResource(String objectKey, HttpServletResponse response){
