@@ -8,6 +8,7 @@ import com.DOCKin.global.error.BusinessException;
 import com.DOCKin.global.error.ErrorCode;
 import com.DOCKin.worklog.model.Equipment;
 import com.DOCKin.member.model.Member;
+import com.DOCKin.worklog.model.WorkLogImage;
 import com.DOCKin.worklog.model.Work_logs;
 import com.DOCKin.worklog.repository.EquipmentRepository;
 import com.DOCKin.member.repository.MemberRepository;
@@ -45,10 +46,20 @@ public class WorkLogsService {
         Work_logs work_logs = Work_logs.builder()
                 .title(dto.getTitle())
                 .logText(dto.getLogText())
-                .imageUrl(dto.getImageUrl())
                 .equipment(equipment)
                 .member(member)
                 .build();
+
+        if(dto.getImageUrls()!=null){
+            dto.getImageUrls().forEach(url->{
+                WorkLogImage image = WorkLogImage.builder()
+                        .imageUrl(url)
+                        .workLog(work_logs)
+                        .build();
+
+                work_logs.addImage(image);
+            });
+        }
 
         return Work_logsDto.from(workLogsRepository.save(work_logs));
     }
@@ -84,11 +95,21 @@ public class WorkLogsService {
         Work_logs work_logs = Work_logs.builder()
                 .title(dto.getTitle())
                 .logText(finalLogText)
-                .imageUrl(dto.getImageUrl())
                 .equipment(equipment)
                 .audioFileUrl(finalAudioUrl)
                 .member(member)
                 .build();
+
+        if(dto.getImageUrls()!=null){
+            dto.getImageUrls().forEach(url->{
+                WorkLogImage image = WorkLogImage.builder()
+                        .imageUrl(url)
+                        .workLog(work_logs)
+                        .build();
+
+                work_logs.addImage(image);
+            });
+        }
 
          return Work_logsDto.from(workLogsRepository.save(work_logs));
     }
@@ -147,7 +168,16 @@ public class WorkLogsService {
 
         if(dto.getTitle()!=null) logs.setTitle(dto.getTitle());
         if(dto.getLogText()!=null) logs.setLogText(dto.getLogText());
-        if(dto.getImageUrl()!=null) logs.setImageUrl(dto.getImageUrl());
+        if(dto.getImageUrls()!=null){
+            dto.getImageUrls().forEach(url->{
+                WorkLogImage image = WorkLogImage.builder()
+                        .imageUrl(url)
+                        .workLog(logs)
+                        .build();
+
+                logs.addImage(image);
+            });
+        }
         if(dto.getEquipmentId()!=null){
             Equipment equipment = equipmentRepository.findById(dto.getEquipmentId())
                     .orElseThrow(()->new BusinessException(ErrorCode.EQUIPMENT_NOT_FOUND));

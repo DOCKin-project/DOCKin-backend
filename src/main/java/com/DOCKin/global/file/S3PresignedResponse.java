@@ -7,4 +7,5 @@ import lombok.Getter;
 @AllArgsConstructor
 public class S3PresignedResponse {
     String presignedUrl;
+    String fileName;
 }
