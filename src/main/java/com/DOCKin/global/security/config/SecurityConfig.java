@@ -43,11 +43,6 @@ public class SecurityConfig {
             "/webjars/**",
             "/member/login",
             "/member/signup",
-            "/api/safety/**",
-            "/api/work-logs/**",
-            "/api/attendance/**",
-            "/ws/**",
-            "/ws-stomp/**"
     };
 
     @PostConstruct
