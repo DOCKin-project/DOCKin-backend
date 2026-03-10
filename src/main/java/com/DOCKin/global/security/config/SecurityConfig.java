@@ -28,39 +28,12 @@ public class SecurityConfig {
     private final JwtUtil jwtUtil;
     private final CustomAccessDeniedHandler accessDeniedHandler;
     private final CustomAuthenticationEntryPoint authenticationEntryPoint;
-
-    private static final String[] AUTH_WHITELIST = {
-            "/",
-            "/error",
-            "/favicon.ico",
-            "/v3/api-docs",
-            "/v3/api-docs/",
-            "/v3/api-docs/**",
-            "/swagger-ui/**",
-            "/swagger-ui.html",
-            "/api-docs/**",
-            "/swagger-resources/**",
-            "/webjars/**",
-            "/member/login",
-            "/member/signup",
-            "/api/safety/**",
-            "/api/work-logs/**",
-            "/api/attendance/**",
-            "/ws/**",
-            "/ws-stomp/**"
-    };
+    private final SecurityPathConfig securityPathConfig;
 
     @PostConstruct
     public void setupSecurityContext() {
         // 비동기 스레드(워커 스레드)로 SecurityContext를 전파하는 설정
         SecurityContextHolder.setStrategyName(SecurityContextHolder.MODE_INHERITABLETHREADLOCAL);
-    }
-
-    @Bean
-    public WebSecurityCustomizer webSecurityCustomizer() {
-        // 경로를 배열로 명시적으로 선언하여 모호성을 제거합니다.
-        return (web) -> web.ignoring()
-                .requestMatchers(new String[]{"/favicon.ico", "/css/**", "/js/**", "/img/**"});
     }
 
     @Bean
@@ -70,26 +43,25 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         http.authorizeHttpRequests(authorize -> authorize
-                // 1. AI 관련 경로를 최상단에 배치하여 우선순위를 높입니다.
+                // 1. AI 관련 경로를 최상단에 배치
                 .requestMatchers("/api/ai/**").authenticated()
+
                 // 2. 화이트리스트 (배열을 그대로 전달)
-                .requestMatchers(AUTH_WHITELIST).permitAll()
+                .requestMatchers(securityPathConfig.getWhiteListArray()).permitAll()
+
                 // 3. 그 외 모든 요청 인증 필요
                 .anyRequest().authenticated());
 
         http.securityContext(context -> context
-                .requireExplicitSave(false)
-        );
+                .requireExplicitSave(false));
+
 
         // JWT 필터 추가
         http.addFilterBefore(new JwtAuthFilter(customUserDetailsService, jwtUtil, jwtBlacklist),
                 UsernamePasswordAuthenticationFilter.class);
 
         http.exceptionHandling(exception -> exception
-                //인증 실패 처리
                 .authenticationEntryPoint(authenticationEntryPoint)
-
-                //인가 실패 처리
                 .accessDeniedHandler(accessDeniedHandler));
 
         return http.build();

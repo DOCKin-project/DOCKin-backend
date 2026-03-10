@@ -1,4 +1,4 @@
-package com.DOCKin.global.security.config; // 프로젝트 패키지 경로에 맞게 수정
+package com.DOCKin.global.security.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
