@@ -34,7 +34,11 @@
         let subscriptions = {};
         let currentRoomId = null;
         let currentUserId = "";
-        const SERVER_URL = "http://localhost:8080";
+
+        // [수정] AWS 배포 주소로 설정
+        const API_BASE_URL = "3.34.181.59:8080";
+        const SERVER_URL = `http://${API_BASE_URL}`;
+        const SOCKET_URL = `ws://${API_BASE_URL}/ws`;
 
         function connect() {
             const jwtToken = $('#jwtToken').val();
@@ -44,20 +48,25 @@
             currentUserId = inputUserId;
 
             if (stompClient) stompClient.disconnect();
+
+            // Axios 기본 헤더에 토큰 설정
             axios.defaults.headers.common['Authorization'] = 'Bearer ' + jwtToken;
 
-            // [중요] WebSocket 엔드포인트가 /ws 인지 확인하세요
-            stompClient = Stomp.client("ws://localhost:8080/ws");
+            // STOMP 클라이언트 생성 및 연결
+            stompClient = Stomp.client(SOCKET_URL);
             stompClient.connect({'token': jwtToken}, () => {
-                alert(currentUserId + ' 연결 성공!');
+                alert(currentUserId + '님, AWS 채팅 서버 연결 성공!');
 
-                // 내 알림 구독
+                // 개인 알림 구독 (방 목록 업데이트 등)
                 stompClient.subscribe(`/sub/user/${currentUserId}/rooms`, (data) => {
                     handleListUpdate(JSON.parse(data.body));
                 });
 
                 loadMyRooms();
-            }, (e) => alert('연결 실패: ' + e));
+            }, (e) => {
+                console.error(e);
+                alert('연결 실패! AWS 보안그룹이나 토큰을 확인하세요.');
+            });
         }
 
         function handleListUpdate(msg) {
@@ -81,10 +90,9 @@
         }
 
         function loadMyRooms() {
-            // [수정] 백엔드 DTO 필드명에 맞춰 rId = room.roomId 등으로 변경
             axios.get(`${SERVER_URL}/api/chat/rooms`)
                 .then(res => {
-                    const rooms = res.data.content; // Page 객체 대응
+                    const rooms = res.data.content;
                     const list = $('#roomList').empty();
                     rooms.forEach(room => {
                         const rId = room.roomId;
@@ -122,7 +130,6 @@
             $('#currentRoomTitle').text(roomName);
             $('#messageBox').empty();
 
-            // 읽음 처리 업데이트 API 호출
             axios.get(`${SERVER_URL}/api/chat/room/${roomId}`)
                 .then(() => {
                     subscriptions['chat'] = stompClient.subscribe(`/sub/chat/room/${roomId}`, (data) => {
@@ -151,6 +158,7 @@
                 messageType: "TEXT"
             };
 
+            // 발행 경로 확인: /pub/chat/message
             stompClient.send("/pub/chat/message", {}, JSON.stringify(payload));
             $('#messageInput').val('');
         }
@@ -188,7 +196,7 @@
                 <div class="p-3 border-bottom bg-light">
                     <div class="row g-2">
                         <div class="col-4">
-                            <input type="text" id="inputUserId" class="form-control form-control-sm" placeholder="내 사번">
+                            <input type="text" id="inputUserId" class="form-control form-control-sm" placeholder="사번">
                         </div>
                         <div class="col-8">
                             <input type="password" id="jwtToken" class="form-control form-control-sm" placeholder="JWT Token">

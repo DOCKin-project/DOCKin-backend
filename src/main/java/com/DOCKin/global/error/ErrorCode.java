@@ -23,9 +23,9 @@ public enum ErrorCode {
     EQUIPMENT_NOT_FOUND(400, "U004", "존재하지 않는 장비 번호입니다."),
 
    // Chat
-    CHATROOM_NOT_FOUND(400, "C001", "존재하지 않는 채팅입니다."),
-    CHATMEMBER_NOT_FOUND(400, "C002", "존재하지 않는 채팅방 멤버입니다."),
-    CHATROOM_AUTHOR(400, "C003", "채팅방의 권한이 없습니다."),
+    CHATROOM_NOT_FOUND(400, "CT001", "존재하지 않는 채팅입니다."),
+    CHATMEMBER_NOT_FOUND(400, "CT002", "존재하지 않는 채팅방 멤버입니다."),
+    CHATROOM_AUTHOR(400, "CT003", "채팅방의 권한이 없습니다."),
 
     //SafetyCourse
     SAFETYCOURSE_NOT_FOUND(404, "S001", "존재하지 않는 안전교육입니다."),

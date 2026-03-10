@@ -86,7 +86,10 @@ public class SecurityConfig {
                 UsernamePasswordAuthenticationFilter.class);
 
         http.exceptionHandling(exception -> exception
+                //인증 실패 처리
                 .authenticationEntryPoint(authenticationEntryPoint)
+
+                //인가 실패 처리
                 .accessDeniedHandler(accessDeniedHandler));
 
         return http.build();
