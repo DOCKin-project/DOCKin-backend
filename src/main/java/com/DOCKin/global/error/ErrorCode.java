@@ -35,6 +35,22 @@ public enum ErrorCode {
     // Attendance
     ATTENDANCE_ALREADY_CHECKED(409, "AT001", "이미 오늘 출근 처리가 완료되었습니다."),
 
+    // Checklist
+    CHECKLIST_NOT_FOUND(404, "CK001", "존재하지 않는 체크리스트입니다."),
+    CHECKLIST_ITEM_NOT_FOUND(404, "CK002", "존재하지 않는 체크리스트 항목입니다."),
+    CHECKLIST_AUTHOR(403, "CK003", "체크리스트 관리 권한이 없습니다."),
+    CHECKLIST_ALREADY_EXISTS(409, "CK004", "해당 장비와 단계에 대한 체크리스트가 이미 존재합니다."),
+    CHECKLIST_ITEM_MISMATCH(400, "CK005", "해당 체크리스트에 속하지 않는 항목입니다."),
+    CHECKLIST_HAS_RESULTS(409, "CK006", "이미 점검 기록이 있어 삭제할 수 없습니다."),
+    CHECKLIST_ITEM_HAS_RESULTS(409, "CK007", "이미 점검 기록이 있어 항목을 삭제할 수 없습니다."),
+
+    // Absence Request
+    ABSENCE_REQUEST_NOT_FOUND(404, "AB001", "존재하지 않는 휴가 신청입니다."),
+    ABSENCE_REQUEST_ALREADY_PROCESSED(409, "AB002", "이미 처리된 휴가 신청입니다."),
+    ABSENCE_REQUEST_AUTHOR(403, "AB003", "휴가 신청 처리 권한이 없습니다."),
+    INSUFFICIENT_LEAVE_DAYS(409, "AB004", "잔여 연차가 부족합니다."),
+    INVALID_DATE_RANGE(400, "AB005", "종료일이 시작일보다 빠를 수 없습니다."),
+
     // Worklog
     LOG_NOT_FOUND(404, "W001", "존재하지 않는 작업 일지입니다."),
     NOT_LOG_AUTHOR(403, "W002", "해당 일지의 작성자가 아닙니다."),

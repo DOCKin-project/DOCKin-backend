@@ -44,4 +44,13 @@ public class Member {
     @Builder.Default
     private WorkShift workShift = WorkShift.MORNING;
 
+    // 연차 정책 확정 전까지의 잠정 기본값 (WorkShift와 동일한 패턴)
+    @Column(name = "remaining_leave_days", nullable = false)
+    @Builder.Default
+    private Integer remainingLeaveDays = 15;
+
+    public void useLeaveDays(int days) {
+        this.remainingLeaveDays -= days;
+    }
+
 }

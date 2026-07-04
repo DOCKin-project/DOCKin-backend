@@ -38,6 +38,7 @@ CREATE TABLE users (
                        password VARCHAR(256) NOT NULL,
                        role ENUM('ADMIN','USER'),
                        work_shift ENUM('MORNING', 'AFTERNOON', 'NIGHT') DEFAULT 'MORNING',
+                       remaining_leave_days INT DEFAULT 15, -- 연차 정책 확정 전까지의 잠정 기본값
                        language_code VARCHAR(10) DEFAULT 'ko',
                        tts_enabled BOOLEAN DEFAULT TRUE,
                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -111,14 +112,15 @@ CREATE TABLE work_log_views (
                                 UNIQUE KEY uk_user_log_view (log_id, user_id)
 );
 
--- 7. 체크리스트
+-- 7. 체크리스트 (템플릿)
 CREATE TABLE checklists (
                             checklist_id INT PRIMARY KEY AUTO_INCREMENT,
-                            equipment_id INT NOT NULL,
+                            equipment_id BIGINT NOT NULL,   -- Equipment 엔티티가 Long이라 BIGINT (기존 INT 표기는 부정확했음)
                             title VARCHAR(100) NOT NULL,
-                            role ENUM('pre', 'post'), -- 작업 전/후
+                            phase VARCHAR(10) NOT NULL,     -- 'PRE'/'POST'. 구 컬럼명 role -> phase (Member.role과 의미 충돌 방지)
                             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                            UNIQUE KEY uk_checklist_equipment_phase (equipment_id, phase),
                             FOREIGN KEY (equipment_id) REFERENCES equipment(equipment_id)
 );
 
@@ -131,17 +133,16 @@ CREATE TABLE checklist_items (
                                  FOREIGN KEY (checklist_id) REFERENCES checklists(checklist_id)
 );
 
--- 9. 체크리스트 결과
+-- 9. 체크리스트 결과 (append-only 감사 로그 - 체크/해제할 때마다 새 행 INSERT, upsert 없음)
 CREATE TABLE checklist_results (
                                    result_id INT PRIMARY KEY AUTO_INCREMENT,
-                                   checklist_id INT NOT NULL,
+                                   checklist_item_id INT NOT NULL,   -- 구 checklist_id 대신 항목 단위로 변경 (통짜 is_checked로는 부분 완료를 표현 못 했음)
                                    user_id VARCHAR(50) NOT NULL,
-                                   equipment_id INT NOT NULL,
-                                   checked_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                                    is_checked BOOLEAN NOT NULL,
-                                   FOREIGN KEY (checklist_id) REFERENCES checklists(checklist_id),
-                                   FOREIGN KEY (user_id) REFERENCES users(user_id),
-                                   FOREIGN KEY (equipment_id) REFERENCES equipment(equipment_id)
+                                   checked_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                                   FOREIGN KEY (checklist_item_id) REFERENCES checklist_items(item_id),
+                                   FOREIGN KEY (user_id) REFERENCES users(user_id)
+                                   -- equipment_id 컬럼 제거: checklist_item -> checklist -> equipment로 유도 가능한 중복 데이터였음
 );
 
 
@@ -174,8 +175,7 @@ CREATE TABLE absence_requests (
                                   requested_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                                   processed_by VARCHAR(50), -- 승인/거절 처리한 관리자
                                   processed_at DATETIME,
-                                  last_message_content TEXT,
-                                  last_message_at DATETIME,
+                                  decision_comment TEXT, -- 승인/거절 사유 코멘트 (구 last_message_content; last_message_at은 processed_at과 중복이라 제거)
                                   FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
                                   FOREIGN KEY (processed_by) REFERENCES users(user_id)
 );
