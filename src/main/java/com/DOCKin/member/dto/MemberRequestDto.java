@@ -1,6 +1,7 @@
 package com.DOCKin.member.dto;
 
 import com.DOCKin.member.model.UserRole;
+import com.DOCKin.member.model.WorkShift;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -36,4 +37,7 @@ public class MemberRequestDto {
 
     @Schema(description = "조선소 구역", example = "제1조선소", requiredMode = Schema.RequiredMode.REQUIRED)
     private String shipYardArea;
+
+    @Schema(description = "근무 교대 (미입력 시 MORNING)", example = "MORNING", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+    private WorkShift workShift;
 }

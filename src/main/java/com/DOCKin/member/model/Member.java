@@ -40,4 +40,8 @@ public class Member {
     @Column(nullable = false, length = 100)
     private String shipYardArea;
 
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private WorkShift workShift = WorkShift.MORNING;
+
 }

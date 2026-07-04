@@ -32,6 +32,9 @@ public enum ErrorCode {
     SAFETYCOURSE_AUTHOR(403, "S002", "안전교육 수정 권한이 없습니다."),
 
 
+    // Attendance
+    ATTENDANCE_ALREADY_CHECKED(409, "AT001", "이미 오늘 출근 처리가 완료되었습니다."),
+
     // Worklog
     LOG_NOT_FOUND(404, "W001", "존재하지 않는 작업 일지입니다."),
     NOT_LOG_AUTHOR(403, "W002", "해당 일지의 작성자가 아닙니다."),

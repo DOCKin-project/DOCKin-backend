@@ -8,6 +8,7 @@ import com.DOCKin.member.dto.*;
 import com.DOCKin.member.model.Member;
 import com.DOCKin.member.model.RefreshToken;
 import com.DOCKin.member.model.UserRole;
+import com.DOCKin.member.model.WorkShift;
 import com.DOCKin.member.repository.MemberRepository;
 import com.DOCKin.member.repository.RefreshTokenRepository;
 import lombok.RequiredArgsConstructor;
@@ -79,6 +80,7 @@ public class MemberService{
                 .language_code(dto.getLanguage_code())
                 .tts_enabled(dto.getTts_enabled())
                 .shipYardArea(dto.getShipYardArea())
+                .workShift(dto.getWorkShift() != null ? dto.getWorkShift() : WorkShift.MORNING)
                 .build();
         memberRepository.save(member);
         return member.getUserId();

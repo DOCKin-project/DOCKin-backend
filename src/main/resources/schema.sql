@@ -157,7 +157,8 @@ CREATE TABLE attendance (
                             in_location VARCHAR(255),
                             out_location VARCHAR(255),
                             CONSTRAINT fk_attendance_member FOREIGN KEY (user_id) REFERENCES users (user_id),
-                            INDEX idx_work_date (work_date)
+                            INDEX idx_work_date (work_date),
+                            UNIQUE KEY uk_attendance_user_workdate (user_id, work_date)
 );
 
 -- 11. 근태 요청 (병결/휴가 서류 등록)

@@ -75,6 +75,9 @@ dependencies {
 	// WebClient
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
+	// Redis distributed lock
+	implementation 'org.redisson:redisson:3.37.0'
+
 }
 
 tasks.named('test') {
