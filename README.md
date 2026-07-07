@@ -2,7 +2,7 @@
 
 # DOCKin — Backend (Spring)
 
-**현장 노동자를 위한 근태·작업일지·안전교육·실시간 채팅 플랫폼의 Spring 백엔드. Spring과 FastAPI 두 서비스에 걸친 비동기 AI 연동(STT·번역·챗봇)을 붙였고, 실사용 중 만난 채팅 동시쓰기 락 경합을 직접 원인 분석해 고친 이력을 정리했습니다.**
+현장 노동자를 위한 근태·작업일지·안전교육·실시간 채팅 플랫폼의 Spring 백엔드입니다. FastAPI 서버와는 비동기로 붙어 STT·번역·챗봇을 처리하고, 아래 헤드라인 섹션은 실사용 중 만난 채팅 동시쓰기 락 경합을 직접 찾아 고친 기록입니다.
 
 </div>
 
@@ -126,7 +126,7 @@ erDiagram
 
 ## 헤드라인 — 채팅 동시 쓰기 락 경합
 
-**문제**: 채팅 메시지 저장(`ChatService.saveMessage`)은 `@Async` + `@Transactional`로 짜여 있었고, 트랜잭션 안에서 `ChatRooms`/`ChatMembers`를 관리 엔티티로 읽어와 setter로 마지막 메시지·마지막 읽음 시간을 갱신하고 있었습니다. 메시지가 여러 스레드에서 동시에 들어오면 같은 `chat_rooms`/`chat_members` 로우를 여러 트랜잭션이 동시에 갱신하려다 락 경합이 났습니다.
+**문제**: 채팅 메시지 저장(`ChatService.saveMessage`)은 `@Async` + `@Transactional`로 구성돼 있었고, 트랜잭션 안에서 `ChatRooms`/`ChatMembers`를 관리 엔티티로 읽어와 setter로 마지막 메시지·마지막 읽음 시간을 갱신하고 있었습니다. 메시지가 여러 스레드에서 동시에 들어오면 같은 `chat_rooms`/`chat_members` 로우를 여러 트랜잭션이 동시에 갱신하려다 락 경합이 났습니다.
 
 **해결**: 마지막 메시지·마지막 읽음 시간 갱신을 `@Modifying` 네이티브 UPDATE 쿼리로 바꿔서 JPA 영속성 컨텍스트와 dirty checking을 거치지 않게 했습니다. 코드에는 이런 주석을 남겼습니다: "여기서 핵심은 room 객체의 필드를 절대 setter로 고치지 않는 것입니다!" 락을 추가로 잡는 대신, JPA가 관리 엔티티를 갱신하면서 락을 걸 상황 자체를 없앤 쪽입니다.
 
