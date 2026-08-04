@@ -175,6 +175,8 @@ class AbsenceRequestServiceTest {
                 LocalDate.of(2026, 7, 10), LocalDate.of(2026, 7, 12), applicant); // 3일 신청
         when(memberRepository.findByUserId(ADMIN_ID)).thenReturn(Optional.of(admin()));
         when(absenceRequestRepository.findById(1)).thenReturn(Optional.of(request));
+        // 잔액 갱신은 lost update를 막기 위해 비관적 락으로 다시 조회한 인스턴스에 대해 수행한다.
+        when(memberRepository.findByUserIdForUpdate(USER_ID)).thenReturn(Optional.of(applicant));
 
         BusinessException ex = assertThrows(BusinessException.class,
                 () -> absenceRequestService.approveRequest(ADMIN_ID, 1, "ok"));
@@ -191,6 +193,7 @@ class AbsenceRequestServiceTest {
         AbsenceRequest request = pendingRequest(AbsenceType.VACATION,
                 LocalDate.of(2026, 7, 10), LocalDate.of(2026, 7, 12), applicant); // 3일
         when(memberRepository.findByUserId(ADMIN_ID)).thenReturn(Optional.of(admin()));
+        when(memberRepository.findByUserIdForUpdate(USER_ID)).thenReturn(Optional.of(applicant));
         when(absenceRequestRepository.findById(1)).thenReturn(Optional.of(request));
         when(absenceRequestRepository.save(any(AbsenceRequest.class))).thenAnswer(inv -> inv.getArgument(0));
 

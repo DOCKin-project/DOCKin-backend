@@ -102,7 +102,14 @@ public class AbsenceRequestService {
 
         if (request.getType() == AbsenceType.VACATION) {
             long days = ChronoUnit.DAYS.between(request.getStartDate(), request.getEndDate()) + 1;
-            Member applicant = request.getMember();
+
+            // 잔여 연차는 읽고-검사하고-쓰는 순서라 락이 없으면 lost update가 난다.
+            // 관리자 두 명이 같은 사용자의 신청 두 건을 동시에 승인하면 둘 다 검사를 통과하고
+            // 둘 다 차감해 잔액이 음수가 될 수 있다. 유니크 제약으로는 막을 수 없는 종류의 문제다
+            // (중복 행이 아니라 수치 갱신이므로). 상세는 findByUserIdForUpdate 주석 참고.
+            Member applicant = memberRepository.findByUserIdForUpdate(request.getMember().getUserId())
+                    .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
             if (days > applicant.getRemainingLeaveDays()) {
                 throw new BusinessException(ErrorCode.INSUFFICIENT_LEAVE_DAYS);
             }
