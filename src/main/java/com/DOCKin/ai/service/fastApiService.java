@@ -79,14 +79,26 @@ public class fastApiService {
                 .map(apiResult -> new ChatDomain.Response(request.traceId(), apiResult));
     }
 
-    //  챗봇 로그 저장 (컨트롤러에서 호출)
+    /**
+     * 챗봇 로그 저장.
+     *
+     * <p>RAG 도입 후 <b>어떤 근거로 답했는지</b>를 함께 남긴다. 잘못된 답변이 나왔을 때
+     * 모델이 문제인지 검색이 문제인지 가르는 유일한 단서이고, 임베딩 서버 장애로 키워드 폴백에
+     * 떨어진 구간을 사후에 식별할 수 있게 한다.
+     *
+     * @param question  실제 질문 원문 (근거가 붙기 전). 프롬프트가 아니라 사용자가 입력한 문장을 남긴다
+     * @param retrieval 근거 검색 결과. 근거가 없으면 {@code source_chunk_ids}는 null이 된다
+     */
     @Transactional
-    public void saveChatLog(ChatDomain.Request request, ChatDomain.Response response, String userId) {
+    public void saveChatLog(String question, ChatDomain.Response response, String userId,
+                            String traceId, com.DOCKin.rag.dto.RetrievalResult retrieval) {
         ChatLog log = ChatLog.builder()
-                .traceId(request.traceId())
+                .traceId(traceId)
                 .userId(userId)
-                .userQuery(request.messages().get(0).content())
-                .reply(response.result().reply())
+                .userQuery(question)
+                .reply(response == null ? null : response.result().reply())
+                .sourceChunkIds(retrieval == null ? null : retrieval.toSourceIds())
+                .retrievalMode(retrieval == null ? null : retrieval.mode().name())
                 .build();
         chatLogRepository.save(log);
     }
@@ -124,42 +136,54 @@ public class fastApiService {
                 workLogEntity.getLogText(), "ko", request.target(), request.traceId());
 
         // 4. 각각 통신 (FastAPI 응답의 'translated' 필드를 맵에서 꺼냄)
-        var titleMap = fastApiWebClient.post()
+        // ADR-0002 2-1: 제목/본문 번역은 서로 의존관계가 없어 Mono.zip으로 동시에 보내고
+        // 한 번만 block()한다. 순차 호출(300ms+300ms) 대비 늦은 쪽 응답시간(약 300ms) 수준으로 단축된다.
+        Mono<java.util.Map> titleMono = fastApiWebClient.post()
                 .uri("/api/translate")
                 .bodyValue(titleReq)
                 .retrieve()
-                .bodyToMono(java.util.Map.class)
-                .block();
+                .bodyToMono(java.util.Map.class);
 
-        var contentMap = fastApiWebClient.post()
+        Mono<java.util.Map> contentMono = fastApiWebClient.post()
                 .uri("/api/translate")
                 .bodyValue(contentReq)
                 .retrieve()
-                .bodyToMono(java.util.Map.class)
-                .block();
+                .bodyToMono(java.util.Map.class);
 
-        if (titleMap == null || contentMap == null) {
+        var zipped = Mono.zip(titleMono, contentMono).block();
+
+        if (zipped == null) {
             throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
+
+        var titleMap = zipped.getT1();
+        var contentMap = zipped.getT2();
 
         // FastAPI 응답 필드명인 "translated"로 데이터 추출
         String transTitle = ((String) titleMap.get("translated")).trim();
         String transContent = ((String) contentMap.get("translated")).trim();
         String modelName = (String) titleMap.get("model");
 
-        // 5. DB 저장 (원문/번역본 각각 저장)
-        TranslateLog translateLog = TranslateLog.builder()
-                .traceId(request.traceId())
-                .workLogs(workLogEntity)
-                .userId(userId)
-                .originalTitle(workLogEntity.getTitle())
-                .translatedTitle(transTitle)
-                .originalText(workLogEntity.getLogText())
-                .translatedText(transContent)
-                .targetLang(request.target())
-                .build();
-
-        translateRepository.save(translateLog);
+        // 5. DB 저장.
+        // work_log_translations에 UNIQUE(log_id, language_code)가 생겨 무조건 save하면 제약 위반이 난다.
+        // 같은 작업일지를 같은 언어로 다시 번역하면 새 행이 아니라 기존 행을 갱신한다 —
+        // 중복 행이 쌓이면 RAG 교차언어 색인에서 같은 문서가 여러 번 색인되어 검색 결과가 오염된다.
+        translateRepository.findByWorkLogsLogIdAndLanguageCode(logId, request.target())
+                .ifPresentOrElse(
+                        existing -> existing.updateTranslation(
+                                workLogEntity.getTitle(), transTitle,
+                                workLogEntity.getLogText(), transContent,
+                                request.traceId()),
+                        () -> translateRepository.save(TranslateLog.builder()
+                                .traceId(request.traceId())
+                                .workLogs(workLogEntity)
+                                .userId(userId)
+                                .originalTitle(workLogEntity.getTitle())
+                                .translatedTitle(transTitle)
+                                .originalText(workLogEntity.getLogText())
+                                .translatedText(transContent)
+                                .languageCode(request.target())
+                                .build()));
 
         // 6. Response DTO 구조에 맞춰서 리턴
         return new TranslateDomain.Response(

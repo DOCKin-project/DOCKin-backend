@@ -34,6 +34,8 @@ public enum ErrorCode {
 
     // Attendance
     ATTENDANCE_ALREADY_CHECKED(409, "AT001", "이미 오늘 출근 처리가 완료되었습니다."),
+    ATTENDANCE_NOT_CHECKED_IN(404, "AT002", "오늘 출근 기록이 존재하지 않습니다."),
+    ATTENDANCE_ALREADY_CHECKED_OUT(409, "AT003", "이미 오늘 퇴근 처리가 완료되었습니다."),
 
     // Checklist
     CHECKLIST_NOT_FOUND(404, "CK001", "존재하지 않는 체크리스트입니다."),
@@ -59,7 +61,11 @@ public enum ErrorCode {
 
     // FastApi
     CHATBOT_NOT_WORK(404, "F001", "챗봇이 에러가 발생했습니다."),
-    STT_CONVERSION_ERROR(404, "F002", "STT에서 에러가 발생했습니다.");
+    STT_CONVERSION_ERROR(404, "F002", "STT에서 에러가 발생했습니다."),
+
+    // RAG
+    EMBEDDING_SERVER_ERROR(503, "R001", "임베딩 서버 호출에 실패했습니다."),
+    EMBEDDING_DIMENSION_MISMATCH(500, "R002", "임베딩 차원이 일치하지 않습니다.");
 
 
     private final int status;

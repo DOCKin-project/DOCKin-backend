@@ -44,6 +44,7 @@ services:
       - RACK_ENV=development
       - JAVA_OPTS=-Xmx400M -Xms256M
       - AI_SERVER_URL=${AI_SERVER_URL}
+      - EMBEDDING_SERVER_URL=http://dockin-embedding:80
       - cloud.aws.credentials.access-key=${AWS_ACCESS_KEY}
       - cloud.aws.credentials.secret-key=${AWS_SECRET_KEY}
       - cloud.aws.region.static=${AWS_REGION}
@@ -104,9 +105,36 @@ services:
         limits:
           memory: 300M # MySQL 메모리 점유 제한
 
+  # RAG 임베딩 추론 서버 (HuggingFace text-embeddings-inference)
+  # 팀원 FastAPI(AI_SERVER_URL)와는 별개 서비스다. 번역/STT와 무관하며 텍스트->벡터 변환만 담당한다.
+  # dockin-app이 depends_on을 걸지 않는 이유: 임베딩 서버가 죽어도 검색은 LIKE 폴백으로 동작해야 하므로
+  # 기동 의존성을 만들지 않는다(ADR-0001의 "Redis가 죽어도 DB가 최종 방어선" 원칙과 동일).
+  dockin-embedding:
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-latest
+    container_name: dockin-embedding
+    command:
+      # multilingual-e5-small: 118M 파라미터 / 384차원.
+      # bge-m3(568M)는 이 환경(i3-6100, 2코어)에서 인덱싱 처리량이 안 나와 제외했다.
+      - --model-id=intfloat/multilingual-e5-small
+      # 모델 최대 시퀀스(512 토큰) 초과 입력에서 에러 대신 잘라내기. 작업일지 본문이 길 수 있다.
+      - --auto-truncate
+    environment:
+      - TZ=Asia/Seoul
+    ports:
+      - "8081:80"
+    volumes:
+      - embedding_cache:/data # 모델 가중치 캐시. 최초 1회만 다운로드한다.
+    networks:
+      - dockin-network
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+
 networks:
   dockin-network:
     driver: bridge
 
 volumes:
   dockin_db_data:
+  embedding_cache:
