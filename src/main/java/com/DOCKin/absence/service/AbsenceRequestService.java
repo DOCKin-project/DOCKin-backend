@@ -5,6 +5,7 @@ import com.DOCKin.absence.dto.AbsenceRequestResponseDto;
 import com.DOCKin.absence.model.AbsenceRequest;
 import com.DOCKin.absence.model.AbsenceStatus;
 import com.DOCKin.absence.model.AbsenceType;
+import com.DOCKin.absence.event.AbsenceApprovedEvent;
 import com.DOCKin.absence.repository.AbsenceRequestRepository;
 import com.DOCKin.global.error.BusinessException;
 import com.DOCKin.global.error.ErrorCode;
@@ -13,6 +14,7 @@ import com.DOCKin.member.model.Member;
 import com.DOCKin.member.model.UserRole;
 import com.DOCKin.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -31,6 +33,7 @@ public class AbsenceRequestService {
     private final AbsenceRequestRepository absenceRequestRepository;
     private final MemberRepository memberRepository;
     private final S3PresignedService s3PresignedService;
+    private final ApplicationEventPublisher eventPublisher;
 
     private Member requireAdmin(String userId) {
         Member member = memberRepository.findByUserId(userId)
@@ -111,7 +114,19 @@ public class AbsenceRequestService {
         request.setProcessedAt(LocalDateTime.now());
         request.setDecisionComment(comment);
 
-        return AbsenceRequestResponseDto.fromEntity(absenceRequestRepository.save(request));
+        AbsenceRequestResponseDto response =
+                AbsenceRequestResponseDto.fromEntity(absenceRequestRepository.save(request));
+
+        // 승인만 하고 끝내면 그 기간은 근태에 아무 기록도 남지 않아 무단 결근 처리 대상이 된다.
+        // 근태 모듈을 직접 호출하지 않고 이벤트로 알리되, 동기 리스너라 같은 트랜잭션에서 처리된다
+        // (반영 실패 시 승인도 함께 롤백되어야 한다). 상세는 AbsenceApprovedEvent 참고.
+        eventPublisher.publishEvent(new AbsenceApprovedEvent(
+                request.getMember().getUserId(),
+                request.getType(),
+                request.getStartDate(),
+                request.getEndDate()));
+
+        return response;
     }
 
     @Transactional

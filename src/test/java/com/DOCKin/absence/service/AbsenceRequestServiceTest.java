@@ -18,6 +18,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.mock.web.MockMultipartFile;
 
 import java.time.LocalDate;
@@ -38,6 +39,12 @@ class AbsenceRequestServiceTest {
     private MemberRepository memberRepository;
     @Mock
     private S3PresignedService s3PresignedService;
+    /**
+     * 승인 시 {@code AbsenceApprovedEvent}를 발행해 근태에 반영한다.
+     * 발행 자체는 여기서 검증하지 않고 {@code AbsenceApprovedListenerTest}가 수신 측을 검증한다.
+     */
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private AbsenceRequestService absenceRequestService;
