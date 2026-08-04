@@ -16,8 +16,16 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor(access= AccessLevel.PROTECTED)
 public class Attendance {
+    /**
+     * PK.
+     *
+     * <p>{@code SEQUENCE}인 이유는 {@code DocumentChunk}와 같다 — 결근 배치와 휴가 반영이
+     * 인원 수만큼 한 번에 INSERT하는데, IDENTITY는 JDBC 배치를 막는다.
+     * 5,000명 규모에서 결근 처리 한 번이 INSERT 왕복 5,000번이 되는 것을 피한다.
+     */
     @Id
-    @GeneratedValue(strategy= GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "attendance_seq")
+    @SequenceGenerator(name = "attendance_seq", sequenceName = "attendance_seq", allocationSize = 50)
     private Long id;
 
     @ManyToOne(fetch =FetchType.LAZY)

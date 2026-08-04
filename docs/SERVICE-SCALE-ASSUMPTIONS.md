@@ -265,6 +265,60 @@ Filter 단계에서 10,020건으로 줄인다. 즉 **약 90%를 헛읽는다.** 
 학습 데이터 양 차이로 보인다. **조선소 근로자 구성을 고려하면 실사용 비중이 높을 언어가 오히려 약하다**는
 뜻이므로, 실데이터가 쌓이면 언어별로 나눠 측정해야 한다.
 
+### 6-5. PostgreSQL 이관 후 재측정 (Phase 2a)
+
+같은 벤치마크를 PostgreSQL(`pgvector/pgvector:pg17`)에서 다시 돌렸다. 코드는 동일하고 DB만 바뀌었다.
+
+| 적재 청크 | 경로 | 후보 수 | MySQL 합계 | **PostgreSQL 합계** |
+|---|---|---|---|---|
+| 10,000 | 선필터 | 1,002 | 159 ms | **79.8 ms** |
+| 10,000 | 전체 스캔 | 10,000 | 664 ms | 749 ms |
+| 100,000 | 선필터 | 10,020 | 1,485 ms | **424 ms** |
+| 100,000 | 전체 스캔 | 100,000 | 5,165 ms | 4,059 ms |
+
+**전체 스캔은 비슷한데 선필터만 3.5배 빨라졌다.** 6-3에서 세운 BitmapOr 가설이 맞았다.
+
+#### `EXPLAIN` — PostgreSQL은 `OR`에서 인덱스를 쓴다
+
+```
+[A] OR 조건 — 41.5ms
+Bitmap Heap Scan on bench_or  rows=10020
+  Recheck Cond: (visibility = 'PUBLIC' OR owner_user_id = 'user1')
+  -> BitmapOr
+       -> Bitmap Index Scan on idx_or_visibility (visibility='PUBLIC')     rows=10000
+       -> Bitmap Index Scan on idx_or_visibility (owner_user_id='user1')   rows=20
+```
+
+같은 인덱스를 두 번 스캔해 비트맵으로 OR 연산한 뒤 힙에 접근한다.
+MySQL은 이 계획을 고르지 못해 10만 행을 전부 읽고 Filter로 걸렀다(770ms).
+
+> **분리 구현을 되돌리지 않는다.** 단일 `OR` 쿼리 41.5ms 대 분리 18.5ms(공개분)로 분리가 여전히 조금 빠르다.
+> `Heap Blocks: exact=10000`으로 힙 접근량은 같고 차이는 BitmapOr 오버헤드다.
+> 되돌리면 코드는 단순해지지만 성능은 약간 손해라, 지금 구조를 유지한다.
+
+#### 대량 적재 — `SEQUENCE` 전환 효과
+
+| 항목 | 값 |
+|---|---|
+| 시퀀스 `increment_by` | **50** (DDL에 반영 확인) |
+| `nextval` 호출 횟수 | **200회** (10,000건 적재) |
+| 소요 시간 | 약 6~7초 (MySQL + IDENTITY 시절 36,461ms) |
+
+IDENTITY였다면 `nextval` 자리에 건별 왕복 10,000회가 있었을 자리다.
+**단, 시간 비교는 엔진이 달라 직접 비교가 아니다** — 결정적 근거는 호출 횟수 200회다.
+
+> **지표를 바꿔야 했다.** MySQL은 `rewriteBatchedStatements`가 배치를 다중행 INSERT 한 문장으로 합쳐
+> `Com_insert` 증가분이 곧 배치 여부였다. PostgreSQL 드라이버는 같은 prepared statement를
+> **파이프라인으로 여러 번 실행**하므로 문장 수로는 배치를 구분할 수 없다.
+> 배치의 이득이 "문장 수 감소"가 아니라 "왕복 감소"이기 때문이다.
+
+#### 이관 중 잡은 문제
+
+`SafetyCourse.createdAt`에 `columnDefinition = "DATETIME"`이 하드코딩돼 있어
+PostgreSQL에서 `type "datetime" does not exist`로 **테이블 생성이 실패했다.**
+`ddl-auto=update`는 DDL 오류를 로그만 남기고 기동을 막지 않아, `safety_courses`가 없는 채로
+**앱이 정상 기동한 것처럼 보였다.** 타입 명시를 제거해 Hibernate가 방언에 맞는 타입을 고르게 했다.
+
 ### 아직 실측 전
 
 - 실제 작업일지 1건당 평균 청크 수 (여기서는 2~3배로 가정) `[실측 필요]`

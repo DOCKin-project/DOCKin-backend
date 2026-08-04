@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class LeaveBalanceConcurrencyTest {
 
     private static final String URL =
-            "jdbc:mysql://localhost:3308/dockindb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
+            "jdbc:postgresql://localhost:5432/dockindb";
     private static final String TABLE = "bench_leave_balance";
     private static final String USER_ID = "10001";
 
@@ -69,7 +69,7 @@ class LeaveBalanceConcurrencyTest {
                     INITIAL_DAYS, result.approved() * REQUEST_DAYS,
                     result.approved() * REQUEST_DAYS - INITIAL_DAYS);
         } catch (SQLException e) {
-            Assumptions.abort("MySQL(localhost:3308) 접속 실패로 검증을 건너뜁니다: " + e.getMessage());
+            Assumptions.abort("PostgreSQL(localhost:5432) 접속 실패로 검증을 건너뜁니다: " + e.getMessage());
         }
     }
 
@@ -93,7 +93,7 @@ class LeaveBalanceConcurrencyTest {
             assertEquals(INITIAL_DAYS - REQUEST_DAYS, result.finalBalance());
             System.out.println(">>> 잔액을 초과하지 않는다.");
         } catch (SQLException e) {
-            Assumptions.abort("MySQL(localhost:3308) 접속 실패로 검증을 건너뜁니다: " + e.getMessage());
+            Assumptions.abort("PostgreSQL(localhost:5432) 접속 실패로 검증을 건너뜁니다: " + e.getMessage());
         }
     }
 

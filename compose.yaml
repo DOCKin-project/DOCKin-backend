@@ -77,32 +77,45 @@ services:
         limits:
           memory: 100M # 출근 분산락 전용, 소용량으로 제한
 
+  # MySQL 8.0에서 PostgreSQL로 이관했다(ADR-0006 3절). 이관 근거 요약:
+  #  - 벡터 검색: MySQL 8.0에 ANN 인덱스가 없다(9.x의 VECTOR도 인덱스는 HeatWave 전용).
+  #    브루트포스 10만 청크가 5.2초이고 병목의 81%가 애플리케이션으로 벡터를 가져오는 전송이라,
+  #    유사도 계산을 DB 안에서 끝내는 pgvector가 유일한 해법이다.
+  #  - 배치 INSERT: IDENTITY 전략이 JDBC 배치를 막았다. 시퀀스는 INSERT 전에 키를 받아 배치가 된다.
+  #  - 락 대기 한도: MySQL은 서버/세션 단위까지만 조정 가능하나, PostgreSQL은
+  #    SET LOCAL lock_timeout으로 트랜잭션 단위 조정이 된다.
+  #
+  # 이미지는 pgvector 포함본을 쓴다. 순수 postgres의 상위 집합이라 지금 비용이 없고,
+  # 2b(pgvector 도입) 때 이미지를 다시 바꾸지 않아도 된다.
   DOCKin-DB:
-    image: mysql:8.0
+    image: pgvector/pgvector:pg17
     container_name: dockin-db
     command:
-      - --default-time-zone=+09:00
-      - --character-set-server=utf8mb4
-      - --collation-server=utf8mb4_unicode_ci
-      # 락 대기 한도. 기본값 50초는 사용자가 승인 버튼을 누르고 50초를 기다린 끝에
-      # 실패를 보게 되어 최악의 경험이 된다. 빨리 실패하고 재시도하는 편이 낫다.
-      #
-      # JPA의 jakarta.persistence.lock.timeout 힌트로는 조정할 수 없다 - 검증 결과
-      # 힌트를 걸어도 SQL에 반영되지 않고(FOR UPDATE에 대기 시간 문법이 없다) 50초가 그대로 적용됐다.
-      # MySQL은 NOWAIT / SKIP LOCKED만 지원하므로 서버 파라미터가 유일한 수단이다.
-      # 검증 코드: LockTimeoutVerificationTest
-      - --innodb-lock-wait-timeout=5
+      # 락 대기 한도. 기본값은 무제한(0)이라 승인이 영원히 매달릴 수 있다.
+      # 전역 기본은 5초로 두고, 오래 잡아야 하는 배치는 트랜잭션 단위로 SET LOCAL로 늘린다.
+      # MySQL에서는 이 트랜잭션 단위 조정이 불가능해 전역 5초로 고정할 수밖에 없었다.
+      - -c
+      - lock_timeout=5s
+      # 데드락 감지 주기. 기본 1초.
+      - -c
+      - deadlock_timeout=1s
+      # 실행된 문장 수를 세기 위해 활성화한다. MySQL의 Com_insert에 해당하는 수단으로,
+      # "배치 설정이 실제로 동작하는가"를 추정이 아니라 DB가 센 값으로 확인하는 데 쓴다.
+      # (MySQL 시절 batch_size가 IDENTITY 때문에 조용히 무시되던 것을 이 방식으로 잡아냈다.)
+      - -c
+      - shared_preload_libraries=pg_stat_statements
     environment:
-      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
-      - MYSQL_DATABASE=dockindb
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=dockindb
       - TZ=Asia/Seoul
     ports:
-      - "3306:3306"
+      - "5432:5432"
     volumes:
-      - dockin_db_data:/var/lib/mysql
+      - dockin_db_data:/var/lib/postgresql/data
       - /etc/localtime:/etc/localtime:ro
     healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD}" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d dockindb" ]
       timeout: 10s
       retries: 10
       interval: 5s
@@ -111,7 +124,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 300M # MySQL 메모리 점유 제한
+          memory: 512M # MySQL(300M)보다 여유를 둔다. 벡터 검색 시 공유 버퍼가 필요하다.
 
   # RAG 임베딩 추론 서버 (HuggingFace text-embeddings-inference)
   # 팀원 FastAPI(AI_SERVER_URL)와는 별개 서비스다. 번역/STT와 무관하며 텍스트->벡터 변환만 담당한다.

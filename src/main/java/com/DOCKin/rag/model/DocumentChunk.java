@@ -41,8 +41,21 @@ import java.time.LocalDateTime;
 )
 public class DocumentChunk {
 
+    /**
+     * PK.
+     *
+     * <p><b>{@code IDENTITY}가 아니라 {@code SEQUENCE}인 이유:</b> IDENTITY는 INSERT 직후
+     * 생성된 키를 읽어야 해서 Hibernate가 JDBC 배치를 포기한다. 인덱싱이 10만 건 단위 적재라
+     * 배치가 막히면 왕복이 10만 번 발생한다(MySQL 시절 {@code Com_insert}로 확인한 문제).
+     * 시퀀스는 INSERT <b>전에</b> 키를 받아오므로 문장을 묶을 수 있다.
+     *
+     * <p>{@code allocationSize}를 배치 크기에 맞춰 50으로 둔다. 기본값 50이지만 명시해
+     * "왜 시퀀스를 한 번 호출하고 50개를 쓰는가"를 드러낸다 — 매 INSERT마다 시퀀스를 호출하면
+     * 배치로 묶어도 왕복이 그만큼 생긴다.
+     */
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "document_chunk_seq")
+    @SequenceGenerator(name = "document_chunk_seq", sequenceName = "document_chunk_seq", allocationSize = 50)
     @Column(name = "chunk_id")
     private Long chunkId;
 
@@ -79,12 +92,15 @@ public class DocumentChunk {
      * <p>BLOB이 아니라 VARBINARY로 둔 이유: 브루트포스가 전체 행을 읽으므로
      * 오프페이지 저장을 피하고 인라인으로 읽는 편이 유리하다.
      *
-     * <p>상한을 4096으로 잡은 것은 확장성 때문이다. VARBINARY는 가변 길이라
-     * 384차원이면 실제로 1536 bytes만 저장하므로 낭비가 없다.
-     * 4096이면 1024차원(예: {@code bge-m3})까지 스키마 변경 없이 수용한다.
+     * <p>MySQL 시절에는 {@code VARBINARY(4096)}이었다. 브루트포스가 전체 행을 훑으므로
+     * BLOB의 오프페이지 저장을 피하려는 선택이었고, 상한 4096은 1024차원까지 수용하기 위함이었다.
+     * PostgreSQL에는 그 구분이 없어 {@code BYTEA} 하나로 대체된다(길이 제한도 불필요).
+     *
+     * <p><b>2b에서 pgvector의 {@code vector} 타입으로 바뀔 자리다.</b> 지금은 이관 자체를
+     * 검증하는 단계라 바이트 표현을 유지한다 — 유사도 계산이 여전히 애플리케이션에서 일어난다.
      * {@link #embeddingDim}과 함께 읽어야 벡터를 복원할 수 있다.
      */
-    @Column(name = "embedding", nullable = false, columnDefinition = "VARBINARY(4096)")
+    @Column(name = "embedding", nullable = false, columnDefinition = "BYTEA")
     private byte[] embedding;
 
     /**
