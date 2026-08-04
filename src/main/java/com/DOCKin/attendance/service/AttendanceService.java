@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -39,6 +40,7 @@ public class AttendanceService {
     private final AttendanceRepository attendanceRepository;
     private final MemberRepository memberRepository;
     private final RedissonClient redissonClient;
+    private final Clock clock;
 
 
     //출근로직
@@ -46,7 +48,7 @@ public class AttendanceService {
     //클래스 레벨 @Transactional(readOnly = true)를 그냥 상속받으면 INSERT가 읽기 전용 커넥션에서 막히므로 NOT_SUPPORTED로 명시한다.
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public AttendanceDto clockin(String userId, ClockInRequestDto dto) {
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(clock);
         String lockKey = "attendance:lock:" + userId + ":" + today;
         RLock lock = redissonClient.getLock(lockKey);
 
@@ -85,7 +87,7 @@ public class AttendanceService {
             throw new BusinessException(ErrorCode.ATTENDANCE_ALREADY_CHECKED);
         }
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(clock);
         // 교대(work_shift)별 시작 시각 기준으로 지각을 판단한다. 필드 도입 이전 데이터 등으로 null이면 MORNING으로 간주.
         WorkShift shift = member.getWorkShift() != null ? member.getWorkShift() : WorkShift.MORNING;
         AttendanceStatus status = now.toLocalTime().isAfter(shift.getStartTime())
@@ -117,17 +119,17 @@ public class AttendanceService {
                 .orElseThrow(()-> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         //가장 마지막의 출근 기록을 가져옴
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(clock);
         Attendance attendance = attendanceRepository.findByMemberAndWorkDate(member,today)
-                .orElseThrow(()->new BusinessException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(()->new BusinessException(ErrorCode.ATTENDANCE_NOT_CHECKED_IN));
 
         if(attendance.getClockOutTime()!=null){
-            throw new IllegalArgumentException("출근 기록이 존재하지 않습니다.");
+            throw new BusinessException(ErrorCode.ATTENDANCE_ALREADY_CHECKED_OUT);
         }
 
         //시간 갱신
-        LocalDateTime now = LocalDateTime.now();
-        attendance.setClockOutTime(LocalDateTime.now());
+        LocalDateTime now = LocalDateTime.now(clock);
+        attendance.setClockOutTime(now);
         attendance.setOutLocation(dto.getOutLocation());
 
         java.time.Duration duration = java.time.Duration.between(attendance.getClockInTime(),now);
