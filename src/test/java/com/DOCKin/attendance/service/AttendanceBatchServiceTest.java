@@ -40,11 +40,14 @@ class AttendanceBatchServiceTest {
     private AttendanceRepository attendanceRepository;
     @Mock
     private MemberRepository memberRepository;
+    @Mock
+    private WorkCalendarService workCalendarService;
 
     @Test
     @DisplayName("근태 기록이 없는 인원만 결근 처리한다")
     void 미체크_인원만_결근() {
         AttendanceBatchService service = service(WEDNESDAY);
+        when(workCalendarService.isWorkingDay(WEDNESDAY)).thenReturn(true);
         when(attendanceRepository.findUserIdsByWorkDate(WEDNESDAY))
                 .thenReturn(List.of("10001"));   // 10001은 출근했다
         when(memberRepository.findAll())
@@ -63,6 +66,7 @@ class AttendanceBatchServiceTest {
     @DisplayName("승인된 휴가로 기록이 있으면 결근으로 뒤집지 않는다")
     void 휴가자는_제외() {
         AttendanceBatchService service = service(WEDNESDAY);
+        when(workCalendarService.isWorkingDay(WEDNESDAY)).thenReturn(true);
         // 휴가 승인 리스너가 이미 VACATION 기록을 만들어 둔 상태.
         when(attendanceRepository.findUserIdsByWorkDate(WEDNESDAY))
                 .thenReturn(List.of("10002"));
@@ -81,6 +85,7 @@ class AttendanceBatchServiceTest {
     @DisplayName("결근 기록에는 출퇴근 시각이 없다")
     void 결근은_시각이_없다() {
         AttendanceBatchService service = service(WEDNESDAY);
+        when(workCalendarService.isWorkingDay(WEDNESDAY)).thenReturn(true);
         when(attendanceRepository.findUserIdsByWorkDate(WEDNESDAY)).thenReturn(List.of());
         when(memberRepository.findAll()).thenReturn(List.of(member("10001")));
 
@@ -92,9 +97,10 @@ class AttendanceBatchServiceTest {
     }
 
     @Test
-    @DisplayName("주말은 결근 처리하지 않는다")
+    @DisplayName("근무일이 아니면 결근 처리하지 않는다 - 주말")
     void 주말_제외() {
         AttendanceBatchService service = service(SATURDAY);
+        when(workCalendarService.isWorkingDay(SATURDAY)).thenReturn(false);
 
         int created = service.markAbsentFor(SATURDAY);
 
@@ -104,9 +110,22 @@ class AttendanceBatchServiceTest {
     }
 
     @Test
+    @DisplayName("근무일이 아니면 결근 처리하지 않는다 - 평일 공휴일")
+    void 공휴일_제외() {
+        AttendanceBatchService service = service(WEDNESDAY);
+        // 요일로는 평일이지만 캘린더가 공휴일로 등록해 둔 날.
+        // 이 판단이 없으면 공휴일에 전원이 결근 처리된다.
+        when(workCalendarService.isWorkingDay(WEDNESDAY)).thenReturn(false);
+
+        assertEquals(0, service.markAbsentFor(WEDNESDAY));
+        verifyNoInteractions(attendanceRepository, memberRepository);
+    }
+
+    @Test
     @DisplayName("전원이 출근했으면 저장을 호출하지 않는다")
     void 결근자가_없으면_저장하지_않는다() {
         AttendanceBatchService service = service(WEDNESDAY);
+        when(workCalendarService.isWorkingDay(WEDNESDAY)).thenReturn(true);
         when(attendanceRepository.findUserIdsByWorkDate(WEDNESDAY))
                 .thenReturn(List.of("10001", "10002"));
         when(memberRepository.findAll())
@@ -126,7 +145,7 @@ class AttendanceBatchServiceTest {
         Clock fixed = Clock.fixed(
                 today.atStartOfDay(ZoneId.systemDefault()).toInstant(),
                 ZoneId.systemDefault());
-        return new AttendanceBatchService(attendanceRepository, memberRepository, fixed);
+        return new AttendanceBatchService(attendanceRepository, memberRepository, workCalendarService, fixed);
     }
 
     @SuppressWarnings("unchecked")

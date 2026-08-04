@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
@@ -28,11 +27,13 @@ import java.util.Set;
  * <p><b>{@code Clock}을 주입받는다.</b> {@code LocalDate.now()}를 직접 부르면 "어제"가 실행 시각에
  * 따라 달라져 테스트가 불가능하다. 근태는 날짜 경계가 곧 비즈니스 규칙이라 특히 중요하다.
  *
- * <h3>알려진 한계 — 근무일 판단</h3>
- * 이 프로젝트에는 <b>근무일 캘린더가 없다.</b> {@code WorkShift}는 교대 시간대만 정의하고
- * 공휴일·교대조별 휴무일 정보는 어디에도 없다. 그래서 지금은 <b>주말만 제외</b>한다.
- * 이대로면 공휴일에 전원이 결근 처리되므로, 운영에 쓰려면 근무일 캘린더가 선행되어야 한다.
- * ADR-0005가 지적한 "근무 정책 엔진 미충족"과 같은 뿌리의 문제다.
+ * <h3>근무일 판단</h3>
+ * {@link WorkCalendarService}에 위임한다. 캘린더에 등록된 날은 등록값을 따르고,
+ * 없으면 기본 규칙(평일=근무, 주말=휴무)을 따른다.
+ *
+ * <p><b>남은 한계:</b> 캘린더는 전사 공통 휴무일만 다룬다. 조선소는 교대조마다 휴무 패턴이 달라
+ * 실제로는 {@code (날짜, 교대조)} 단위로 근무일이 결정되지만, 그건 근무 정책 엔진의 영역이다
+ * (ADR-0005 "근무 정책 엔진 미충족", 백로그 P3).
  */
 @Slf4j
 @Service
@@ -41,6 +42,7 @@ public class AttendanceBatchService {
 
     private final AttendanceRepository attendanceRepository;
     private final MemberRepository memberRepository;
+    private final WorkCalendarService workCalendarService;
     private final Clock clock;
 
     @Value("${attendance.absent-batch.enabled:true}")
@@ -75,8 +77,8 @@ public class AttendanceBatchService {
      */
     @Transactional
     public int markAbsentFor(LocalDate workDate) {
-        if (isNonWorkingDay(workDate)) {
-            log.info("[근태] {}는 주말이라 결근 처리를 건너뜁니다.", workDate);
+        if (!workCalendarService.isWorkingDay(workDate)) {
+            log.info("[근태] {}는 근무일이 아니라 결근 처리를 건너뜁니다.", workDate);
             return 0;
         }
 
@@ -95,14 +97,5 @@ public class AttendanceBatchService {
         log.info("[근태] 결근 처리 완료 - {} 대상 {}건 (기존 기록 {}건)",
                 workDate, absentees.size(), recorded.size());
         return absentees.size();
-    }
-
-    /**
-     * 주말 여부. <b>공휴일은 판단하지 못한다</b> — 근무일 캘린더가 없다.
-     * 운영 투입 전에 반드시 보완해야 하는 지점이라 별도 메서드로 드러내 둔다.
-     */
-    private boolean isNonWorkingDay(LocalDate date) {
-        DayOfWeek day = date.getDayOfWeek();
-        return day == DayOfWeek.SATURDAY || day == DayOfWeek.SUNDAY;
     }
 }

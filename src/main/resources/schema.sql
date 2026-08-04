@@ -9,6 +9,7 @@
 -- 안전 관리
 -- refresh_token
 SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS work_calendar;
 DROP TABLE IF EXISTS document_chunks;
 DROP TABLE IF EXISTS work_log_translations;
 DROP TABLE IF EXISTS chat_history;
@@ -290,7 +291,25 @@ CREATE TABLE work_log_translations (
                                        UNIQUE KEY uk_log_lang (log_id, language_code)
 );
 
--- 20. RAG 문서 청크 (벡터 검색용)
+-- 20. 근무일 캘린더
+-- 이 테이블이 없으면 결근 배치가 공휴일에 전원을 결근 처리한다.
+-- WorkShift는 교대 시간대만 정의하고 휴무일 정보가 어디에도 없었다.
+--
+-- 날짜를 PK로 쓰는 자연키 설계다. 같은 날이 두 번 등록될 수 없어야 하는데,
+-- 대리키 + 유니크 제약보다 자연키가 의도를 직접 드러낸다.
+--
+-- 등록되지 않은 날은 기본 규칙(평일=근무, 주말=휴무)을 따른다. 비워둬도 기존 동작이 유지되므로
+-- 점진적으로 채울 수 있다. 반대로 "미등록=휴무"로 잡으면 캘린더를 채우기 전까지
+-- 결근 배치가 조용히 무력화된다.
+--
+-- 범위: 전사 공통 휴무일만 다룬다. 교대조별 휴무 패턴은 근무 정책 엔진의 영역이다(백로그 P3).
+CREATE TABLE work_calendar (
+                               calendar_date DATE PRIMARY KEY,
+                               day_type VARCHAR(20) NOT NULL, -- WORKDAY | WEEKEND | HOLIDAY | COMPANY_HOLIDAY
+                               description VARCHAR(100)       -- 예: 광복절, 창립기념일, 토요 특근
+);
+
+-- 21. RAG 문서 청크 (벡터 검색용)
 -- 설계 근거는 docs/SERVICE-SCALE-ASSUMPTIONS.md 3-2, docs/WORK-BACKLOG.md P1 참고.
 --
 -- FK를 걸지 않은 이유: work_logs / work_log_translations / safety_courses 등 여러 원본 테이블을
