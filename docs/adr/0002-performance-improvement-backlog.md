@@ -1,6 +1,6 @@
 # ADR-0002: 백엔드 성능 개선 후보 검토 (JVM / 네트워크 / 캐시 / 쿼리)
 
-- 상태: 후보 검토 완료, 구현 전 (우선순위만 정함)
+- 상태: 2-1(비동기 병렬 외부 호출) 구현 및 실측 완료, 나머지 후보는 검토만 완료(구현 전)
 - 작성 목적: "포폴에 넣을 만한 성능 개선 소재"를 코드 근거 없이 갖다 붙이지 않기 위해, 실제 코드에서 확인되는 문제와 아직 근거가 없는 항목을 구분해서 기록한다. ADR-0001과 동일하게, 숫자를 지어내지 않는다는 원칙을 따른다.
 
 ## 1. 검토 배경
@@ -9,16 +9,29 @@ JVM GC/힙 튜닝, tcpdump, Redis 캐시, 비동기/동기 외부 호출, 로컬
 
 ## 2. 후보별 검토
 
-### 2-1. 비동기 병렬 외부 호출 — 근거 있음, 우선순위 1
+### 2-1. 비동기 병렬 외부 호출 — 구현 및 실측 완료
 
-`fastApiService.saveTranslateLog()`가 제목/본문 번역을 순차적으로 `.block()` 두 번 호출한다.
+`fastApiService.saveTranslateLog()`가 제목/본문 번역을 순차적으로 `.block()` 두 번 호출하던 것을, `Mono.zip()`으로 동시에 보내고 한 번만 block하도록 수정했다.
 
 ```java
+// 변경 전
 var titleMap = fastApiWebClient.post()...bodyToMono(Map.class).block();
 var contentMap = fastApiWebClient.post()...bodyToMono(Map.class).block();
+
+// 변경 후
+var zipped = Mono.zip(titleMono, contentMono).block();
 ```
 
-WebClient(리액티브)를 쓰면서도 동기 블로킹으로 두 번 순차 호출해, 두 요청의 응답 시간이 그대로 더해진다. `Mono.zip()`으로 병렬화하면 전체 지연을 늦은 쪽 응답 시간 수준으로 줄일 수 있다. 코드 몇 줄로 즉시 검증 가능(개선 전/후 응답 시간 실측)하다는 점에서 가장 확실한 소재.
+**실측 결과** (`TranslateParallelBenchmarkTest`, JDK `com.sun.net.httpserver.HttpServer`로 300ms 인위 지연 스텁 서버를 로컬에 띄워 측정):
+
+첫 측정에서는 순차 2540ms vs 병렬 613ms(약 4.1배)로 나왔으나, 이는 대부분 Reactor Netty 커넥션 초기화 비용이 순차 버전에서 두 번 발생한 콜드 스타트 효과였다. 스텁 서버에 커넥션 풀을 미리 데우는 워밍업 호출 5회를 추가하고 재측정하니:
+
+| 방식 | 소요 시간(워밍업 후) |
+|---|---|
+| 순차 `.block()` 2회 (변경 전) | 622ms |
+| `Mono.zip()` 병렬화 (변경 후) | 320ms |
+
+약 1.9배(300ms 지연 두 개를 겹치느냐 아니냐 차이) — 이론적으로 기대한 수치와 일치한다. 참고로 첫 측정 때는 스텁 서버(`HttpServer`)에 `setExecutor()`를 지정하지 않아 서버가 요청을 한 번에 하나씩만 처리하고 있었고(기본 동작), 이 상태에서는 클라이언트가 아무리 병렬로 요청을 보내도 서버 쪽에서 직렬화되어 병렬화 효과가 사라졌다 — `Executors.newFixedThreadPool(4)`로 서버를 동시 처리 가능하게 고친 뒤에야 위 수치가 나왔다. 이 수치는 로컬 스텁 서버 조건의 결과이며, 실제 FastAPI 서버 환경에서는 차이가 다를 수 있다(ADR-0001과 동일하게 측정 조건을 명시해둔다).
 
 ### 2-2. MySQL 쿼리/EXPLAIN 개선 — 근거 있음, 우선순위 2
 
@@ -54,7 +67,7 @@ DOCKin과 Shadowfit의 Real MySQL 소재가 겹치지 않는다는 점을 확인
 
 ## 4. 결론 및 우선순위
 
-1. **비동기 병렬 호출** (`saveTranslateLog` `Mono.zip` 병렬화) — 즉시 구현·측정 가능
+1. **비동기 병렬 호출** (`saveTranslateLog` `Mono.zip` 병렬화) — 구현 및 실측 완료(2-1 참고)
 2. **쿼리 개선** — 채팅 목록 N+1 해결 + `work_logs` 검색 `EXPLAIN` 확인 후 조치
 3. **JVM GC** — 모니터링부터 붙이고 실측 후 튜닝 여부 판단
 4. **로컬 캐시(Caffeine)** — 참조 데이터 대상으로 검토
