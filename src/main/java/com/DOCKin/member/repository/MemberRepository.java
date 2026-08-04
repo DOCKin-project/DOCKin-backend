@@ -32,6 +32,21 @@ public interface MemberRepository extends JpaRepository<Member,String> {
      * 출퇴근은 <b>피크에 몰리는</b> 요청이라 DB 커넥션을 오래 잡지 않으려고 Redis 분산락을 앞단에 뒀다.
      * 휴가 승인은 관리자가 간헐적으로 하는 작업이라 경합이 드물고, 단일 DB이므로
      * {@code SELECT ... FOR UPDATE} 하나로 충분하다. 저장소를 하나 더 끌어들일 이유가 없다.
+     *
+     * <h3>락 대기 한도는 여기서 못 정한다</h3>
+     * {@code jakarta.persistence.lock.timeout} 힌트는 <b>MySQL에서 조용히 무시된다.</b>
+     * 표준 JPA 힌트지만 DB가 문장 단위 대기 시간을 지원해야 실제로 적용되는데,
+     * MySQL은 {@code NOWAIT}과 {@code SKIP LOCKED}만 지원하고 임의의 대기 시간 문법이 없다
+     * (Oracle의 {@code FOR UPDATE WAIT n}에 해당하는 것이 없다).
+     *
+     * <p>실측: 힌트를 3초로 걸고 경합을 만들었더니 <b>50,850ms</b> 걸렸다 —
+     * {@code innodb_lock_wait_timeout} 기본값 50초가 그대로 적용된 것이다.
+     * 생성된 SQL에도 대기 시간이 들어가지 않았다({@code ... for update of m1_0}).
+     * 검증 코드: {@code LockTimeoutVerificationTest}
+     *
+     * <p>그래서 대기 한도는 서버 파라미터로 조정한다 — {@code compose.yaml}의
+     * {@code --innodb-lock-wait-timeout=5}. 승인 버튼을 누르고 50초를 기다린 끝에 실패하는 것보다
+     * 5초 만에 실패하고 재시도하는 편이 낫다.
      */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT m FROM Member m WHERE m.userId = :userId")

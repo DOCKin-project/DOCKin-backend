@@ -84,6 +84,14 @@ services:
       - --default-time-zone=+09:00
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
+      # 락 대기 한도. 기본값 50초는 사용자가 승인 버튼을 누르고 50초를 기다린 끝에
+      # 실패를 보게 되어 최악의 경험이 된다. 빨리 실패하고 재시도하는 편이 낫다.
+      #
+      # JPA의 jakarta.persistence.lock.timeout 힌트로는 조정할 수 없다 - 검증 결과
+      # 힌트를 걸어도 SQL에 반영되지 않고(FOR UPDATE에 대기 시간 문법이 없다) 50초가 그대로 적용됐다.
+      # MySQL은 NOWAIT / SKIP LOCKED만 지원하므로 서버 파라미터가 유일한 수단이다.
+      # 검증 코드: LockTimeoutVerificationTest
+      - --innodb-lock-wait-timeout=5
     environment:
       - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
       - MYSQL_DATABASE=dockindb

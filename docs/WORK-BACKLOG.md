@@ -120,6 +120,26 @@ ADR-0002가 스스로 경계한 "실측 없이 튜닝했다" 패턴이 된다.
 > 실제로 손볼 지점은 **`DocumentChunk.embedding`의 `columnDefinition = "VARBINARY(4096)"` → `BYTEA`** 한 줄이다.
 > (MySQL에서 VARBINARY를 고른 것은 브루트포스 전체 스캔에서 오프페이지 저장을 피하기 위한 의도적 선택이므로 Phase 1에서는 그대로 둔다.)
 
+#### 이전 시 함께 검증할 항목
+
+MySQL에서 발견한 문제들이 PostgreSQL에서 어떻게 되는지 정리한다.
+**"예상" 열은 전부 추측이다** — MySQL에서 세 번 다 예상이 빗나갔으므로 같은 방식으로 실측해야 한다.
+
+| 항목 | MySQL 실측 | PostgreSQL 예상 | 검증 방법 |
+|---|---|---|---|
+| 배치 INSERT | ❌ `IDENTITY`가 막음 (문장 10,000개) | ✅ `SEQUENCE`로 해결 — INSERT 전에 키를 받으므로 묶을 수 있다 | 실행된 INSERT 문장 수 측정 |
+| 락 타임아웃 힌트 | ❌ 무시 (50,850ms) | ❌ 아마 동일 — PostgreSQL에도 문장 단위 대기 시간 문법이 없다 | Hibernate 방언 동작 확인 |
+| 락 타임아웃 조정 | 세션 단위까지 (`innodb_lock_wait_timeout`) | ✅ **트랜잭션 단위** (`SET LOCAL lock_timeout`) | 승인/배치에 다른 값 적용 |
+| 권한 `OR` 인덱스 | ❌ 미사용 → 두 쿼리로 분리 | ⚠️ **BitmapOr**로 탈 가능성 — 플래너가 MySQL의 `index_merge`보다 적극적이다 | `EXPLAIN` 재확인. 타면 분리를 되돌릴 수 있다 |
+| 벡터 컬럼 | `VARBINARY(4096)` | `BYTEA` 또는 pgvector `vector` | 애노테이션 한 줄 |
+
+> **락 타임아웃의 `SET LOCAL`이 실질적 이득이다.** MySQL에서는 서버 전역 5초로 고정할 수밖에 없어
+> "승인에는 적당하지만 인덱싱 배치에는 짧을 수 있다"는 문제가 남았다. PostgreSQL에서는
+> 트랜잭션마다 다른 값을 줄 수 있어 이 트레이드오프가 사라진다.
+>
+> **`OR` 분리는 되돌릴 수 있다.** 현재 구현은 JPQL 두 개를 애플리케이션에서 합치는 방식이라
+> 방언에 무관하게 동작한다. BitmapOr가 확인되면 단일 쿼리로 되돌려 단순화할 수 있다.
+
 **MySQL 9.0 업그레이드는 선택지가 아니다** — `VECTOR` 타입은 있으나 ANN 인덱스가 HeatWave(유료) 전용이라
 커뮤니티 에디션에서는 8.0 + BLOB 브루트포스와 성능이 같다. innovation 릴리스라 지원 주기도 짧다.
 
