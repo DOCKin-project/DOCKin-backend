@@ -109,7 +109,13 @@ public class EmbeddingClient {
             throw e;
         } catch (Exception e) {
             // 서버가 내려가 있는 경우도 여기로 온다. 호출자가 폴백할 수 있도록 도메인 예외로 감싼다.
-            log.error("임베딩 서버 호출 실패: {}", e.getMessage());
+            //
+            // 예외 타입을 함께 찍는다. getMessage()만 찍으면 타임아웃일 때 "null"만 남는다 --
+            // Reactor Netty의 ReadTimeoutException은 메시지가 없기 때문이다.
+            // 실제로 10만 건 색인이 이 로그 하나("임베딩 서버 호출 실패: null")만 남기고 멈춰
+            // 원인이 타임아웃인지 서버 다운인지 구분할 수 없었다.
+            log.error("임베딩 서버 호출 실패 [{}]: {}",
+                    e.getClass().getSimpleName(), e.getMessage());
             throw new BusinessException(ErrorCode.EMBEDDING_SERVER_ERROR);
         }
     }

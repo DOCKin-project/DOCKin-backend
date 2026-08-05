@@ -29,9 +29,14 @@ import java.util.List;
  * {@code @Transactional} 무효화를 피하기 위한 분리).
  *
  * <h3>멱등성과 재시작</h3>
- * 10만 청크 기준 약 20분이 걸리므로(배치 12ms/건 실측) 도중에 중단될 수 있다.
+ * 오래 걸리는 작업이라 도중에 중단될 수 있다.
  * 청크마다 원문의 SHA-256을 저장해두고 재실행 시 해시가 같으면 임베딩을 건너뛰므로,
  * <b>몇 번을 다시 돌려도 결과가 같고 끊긴 지점부터 사실상 이어서 진행된다.</b>
+ *
+ * <p><b>"10만 청크 약 20분(12ms/건)"이라고 적혀 있었으나 틀린 값이다.</b> TEI를 직접 재보니
+ * 청크 길이에 크게 좌우된다 — 149자는 배치 32건에서 46ms/건, 317자는 153ms/건이다.
+ * 게다가 색인 중에는 TEI가 PostgreSQL과 CPU를 두고 경쟁한다.
+ * 실제로 12만 청크 규모에서 <b>시간 단위</b>가 걸린다(SERVICE-SCALE-ASSUMPTIONS 6-8).
  *
  * <h3>알려진 한계</h3>
  * pull 방식(주기 실행)이라 원본 수정이 즉시 반영되지 않는다. 최대 1주기만큼 검색 결과가 낡을 수 있다.
@@ -81,16 +86,25 @@ public class IndexingService {
      */
     public int indexAll() {
         long start = System.currentTimeMillis();
-        int embedded = 0;
+
+        // 누산기를 필드가 아닌 지역 객체로 두되 하위 메서드에 넘긴다.
+        //
+        // 이전에는 각 indexXxx()가 자기 지역변수에 세고 반환값을 더했다. 그러면 예외가 나는 순간
+        // 그 메서드가 반환하지 못해 **이미 커밋된 페이지의 수가 통째로 사라진다.**
+        // 실제로 10만 건 색인이 중간에 실패했을 때 1,837건이 커밋되어 있는데도 로그에는
+        // "신규 임베딩 0건까지 반영됨"이 찍혔다. 재시작 지점을 알려주려고 만든 로그인데
+        // 그 숫자가 틀리면 "얼마나 진행됐나"를 DB에 직접 물어봐야 한다.
+        Progress progress = new Progress();
 
         try {
-            embedded += indexWorkLogs();
-            embedded += indexTranslations();
-            embedded += indexSafetyCourses();
+            indexWorkLogs(progress);
+            indexTranslations(progress);
+            indexSafetyCourses(progress);
         } catch (Exception e) {
             // 이미 커밋된 페이지는 살아남고, 다음 주기에 남은 분부터 이어서 진행된다(해시 기반 멱등).
-            log.error("[RAG] 인덱싱 중단 - 신규 임베딩 {}건까지 반영됨: {}", embedded, e.getMessage(), e);
+            log.error("[RAG] 인덱싱 중단 - 신규 임베딩 {}건까지 반영됨: {}", progress.embedded, e.getMessage(), e);
         }
+        int embedded = progress.embedded;
 
         long total = documentChunkRepository.countByEmbeddingModel(embeddingClient.getModelName());
         log.info("[RAG] 인덱싱 종료 - 신규 임베딩 {}건 / 전체 청크 {}건 / {}ms",
@@ -99,8 +113,7 @@ public class IndexingService {
     }
 
     /** 작업일지는 작성자와 ADMIN만 조회 가능하므로 {@link Visibility#OWNER}로 색인한다. */
-    private int indexWorkLogs() {
-        int embedded = 0;
+    private void indexWorkLogs(Progress progress) {
         long lastId = 0L;
 
         while (true) {
@@ -113,11 +126,10 @@ public class IndexingService {
                 break;
             }
             List<IndexTarget> targets = batch.stream().map(this::toTarget).toList();
-            embedded += chunkIndexWriter.writePage(targets);
+            progress.embedded += chunkIndexWriter.writePage(targets);
 
             lastId = batch.get(batch.size() - 1).getLogId();
         }
-        return embedded;
     }
 
     private IndexTarget toTarget(WorkLog workLog) {
@@ -142,8 +154,7 @@ public class IndexingService {
      * <b>"어떤 질의로 어느 원문이 나와야 하는가"의 정답 라벨이 이미 존재한다.</b>
      * recall@k를 지어내지 않고 측정할 수 있는 근거가 여기 있다.
      */
-    private int indexTranslations() {
-        int embedded = 0;
+    private void indexTranslations(Progress progress) {
         long lastId = 0L;
 
         while (true) {
@@ -155,11 +166,10 @@ public class IndexingService {
             List<IndexTarget> targets = batch.stream()
                     .map(this::toTarget)
                     .toList();
-            embedded += chunkIndexWriter.writePage(targets);
+            progress.embedded += chunkIndexWriter.writePage(targets);
 
             lastId = batch.get(batch.size() - 1).getId();
         }
-        return embedded;
     }
 
     private IndexTarget toTarget(TranslateLog translation) {
@@ -175,8 +185,7 @@ public class IndexingService {
     }
 
     /** 안전교육은 전 근로자가 봐야 하는 내용이므로 {@link Visibility#PUBLIC}이다. */
-    private int indexSafetyCourses() {
-        int embedded = 0;
+    private void indexSafetyCourses(Progress progress) {
         int lastId = 0;
 
         while (true) {
@@ -191,10 +200,19 @@ public class IndexingService {
                             c.getTitle() + "\n" + c.getDescription(),
                             "ko", Visibility.PUBLIC, null))
                     .toList();
-            embedded += chunkIndexWriter.writePage(targets);
+            progress.embedded += chunkIndexWriter.writePage(targets);
 
             lastId = batch.get(batch.size() - 1).getCourseId();
         }
-        return embedded;
+    }
+
+    /**
+     * 진행 수를 하위 메서드와 공유하기 위한 누산기.
+     *
+     * <p>반환값으로 세면 예외가 나는 순간 <b>이미 커밋된 분량이 로그에서 사라진다.</b>
+     * 값을 참조로 들고 다녀야 실패 시점까지의 진행이 남는다.
+     */
+    private static final class Progress {
+        private int embedded = 0;
     }
 }
