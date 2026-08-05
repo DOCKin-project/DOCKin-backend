@@ -6,6 +6,11 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 application-local.properties
+
+### 로컬 전용 설정 (머신마다 다름) ###
+compose.override.yaml
+compose.override.yml
+
 ### STS ###
 .apt_generated
 .classpath
