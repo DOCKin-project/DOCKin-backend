@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
  * <p>동시에 {@code UNIQUE(log_id, language_code)}를 추가했다. 제약이 없던 탓에
  * 같은 작업일지를 같은 언어로 두 번 번역하면 중복 행이 쌓였고, 교차언어 검색에서
  * <b>같은 문서가 여러 번 색인되어 검색 결과를 오염</b>시킬 수 있었다.
- * 재번역은 새 행이 아니라 기존 행 갱신으로 처리한다({@code fastApiService.saveTranslateLog}).
+ * 재번역은 새 행이 아니라 기존 행 갱신으로 처리한다({@code FastApiService.saveTranslateLog}).
  *
  * <p>{@code originalTitle}/{@code originalText}는 {@code work_logs}와 중복되는 비정규화 컬럼이지만,
  * <b>번역 시점의 원문</b>을 남겨 원문이 나중에 수정되었을 때 번역본이 어느 버전을 옮긴 것인지 추적할 수 있게 한다.

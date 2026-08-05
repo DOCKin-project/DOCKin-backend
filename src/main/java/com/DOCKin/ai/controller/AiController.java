@@ -2,13 +2,13 @@ package com.DOCKin.ai.controller;
 
 import com.DOCKin.ai.dto.ChatDomain;
 import com.DOCKin.ai.dto.TranslateDomain;
-import com.DOCKin.ai.dto.onlineTranslateDomain;
+import com.DOCKin.ai.dto.OnlineTranslateDomain;
 import com.DOCKin.global.error.BusinessException;
 import com.DOCKin.global.error.ErrorCode;
 import com.DOCKin.global.security.auth.CustomUserDetails;
 import com.DOCKin.member.model.UserRole;
 import com.DOCKin.rag.service.RagChatService;
-import com.DOCKin.ai.service.fastApiService;
+import com.DOCKin.ai.service.FastApiService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -28,12 +28,12 @@ import reactor.core.publisher.Mono;
 @RestController
 @RequestMapping("/api/ai")
 public class AiController {
-    private final fastApiService fastApiService;
+    private final FastApiService fastApiService;
     private final RagChatService ragChatService;
 
     @Operation(summary= "stt 실시간 번역",description = "실시간 번역을 해준다")
     @PostMapping(value = "/rt-translate", consumes= MediaType.MULTIPART_FORM_DATA_VALUE)
-    public Mono<ResponseEntity<onlineTranslateDomain.RtTranslateResponse>> rtTranslate(
+    public Mono<ResponseEntity<OnlineTranslateDomain.RtTranslateResponse>> rtTranslate(
             @RequestPart("file")MultipartFile file,
             @RequestPart("source") String source,
             @RequestPart("target") String target,

@@ -2,7 +2,7 @@ package com.DOCKin.ai.service;
 
 import com.DOCKin.ai.dto.ChatDomain;
 import com.DOCKin.ai.dto.TranslateDomain;
-import com.DOCKin.ai.dto.onlineTranslateDomain;
+import com.DOCKin.ai.dto.OnlineTranslateDomain;
 import com.DOCKin.ai.model.ChatLog;
 import com.DOCKin.ai.model.TranslateLog;
 import com.DOCKin.ai.repository.ChatLogRepository;
@@ -24,7 +24,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 @Slf4j
 @Transactional(readOnly = true)
-public class fastApiService {
+public class FastApiService {
     private final ChatLogRepository chatLogRepository;
     private final WebClient fastApiWebClient;
     private final Work_logsRepository workLogsRepository;
@@ -43,7 +43,7 @@ public class fastApiService {
     }
 
     //1. 실시간 번역 (stt -> 번역)
-    public Mono<onlineTranslateDomain.RtTranslateResponse> realtimeTranslate(
+    public Mono<OnlineTranslateDomain.RtTranslateResponse> realtimeTranslate(
             MultipartFile file, String source, String target, String traceId, String token){
 
         return sttService.processStt(file,traceId,token,source)
@@ -56,13 +56,13 @@ public class fastApiService {
 
                     return translateForRealTime(apiRequest)
                             .map(transResponse -> {
-                                onlineTranslateDomain.TranslationResult result =
-                                        new onlineTranslateDomain.TranslationResult(
+                                OnlineTranslateDomain.TranslationResult result =
+                                        new OnlineTranslateDomain.TranslationResult(
                                                 recognizedText,
                                                 transResponse.translated()
                                         );
 
-                                return new onlineTranslateDomain.RtTranslateResponse(traceId, result);
+                                return new OnlineTranslateDomain.RtTranslateResponse(traceId, result);
                             });
                 });
     }

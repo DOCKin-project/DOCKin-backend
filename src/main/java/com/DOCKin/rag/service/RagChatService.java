@@ -1,7 +1,7 @@
 package com.DOCKin.rag.service;
 
 import com.DOCKin.ai.dto.ChatDomain;
-import com.DOCKin.ai.service.fastApiService;
+import com.DOCKin.ai.service.FastApiService;
 import com.DOCKin.rag.dto.RetrievalResult;
 import com.DOCKin.rag.dto.RetrievedChunk;
 import com.DOCKin.rag.model.SourceType;
@@ -33,7 +33,7 @@ import java.util.List;
 public class RagChatService {
 
     private final RetrievalService retrievalService;
-    private final fastApiService fastApiService;
+    private final FastApiService fastApiService;
 
     @Value("${rag.search.top-k:5}")
     private int topK;

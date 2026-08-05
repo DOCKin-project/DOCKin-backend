@@ -3,7 +3,7 @@ package com.DOCKin.ai.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "실시간 stt dto")
-public class onlineTranslateDomain {
+public class OnlineTranslateDomain {
     @Schema(description = "실시간 stt 번역 response")
     public record RtTranslateResponse(
             @Schema(description = "추적ID")

@@ -45,6 +45,4 @@ public interface Work_logsRepository extends JpaRepository<Work_logs, Long> {
             ORDER BY w.logId ASC
             """)
     List<Work_logs> findForIndexingAfter(@Param("lastId") Long lastId, Pageable pageable);
-
-    Long logId(Long logId);
 }
