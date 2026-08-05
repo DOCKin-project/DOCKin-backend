@@ -336,9 +336,49 @@ range 파티션 + `DROP PARTITION`이며, 이유는 HNSW가 대량 삭제와 궁
 | # | 항목 | 근거 |
 |---|---|---|
 | ~~P0-7~~ | ~~**CI 복구** — 테스트 20개가 자동 실행되지 않는다~~ | **완료** — `.github/workflows/ci.yml`. 아래에 별도로 적는다 |
-| P0-8 | `@EnableJpaAuditing` 중복 선언 | `DocKinSpringApplication`과 `JpaAuditingConfig` 두 곳에 있다 |
-| P0-9 | `GlobalExceptionHandler`에 `@ExceptionHandler`가 1개뿐 | `@Valid` 검증 실패가 500으로 나갈 수 있다. ADR-0005 진단 이후 그대로 |
-| P0-10 | `SENTENCE_LOOKBACK = 120`에 근거가 없다 | `TARGET_CHARS`(500)·`OVERLAP_CHARS`(50)와 달리 실측 근거가 주석에 없다. "문장 경계를 못 찾아 강제 절단된 청크 비율"을 재면 값이 나온다 |
+| ~~P0-8~~ | ~~`@EnableJpaAuditing` 중복 선언~~ | **완료 — 진단이 틀렸다.** 중복 선언이 아니라 `DocKinSpringApplication`에 **사용하지 않는 import만** 남아 있었다. 애노테이션은 `JpaAuditingConfig` 한 곳뿐이다. import 제거 |
+| ~~P0-9~~ | ~~`GlobalExceptionHandler`에 `@ExceptionHandler`가 1개뿐~~ | **완료** — 아래 별도 |
+| ~~P0-10~~ | ~~`SENTENCE_LOOKBACK = 120`에 근거가 없다~~ | **완료** — 실측 후 값 유지. 아래 별도 |
+
+### P0-9 — 예외 처리 표준화 (완료)
+
+`BusinessException` 하나만 처리하고 있어 **`@Valid` 검증 실패가 500으로 나갔다.**
+클라이언트가 "내가 잘못 보낸 것"과 "서버가 고장난 것"을 구분할 수 없는 상태였다.
+
+추가: `MethodArgumentNotValidException`, `ConstraintViolationException`,
+`MethodArgumentTypeMismatchException`, `HttpMessageNotReadableException`,
+`HttpRequestMethodNotSupportedException`, `AccessDeniedException`, `Exception`(캐치올).
+
+**설계 판단**
+
+- **응답 형태를 바꾸지 않았다.** `ErrorResponseDto`는 `status/message/timestamp` 세 필드이고
+  `ErrorCode`의 `C001` 같은 코드는 응답에 없다. 넣으면 프론트엔드 계약이 바뀌므로
+  예외 처리 보강과 별개의 결정으로 남긴다. 코드는 로그에만 남는다.
+- **캐치올이 403을 500으로 바꾸는 함정이 있다.** `AccessDeniedException`은 `RuntimeException`이라
+  `Exception` 핸들러가 삼킨다. 명시적 핸들러를 두어 막았고, **지우면 조용히 권한 오류가 서버 오류가 된다**는
+  주석을 남겼다.
+- **검증 실패 응답에 입력값을 넣지 않는다.** 필드명과 위반 사유만 보낸다.
+  값을 에코하면 비밀번호 같은 입력이 응답과 로그에 남는다.
+- **500 응답에 예외 메시지를 노출하지 않는다.** 파서 메시지에는 클래스명·패키지 구조가 들어 있다.
+  스택 트레이스는 로그에만 남긴다.
+
+### P0-10 — `SENTENCE_LOOKBACK` 실측 (완료, 값은 유지)
+
+`SentenceLookbackMeasurementTest`로 탐색 거리를 스윕했다. 전문은 `SERVICE-SCALE-ASSUMPTIONS.md` 6-6.
+
+**측정이 가설 하나를 뒤집었다.** "창을 넓히면 청크가 짧아진다"고 보고 어서션을 걸었는데 실패했다.
+탐색이 뒤에서부터 훑어 **가장 가까운** 경계를 쓰기 때문에, 이미 경계를 찾은 절단은 창을 넓혀도
+위치가 그대로다. 작업일지 문투에서 120과 400의 결과가 **완전히 동일**하다(448자, 401청크).
+대가는 **강제 절단이 실제로 구제되는 경우에만** 붙는다(긴 서술 120→200에서 평균 8% 감소).
+
+| 발견 | 내용 |
+|---|---|
+| 필요한 거리 = **평균 문장 길이 × 약 1.7** | 35자→80, 70자→120, 140자→200에서 0% |
+| **120은 "평균 문장 길이 70자" 가정값이다** | 감이 아니었지만, 근거는 값이 아니라 **가정**에 있었다 |
+| **STT 텍스트에서는 무의미** | 종결 부호가 없어 어떤 값이든 100% 강제 절단. 이 프로젝트에 STT 경로가 있다 |
+
+> **값은 바꾸지 않았다.** 바뀐 것은 근거다. 남은 실측은 `SENTENCE_LOOKBACK`이 아니라
+> **실제 작업일지의 평균 문장 길이**이며, 100자를 넘으면 120은 부족하다.
 
 ### P0-7 — CI 복구 (완료). **이 항목의 전제가 틀려 있었다**
 
