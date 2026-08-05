@@ -11,13 +11,16 @@ import org.springframework.test.context.TestPropertySource;
  * 검증: 지금 DB가 엔티티와 일치하는가?
  *
  * <h3>왜 필요한가</h3>
- * 이 프로젝트는 스키마를 {@code ddl-auto=update}가 만든다. 즉 <b>스키마를 적어둔 파일이 없고</b>
- * 소스 오브 트루스는 엔티티다. 그런데 {@code update}는 <b>추가만 한다</b> --
- * 컬럼 삭제, 타입 변경, {@code NOT NULL} 완화는 반영하지 않는다.
+ * 스키마는 {@code db/migration/V*.sql}이 만들고 엔티티는 그것을 매핑한다. 둘은 사람이 따로
+ * 고치는 것이라 <b>어긋날 수 있다</b> — 엔티티에 필드를 추가하고 마이그레이션을 빠뜨리는 식이다.
  *
- * <p>그래서 엔티티를 고쳐도 DB는 옛 모습으로 남을 수 있고, <b>비교할 파일이 없으니 아무도 모른다.</b>
- * 이 테스트가 그 비교를 대신한다. {@code ddl-auto=validate}는 매핑과 실제 테이블이 어긋나면
- * 컨텍스트 로딩을 실패시킨다.
+ * <p>운영 설정({@code ddl-auto=validate})이 기동 시 이를 잡지만, <b>기동해봐야 안다</b>는 뜻이기도 하다.
+ * 이 테스트는 그 검사를 빌드로 앞당긴다.
+ *
+ * <h3>Flyway를 켜둔 채로 본다</h3>
+ * 마이그레이션을 끄고 검증하면 "이미 만들어져 있는 DB에서만" 맞다는 뜻이 된다.
+ * 켜두면 <b>기동 경로 그대로</b> — 마이그레이션이 만든 스키마를 매핑이 검증하는 — 순서를 본다.
+ * 빈 DB에서는 V1/V2가 전부 만들고 그 위에서 검증이 돌며, 이미 적용된 DB에서는 Flyway가 통과만 한다.
  *
  * <h3>이 테스트가 하지 않는 것</h3>
  * {@code validate}는 <b>엔티티가 요구하는 것이 DB에 있는지</b>만 본다.
@@ -40,8 +43,10 @@ import org.springframework.test.context.TestPropertySource;
         "spring.datasource.driver-class-name=org.postgresql.Driver",
         // 이 테스트의 전부다. 어긋나면 컨텍스트가 뜨지 않는다.
         "spring.jpa.hibernate.ddl-auto=validate",
-        // 검증만 하므로 마이그레이션을 다시 돌릴 필요가 없다.
-        "spring.flyway.enabled=false"
+        // 기동 경로와 같은 순서를 보기 위해 켜둔다. Spring Boot가 Flyway를 먼저 실행한다.
+        "spring.flyway.enabled=true",
+        "spring.flyway.baseline-on-migrate=true",
+        "spring.flyway.baseline-version=0"
 })
 class SchemaValidationTest {
 

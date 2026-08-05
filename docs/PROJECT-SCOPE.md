@@ -42,8 +42,8 @@ DOCKin은 팀 프로젝트다. `docs/adr/*` 문서와 이 저장소(`DOCKin-back
 
 - **DB는 PostgreSQL이다**(2026-08-04 MySQL에서 이관, `docs/adr/0006` 8절). 이관 근거는 벡터 검색의 ANN 인덱스이며, 부수적으로 JDBC 배치 INSERT와 트랜잭션 단위 락 타임아웃이 함께 해결됐다.
 - Redis: 출근 체크 분산락 전용.
-- 스키마 관리는 **과도기다.** `document_chunks`는 Flyway(`db/migration/V1`)가, 나머지 테이블은 여전히 Hibernate `ddl-auto=update`가 만든다. `src/main/resources/schema.sql`은 **실행되지 않는 참조 문서이며 MySQL 문법이 남아 있어 현재 stale하다** — 인용하면 안 된다.
-- **현재 PostgreSQL 스키마는 `docs/db/postgresql-schema.sql`에 있다.** 손으로 쓴 것이 아니라 실제 DB에서 뽑은 덤프이며, 소스 오브 트루스는 여전히 엔티티다. 엔티티와 DB의 일치는 `SchemaValidationTest`(`ddl-auto=validate`)가 검증한다.
+- **스키마는 Flyway가 전부 관리한다** (2026-08-05, 백로그 P0-13-3). `db/migration/V1`(pgvector·document_chunks)과 `V2`(나머지 21개 테이블)가 전부이며 `ddl-auto=validate`다 — 엔티티와 어긋나면 기동이 실패한다. `src/main/resources/schema.sql`은 **실행되지 않는 MySQL 시절 문서로 stale하다** — 인용하면 안 된다.
+- **`docs/db/postgresql-schema.sql`은 읽기용 사본이다.** 실제 DB에서 뽑은 덤프이며 실행되지 않는다. 스키마를 바꾸려면 여기가 아니라 `db/migration/V*.sql`에 새 버전을 추가한다. 엔티티와 DB의 일치는 `SchemaValidationTest`가 빌드 단계에서 검증한다.
 
 ## 명시적으로 짚어야 할 오해 소지
 

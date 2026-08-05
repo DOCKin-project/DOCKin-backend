@@ -55,6 +55,7 @@ class FlywayMigrationTest {
     private static final String USER = "root";
 
     private String password;
+    private Flyway flyway;
 
     @BeforeAll
     void createScratchDatabase() throws SQLException {
@@ -65,13 +66,13 @@ class FlywayMigrationTest {
             st.execute("DROP DATABASE IF EXISTS " + SCRATCH_DB);
             st.execute("CREATE DATABASE " + SCRATCH_DB);
         }
-        Flyway.configure()
+        flyway = Flyway.configure()
                 .dataSource(HOST + SCRATCH_DB, USER, password)
                 .locations("classpath:db/migration")
                 .baselineOnMigrate(true)
                 .baselineVersion("0")
-                .load()
-                .migrate();
+                .load();
+        flyway.migrate();
     }
 
     @AfterAll
@@ -82,13 +83,27 @@ class FlywayMigrationTest {
         }
     }
 
+    /**
+     * 최신 버전 번호를 박아두지 않는다. 그러면 마이그레이션을 하나 추가할 때마다 이 테스트가 깨지고,
+     * 고치는 사람은 <b>기대값만 바꾸게 된다</b> — 검증이 아니라 형식이 되는 순간이다.
+     * 대신 <b>클래스패스에 있는 것이 전부 성공으로 적용됐는가</b>를 본다.
+     */
     @Test
-    @DisplayName("V1이 적용되어 이력에 성공으로 남는다")
+    @DisplayName("클래스패스의 마이그레이션이 빠짐없이 성공으로 적용된다")
     void 마이그레이션_이력() throws SQLException {
-        assertEquals("1", queryString("""
-                SELECT version FROM flyway_schema_history WHERE success = true AND version IS NOT NULL
-                ORDER BY installed_rank DESC LIMIT 1
-                """));
+        long expected = java.util.Arrays.stream(flyway.info().all())
+                .filter(i -> i.getVersion() != null)
+                .filter(i -> !"BASELINE".equals(i.getType().name()))
+                .count();
+
+        assertEquals(String.valueOf(expected), queryString("""
+                SELECT count(*) FROM flyway_schema_history
+                WHERE success = true AND version IS NOT NULL AND type <> 'BASELINE'
+                """), "적용된 마이그레이션 수가 클래스패스의 개수와 다르다");
+
+        assertEquals("0", queryString("""
+                SELECT count(*) FROM flyway_schema_history WHERE success = false
+                """), "실패로 남은 마이그레이션이 있다");
     }
 
     @Test
