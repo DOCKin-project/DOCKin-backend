@@ -1,13 +1,26 @@
--- ADR-0006 Phase 2b — document_chunks.embedding에 HNSW 인덱스 생성
+-- ===========================================================================
+-- 운영 절차: HNSW 인덱스 재생성 (마이그레이션 아님)
+--
+-- **평상시에는 실행할 필요가 없다.** 인덱스 생성은 Flyway V1
+-- (src/main/resources/db/migration/V1__pgvector_and_document_chunks.sql)이 기동 경로에서 담당한다.
+--
+-- 이 파일이 남아 있는 이유는 하나다 -- V1은 인덱스를 **만들기만** 하고,
+-- 이미 대량 데이터가 있는 테이블에 인덱스를 **다시 만들 때 필요한 세션 설정**은 주지 못한다.
+-- 아래 두 SET이 그것이며, 빌드 시간을 4분 56초 -> 3분 09초로 줄인다(10만 청크 실측).
+--
+-- 언제 쓰나:
+--   - 모델을 바꿔 전량 재색인한 뒤 인덱스를 다시 만들 때
+--   - 인덱스를 DROP하고 재생성해야 할 때(그래프 열화 의심 등)
 --
 -- 실행:
---   docker exec -i dockin-db psql -U root -d dockindb < docs/migration/2b-hnsw-index.sql
+--   docker exec -i dockin-db psql -U root -d dockindb < docs/db/rebuild-hnsw-index.sql
 --
--- 선행 조건: docs/migration/2b-pgvector.sql (확장 등록 + 컬럼 타입 교체)
+-- 배경과 실측 전문은 ADR-0006 8-2.
 --
--- 이 인덱스는 Hibernate가 관리하지 않는다. @Index는 btree만 만들 수 있고 HNSW 문법을 모른다.
--- db/init/에 넣을 수도 없다 — 그건 컨테이너 최초 기동 시 실행되는데 그 시점에는
--- Hibernate가 아직 테이블을 만들기 전이다. 즉 이 파일을 잊으면 인덱스가 조용히 없는 상태가 된다.
+-- 왜 Hibernate가 못 하나: @Index는 btree만 만들 수 있고 HNSW 문법을 모른다.
+-- 왜 db/init/에 못 넣나: 그것은 컨테이너 최초 기동 시 실행되는데 그 시점에는 테이블이 없다.
+-- (2026-08-05: 확장 등록만 하던 db/init/01-pgvector.sql은 V1이 대체하여 삭제했다.)
+-- ===========================================================================
 
 -- 빌드 설정. 아래 두 줄이 없으면 4분 56초, 있으면 3분 09초다(10만 청크 실측).
 --

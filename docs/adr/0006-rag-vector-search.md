@@ -302,6 +302,16 @@ cgroup에 잡히는데 한도가 512MB뿐이라 `shared_buffers` 128MB + DSM 256
 결국 `docs/migration/2b-hnsw-index.sql`로만 관리되며, **새 환경에서 빠뜨리면 조용히 없는 상태가 된다.**
 확장 등록(8-1 ②)에 이어 "잊으면 조용히 잘못되는 것"이 두 번째로 늘었다.
 
+> **해소됨 (2026-08-05).** 여기서 지적한 "사람이 기억해야 하는 절차"가 Flyway 도입으로 사라졌다.
+> `V1__pgvector_and_document_chunks.sql`이 **확장 → 테이블 → HNSW 인덱스**를 기동 경로에서
+> 한 번에 만들며, Spring Boot가 EntityManagerFactory보다 Flyway를 먼저 실행하므로 순서도 보장된다.
+> 빈 DB에 V1만 적용해 셋이 모두 생기는 것과 재실행이 멱등인 것을 실측으로 확인했다.
+>
+> 그래서 8-1 ②의 `db/init/01-pgvector.sql`과 `docs/migration/2b-pgvector.sql`은 **삭제했다.**
+> `2b-hnsw-index.sql`은 `docs/db/rebuild-hnsw-index.sql`로 옮겨 **운영 절차**로 용도를 바꿨다 —
+> V1은 인덱스를 만들 뿐, 대량 데이터에서 재생성할 때 필요한 세션 설정(`maintenance_work_mem`)은
+> 주지 못하기 때문이다. 위 두 문단은 그 이전 상태의 기록이며 고치지 않는다.
+
 ## 8-3. 검색 쿼리를 DB로 이동 (완료) — 8절이 지목한 근본 해결
 
 `RetrievalService`가 후보 벡터를 전부 가져와 자바에서 코사인을 돌리던 구조를,

@@ -449,5 +449,31 @@ range 파티션 + `DROP PARTITION`이며, 이유는 HNSW가 대량 삭제와 궁
 | # | 항목 | 근거 |
 |---|---|---|
 | ~~P0-13-1~~ | ~~`init.sql`(루트, 552줄) 삭제~~ | **완료** — MySQL 8.0.44 덤프(`Dockin` DB)였고 compose·Dockerfile·설정 어디에서도 참조하지 않았다. 저장소 루트에 있어 새로 오는 사람이 스키마로 오인하기 가장 쉬운 파일이었다. 필요하면 `b67134f`에서 복구 |
-| P0-13-2 | `db/init/01-pgvector.sql`·`docs/migration/2b-*.sql` 역할 정리 | Flyway V1이 같은 일을 멱등으로 하게 되면서 겹친다. 단 `2b-hnsw-index.sql`의 `maintenance_work_mem` 실측 주석은 문서 가치가 있다 |
+| ~~P0-13-2~~ | ~~`db/init/01-pgvector.sql`·`docs/migration/2b-*.sql` 역할 정리~~ | **완료** — 아래 별도 |
 | P0-13-3 | **전체 테이블 Flyway 이관 → `ddl-auto=validate`** | 근본 해결. V1 주석이 "나머지 20여 개는 아직 안 옮겼다"고 인정한 부분이다. 지금은 `SchemaValidationTest`가 이를 **테스트로만** 대신하고 있어, 기동 자체는 여전히 막지 못한다 |
+
+#### P0-13-2 상세 — 같은 일을 하는 SQL이 셋이었다
+
+Flyway V1을 넣으면서 기존 스크립트와 역할이 겹쳤다. **실제로 도는 것은 V1 하나뿐**인데
+나머지 둘이 남아 있어 "어느 것을 실행해야 하는가"가 불분명했다.
+
+| 파일 | 처리 | 근거 |
+|---|---|---|
+| `db/init/01-pgvector.sql` | **삭제** + compose 마운트 제거 | 확장 등록만 했고 V1이 대체한다. 데이터 디렉터리가 빌 때만 돌아 기존 볼륨엔 적용되지 않았고, 그 시점엔 테이블이 없어 인덱스는 어차피 못 만들었다 |
+| `docs/migration/2b-pgvector.sql` | **삭제** | `bytea → vector` 일회성 이관. 그 상태의 DB가 더는 없다. 내용은 ADR-0006 8-1에 전부 있다 |
+| `docs/migration/2b-hnsw-index.sql` | **`docs/db/rebuild-hnsw-index.sql`로 이동 + 용도 재정의** | 마이그레이션이 아니라 **운영 절차**다. V1은 인덱스를 만들 뿐, 대량 데이터에서 재생성할 때 필요한 세션 설정(`maintenance_work_mem`)은 주지 못한다 |
+
+**실측 주석을 잃지 않았다.** 삭제한 두 파일의 근거(빌드 4분 56초→3분 09초, `/dev/shm` 64MB 문제,
+인덱스 195MB, `USING NULL` 캐스팅)는 **이미 ADR-0006 8-1/8-2에 기록되어 있음을 확인**한 뒤 지웠다.
+
+**검증 — 별도 임시 컨테이너로 실제로 확인했다.** `db/init` 없이 빈 DB에 V1만 적용해:
+
+| 확인 | 결과 |
+|---|---|
+| `CREATE EXTENSION vector` | ✅ (적용 전 0건 → 적용 후 등록) |
+| `embedding` 컬럼 타입 | ✅ `vector(384)` |
+| HNSW 인덱스 | ✅ `idx_chunk_embedding_hnsw` |
+| V1 재실행(멱등성) | ✅ `ON_ERROR_STOP=1`에서 종료코드 0, NOTICE만 |
+
+> **새 환경 구축 절차가 한 줄로 줄었다.** 이전에는 "`docs/migration/`을 잊지 말 것"이 사람이
+> 기억해야 하는 항목이었다(ADR-0006 8-2가 경고한 지점). 이제 앱을 띄우면 Flyway가 한다.
