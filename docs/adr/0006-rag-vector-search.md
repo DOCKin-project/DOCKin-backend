@@ -2,7 +2,10 @@
 
 - 상태: **Phase 1 구현 및 실측 완료.** Phase 2(ANN 도입) 판단은 아래 8절의 트리거에 따름
 - 대상 코드: `rag/*`, `ai/controller/AiController`, `ai/service/fastApiService`, `compose.yaml`
-- 관련 문서: `docs/SERVICE-SCALE-ASSUMPTIONS.md`(규모 가정·실측), `docs/adr/0003`(검색 도메인 확장), `docs/PROJECT-SCOPE.md`(담당 범위)
+- 관련 문서: `docs/SERVICE-SCALE-ASSUMPTIONS.md`(규모 가정·실측), `docs/adr/0003`(검색 도메인 확장), `docs/adr/0007`(코퍼스 보존 정책), `docs/PROJECT-SCOPE.md`(담당 범위)
+
+> **이 문서는 코퍼스 증가를 Phase 2 전환 트리거로만 다룬다.** "1년 운영 시 브루트포스가 성립하지 않는다"까지 가고
+> pgvector로 해결했지만, **2년차 이후에 무엇이 일어나는가는 다루지 않았다.** 만료 정책은 `docs/adr/0007`에 있다.
 - 작성 목적: 챗봇이 근거 없이 답하던 구조에 검색 단계를 넣으면서 내린 결정과 그 근거를 남긴다. ADR-0001과 동일하게 **숫자를 지어내지 않으며**, 측정한 값과 가정한 값을 구분한다.
 
 ---
