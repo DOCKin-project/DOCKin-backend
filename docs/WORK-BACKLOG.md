@@ -448,6 +448,6 @@ range 파티션 + `DROP PARTITION`이며, 이유는 HNSW가 대량 삭제와 궁
 
 | # | 항목 | 근거 |
 |---|---|---|
-| P0-13-1 | `init.sql`(루트, 552줄) 삭제 판단 | **MySQL 8.0.44 덤프이며 참조하는 곳이 한 곳도 없다.** 새로 오는 사람이 스키마로 오인할 위험 |
+| ~~P0-13-1~~ | ~~`init.sql`(루트, 552줄) 삭제~~ | **완료** — MySQL 8.0.44 덤프(`Dockin` DB)였고 compose·Dockerfile·설정 어디에서도 참조하지 않았다. 저장소 루트에 있어 새로 오는 사람이 스키마로 오인하기 가장 쉬운 파일이었다. 필요하면 `b67134f`에서 복구 |
 | P0-13-2 | `db/init/01-pgvector.sql`·`docs/migration/2b-*.sql` 역할 정리 | Flyway V1이 같은 일을 멱등으로 하게 되면서 겹친다. 단 `2b-hnsw-index.sql`의 `maintenance_work_mem` 실측 주석은 문서 가치가 있다 |
 | P0-13-3 | **전체 테이블 Flyway 이관 → `ddl-auto=validate`** | 근본 해결. V1 주석이 "나머지 20여 개는 아직 안 옮겼다"고 인정한 부분이다. 지금은 `SchemaValidationTest`가 이를 **테스트로만** 대신하고 있어, 기동 자체는 여전히 막지 못한다 |
