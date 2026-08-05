@@ -309,7 +309,44 @@ Redis는 이미 분산락으로 도입되어 있으므로 저장소를 추가할
 
 | # | 항목 | 근거 |
 |---|---|---|
-| P0-7 | **CI 복구** — 테스트 20개가 자동 실행되지 않는다 | 회귀를 잡을 수단이 없다. DB가 필요한 테스트는 `DB_PASSWORD` 유무로 skip되므로 CI에서도 안전하게 돌릴 수 있다 |
+| ~~P0-7~~ | ~~**CI 복구** — 테스트 20개가 자동 실행되지 않는다~~ | **완료** — `.github/workflows/ci.yml`. 아래에 별도로 적는다 |
 | P0-8 | `@EnableJpaAuditing` 중복 선언 | `DocKinSpringApplication`과 `JpaAuditingConfig` 두 곳에 있다 |
 | P0-9 | `GlobalExceptionHandler`에 `@ExceptionHandler`가 1개뿐 | `@Valid` 검증 실패가 500으로 나갈 수 있다. ADR-0005 진단 이후 그대로 |
 | P0-10 | `SENTENCE_LOOKBACK = 120`에 근거가 없다 | `TARGET_CHARS`(500)·`OVERLAP_CHARS`(50)와 달리 실측 근거가 주석에 없다. "문장 경계를 못 찾아 강제 절단된 청크 비율"을 재면 값이 나온다 |
+
+### P0-7 — CI 복구 (완료). **이 항목의 전제가 틀려 있었다**
+
+위 표에 "DB가 필요한 테스트는 `DB_PASSWORD` 유무로 skip되므로 CI에서도 안전하게 돌릴 수 있다"고
+적었으나 **확인해보니 아니었다.** 환경변수 없이 돌리자 3개가 skip되지 않고 **실패**했다.
+
+| 테스트 | 원인 |
+|---|---|
+| `DocKinSpringApplicationTests` | 가드가 아예 없었다. `@SpringBootTest`라 전체 컨텍스트(DB·Redis·JWT·FastAPI)를 요구한다 |
+| `LockTimeoutVerificationTest` | 가드가 **메서드 안**(`Assumptions`)에 있었다 |
+| `HibernateBatchInsertVerificationTest` | 동일 |
+
+**뒤의 둘은 직전 Flyway 커밋(`d3fdc15`)이 깨뜨린 것이다.** 그전에는 Hibernate가 커넥션을
+늦게 잡아 메서드의 `Assumptions`가 먼저 실행됐다. Flyway는 컨텍스트 기동 시점에 접속하므로
+메서드에 닿기도 전에 `FlywaySqlUnableToConnectToDbException`이 난다.
+`VectorTypeMappingTest`가 주석으로 남겨둔 "가드는 클래스에 붙여야 한다"가 정확히 이 이야기였고,
+셋 다 그 규약으로 맞췄다.
+
+> **CI를 붙이는 작업이 아니라, CI를 붙이려고 실제로 돌려본 것이 이 결함을 찾았다.**
+> 문서상 "안전하게 돌릴 수 있다"는 진술은 아무도 검증한 적이 없었다.
+
+**결과** — 100개 중 78 통과 / 22 skip / 0 실패.
+
+**의도적으로 하지 않은 것**
+
+- **배포는 복구하지 않았다.** 삭제된 워크플로가 실패한 이유는 테스트가 아니라 Docker Hub 푸시와
+  EC2 배포였다. 한 잡에 묶여 있어 배포 자격증명이 없다는 이유로 전체가 빨간불이 됐다.
+  다시 붙이더라도 별도 워크플로여야 한다. (참고: 그 워크플로는 `-x test`라 **애초에 테스트를 돌린 적이 없다.**)
+- **CI에 `DB_PASSWORD`를 주지 않는다.** 서비스 컨테이너로 PostgreSQL을 띄우면 벡터/Flyway 테스트를
+  살릴 수 있지만 지금은 곤란하다. ① 스위치가 하나뿐이라 10만 청크 벤치마크까지 함께 깨어난다.
+  ② `LockTimeoutVerificationTest`는 서버 파라미터 `lock_timeout=5s`를 전제하는데
+  GitHub 서비스 컨테이너에는 postgres 명령 인자를 넘길 자리가 없어 **실패가 아니라 멈춘다.**
+
+| # | 후속 | 근거 |
+|---|---|---|
+| P0-11 | 테스트 스위치를 "DB 필요"와 "오래 걸림"으로 분리 (JUnit `@Tag` 등) | 지금은 `DB_PASSWORD` 하나가 둘을 겸해 CI에서 DB 테스트만 골라 켤 수 없다. **P0-7이 CI 범위를 단위 테스트로 좁힌 직접적 원인** |
+| P0-12 | 컨텍스트 로딩 검증이 CI에서 빠져 있다 | 빈 순환·설정 누락은 여전히 로컬에서만 걸린다. P0-11 이후 서비스 컨테이너로 되살릴 수 있다 |

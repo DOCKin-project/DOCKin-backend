@@ -4,6 +4,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
@@ -35,9 +36,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * <h3>측정 방법</h3>
  * 별도 커넥션으로 대상 행에 {@code FOR UPDATE} 락을 잡아둔 채,
  * 같은 행을 잠그려 할 때까지 걸리는 시간을 잰다.
+ *
+ * <h3>DB가 없으면 실행하지 않는다</h3>
+ * 가드가 <b>클래스에</b> 있어야 한다. 아래 {@code Assumptions}만으로는 늦다 --
+ * 메서드에 닿기 전에 스프링 컨텍스트가 먼저 뜨고, Flyway가 기동 시점에 DB로 접속하면서
+ * {@code FlywaySqlUnableToConnectToDbException}으로 <b>skip이 아니라 실패</b>한다.
+ * (Flyway 도입 전에는 Hibernate가 커넥션을 늦게 잡아 우연히 통과했다.)
  */
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@EnabledIfEnvironmentVariable(named = "DB_PASSWORD", matches = ".+",
+        disabledReason = "PostgreSQL 접속 정보가 없어 락 타임아웃 검증을 건너뜁니다.")
 @TestPropertySource(properties = {
         "spring.datasource.url=jdbc:postgresql://localhost:5432/dockindb",
         "spring.datasource.username=root",

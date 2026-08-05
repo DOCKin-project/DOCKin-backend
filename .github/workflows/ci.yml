@@ -1,0 +1,89 @@
+# 테스트 자동 실행.
+#
+# 이전 워크플로(e672ea9에서 삭제)는 빌드 -> Docker Hub 푸시 -> EC2 배포까지 한 잡에 묶여 있었고,
+# 배포 단계가 계속 실패해 통째로 제거됐다. 그 결과 테스트가 1개에서 20개로 늘어나는 동안
+# 자동으로 돌아가는 곳이 없었다(백로그 P0-7).
+#
+# 그래서 이번에는 CI만 복구한다. 배포를 다시 붙이더라도 별도 워크플로여야 한다 --
+# 배포 자격증명이 없다는 이유로 테스트 결과까지 빨간불이 되는 구조가 원인이었다.
+#
+# 이전 워크플로는 `./gradlew clean build -x test`로 테스트를 아예 건너뛰었다.
+# 즉 살아 있을 때도 회귀를 잡은 적이 없다.
+
+name: CI
+
+on:
+  push:
+    branches: [ "dev", "main" ]
+  pull_request:
+    branches: [ "dev", "main" ]
+
+# 같은 브랜치에 연속으로 푸시하면 이전 실행을 취소한다.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: 빌드 + 테스트
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: JDK 21 설치
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Gradle 설정 (의존성 캐시 포함)
+        uses: gradle/actions/setup-gradle@v4
+
+      - run: chmod +x gradlew
+
+      # 외부 의존이 필요한 테스트는 DB_PASSWORD 부재로 스스로 skip한다.
+      # 이 워크플로는 그 변수를 의도적으로 주지 않는다 -- 아래 "CI가 검증하지 않는 것" 참고.
+      - name: 테스트
+        run: ./gradlew test --no-daemon
+
+      # 테스트가 실패해도 리포트는 올린다. 실패했을 때가 정작 필요한 순간이다.
+      - name: 테스트 리포트 업로드
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            build/reports/tests/test
+            build/test-results/test
+          retention-days: 7
+
+      - name: 프로덕션 빌드
+        run: ./gradlew assemble --no-daemon
+
+# ---------------------------------------------------------------------------
+# CI가 검증하지 않는 것 (알면서 뺀 것들 -- 조용히 빠지지 않도록 적어둔다)
+#
+# DB_PASSWORD를 주지 않으므로 아래는 CI에서 전부 skip된다. 로컬에서만 돈다.
+#
+#   - 컨텍스트 로딩         DocKinSpringApplicationTests
+#   - pgvector 타입/검색    VectorTypeMappingTest, VectorSearchQueryTest
+#   - Flyway 마이그레이션   FlywayMigrationTest
+#   - 락 타임아웃           LockTimeoutVerificationTest
+#   - 배치 INSERT           HibernateBatchInsertVerificationTest
+#   - 연차 차감 동시성      LeaveBalanceConcurrencyTest
+#   - 브루트포스 벤치마크   BruteForceSearchBenchmarkTest
+#   - 교차언어 검색         CrossLingualRetrievalTest (임베딩 서버도 필요)
+#
+# 서비스 컨테이너로 PostgreSQL을 띄우면 위 절반은 살릴 수 있지만, 지금 구조로는 곤란하다.
+#
+#   1. 벤치마크가 같은 스위치를 공유한다. DB_PASSWORD 하나로 열리므로 10만 청크 적재
+#      벤치마크와 10,000건 배치 테스트가 함께 깨어난다. CI에 넣을 시간이 아니다.
+#   2. LockTimeoutVerificationTest는 서버 파라미터 lock_timeout=5s를 전제한다.
+#      GitHub 서비스 컨테이너에는 postgres 명령 인자를 넘길 자리가 없어 기본값(무한 대기)이 되고,
+#      테스트는 실패가 아니라 '멈춘다'.
+#
+# 즉 선결 과제는 "DB가 필요한가"와 "오래 걸리는가"를 다른 스위치로 나누는 것이다.
+# 그 전까지 CI의 범위는 단위 테스트 + 컴파일이며, 이 범위를 실제보다 넓게 말하지 않는다.
+# ---------------------------------------------------------------------------

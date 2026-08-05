@@ -7,6 +7,7 @@ import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
@@ -45,9 +46,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * <p>그래서 <b>시퀀스 호출 횟수</b>를 본다. {@code allocationSize=50}이면 10,000건 적재에
  * {@code nextval}이 200회 근처여야 한다. 10,000회가 나오면 시퀀스 최적화가 동작하지 않는 것이고,
  * 그 경우 배치도 의미가 없다(INSERT마다 왕복이 한 번씩 더 생기므로).
+ *
+ * <h3>DB가 없으면 실행하지 않는다</h3>
+ * 가드가 <b>클래스에</b> 있어야 한다. 아래 {@code Assumptions}만으로는 늦다 --
+ * 메서드에 닿기 전에 스프링 컨텍스트가 먼저 뜨고, Flyway가 기동 시점에 DB로 접속하면서
+ * {@code FlywaySqlUnableToConnectToDbException}으로 <b>skip이 아니라 실패</b>한다.
+ * (Flyway 도입 전에는 Hibernate가 커넥션을 늦게 잡아 우연히 통과했다.)
+ *
+ * <p>그리고 이 테스트는 10,000건을 적재한다. DB가 붙은 환경에서도 <b>CI에서 돌릴 성격이 아니다</b> --
+ * 백로그 P0-7이 CI에 {@code DB_PASSWORD}를 주지 않기로 한 이유 중 하나다.
  */
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@EnabledIfEnvironmentVariable(named = "DB_PASSWORD", matches = ".+",
+        disabledReason = "PostgreSQL 접속 정보가 없어 배치 INSERT 검증을 건너뜁니다.")
 @TestPropertySource(properties = {
         "spring.datasource.url=jdbc:postgresql://localhost:5432/dockindb",
         "spring.datasource.username=root",
