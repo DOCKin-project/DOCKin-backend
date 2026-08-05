@@ -424,6 +424,22 @@ CDC의 장점은 "애플리케이션을 우회한 변경도 잡는다"인데, **
 
 ---
 
+## P2-9 — 인프라 설정 정합성 (2026-08-05 점검에서 발견)
+
+`nginx/conf.d/default.conf`, `WebClientConfig`, `WebSocketConfig`, `application.properties`,
+`compose.yaml`을 대조했다. **네 건 모두 "설정 두 개가 서로 안 맞아 조용히 잘못되는" 부류**로,
+이 프로젝트가 지금까지 잡아온 것들과 성격이 같고 층위만 인프라로 옮겨간 것이다.
+근거와 순서는 `PORTFOLIO-ROADMAP.md` 6-3.
+
+| # | 항목 | 근거 | 급함 |
+|---|---|---|---|
+| P2-9-1 | **WebClient에 타임아웃이 없다** | Reactor Netty 기본은 응답 타임아웃 **무한**이다. `ChunkIndexWriter.writePage()`는 `@Transactional` 안에서 임베딩 HTTP를 호출하므로, TEI가 멈추면 **트랜잭션이 안 닫히고 → 커넥션이 반납되지 않고 → Hikari 풀이 말라 서비스 전체가 멎는다.** 단일 장애가 전파되는 경로다 | **★ 최우선.** 한 줄로 막는다 |
+| P2-9-2 | **WebSocket이 Nginx를 통과하지 못한다** | `proxy_http_version 1.1`과 `Upgrade`/`Connection` 헤더가 없다. Nginx는 기본적으로 HTTP/1.0으로 업스트림에 말하고 hop-by-hop 헤더를 걷어낸다. `addEndpoint("/ws")`에 `.withSockJS()`도 없어 폴백이 없다. **지금 도는 이유는 `dockin-app`이 8080을 직접 노출하기 때문일 가능성이 크고, 그렇다면 채팅만 리버스 프록시를 우회하는 것이다** | ★ |
+| P2-9-3 | **Nginx 60초가 Spring 120초를 이긴다** | `spring.mvc.async.request-timeout=120000`인데 Nginx `proxy_read_timeout`이 미설정이라 기본 60초다. **120초는 도달할 수 없는 값**이고, Nginx가 끊어도 Spring은 계속 돌아 재시도가 겹친다 | ☆ |
+| P2-9-4 | **업로드 413이 예외 처리 표준 밖에 있다** | Nginx `client_max_body_size 10M`(요청 전체) vs Spring `max-file-size 10MB`(파일 하나). 멀티파트 오버헤드 때문에 10MB 파일은 Nginx에서 먼저 잘리고, **응답이 Nginx 기본 HTML이라 `ErrorResponseDto` 형식이 아니다.** P0-9가 표준화한 것에 구멍이 하나 있는 셈 | ☆ |
+
+---
+
 ## P3 — 이후 (하지 않아도 무방)
 
 우선순위가 낮다. P0~P2를 끝낸 뒤에만 손댄다.
