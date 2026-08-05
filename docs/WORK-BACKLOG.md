@@ -451,6 +451,25 @@ range 파티션 + `DROP PARTITION`이며, 이유는 HNSW가 대량 삭제와 궁
 | ~~P0-13-1~~ | ~~`init.sql`(루트, 552줄) 삭제~~ | **완료** — MySQL 8.0.44 덤프(`Dockin` DB)였고 compose·Dockerfile·설정 어디에서도 참조하지 않았다. 저장소 루트에 있어 새로 오는 사람이 스키마로 오인하기 가장 쉬운 파일이었다. 필요하면 `b67134f`에서 복구 |
 | ~~P0-13-2~~ | ~~`db/init/01-pgvector.sql`·`docs/migration/2b-*.sql` 역할 정리~~ | **완료** — 아래 별도 |
 | P0-13-3 | **전체 테이블 Flyway 이관 → `ddl-auto=validate`** | 근본 해결. V1 주석이 "나머지 20여 개는 아직 안 옮겼다"고 인정한 부분이다. 지금은 `SchemaValidationTest`가 이를 **테스트로만** 대신하고 있어, 기동 자체는 여전히 막지 못한다 |
+| P0-13-4 | **시드 데이터 수단이 없다** | `data.sql` 삭제로 로컬에 표본 데이터를 넣을 방법이 사라졌다. 아래 참고 |
+
+#### `data.sql` — 세 겹으로 죽어 있었다 (삭제)
+
+`src/main/resources/data.sql`(28줄)은 사용자 2명·장비 2대·작업일지 5건의 시드 데이터였다.
+**세 가지가 동시에 틀려 있었다.**
+
+| # | 문제 |
+|---|---|
+| 1 | **실행되지 않았다** — `spring.sql.init.mode=never`이고 `data-locations`는 주석 처리 상태 |
+| 2 | **MySQL 문법** — `USE Dockin`, `SET FOREIGN_KEY_CHECKS`, `REPLACE INTO`, `INSERT IGNORE`, 불리언 `1`/`0` |
+| 3 | **없는 컬럼을 참조** — `attendance (…, role, …)`에 INSERT하는데 **`attendance.role`은 존재하지 않는다**(실제 DB 확인) |
+
+즉 문법을 고쳐도 실패한다. 실행된 적이 없어서 아무도 몰랐다.
+
+> **시드 데이터 자체는 지금 오히려 필요하다.** `document_chunks`가 **0건**이라
+> ADR-0007의 만료 기간 `N` 측정도, ADR-0006이 남긴 **ANN recall 측정**도 실데이터가 없어 못 한다.
+> 다만 `data.sql`을 되살리는 것은 답이 아니다 — **Flyway repeatable 마이그레이션(`R__seed.sql`)이나
+> 테스트 픽스처**가 맞는 자리이며, 운영 DB에 섞이지 않도록 프로파일로 분리해야 한다(P0-13-4).
 
 #### P0-13-2 상세 — 같은 일을 하는 SQL이 셋이었다
 
