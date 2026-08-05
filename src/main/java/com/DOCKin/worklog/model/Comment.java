@@ -24,7 +24,7 @@ public class Comment {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "log_id",nullable = false)
-    private Work_logs logId;
+    private WorkLog logId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id",nullable = false)

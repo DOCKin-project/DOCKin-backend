@@ -4,16 +4,16 @@ import com.DOCKin.ai.service.SttService;
 import com.DOCKin.global.file.S3PresignedService;
 import com.DOCKin.worklog.dto.WorkLogsCreateRequestDto;
 import com.DOCKin.worklog.dto.WorkLogsUpdateRequestDto;
-import com.DOCKin.worklog.dto.Work_logsDto;
+import com.DOCKin.worklog.dto.WorkLogDto;
 import com.DOCKin.global.error.BusinessException;
 import com.DOCKin.global.error.ErrorCode;
 import com.DOCKin.worklog.model.Equipment;
 import com.DOCKin.member.model.Member;
 import com.DOCKin.worklog.model.WorkLogImage;
-import com.DOCKin.worklog.model.Work_logs;
+import com.DOCKin.worklog.model.WorkLog;
 import com.DOCKin.worklog.repository.EquipmentRepository;
 import com.DOCKin.member.repository.MemberRepository;
-import com.DOCKin.worklog.repository.Work_logsRepository;
+import com.DOCKin.worklog.repository.WorkLogRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -30,7 +30,7 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class WorkLogsService {
 
-    private final Work_logsRepository workLogsRepository;
+    private final WorkLogRepository workLogsRepository;
     private final MemberRepository memberRepository;
     private final EquipmentRepository equipmentRepository;
     private final SttService sttService;
@@ -38,14 +38,14 @@ public class WorkLogsService {
 
     //게시물 작성
     @Transactional
-    public Work_logsDto createWorklog(String userId,WorkLogsCreateRequestDto dto,List<MultipartFile> images){
+    public WorkLogDto createWorklog(String userId,WorkLogsCreateRequestDto dto,List<MultipartFile> images){
         Member member = memberRepository.findByUserId(userId)
                 .orElseThrow(()->new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         Equipment equipment = equipmentRepository.findById(dto.getEquipmentId())
                 .orElseThrow(()->new BusinessException(ErrorCode.EQUIPMENT_NOT_FOUND));
 
-        Work_logs work_logs = Work_logs.builder()
+        WorkLog workLog = WorkLog.builder()
                 .title(dto.getTitle())
                 .logText(dto.getLogText())
                 .equipment(equipment)
@@ -59,20 +59,20 @@ public class WorkLogsService {
 
                 WorkLogImage image = WorkLogImage.builder()
                         .imageUrl(uploadedUrl)
-                        .workLog(work_logs)
+                        .workLog(workLog)
                         .build();
 
-                work_logs.addImage(image);
+                workLog.addImage(image);
             });
         }
 
-        return Work_logsDto.from(workLogsRepository.save(work_logs));
+        return WorkLogDto.from(workLogsRepository.save(workLog));
     }
 
 
     //stt용게시물 작성
     @Transactional
-    public Work_logsDto createSttWorklog(String userId, WorkLogsCreateRequestDto dto, MultipartFile file,String token, List<MultipartFile> images){
+    public WorkLogDto createSttWorklog(String userId, WorkLogsCreateRequestDto dto, MultipartFile file,String token, List<MultipartFile> images){
         Member member = memberRepository.findByUserId(userId)
                 .orElseThrow(()->new BusinessException(ErrorCode.USER_NOT_FOUND));
 
@@ -97,7 +97,7 @@ public class WorkLogsService {
             }
         }
 
-        Work_logs work_logs = Work_logs.builder()
+        WorkLog workLog = WorkLog.builder()
                 .title(dto.getTitle())
                 .logText(finalLogText)
                 .equipment(equipment)
@@ -112,32 +112,32 @@ public class WorkLogsService {
 
                 WorkLogImage image = WorkLogImage.builder()
                         .imageUrl(uploadedUrl)
-                        .workLog(work_logs)
+                        .workLog(workLog)
                         .build();
 
-                work_logs.addImage(image);
+                workLog.addImage(image);
             });
         }
 
-         return Work_logsDto.from(workLogsRepository.save(work_logs));
+         return WorkLogDto.from(workLogsRepository.save(workLog));
     }
 
     //전체 게시물 조회
     @Transactional(readOnly = true)
-    public Page<Work_logsDto> readWorklog(String userId, Pageable pageable){
+    public Page<WorkLogDto> readWorklog(String userId, Pageable pageable){
         Member member = memberRepository.findByUserId(userId)
                 .orElseThrow(()->new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         String area = member.getShipYardArea();
        List<Member> areaMembers= memberRepository.findByShipYardArea(area);
-       Page<Work_logs> logs = workLogsRepository.findByMemberIn(areaMembers,pageable);
+       Page<WorkLog> logs = workLogsRepository.findByMemberIn(areaMembers,pageable);
 
-       return logs.map(Work_logsDto::from);
+       return logs.map(WorkLogDto::from);
     }
 
     //다른 작업자의 작업일지 조회기능
     @Transactional(readOnly = true)
-    public Page<Work_logsDto> readOtherWorklog(String currentuserId, String targetUserId, Pageable pageable){
+    public Page<WorkLogDto> readOtherWorklog(String currentuserId, String targetUserId, Pageable pageable){
         // 내 사원번호
         Member member = memberRepository.findByUserId(currentuserId)
                 .orElseThrow(()->new BusinessException(ErrorCode.USER_NOT_FOUND));
@@ -151,22 +151,22 @@ public class WorkLogsService {
             throw new BusinessException(ErrorCode.ACCESS_DENIED);
         }
 
-        Page<Work_logs> work_logs = workLogsRepository.findAllByMemberUserId(targetUserId,pageable);
+        Page<WorkLog> workLogs = workLogsRepository.findAllByMemberUserId(targetUserId,pageable);
 
-        return work_logs.map(Work_logsDto::from);
+        return workLogs.map(WorkLogDto::from);
     }
 
     //키워드로 게시물 조회
     @Transactional(readOnly = true)
-    public Page<Work_logsDto> searchByKeyword(String keyword,Pageable pageable){
-        Page<Work_logs> work_logs = workLogsRepository.searchWorkLogs(keyword,pageable);
-        return work_logs.map(Work_logsDto::from);
+    public Page<WorkLogDto> searchByKeyword(String keyword,Pageable pageable){
+        Page<WorkLog> workLog = workLogsRepository.searchWorkLogs(keyword,pageable);
+        return workLog.map(WorkLogDto::from);
     }
 
     //게시물 수정
     @Transactional
-    public Work_logsDto updateWorklog(String userId, Long logId, WorkLogsUpdateRequestDto dto, List<MultipartFile> images){
-        Work_logs logs = workLogsRepository.findById(logId)
+    public WorkLogDto updateWorklog(String userId, Long logId, WorkLogsUpdateRequestDto dto, List<MultipartFile> images){
+        WorkLog logs = workLogsRepository.findById(logId)
                 .orElseThrow(()->new BusinessException(ErrorCode.LOG_NOT_FOUND));
 
         //작성자와 수정자가 같은지 확인
@@ -197,13 +197,13 @@ public class WorkLogsService {
             logs.setEquipment(equipment);
         }
 
-        return Work_logsDto.from(logs);
+        return WorkLogDto.from(logs);
     }
 
     //게시물 삭제
     @Transactional
     public void deleteWorklog(String userId, Long logId){
-        Work_logs log = workLogsRepository.findById(logId)
+        WorkLog log = workLogsRepository.findById(logId)
                 .orElseThrow(()->new BusinessException(ErrorCode.LOG_NOT_FOUND));
 
        //작성자와 같은지 확인

@@ -1,7 +1,7 @@
 package com.DOCKin.worklog.repository;
 
 import com.DOCKin.member.model.Member;
-import com.DOCKin.worklog.model.Work_logs;
+import com.DOCKin.worklog.model.WorkLog;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -11,13 +11,13 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
-public interface Work_logsRepository extends JpaRepository<Work_logs, Long> {
+public interface WorkLogRepository extends JpaRepository<WorkLog, Long> {
     @Transactional
-    Page<Work_logs> findByMemberIn(List<Member> members, Pageable pageable);
-    Page<Work_logs> findAllByMemberUserId(String targetUserId, Pageable pageable);
+    Page<WorkLog> findByMemberIn(List<Member> members, Pageable pageable);
+    Page<WorkLog> findAllByMemberUserId(String targetUserId, Pageable pageable);
 
-    @Query("SELECT w FROM Work_logs w WHERE w.title LIKE %:keyword% OR w.logText LIKE %:keyword%")
-    Page<Work_logs> searchWorkLogs(@Param("keyword") String keyword, Pageable pageable);
+    @Query("SELECT w FROM WorkLog w WHERE w.title LIKE %:keyword% OR w.logText LIKE %:keyword%")
+    Page<WorkLog> searchWorkLogs(@Param("keyword") String keyword, Pageable pageable);
 
     /**
      * RAG 인덱싱 배치 전용 조회.
@@ -39,10 +39,10 @@ public interface Work_logsRepository extends JpaRepository<Work_logs, Long> {
      * 정렬 키가 유니크(PK)라 중복·누락도 발생하지 않는다.
      */
     @Query("""
-            SELECT w FROM Work_logs w
+            SELECT w FROM WorkLog w
             LEFT JOIN FETCH w.member
             WHERE w.logId > :lastId
             ORDER BY w.logId ASC
             """)
-    List<Work_logs> findForIndexingAfter(@Param("lastId") Long lastId, Pageable pageable);
+    List<WorkLog> findForIndexingAfter(@Param("lastId") Long lastId, Pageable pageable);
 }

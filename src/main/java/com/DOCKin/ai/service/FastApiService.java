@@ -9,8 +9,8 @@ import com.DOCKin.ai.repository.ChatLogRepository;
 import com.DOCKin.ai.repository.TranslateRepository;
 import com.DOCKin.global.error.BusinessException;
 import com.DOCKin.global.error.ErrorCode;
-import com.DOCKin.worklog.model.Work_logs;
-import com.DOCKin.worklog.repository.Work_logsRepository;
+import com.DOCKin.worklog.model.WorkLog;
+import com.DOCKin.worklog.repository.WorkLogRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -27,7 +27,7 @@ import reactor.core.publisher.Mono;
 public class FastApiService {
     private final ChatLogRepository chatLogRepository;
     private final WebClient fastApiWebClient;
-    private final Work_logsRepository workLogsRepository;
+    private final WorkLogRepository workLogsRepository;
     private final TranslateRepository translateRepository;
     private final SttService sttService;
 
@@ -124,7 +124,7 @@ public class FastApiService {
     @Transactional
     public TranslateDomain.Response saveTranslateLog(Long logId, TranslateDomain.Request request, String userId) {
         // 1. 원본 로그 조회
-        Work_logs workLogEntity = workLogsRepository.findById(logId)
+        WorkLog workLogEntity = workLogsRepository.findById(logId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.LOG_NOT_FOUND));
 
         // 2. 제목 번역용 요청 생성

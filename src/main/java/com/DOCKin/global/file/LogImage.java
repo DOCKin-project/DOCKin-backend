@@ -1,6 +1,6 @@
 package com.DOCKin.global.file;
 
-import com.DOCKin.worklog.model.Work_logs;
+import com.DOCKin.worklog.model.WorkLog;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -20,10 +20,10 @@ public class LogImage {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "log_id")
-    private Work_logs workLog;
+    private WorkLog workLog;
 
     @Builder
-    public LogImage(String imageUrl, Work_logs workLog){
+    public LogImage(String imageUrl, WorkLog workLog){
         this.imageUrl = imageUrl;
         this.workLog = workLog;
     }

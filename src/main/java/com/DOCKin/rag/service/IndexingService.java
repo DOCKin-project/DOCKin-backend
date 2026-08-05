@@ -8,8 +8,8 @@ import com.DOCKin.rag.repository.DocumentChunkRepository;
 import com.DOCKin.rag.service.ChunkIndexWriter.IndexTarget;
 import com.DOCKin.safetyCourse.model.SafetyCourse;
 import com.DOCKin.safetyCourse.repository.SafetyCourseRepository;
-import com.DOCKin.worklog.model.Work_logs;
-import com.DOCKin.worklog.repository.Work_logsRepository;
+import com.DOCKin.worklog.model.WorkLog;
+import com.DOCKin.worklog.repository.WorkLogRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -49,7 +49,7 @@ public class IndexingService {
     /** 한 트랜잭션에서 처리할 원본 문서 수. 임베딩 배치 크기와는 별개다. */
     private static final int PAGE_SIZE = 100;
 
-    private final Work_logsRepository workLogsRepository;
+    private final WorkLogRepository workLogsRepository;
     private final TranslateRepository translateRepository;
     private final SafetyCourseRepository safetyCourseRepository;
     private final DocumentChunkRepository documentChunkRepository;
@@ -101,7 +101,7 @@ public class IndexingService {
             // 커서(keyset) 순회. OFFSET을 쓰지 않는 이유는 findForIndexingAfter의 주석 참고.
             // 페치 조인도 함께 쓴다 - 배치는 OSIV가 없어 트랜잭션 밖에서 member에 접근하면 터지고,
             // 지연 로딩이면 작업일지마다 쿼리가 하나씩 더 나가 N+1이 된다.
-            List<Work_logs> batch =
+            List<WorkLog> batch =
                     workLogsRepository.findForIndexingAfter(lastId, PageRequest.of(0, PAGE_SIZE));
             if (batch.isEmpty()) {
                 break;
@@ -114,7 +114,7 @@ public class IndexingService {
         return embedded;
     }
 
-    private IndexTarget toTarget(Work_logs workLog) {
+    private IndexTarget toTarget(WorkLog workLog) {
         // 제목과 본문을 함께 임베딩한다. 제목만 검색어와 맞는 경우를 놓치지 않기 위함이다.
         String text = workLog.getTitle() + "\n" + workLog.getLogText();
         String ownerUserId = workLog.getMember() == null ? null : workLog.getMember().getUserId();
@@ -158,7 +158,7 @@ public class IndexingService {
 
     private IndexTarget toTarget(TranslateLog translation) {
         String text = translation.getTranslatedTitle() + "\n" + translation.getTranslatedText();
-        Work_logs source = translation.getWorkLogs();
+        WorkLog source = translation.getWorkLogs();
         String ownerUserId = (source == null || source.getMember() == null)
                 ? null : source.getMember().getUserId();
 

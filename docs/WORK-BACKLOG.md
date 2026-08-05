@@ -10,23 +10,52 @@
 
 새 기능보다 먼저 한다. 저장소를 처음 여는 사람 눈에 가장 먼저 띄는 것들이고, 작업량 대비 효과가 가장 크다.
 
-> **2026-08-05 갱신** — 현재 PostgreSQL 스키마 덤프가 `docs/db/postgresql-schema.sql`에 생겼고,
-> 엔티티↔DB 일치는 `SchemaValidationTest`가 검증한다. `schema.sql`에는 stale 경고 헤더를 붙였다.
-> 아래 문단은 그 이전 상태를 설명한 것이며 **소스 오브 트루스가 엔티티라는 점은 여전히 유효하다.**
-> 남은 부채는 P0-13.
+> **⚠️ 아래 두 문단은 2026-08-05 이전 상태다. P0-13-3으로 뒤집혔다.**
+>
+> **현재: 스키마는 `db/migration/V1`·`V2`가 전부 만들고 `ddl-auto=validate`다.**
+> 엔티티는 더 이상 소스 오브 트루스가 아니며, 스키마를 바꾸려면 **새 마이그레이션(`V3...`)을 써야 한다.**
+> 빠뜨리면 기동이 실패한다. `docs/db/postgresql-schema.sql`은 읽기용 덤프이고,
+> 엔티티↔DB 일치는 `SchemaValidationTest`가 빌드 단계에서 검증한다.
 
-> **중요 — `schema.sql`은 실행되지 않는다.** `application.properties`가 `spring.sql.init.mode=never`,
+> ~~**중요 — `schema.sql`은 실행되지 않는다.** `application.properties`가 `spring.sql.init.mode=never`,
 > `spring.jpa.hibernate.ddl-auto=update`이므로 테이블은 Hibernate가 **JPA 엔티티에서** 생성한다.
 > 즉 **소스 오브 트루스는 엔티티이고 `schema.sql`은 참조 문서**다. 아래 P0-1이 지금까지 드러나지 않은 이유이기도 하다.
-> 스키마를 바꿀 때는 **엔티티와 `schema.sql` 양쪽을 함께** 고쳐야 한다.
+> 스키마를 바꿀 때는 **엔티티와 `schema.sql` 양쪽을 함께** 고쳐야 한다.~~
+> (`schema.sql`이 실행되지 않고 stale하다는 것만 여전히 맞다 — 파일에 경고 헤더를 붙였다.)
 
 | # | 항목 | 근거 |
 |---|---|---|
 | ~~P0-1~~ | ~~`schema.sql`의 `work_log_translations`에 `translated_title` 컬럼이 2회 선언됨~~ | **완료** — 중복 제거. 수동 실행 시 `Duplicate column name`으로 실패하던 상태였다 |
 | ~~P0-2~~ | ~~`ChatHistory`와 `ChatLog` 두 엔티티가 같은 테이블(`chat_history`)에 매핑됨~~ | **완료** — `ChatHistory`는 참조하는 코드가 한 곳도 없는 사용하지 않는 엔티티였다. 삭제했다 |
-| P0-3 | 클래스명 자바 컨벤션 위반 — `fastApiService`, `onlineTranslateDomain` | 파일을 여는 즉시 보인다. `FastApiService`, `OnlineTranslateDomain`으로 변경 |
-| P0-4 | `Work_logs` / `Work_logsRepository` 스네이크 케이스 엔티티명 | P0-3과 함께. 변경 범위가 넓으므로 별도 커밋 |
-| P0-5 | `Work_logsRepository.logId(Long logId)` 죽은 메서드 | 의미 불명. 제거 |
+| ~~P0-3~~ | ~~클래스명 자바 컨벤션 위반 — `fastApiService`, `onlineTranslateDomain`~~ | **완료** — `FastApiService`, `OnlineTranslateDomain` |
+| ~~P0-4~~ | ~~`Work_logs` / `Work_logsRepository` 스네이크 케이스 엔티티명~~ | **완료** — 아래 별도 |
+| ~~P0-5~~ | ~~`Work_logsRepository.logId(Long logId)` 죽은 메서드~~ | **완료** — 호출처 0. Spring Data 쿼리 메서드 규칙에도 맞지 않았다 |
+
+### P0-4 — `Work_logs` → `WorkLog` (완료)
+
+클래스를 **테이블 이름대로 지은** 것이 문제의 본질이다. 자바 클래스는 `PascalCase` 단수,
+테이블은 `snake_case` 복수라는 서로 다른 관례가 있는데 후자가 코드로 새어 나와 있었다.
+
+| 변경 | |
+|---|---|
+| `Work_logs` → `WorkLog` | 엔티티 |
+| `Work_logsRepository` → `WorkLogRepository` | 리포지토리 |
+| `Work_logsDto` → `WorkLogDto` | DTO (백로그에 없었으나 같은 문제였다) |
+| 지역변수 `work_logs` → `workLog` / `workLogs` | 변수까지 스네이크였다 |
+
+**DB는 건드리지 않았다.** `@Table(name="Work_logs")`를 `@Table(name = "work_logs")`로 바꿨는데
+매핑은 동일하다 — PostgreSQL이 따옴표 없는 식별자를 소문자로 접기 때문에 원래도 `work_logs`였다.
+표기만 실제 테이블명과 일치시켰다.
+
+**함께 바꿔야 했던 것 — JPQL은 테이블이 아니라 엔티티 이름을 쓴다.**
+`@Query("SELECT w FROM Work_logs w ...")`가 두 곳 있었고, 클래스명만 바꾸면
+**컴파일은 통과하고 실행 시점에 깨지는** 종류다. 함께 `FROM WorkLog w`로 바꿨다.
+
+> **주석에 남은 `work_logs`는 그대로 뒀다.** 그것들은 클래스가 아니라 **테이블**을 가리킨다
+> (`TranslateLog`, `SourceType`의 설명). 일괄 치환했으면 오히려 틀린 문서가 됐을 것이다.
+
+검증: `SchemaValidationTest`가 통과했다는 것이 **매핑이 그대로임을 증명**한다 —
+어긋났다면 `validate`가 테이블을 못 찾아 실패했을 것이다.
 
 ---
 

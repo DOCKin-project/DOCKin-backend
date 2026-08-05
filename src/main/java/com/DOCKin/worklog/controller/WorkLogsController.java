@@ -4,7 +4,7 @@ import com.DOCKin.ai.dto.SttDomain;
 import com.DOCKin.ai.service.SttService;
 import com.DOCKin.worklog.dto.WorkLogsCreateRequestDto;
 import com.DOCKin.worklog.dto.WorkLogsUpdateRequestDto;
-import com.DOCKin.worklog.dto.Work_logsDto;
+import com.DOCKin.worklog.dto.WorkLogDto;
 import com.DOCKin.global.security.auth.CustomUserDetails;
 import com.DOCKin.worklog.service.WorkLogsService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -38,32 +38,32 @@ public class WorkLogsController {
 
     @Operation(summary="특정 작업자 작업일지 생성(사진 포함)",description = "특정 작업자의 작업일지를 생성해줌")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Work_logsDto> createWorkLog(@AuthenticationPrincipal CustomUserDetails customUserDetails,
+    public ResponseEntity<WorkLogDto> createWorkLog(@AuthenticationPrincipal CustomUserDetails customUserDetails,
                                                       @Valid @RequestPart(value="requestDto") WorkLogsCreateRequestDto requestDto,
                                                       @RequestPart(value="images", required=false)List<MultipartFile> images
                                                       ){
         String userId = customUserDetails.getMember().getUserId();
-        Work_logsDto response =  workLogsService.createWorklog(userId,requestDto,images);
+        WorkLogDto response =  workLogsService.createWorklog(userId,requestDto,images);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
 
     @Operation(summary="Stt용 특정 작업자 작업일지 생성",description = "특정 작업자의 작업일지를 생성해줌")
     @PostMapping(value= "/stt",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Work_logsDto> createWorkLog( @AuthenticationPrincipal CustomUserDetails customUserDetails,
+    public ResponseEntity<WorkLogDto> createWorkLog( @AuthenticationPrincipal CustomUserDetails customUserDetails,
         @RequestPart(value="request") @Valid WorkLogsCreateRequestDto requestDto,
                                                        @RequestPart(value="file",required = false) MultipartFile file,
                                                        @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
                                                        @RequestPart(value="images",required = false) List<MultipartFile> images
     ){
         String userId = customUserDetails.getMember().getUserId();
-      Work_logsDto response =  workLogsService.createSttWorklog(userId,requestDto,file,token,images);
+      WorkLogDto response =  workLogsService.createSttWorklog(userId,requestDto,file,token,images);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @Operation(summary="전체 작업일지 조회",description = "전체 작업자의 작업일지를 조회해줌")
     @GetMapping
-    public ResponseEntity<Page<Work_logsDto>> getWorkLog(
+    public ResponseEntity<Page<WorkLogDto>> getWorkLog(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @PageableDefault(size = 20,direction = Sort.Direction.DESC)Pageable pageable
             ){
@@ -73,7 +73,7 @@ public class WorkLogsController {
 
     @Operation(summary="특정 작업자 작업일지 조회",description = "특정 작업자의 작업일지를 조회해줌")
     @GetMapping("/others/{targetUserId}")
-    public ResponseEntity<Page<Work_logsDto>> getMyWorkLog(@PathVariable String targetUserId,
+    public ResponseEntity<Page<WorkLogDto>> getMyWorkLog(@PathVariable String targetUserId,
                                                            @AuthenticationPrincipal CustomUserDetails customUserDetails,
                                                            @PageableDefault(size=20, direction = Sort.Direction.DESC)Pageable pageable){
         String userId = customUserDetails.getMember().getUserId();
@@ -82,20 +82,20 @@ public class WorkLogsController {
 
     @Operation(summary="특정 작업자 작업일지 수정",description = "특정 작업자의 작업일지를 수정해줌")
     @PutMapping("/{logId}")
-    public ResponseEntity<Work_logsDto> PutMyWorkLog(@PathVariable Long logId,
+    public ResponseEntity<WorkLogDto> PutMyWorkLog(@PathVariable Long logId,
                                                      @Valid @RequestPart(value = "requestDto") WorkLogsUpdateRequestDto request,
                                                      @AuthenticationPrincipal CustomUserDetails customUserDetails,
                                                      @RequestPart(value="images", required = false) List<MultipartFile> images){
         String userId = customUserDetails.getMember().getUserId();
-        Work_logsDto response = workLogsService.updateWorklog(userId,logId,request,images);
+        WorkLogDto response = workLogsService.updateWorklog(userId,logId,request,images);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @Operation(summary = "키워드로 게시물 검색", description = "키워드로 게시물 검색이 가능함")
     @GetMapping("/search")
-    public ResponseEntity<Page<Work_logsDto>> searchByKeyword( @PageableDefault(size=20,sort = "createdAt", direction = Sort.Direction.DESC)Pageable pageable,
+    public ResponseEntity<Page<WorkLogDto>> searchByKeyword( @PageableDefault(size=20,sort = "createdAt", direction = Sort.Direction.DESC)Pageable pageable,
                                                               String keyword){
-        Page<Work_logsDto> workLogsDtos = workLogsService.searchByKeyword(keyword,pageable);
+        Page<WorkLogDto> workLogsDtos = workLogsService.searchByKeyword(keyword,pageable);
         return ResponseEntity.ok(workLogsDtos);
     }
 

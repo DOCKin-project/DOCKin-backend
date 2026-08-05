@@ -18,8 +18,8 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EntityListeners(AuditingEntityListener.class)
-@Table(name="Work_logs")
-public class Work_logs {
+@Table(name = "work_logs")
+public class WorkLog {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long logId;

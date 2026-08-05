@@ -1,6 +1,6 @@
 package com.DOCKin.ai.model;
 
-import com.DOCKin.worklog.model.Work_logs;
+import com.DOCKin.worklog.model.WorkLog;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -46,7 +46,7 @@ public class TranslateLog {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "log_id")
-    private Work_logs workLogs;
+    private WorkLog workLogs;
 
     private String userId;
 

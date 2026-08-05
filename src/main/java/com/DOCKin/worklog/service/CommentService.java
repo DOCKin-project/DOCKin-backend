@@ -8,10 +8,10 @@ import com.DOCKin.global.error.ErrorCode;
 import com.DOCKin.member.model.Member;
 import com.DOCKin.member.model.UserRole;
 import com.DOCKin.worklog.model.Comment;
-import com.DOCKin.worklog.model.Work_logs;
+import com.DOCKin.worklog.model.WorkLog;
 import com.DOCKin.member.repository.MemberRepository;
 import com.DOCKin.worklog.repository.CommentRepository;
-import com.DOCKin.worklog.repository.Work_logsRepository;
+import com.DOCKin.worklog.repository.WorkLogRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,13 +24,13 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class CommentService {
     private final CommentRepository commentRepository;
-    private final Work_logsRepository workLogsRepository;
+    private final WorkLogRepository workLogsRepository;
     private  final MemberRepository memberRepository;
 
     //댓글 생성
     @Transactional
     public CommentResponseDto createComment(Long logId,String userId,CommentCreateRequestDto dto){
-        Work_logs work_logs = workLogsRepository.findById(logId)
+        WorkLog workLog = workLogsRepository.findById(logId)
                 .orElseThrow(()->new BusinessException(ErrorCode.LOG_NOT_FOUND));
 
         Member member = memberRepository.findByUserId(userId)
@@ -41,7 +41,7 @@ public class CommentService {
         }
 
         Comment comment = Comment.builder()
-                .logId(work_logs)
+                .logId(workLog)
                 .userId(member)
                 .content(dto.getContent())
                 .build();

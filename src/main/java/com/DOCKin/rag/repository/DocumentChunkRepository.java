@@ -136,7 +136,7 @@ public interface DocumentChunkRepository extends JpaRepository<DocumentChunk, Lo
      * 임베딩 서버 장애 시 사용하는 키워드 폴백.
      *
      * <p><b>같은 테이블에 LIKE를 거는 이유는 권한 모델을 재사용하기 위해서다.</b>
-     * 기존 {@code Work_logsRepository.searchWorkLogs}는 소유자 필터가 없어 그대로 폴백에 쓰면
+     * 기존 {@code WorkLogRepository.searchWorkLogs}는 소유자 필터가 없어 그대로 폴백에 쓰면
      * 남의 작업일지가 챗봇 근거로 새어 나간다. 벡터 검색과 폴백이 동일한 선필터를 공유해야
      * 장애 상황에서만 권한이 느슨해지는 사고를 막을 수 있다.
      *

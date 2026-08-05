@@ -1,7 +1,7 @@
 package com.DOCKin.worklog.dto;
 
 import com.DOCKin.worklog.model.WorkLogImage;
-import com.DOCKin.worklog.model.Work_logs;
+import com.DOCKin.worklog.model.WorkLog;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @NoArgsConstructor
 @Schema(description = "작업 일지 조회 res dto")
-public class Work_logsDto {
+public class WorkLogDto {
     @Schema(description = "작업 일지 고유 ID", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
     private Long logId;
 
@@ -44,8 +44,8 @@ public class Work_logsDto {
 
     private String audioFileUrl;
 
-    public static Work_logsDto from(Work_logs entity) {
-        return Work_logsDto.builder()
+    public static WorkLogDto from(WorkLog entity) {
+        return WorkLogDto.builder()
                 .logId(entity.getLogId())
                 .userId(entity.getMember().getUserId())
                 .equipmentId(entity.getEquipment().getEquipmentId())
