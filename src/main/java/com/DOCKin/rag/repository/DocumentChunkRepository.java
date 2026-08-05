@@ -75,7 +75,7 @@ public interface DocumentChunkRepository extends JpaRepository<DocumentChunk, Lo
 
     @Query("""
             SELECT new com.DOCKin.rag.repository.ChunkVector(
-                       c.chunkId, c.sourceType, c.sourceId, c.embedding, c.embeddingDim)
+                       c.chunkId, c.sourceType, c.sourceId, c.embedding)
             FROM DocumentChunk c
             WHERE c.embeddingModel = :model
               AND c.visibility = com.DOCKin.rag.model.Visibility.PUBLIC
@@ -84,7 +84,7 @@ public interface DocumentChunkRepository extends JpaRepository<DocumentChunk, Lo
 
     @Query("""
             SELECT new com.DOCKin.rag.repository.ChunkVector(
-                       c.chunkId, c.sourceType, c.sourceId, c.embedding, c.embeddingDim)
+                       c.chunkId, c.sourceType, c.sourceId, c.embedding)
             FROM DocumentChunk c
             WHERE c.embeddingModel = :model
               AND c.visibility = com.DOCKin.rag.model.Visibility.OWNER
@@ -96,7 +96,7 @@ public interface DocumentChunkRepository extends JpaRepository<DocumentChunk, Lo
     /** 관리자용. 권한 필터 없이 전체를 대상으로 한다. */
     @Query("""
             SELECT new com.DOCKin.rag.repository.ChunkVector(
-                       c.chunkId, c.sourceType, c.sourceId, c.embedding, c.embeddingDim)
+                       c.chunkId, c.sourceType, c.sourceId, c.embedding)
             FROM DocumentChunk c
             WHERE c.embeddingModel = :model
             """)

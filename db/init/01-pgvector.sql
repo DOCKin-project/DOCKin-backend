@@ -1,0 +1,15 @@
+-- pgvector 확장 활성화 (ADR-0006 Phase 2b)
+--
+-- 이미지(pgvector/pgvector:pg17)에는 확장 "파일"이 들어 있을 뿐, 데이터베이스에
+-- 등록되어 있지는 않다. CREATE EXTENSION을 한 번 실행해야 vector 타입을 쓸 수 있다.
+--
+-- 이것이 없으면 Hibernate가 document_chunks를 만들 때 vector(384)에서
+--   ERROR: type "vector" does not exist
+-- 로 실패한다. 그런데 ddl-auto=update는 DDL 오류를 로그만 남기고 기동을 막지 않으므로
+-- 앱은 정상 기동한 것처럼 보이고, 검색 시점에야 테이블이 없다는 사실이 드러난다.
+-- (2a에서 SafetyCourse의 DATETIME이 정확히 이 방식으로 숨어 있었다.)
+--
+-- 주의: docker-entrypoint-initdb.d는 데이터 디렉터리가 비어 있을 때만 실행된다.
+-- 이미 만들어진 dockin_db_data 볼륨에는 적용되지 않으므로, 기존 환경에서는
+-- docs/migration/2b-pgvector.sql을 직접 실행해야 한다.
+CREATE EXTENSION IF NOT EXISTS vector;

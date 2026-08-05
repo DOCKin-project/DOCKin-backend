@@ -113,6 +113,10 @@ services:
       - "5432:5432"
     volumes:
       - dockin_db_data:/var/lib/postgresql/data
+      # CREATE EXTENSION vector. 이미지에 확장 파일은 있으나 DB 등록은 별개라 한 번 실행해야 한다.
+      # 데이터 디렉터리가 비어 있을 때만 돌기 때문에, 기존 볼륨에는
+      # docs/migration/2b-pgvector.sql을 수동 실행해야 한다.
+      - ./db/init:/docker-entrypoint-initdb.d:ro
       - /etc/localtime:/etc/localtime:ro
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d dockindb" ]

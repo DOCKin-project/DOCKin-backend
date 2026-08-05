@@ -330,13 +330,15 @@ CREATE TABLE document_chunks (
     -- 인덱싱 배치가 중간에 끊겨도 이어서 돌릴 수 있어야 하므로 필수다(10만 청크 기준 약 20분 소요).
                                  content_hash CHAR(64) NOT NULL,     -- SHA-256 hex
 
-    -- float32 배열의 바이트 표현. 현재 모델(multilingual-e5-small)은 384차원 = 1536 bytes.
-    -- TEXT/BLOB이 아니라 VARBINARY로 둔 이유는 브루트포스 검색이 전체 행을 훑기 때문에
-    -- 오프페이지 저장을 피하고 인라인으로 읽기 위함이다.
-    -- 상한을 4096으로 잡은 것은 확장성 때문이다. VARBINARY는 가변 길이라 384차원이면
-    -- 실제로 1536 bytes만 저장하므로 낭비가 없고, 1024차원(bge-m3 등)까지 ALTER 없이 수용한다.
-                                 embedding VARBINARY(4096) NOT NULL,
-                                 embedding_dim INT NOT NULL,           -- embedding 길이 = embedding_dim * 4 여야 한다
+    -- pgvector의 vector 타입. 현재 모델(multilingual-e5-small)이 384차원이다.
+    -- MySQL VARBINARY(4096) -> PostgreSQL BYTEA -> vector(384) 순으로 바뀌어 왔다.
+    -- 앞의 둘은 DB가 보기엔 바이트 뭉치라 유사도 계산을 애플리케이션에서 할 수밖에 없었다.
+    --
+    -- 차원을 384로 못박은 것은 HNSW 인덱스가 고정 차원 컬럼에만 걸리기 때문이다.
+    -- 그 대가로 차원이 다른 모델의 청크가 공존할 수 없다(BYTEA 시절에는 가능했다).
+    -- 확장 등록이 선행되어야 한다: CREATE EXTENSION IF NOT EXISTS vector;
+                                 embedding vector(384) NOT NULL,
+                                 embedding_dim INT NOT NULL,           -- 항상 384. 어느 차원 모델로 만든 행인지의 기록
                                  embedding_model VARCHAR(64) NOT NULL, -- 예: intfloat/multilingual-e5-small
 
     -- 권한 인지 검색용 비정규화 컬럼.

@@ -148,7 +148,7 @@ class RetrievalServiceTest {
     }
 
     private static ChunkVector vector(Long chunkId, SourceType type, Long sourceId, float[] v) {
-        return new ChunkVector(chunkId, type, sourceId, EmbeddingClient.toBytes(v), v.length);
+        return new ChunkVector(chunkId, type, sourceId, v);
     }
 
     /** {@code chunkId}는 {@code @GeneratedValue}라 빌더로 지정할 수 없어 리플렉션으로 채운다. */
@@ -161,7 +161,7 @@ class RetrievalServiceTest {
                 .languageCode("ko")
                 .content(content)
                 .contentHash("hash")
-                .embedding(new byte[]{})
+                .embedding(new float[]{})
                 .embeddingDim(3)
                 .embeddingModel(MODEL)
                 .visibility(Visibility.PUBLIC)

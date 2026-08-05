@@ -178,8 +178,9 @@ class HibernateBatchInsertVerificationTest {
                 .languageCode("ko")
                 .content("배치 검증용 청크 " + i)
                 .contentHash(String.format("%064d", i))
-                .embedding(new byte[1536])
-                .embeddingDim(384)
+                // vector(384) 컬럼이라 길이가 정확히 맞아야 한다. DB가 차원을 강제한다.
+                .embedding(new float[DocumentChunk.EMBEDDING_DIM])
+                .embeddingDim(DocumentChunk.EMBEDDING_DIM)
                 .embeddingModel("batch-verification")
                 .visibility(Visibility.PUBLIC)
                 .build();

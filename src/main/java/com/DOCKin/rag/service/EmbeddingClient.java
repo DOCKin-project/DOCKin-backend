@@ -115,8 +115,15 @@ public class EmbeddingClient {
     }
 
     /**
-     * float 배열을 DB 저장용 바이트로 변환한다(리틀엔디언 float32).
-     * {@code document_chunks.embedding}이 VARBINARY이므로 바이트로 눕혀 저장한다.
+     * float 배열을 리틀엔디언 float32 바이트로 눕힌다.
+     *
+     * <p><b>더 이상 운영 경로에서 쓰지 않는다.</b> {@code document_chunks.embedding}이
+     * MySQL {@code VARBINARY} → PostgreSQL {@code BYTEA}였을 때 저장 형식을 맞추던 변환이며,
+     * pgvector {@code vector} 매핑 이후에는 {@code float[]}를 그대로 저장한다.
+     *
+     * <p>남겨두는 이유는 {@code BruteForceSearchBenchmarkTest}가 <b>Phase 1 기준선을
+     * 그대로 재현</b>하기 때문이다. 그 벤치마크는 BYTEA 테이블을 직접 만들어 재는 기록이고,
+     * ANN 도입 후 지연시간·recall을 비교할 때의 대조군이다. 벤치마크를 걷어낼 때 함께 사라질 자리다.
      */
     public static byte[] toBytes(float[] vector) {
         ByteBuffer buffer = ByteBuffer.allocate(vector.length * Float.BYTES)
@@ -127,7 +134,7 @@ public class EmbeddingClient {
         return buffer.array();
     }
 
-    /** {@link #toBytes(float[])}의 역변환. 검색 시 DB에서 읽은 벡터를 복원한다. */
+    /** {@link #toBytes(float[])}의 역변환. 같은 이유로 벤치마크 전용이다. */
     public static float[] toFloats(byte[] bytes) {
         if (bytes.length % Float.BYTES != 0) {
             throw new BusinessException(ErrorCode.EMBEDDING_DIMENSION_MISMATCH);

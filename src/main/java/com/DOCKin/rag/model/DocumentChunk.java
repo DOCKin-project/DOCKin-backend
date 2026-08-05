@@ -5,6 +5,9 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Array;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -40,6 +43,15 @@ import java.time.LocalDateTime;
         }
 )
 public class DocumentChunk {
+
+    /**
+     * 임베딩 차원. 현재 모델 {@code intfloat/multilingual-e5-small}의 출력 차원이다.
+     *
+     * <p><b>컬럼 정의에 박히는 값이라 모델과 함께 바뀐다.</b> {@code @Array(length)}는 애노테이션이라
+     * 컴파일 상수여야 하므로 설정으로 뺄 수 없다 — 차원은 런타임에 고를 수 있는 값이 아니라
+     * 스키마의 일부라는 뜻이기도 하다. 다른 차원의 모델로 교체하려면 컬럼 마이그레이션이 따라온다.
+     */
+    public static final int EMBEDDING_DIM = 384;
 
     /**
      * PK.
@@ -87,27 +99,41 @@ public class DocumentChunk {
     private String contentHash;
 
     /**
-     * float32 배열의 리틀엔디언 바이트 표현. 현재 모델은 384차원 = 1536 bytes.
+     * 임베딩 벡터. pgvector의 {@code vector(384)} 컬럼에 매핑된다.
      *
-     * <p>BLOB이 아니라 VARBINARY로 둔 이유: 브루트포스가 전체 행을 읽으므로
-     * 오프페이지 저장을 피하고 인라인으로 읽는 편이 유리하다.
+     * <h4>커스텀 UserType이 필요 없다</h4>
+     * Hibernate 6.4부터 {@code hibernate-vector} 모듈이 {@link SqlTypes#VECTOR}를 제공하고,
+     * PostgreSQL 방언에서 이를 pgvector의 {@code vector} 타입으로 내보낸다.
+     * {@code @Array(length)}가 곧 컬럼의 차원 선언이다.
      *
-     * <p>MySQL 시절에는 {@code VARBINARY(4096)}이었다. 브루트포스가 전체 행을 훑으므로
-     * BLOB의 오프페이지 저장을 피하려는 선택이었고, 상한 4096은 1024차원까지 수용하기 위함이었다.
-     * PostgreSQL에는 그 구분이 없어 {@code BYTEA} 하나로 대체된다(길이 제한도 불필요).
+     * <h4>왜 BYTEA가 아닌가</h4>
+     * MySQL 시절 {@code VARBINARY(4096)}, 2a에서 {@code BYTEA}였다. 둘 다 DB가 보기에는
+     * 그냥 바이트 뭉치라 <b>유사도 계산을 애플리케이션에서 할 수밖에 없었다</b> — 검색 한 번에
+     * 후보 벡터 전체(10만 청크 기준 146MB)를 JVM으로 끌어와야 했고, 실측상 그 전송이 병목의 81%였다.
+     * {@code vector}는 DB가 의미를 아는 타입이라 거리 연산자({@code <=>})와 HNSW 인덱스가 붙는다.
      *
-     * <p><b>2b에서 pgvector의 {@code vector} 타입으로 바뀔 자리다.</b> 지금은 이관 자체를
-     * 검증하는 단계라 바이트 표현을 유지한다 — 유사도 계산이 여전히 애플리케이션에서 일어난다.
-     * {@link #embeddingDim}과 함께 읽어야 벡터를 복원할 수 있다.
+     * <h4>차원을 384로 고정한 대가</h4>
+     * <b>HNSW 인덱스는 차원이 고정된 컬럼에만 만들 수 있다.</b> pgvector의 {@code vector}는
+     * 차원 없이 선언할 수도 있지만 그러면 인덱스를 걸지 못해 ANN 도입 자체가 무의미해진다.
+     * 그 대가로 <b>차원이 다른 모델의 청크가 한 컬럼에 공존할 수 없게 됐다</b>
+     * — 가변 길이였던 BYTEA 시절에는 가능했던 일이다.
+     * 차원이 다른 모델로 교체하려면 새 컬럼(또는 새 테이블)을 만들어 옮겨야 한다.
      */
-    @Column(name = "embedding", nullable = false, columnDefinition = "BYTEA")
-    private byte[] embedding;
+    @JdbcTypeCode(SqlTypes.VECTOR)
+    @Array(length = EMBEDDING_DIM)
+    @Column(name = "embedding", nullable = false)
+    private float[] embedding;
 
     /**
-     * 이 벡터의 차원 수. {@code embedding.length == embeddingDim * 4}가 성립해야 한다.
+     * 이 벡터의 차원 수.
      *
-     * <p>모델 교체 과도기에는 차원이 다른 청크가 한 테이블에 공존할 수 있으므로,
-     * 코사인 유사도 계산 전에 차원이 일치하는지 확인하는 근거가 된다.
+     * <p>BYTEA 시절에는 바이트 배열에서 벡터를 복원하는 데 반드시 필요했고, 차원이 다른 청크가
+     * 공존할 수 있어 비교 가능 여부를 가리는 근거이기도 했다. {@code vector(384)}로 바뀌면서
+     * <b>DB 제약이 같은 역할을 하게 되어 항상 {@link #EMBEDDING_DIM}과 같은 값이 된다.</b>
+     *
+     * <p>그럼에도 남겨두는 이유는 {@link #embeddingModel}과 짝을 이뤄
+     * "이 행이 몇 차원 모델로 만들어졌는가"를 데이터 자체에 남기기 위함이다.
+     * 컬럼 차원을 넓히는 이행기에 구/신 청크를 구분하는 근거가 된다.
      */
     @Column(name = "embedding_dim", nullable = false)
     private Integer embeddingDim;
@@ -140,7 +166,7 @@ public class DocumentChunk {
     @Builder
     public DocumentChunk(SourceType sourceType, Long sourceId, Integer chunkIndex,
                          String languageCode, String content, String contentHash,
-                         byte[] embedding, Integer embeddingDim, String embeddingModel,
+                         float[] embedding, Integer embeddingDim, String embeddingModel,
                          Visibility visibility, String ownerUserId) {
         this.sourceType = sourceType;
         this.sourceId = sourceId;
@@ -159,7 +185,7 @@ public class DocumentChunk {
      * 원본이 수정되어 내용이 바뀐 경우 청크를 갱신한다.
      * 해시가 같으면 인덱싱 배치가 이 메서드를 호출하지 않고 건너뛴다.
      */
-    public void reindex(String content, String contentHash, byte[] embedding, Integer embeddingDim) {
+    public void reindex(String content, String contentHash, float[] embedding, Integer embeddingDim) {
         this.content = content;
         this.contentHash = contentHash;
         this.embedding = embedding;

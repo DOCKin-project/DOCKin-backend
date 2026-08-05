@@ -36,6 +36,12 @@ dependencies {
 	//JPA library
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 
+	// pgvector의 vector 타입 매핑 (ADR-0006 Phase 2b).
+	// Hibernate 6.4부터 제공되는 공식 모듈이라 커스텀 UserType이 필요 없다.
+	// @JdbcTypeCode(SqlTypes.VECTOR) + @Array(length=384)로 매핑되고,
+	// HQL에 cosine_distance() 등 거리 함수가 등록된다.
+	implementation 'org.hibernate.orm:hibernate-vector'
+
 	//security
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 

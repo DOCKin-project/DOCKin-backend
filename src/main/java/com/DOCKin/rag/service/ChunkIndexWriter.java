@@ -100,11 +100,12 @@ public class ChunkIndexWriter {
         for (int i = 0; i < pending.size(); i++) {
             PendingChunk p = pending.get(i);
             IndexTarget t = p.target();
+            // 임베딩 서버가 준 float[]를 그대로 넘긴다. pgvector 매핑 전에는 여기서
+            // 리틀엔디언 바이트로 눕히는 단계가 있었다(EmbeddingClient.toBytes).
             float[] vector = vectors.get(i);
-            byte[] bytes = EmbeddingClient.toBytes(vector);
 
             if (p.previous() != null) {
-                p.previous().reindex(p.content(), p.contentHash(), bytes, vector.length);
+                p.previous().reindex(p.content(), p.contentHash(), vector, vector.length);
                 p.previous().updateVisibility(t.visibility(), t.ownerUserId());
             } else {
                 toSave.add(DocumentChunk.builder()
@@ -114,7 +115,7 @@ public class ChunkIndexWriter {
                         .languageCode(t.languageCode())
                         .content(p.content())
                         .contentHash(p.contentHash())
-                        .embedding(bytes)
+                        .embedding(vector)
                         .embeddingDim(vector.length)
                         .embeddingModel(model)
                         .visibility(t.visibility())

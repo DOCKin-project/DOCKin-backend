@@ -143,13 +143,34 @@ ADR-0002가 스스로 경계한 "실측 없이 튜닝했다" 패턴이 된다.
 **이관의 본래 목적이다.** 브루트포스는 여전히 벡터를 애플리케이션으로 전부 가져와 계산한다
 (10만 청크 관리자 경로 4,059ms). 유사도 계산을 DB 안으로 옮겨야 6-3의 전송 병목이 사라진다.
 
-| 작업 | 난이도 |
+| 작업 | 난이도 | 상태 |
+|---|---|---|
+| `vector` 타입 매핑 | ~~높음~~ **낮았음** | **완료** (아래) |
+| HNSW 인덱스 생성 및 파라미터 조정 | 보통 | |
+| `RetrievalService`의 코사인 계산을 DB 쿼리로 이동 | 높음 | |
+| **ANN recall 측정** — Phase 1 브루트포스 결과를 정답 기준선으로 비교 | 보통 | |
+| 권한 선필터와 ANN 결합 (알려진 난제 — ADR-0006 8절) | 높음 | |
+
+**타입 매핑 — "커스텀 `UserType`이 필요하다"는 전제가 틀렸다.**
+Hibernate 6.4부터 `hibernate-vector` 모듈이 `SqlTypes.VECTOR`를 제공하고 PostgreSQL 방언에서
+pgvector의 `vector`로 내보낸다. 현재 Hibernate 7.2.0.Final이라 애노테이션 두 줄로 끝났다.
+버전도 Spring Boot BOM이 관리해 명시할 필요가 없다.
+
+```java
+@JdbcTypeCode(SqlTypes.VECTOR)
+@Array(length = EMBEDDING_DIM)   // 이 값이 곧 컬럼의 vector(384)
+private float[] embedding;
+```
+
+| 발견 | 내용 |
 |---|---|
-| `vector` 타입 매핑 (Hibernate가 모르는 타입 — 커스텀 `UserType` 또는 네이티브 쿼리) | 높음 |
-| HNSW 인덱스 생성 및 파라미터 조정 | 보통 |
-| `RetrievalService`의 코사인 계산을 DB 쿼리로 이동 | 높음 |
-| **ANN recall 측정** — Phase 1 브루트포스 결과를 정답 기준선으로 비교 | 보통 |
-| 권한 선필터와 ANN 결합 (알려진 난제 — ADR-0006 8절) | 높음 |
+| **차원이 스키마가 됐다** | HNSW는 고정 차원 컬럼에만 걸린다. 그 대가로 차원이 다른 모델의 청크가 공존할 수 없다 — 가변 길이 `BYTEA` 시절에는 가능했던 일이다. 모델을 바꾸면 컬럼 마이그레이션이 따라온다 |
+| **`ALTER`에 `USING`이 필요하다** | `bytea → vector` 자동 변환 규칙이 없어 PostgreSQL이 거부한다. **행이 0건이어도** DDL 시점에 검사한다. `USING NULL::vector(384)`로 명시했고, 행이 남아 있으면 `NOT NULL` 위반으로 실패해 실수로 임베딩을 날리지 못한다 |
+| **확장 등록은 이미지와 별개** | `pgvector/pgvector:pg17`에 확장 파일은 있으나 `CREATE EXTENSION`은 따로 실행해야 한다. `db/init/`을 마운트했지만 **데이터 디렉터리가 비어 있을 때만 돌므로** 기존 볼륨에는 `docs/migration/2b-pgvector.sql`을 직접 실행한다 |
+| **벡터가 TOAST로 나간다** | `vector(384)` = 1544 bytes, `attstorage=EXTERNAL`. 본문과 합쳐 행이 약 2KB를 넘으면 벡터가 행 밖으로 빠진다(실측: TOAST에 들어간 값이 1540 bytes로 `content`가 아닌 벡터였다). **ADR-0006이 `VARBINARY`를 고르며 피하려던 InnoDB 오프페이지 저장과 같은 문제가 PostgreSQL에서 재현된다.** `SET STORAGE PLAIN`이 대응 수단이며, HNSW 도입 후에는 인덱스가 벡터 사본을 갖기 때문에 영향이 줄어든다 — 인덱스 단계에서 함께 판단한다 |
+
+검증: `VectorTypeMappingTest`(엔티티 왕복 / `ChunkVector` 투영 왕복 / 차원 불일치 거부).
+**투영 왕복을 따로 보는 이유**는 검색 경로가 엔티티가 아니라 생성자 투영으로 벡터만 뽑아 오기 때문이다.
 
 **MySQL 9.0 업그레이드는 선택지가 아니다** — `VECTOR` 타입은 있으나 ANN 인덱스가 HeatWave(유료) 전용이라
 커뮤니티 에디션에서는 8.0 + BLOB 브루트포스와 성능이 같다. innovation 릴리스라 지원 주기도 짧다.

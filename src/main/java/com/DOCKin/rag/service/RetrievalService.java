@@ -169,24 +169,30 @@ public class RetrievalService {
         return attachContent(selected);
     }
 
-    /** 후보 전체와 코사인 유사도를 계산한다. 차원이 다른 청크는 건너뛴다. */
+    /**
+     * 후보 전체와 코사인 유사도를 계산한다. 차원이 다른 청크는 건너뛴다.
+     *
+     * <p>차원 불일치는 컬럼이 {@code vector(384)}로 고정되면서 발생 경로가 좁아졌다.
+     * 저장 쪽은 DB가 막으므로, 이제 남은 경우는 <b>질의 모델이 바뀌었는데 재색인하지 않은</b> 상황뿐이다.
+     * 그때는 전 건이 여기서 걸러지며, 조용히 0건을 반환하지 않도록 경고를 남긴다.
+     */
     private List<Scored> score(List<ChunkVector> candidates, float[] queryVector) {
         List<Scored> scored = new ArrayList<>(candidates.size());
         int skipped = 0;
 
         for (ChunkVector candidate : candidates) {
-            // 모델 교체 과도기에는 차원이 다른 청크가 공존할 수 있다. 비교 자체가 불가능하므로 제외한다.
-            if (candidate.embeddingDim() == null || candidate.embeddingDim() != queryVector.length) {
+            float[] embedding = candidate.embedding();
+            if (embedding == null || embedding.length != queryVector.length) {
                 skipped++;
                 continue;
             }
-            double similarity = cosine(queryVector, EmbeddingClient.toFloats(candidate.embedding()));
+            double similarity = cosine(queryVector, embedding);
             if (similarity >= minScore) {
                 scored.add(new Scored(candidate, similarity));
             }
         }
         if (skipped > 0) {
-            log.warn("[RAG] 차원 불일치로 제외한 청크 {}건 - 재색인이 필요할 수 있습니다.", skipped);
+            log.warn("[RAG] 차원 불일치로 제외한 청크 {}건 - 질의 모델과 색인 모델이 다를 수 있습니다.", skipped);
         }
         return scored;
     }

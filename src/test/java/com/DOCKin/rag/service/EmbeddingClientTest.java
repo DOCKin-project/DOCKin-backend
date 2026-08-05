@@ -28,7 +28,8 @@ class EmbeddingClientTest {
 
         byte[] bytes = EmbeddingClient.toBytes(vector);
 
-        // document_chunks.embedding을 VARBINARY(4096)으로 잡은 근거가 이 계산이다.
+        // VARBINARY(4096) / BYTEA 시절 컬럼 크기를 잡은 근거였던 계산이다.
+        // 지금 운영 컬럼은 pgvector vector(384)이며, 이 변환은 Phase 1 기준선 벤치마크만 쓴다.
         assertEquals(1536, bytes.length);
     }
 
