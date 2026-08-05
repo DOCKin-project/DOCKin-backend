@@ -10,6 +10,11 @@
 
 새 기능보다 먼저 한다. 저장소를 처음 여는 사람 눈에 가장 먼저 띄는 것들이고, 작업량 대비 효과가 가장 크다.
 
+> **2026-08-05 갱신** — 현재 PostgreSQL 스키마 덤프가 `docs/db/postgresql-schema.sql`에 생겼고,
+> 엔티티↔DB 일치는 `SchemaValidationTest`가 검증한다. `schema.sql`에는 stale 경고 헤더를 붙였다.
+> 아래 문단은 그 이전 상태를 설명한 것이며 **소스 오브 트루스가 엔티티라는 점은 여전히 유효하다.**
+> 남은 부채는 P0-13.
+
 > **중요 — `schema.sql`은 실행되지 않는다.** `application.properties`가 `spring.sql.init.mode=never`,
 > `spring.jpa.hibernate.ddl-auto=update`이므로 테이블은 Hibernate가 **JPA 엔티티에서** 생성한다.
 > 즉 **소스 오브 트루스는 엔티티이고 `schema.sql`은 참조 문서**다. 아래 P0-1이 지금까지 드러나지 않은 이유이기도 하다.
@@ -416,3 +421,33 @@ range 파티션 + `DROP PARTITION`이며, 이유는 HNSW가 대량 삭제와 궁
 |---|---|---|
 | P0-11 | 테스트 스위치를 "DB 필요"와 "오래 걸림"으로 분리 (JUnit `@Tag` 등) | 지금은 `DB_PASSWORD` 하나가 둘을 겸해 CI에서 DB 테스트만 골라 켤 수 없다. **P0-7이 CI 범위를 단위 테스트로 좁힌 직접적 원인** |
 | P0-12 | 컨텍스트 로딩 검증이 CI에서 빠져 있다 | 빈 순환·설정 누락은 여전히 로컬에서만 걸린다. P0-11 이후 서비스 컨테이너로 되살릴 수 있다 |
+
+### P0-13 — 스키마 파일이 없다 (부분 해소)
+
+**"PostgreSQL 스키마를 보려면 어디를 봐야 하나"에 답이 없었다.** 엔티티 22개를 읽는 수밖에 없었다.
+`ddl-auto=update`가 스키마를 만드는 구조라 애초에 파일이 존재한 적이 없다.
+
+**2026-08-05에 한 것**
+
+| 항목 | 내용 |
+|---|---|
+| `docs/db/postgresql-schema.sql` | 실제 DB에서 뽑은 덤프(24테이블). **생성물이며 소스 오브 트루스가 아니다** |
+| `SchemaValidationTest` | `ddl-auto=validate`로 엔티티↔DB 일치를 검증. **통과했다** |
+| `schema.sql` stale 경고 헤더 | 열어보면 알 수 있게 됐다. 이전에는 파일 안에 아무 표시가 없었다 |
+
+> **drift가 없는 이유는 보호 장치가 아니라 우연이다.** DB가 **2026-08-04 23:24 생성**,
+> 즉 PostgreSQL 이관 때 통째로 새로 만들어져 현재 엔티티와 일치할 수밖에 없었다.
+> 앞으로 엔티티에서 컬럼을 지우거나 타입을 바꾸면 `update`는 반영하지 않으므로 그때부터 어긋난다.
+
+**`validate`가 보지 않는 것** — 테이블/컬럼 존재와 타입만 본다.
+**nullability, 기본값, 인덱스, FK 제약, 그리고 DB에만 있고 엔티티에 없는 잉여 항목은 잡지 못한다.**
+실제로 `bench_leave_balance`(`LeaveBalanceConcurrencyTest`가 만드는 벤치마크 테이블)가 잉여로 남아 있으나
+검증을 통과한다.
+
+**남은 부채**
+
+| # | 항목 | 근거 |
+|---|---|---|
+| P0-13-1 | `init.sql`(루트, 552줄) 삭제 판단 | **MySQL 8.0.44 덤프이며 참조하는 곳이 한 곳도 없다.** 새로 오는 사람이 스키마로 오인할 위험 |
+| P0-13-2 | `db/init/01-pgvector.sql`·`docs/migration/2b-*.sql` 역할 정리 | Flyway V1이 같은 일을 멱등으로 하게 되면서 겹친다. 단 `2b-hnsw-index.sql`의 `maintenance_work_mem` 실측 주석은 문서 가치가 있다 |
+| P0-13-3 | **전체 테이블 Flyway 이관 → `ddl-auto=validate`** | 근본 해결. V1 주석이 "나머지 20여 개는 아직 안 옮겼다"고 인정한 부분이다. 지금은 `SchemaValidationTest`가 이를 **테스트로만** 대신하고 있어, 기동 자체는 여전히 막지 못한다 |
