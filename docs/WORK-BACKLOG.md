@@ -577,6 +577,103 @@ ANN recall 측정(A1)을 위해 코퍼스를 채우려고 컨테이너를 올리
 
 ---
 
+## P2-14 — 컨테이너를 새 이미지로 띄우며 드러난 것 (2026-08-06)
+
+P2-13-1을 고쳐 이미지를 다시 굽고 스택을 올렸다. **기동 자체는 정상이었고**
+(Flyway 6개 검증, 스키마 버전 2, PostgreSQL 17.10 연결, Tomcat 8080),
+힙 400M와 CPU 상한도 런타임에서 확인했다. 아래는 그 과정에서 따로 나온 둘이다.
+
+| # | 항목 | 근거 | 급함 |
+|---|---|---|---|
+| P2-14-1 | **404여야 할 응답이 500으로 나간다** | `GET /`가 500이다. 원인은 `NoResourceFoundException: No static resource for request '/'`인데 `GlobalExceptionHandler`가 이를 "처리되지 않은 예외"로 잡아 500으로 승격시킨다 | ★ |
+| P2-14-2 | **`com.DOCKin`의 INFO 로그가 전부 죽어 있다** | `.env` 27번 줄의 `logging.level.com.DOCKin=warn`. `root`는 `info`라 Spring/Hibernate/Flyway INFO는 다 보이고 **우리 코드의 INFO만 사라진다.** 로그가 비어 보이지 않아 오래 눈에 안 띄었다 | ★ |
+| P2-14-3 | **G1이 아니라 Serial GC가 선택된다** | 아무도 지정한 적이 없다. JVM의 server-class 판정이 **CPU 2개 이상 AND 메모리 1792MB 이상**을 요구하는데 컨테이너 제한이 512M이라 탈락한다 | ☆ |
+
+이슈로도 등록했다 — [#30](https://github.com/DOCKin-project/DOCKin-backend/issues/30)(로깅),
+[#31](https://github.com/DOCKin-project/DOCKin-backend/issues/31)(404/500),
+[#32](https://github.com/DOCKin-project/DOCKin-backend/issues/32)(Serial GC).
+
+### P2-14-1 상세 — 없는 것과 고장난 것을 구분하지 못한다
+
+**클라이언트가 잘못한 것(404)과 서버가 잘못한 것(500)은 대응이 다르다.**
+전자는 요청을 고쳐야 하고 후자는 서버를 고쳐야 한다. 지금은 둘이 같은 코드로 나간다.
+
+| 영향 | 내용 |
+|---|---|
+| 운영 | **로드밸런서가 `/`를 헬스체크로 때리면 서버를 죽은 것으로 판정한다.** 실제로는 멀쩡하다 |
+| 관측 | 5xx 알람을 걸면 정상 트래픽에 계속 울린다. 알람을 끄게 되고, 그러면 진짜 500을 놓친다 |
+| 첫인상 | 저장소를 처음 여는 사람이 루트로 접속하면 서버 오류를 본다 |
+
+`GlobalExceptionHandler`에 `NoResourceFoundException` 처리를 더해 404로 내리는 것이
+직접적인 수정이다. 다만 **같은 형태로 잘못 승격되는 예외가 더 있는지** 함께 봐야 한다 —
+Spring이 던지는 클라이언트 오류 계열(`MethodArgumentTypeMismatchException`,
+`HttpRequestMethodNotSupportedException`, `HttpMessageNotReadableException`)이 전부 같은 자리다.
+
+> **"처리되지 않은 예외"를 전부 500으로 접는 catch-all은 그 자체가 결함이 아니다.**
+> 마지막 방어선은 있어야 한다. 문제는 **그 그물이 너무 위쪽에 쳐져 있어서**
+> 클라이언트 오류까지 걷어 올린다는 것이다.
+
+### P2-14-2 상세 — 처음엔 "`Started` 로그가 없다"로 보였다
+
+기동을 기다리는데 `Started DocKinSpringApplication in N seconds`가 끝내 안 나왔다.
+`log-startup-info`를 끈 적이 없고 `main`은 정상 종료했으며 앱도 잘 돌았다.
+
+**그 다음 색인을 돌렸을 때 러너의 `[RAG]` 로그도 안 나왔다.** 색인은 확실히 돌고 있었다 —
+스레드 덤프에서 `main`이 `SeedIndexingRunner → IndexingService → ChunkIndexWriter.flush
+→ EmbeddingClient.embedPassages → Mono.block`에 있었고 `document_chunks`도 늘고 있었다.
+두 번째 사례가 나오고서야 공통점이 보였다. **둘 다 `com.DOCKin`의 INFO였다.**
+
+```
+logging.level.root=info
+logging.level.com.DOCKin=warn      <-- .env 27번 줄
+```
+
+`root`가 `info`라 **로그가 비어 보이지 않는다.** Tomcat, Hikari, Flyway, Hibernate의
+INFO는 그대로 흐르고 우리 코드의 INFO만 빠진다. 그래서 오래 눈에 띄지 않았다.
+
+| 가려진 것 | 내용 |
+|---|---|
+| 기동 완료 | `Started ...`의 로거 이름이 `com.DOCKin.DocKinSpringApplication`이라 같이 걸린다. **"떴다"를 기계가 판정할 신호가 없다.** CD를 붙이면 그 시점에 바로 걸리고, compose에 앱 헬스체크가 없는 것과도 겹친다 |
+| 배치 진행률 | **수 시간 걸리는 색인이 아무것도 남기지 않는다.** 진행 확인에 DB를 직접 세거나 스레드 덤프를 떠야 했다 |
+
+> **정할 것은 "지우자"가 아니라 "의도였나"다.** 로그가 시끄러워 줄인 것이라면 `.env`가
+> 아니라 `application.properties`에 이유와 함께 두어야 한다. **`.env`는 커밋되지 않으므로
+> 지금 이 설정은 사람마다 다르게 동작한다** — 누구는 로그가 보이고 누구는 안 보인다.
+
+P2-11-2(Actuator)와도 이어진다. `/actuator/health`가 있으면 기동 판정을 로그에
+의존하지 않아도 된다.
+
+### P2-14-3 상세 — 컬렉터를 환경이 고르고 있다
+
+JVM은 실행 환경이 server-class인지 보고 컬렉터를 정한다. 조건은 **CPU 2개 이상 AND
+메모리 1792MB 이상**이다. 2×2로 갈랐다.
+
+| | 메모리 512M | 메모리 2G |
+|---|---|---|
+| **CPU 무제한** | Serial | **G1** |
+| **CPU 1.0** | Serial | Serial |
+
+**메모리 512M만으로 이미 Serial이었다** — CPU 상한(P2-10-3)을 넣기 전부터다.
+다만 그 상한이 **두 번째 독립 원인을 추가**해서, 이제는 메모리를 올려도 Serial이다.
+손잡이 하나가 가려졌다.
+
+색인 부하 13분간 실측:
+
+```
+Young GC 132회   pause  min 2.3ms / median 12.9ms / max 132.6ms
+Full  GC   8회   전부 (Metadata GC Threshold) — 기동 90초 안에 몰려 있다
+힙 점유          124M -> 55M (247M)   최대 400M 중 247M만 커밋
+```
+
+**`Allocation Failure`로 인한 Full GC는 한 번도 없었다. 힙 400M이 좁다는 근거는 없다.**
+눈에 띄는 것은 Young pause 최댓값 132.6ms로, 중앙값의 10배다.
+
+> **당장 바꿀 일은 아니지만 "환경이 알아서 고르게 두는" 지금이 가장 나쁘다.**
+> 최소한 `-XX:+UseSerialGC`를 명시해 **선택을 기록**해야 한다. 그러지 않으면
+> 컨테이너 메모리 제한을 올리는 순간 컬렉터가 조용히 바뀐다. G1로 갈지는 재본 뒤에 정한다.
+
+---
+
 ## P3 — 이후 (하지 않아도 무방)
 
 우선순위가 낮다. P0~P2를 끝낸 뒤에만 손댄다.
