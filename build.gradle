@@ -103,4 +103,15 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+
+	// 이 저장소의 테스트 일부는 검증이 아니라 측정이 목적이고, 그 결과를 System.out으로 낸다
+	// (BruteForceSearchBenchmarkTest, HibernateBatchInsertVerificationTest, AnnRecallMeasurementTest).
+	// Gradle은 기본적으로 테스트의 표준 출력을 삼키므로, 켜두지 않으면 측정값을 볼 수 없다.
+	testLogging {
+		showStandardStreams = true
+		events 'passed', 'failed', 'skipped'
+		// 건너뛴 이유를 보여준다. 측정 테스트는 환경변수 게이트로 skip되는 경우가 많은데,
+		// 이유가 안 보이면 "통과했다"와 "돌지 않았다"가 구분되지 않는다.
+		exceptionFormat = 'full'
+	}
 }
