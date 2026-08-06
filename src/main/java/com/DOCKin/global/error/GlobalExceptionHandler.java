@@ -7,11 +7,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
@@ -29,10 +32,24 @@ import java.util.stream.Collectors;
  * {@link ErrorCode}에는 {@code C001} 같은 코드가 있지만 <b>응답에는 들어가지 않으며, 이 작업에서 추가하지 않았다.</b>
  * 필드를 늘리면 프론트엔드와의 계약이 바뀌고, 그건 예외 처리 보강과 별개의 결정이다. 코드는 로그에만 남는다.
  *
- * <h3>순서에 의존하는 부분이 하나 있다</h3>
- * 맨 아래 {@code Exception} 캐치올이 <b>{@link AccessDeniedException}을 삼키면 403이 500이 된다.</b>
- * 스프링이 더 구체적인 핸들러를 우선하므로 명시적으로 잡아두면 해결되지만,
- * <b>캐치올을 넣는 순간 생기는 함정</b>이라 별도 핸들러로 남겨둔다. 지우면 조용히 권한 오류가 서버 오류가 된다.
+ * <h3>캐치올이 만드는 함정 -- 이 클래스의 핵심</h3>
+ * 맨 아래 {@code Exception} 캐치올은 마지막 방어선이라 있어야 한다.
+ * <b>문제는 그 그물이 너무 위쪽에 쳐져 있어서 클라이언트 오류까지 걷어 올린다는 것이다.</b>
+ * 스프링은 더 구체적인 핸들러를 우선하므로, 명시적으로 잡아두지 않은 예외는 전부 500이 된다.
+ *
+ * <p>실제로 두 번 걸렸다.
+ * <ul>
+ *   <li>{@link AccessDeniedException} -- {@code RuntimeException}이라 <b>403이 500</b>으로 나갔다</li>
+ *   <li>{@link NoResourceFoundException} -- 매핑 없는 경로가 <b>404가 아니라 500</b>으로 나갔다(이슈 #31).
+ *       {@code GET /}가 500이었고, 로드밸런서가 그것을 헬스체크로 때리면 멀쩡한 서버가 죽은 것으로 판정된다</li>
+ * </ul>
+ *
+ * <p><b>그래서 클라이언트 오류는 하나씩 명시적으로 잡는다.</b> 아래 핸들러들이 그 목록이고,
+ * 지우면 조용히 500으로 돌아간다. 캐치올에 걸린다는 것은 <b>"우리가 예상하지 못했다"</b>는 뜻이어야 한다.
+ *
+ * <p>남아 있는 후보 하나 -- {@code MaxUploadSizeExceededException}(413)은 아직 잡지 않는다.
+ * nginx의 {@code client_max_body_size}와 응답 형식을 맞추는 문제가 함께 걸려 있어
+ * 별도 항목으로 둔다(백로그 P2-9-4).
  */
 @Slf4j
 @RestControllerAdvice
@@ -94,6 +111,38 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponseDto> handleMethodNotAllowed(HttpRequestMethodNotSupportedException e) {
         log.warn("허용되지 않은 메서드: {}", e.getMethod());
         return toResponse(ErrorCode.METHOD_NOT_ALLOWED, ErrorCode.METHOD_NOT_ALLOWED.getMessage());
+    }
+
+    /** 필수 쿼리 파라미터 누락. {@code @RequestParam(required = true)}에 값이 안 온 경우다. */
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ErrorResponseDto> handleMissingParameter(MissingServletRequestParameterException e) {
+        log.warn("필수 파라미터 누락: {}", e.getParameterName());
+        return toResponse(ErrorCode.INVALID_INPUT_VALUE,
+                message(ErrorCode.INVALID_INPUT_VALUE, e.getParameterName() + " 값이 필요합니다"));
+    }
+
+    /** {@code Content-Type}이 컨트롤러가 받는 형식과 다른 경우. 대부분 JSON 자리에 폼 데이터가 온 것이다. */
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ErrorResponseDto> handleUnsupportedMediaType(HttpMediaTypeNotSupportedException e) {
+        log.warn("지원하지 않는 Content-Type: {}", e.getContentType());
+        return toResponse(ErrorCode.UNSUPPORTED_MEDIA_TYPE, ErrorCode.UNSUPPORTED_MEDIA_TYPE.getMessage());
+    }
+
+    /**
+     * 매핑된 것이 없는 경로. <b>이 핸들러가 없어서 {@code GET /}가 500으로 나가고 있었다</b>(이슈 #31).
+     *
+     * <p>없는 것과 고장난 것은 대응이 다르다 -- 전자는 요청을 고쳐야 하고 후자는 서버를 고쳐야 한다.
+     * 그런데 아래 캐치올이 이 예외를 "처리되지 않은 예외"로 걷어 올려 <b>404여야 할 응답이 500</b>이 됐다.
+     * 로드밸런서가 {@code /}를 헬스체크로 때리면 <b>멀쩡한 서버를 죽은 것으로 판정하는</b> 상태였다.
+     *
+     * <p><b>로그를 debug로 낮춘 이유</b> -- 여기 걸리는 것의 대부분은 오타 URL과 봇 스캔이다.
+     * warn으로 두면 정상 트래픽에 경고가 끝없이 쌓이고, 그러면 사람이 경고를 안 보게 된다.
+     * 서버가 할 일이 없는 종류의 오류다.
+     */
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ErrorResponseDto> handleNoResourceFound(NoResourceFoundException e) {
+        log.debug("매핑 없는 경로: {}", e.getResourcePath());
+        return toResponse(ErrorCode.RESOURCE_NOT_FOUND, ErrorCode.RESOURCE_NOT_FOUND.getMessage());
     }
 
     /**

@@ -9,6 +9,8 @@ public enum ErrorCode {
     METHOD_NOT_ALLOWED(405, "C002", "허용되지 않은 HTTP 메서드입니다."),
     INTERNAL_SERVER_ERROR(500, "C003", "서버 내부 오류가 발생했습니다."),
     INVALID_TYPE_VALUE(400, "C004", "입력값의 타입이 적절하지 않습니다."),
+    RESOURCE_NOT_FOUND(404, "C005", "요청한 경로를 찾을 수 없습니다."),
+    UNSUPPORTED_MEDIA_TYPE(415, "C006", "지원하지 않는 Content-Type입니다."),
 
     // Auth
     UNAUTHORIZED(401, "A001", "로그인이 필요한 서비스입니다."),
