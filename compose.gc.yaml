@@ -1,0 +1,24 @@
+# 색인 부하에서 GC를 관측하기 위한 오버레이. 평상시 기동에는 쓰지 않는다.
+#
+#   docker compose -f compose.yaml -f compose.gc.yaml up -d dockin-app
+#
+# 원래대로 되돌리려면 오버레이 없이 다시 올린다:
+#
+#   docker compose up -d dockin-app
+#
+# [이 파일이 성립하는 전제]
+# JAVA_OPTS가 실제로 읽힌다는 것(P2-10-1, 2026-08-06). 그 전에는 이 오버레이를 써도
+# 아무 일도 일어나지 않았다 -- exec 형식 ENTRYPOINT가 셸을 거치지 않아 변수가
+# 확장되지 않았기 때문이다. 즉 이 측정은 그 수정 위에서만 가능하다.
+services:
+  dockin-app:
+    environment:
+      # seed 프로파일이 있어야 SeedIndexingRunner 빈이 만들어진다(@Profile("seed")).
+      # 시드 SQL은 이미 적용되어 있고 체크섬이 그대로라 Flyway가 다시 돌리지 않는다.
+      - SPRING_PROFILES_ACTIVE=secret,seed
+      # application-seed.properties의 기본값 false를 덮는다(환경변수가 우선한다).
+      - RAG_INDEXING_ON_STARTUP=true
+      # gc+heap=debug를 넣은 이유 -- 힙이 400M에서 좁은지 넓은지 보려면 pause 시간만으로는
+      # 부족하고 세대별 점유 추이가 필요하다. 400M이라는 값에 근거가 없다는 것이 이 측정의 출발점이다.
+      # 파일로 빼는 이유 -- stdout으로 내면 색인 진행 로그와 섞여 둘 다 읽기 어려워진다.
+      - JAVA_OPTS=-Xlog:gc*,gc+heap=debug:file=/tmp/gc.log:time,uptime,level,tags:filecount=5,filesize=20M

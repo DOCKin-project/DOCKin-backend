@@ -1,0 +1,34 @@
+# CPU 상한만 걷어낸 대조군. compose.gc.yaml 위에 겹쳐 쓴다.
+#
+#   docker compose -f compose.yaml -f compose.gc.yaml -f compose.nocpu.yaml up -d
+#
+# [무엇을 가르려는 것인가]
+# 색인 처리량이 6-8 실측(원본당 214ms)보다 느리게(611ms) 나왔는데, 그 사이에
+# 변수가 셋 달라졌다 -- CPU 상한, 코퍼스 크기, GC 로깅.
+#
+# 코퍼스 크기는 되돌릴 수 없고(HNSW 삽입 비용은 코퍼스가 클수록 오른다)
+# GC 로깅은 이 파일을 compose.gc.yaml 위에 겹쳐 써서 켜둔 채로 유지한다.
+# 그러면 남는 차이는 CPU 상한 하나뿐이고, 이번 측정과 직전 측정의 차이는 그것 탓이다.
+#
+# cpus: 0 은 "상한 없음"이다(NanoCpus=0). 값을 지우는 것이 아니라 덮어써야
+# compose 병합에서 상위 파일의 값이 사라진다.
+services:
+  dockin-app:
+    deploy:
+      resources:
+        limits:
+          cpus: '0'
+
+  dockin-embedding:
+    deploy:
+      resources:
+        limits:
+          cpus: '0'
+
+  # 서비스 키는 DOCKin-DB다. 컨테이너 이름(dockin-db)과 다르므로 주의한다 --
+  # 소문자로 쓰면 compose가 새 서비스로 해석해 "image도 build도 없다"며 거부한다.
+  DOCKin-DB:
+    deploy:
+      resources:
+        limits:
+          cpus: '0'
