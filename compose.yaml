@@ -18,6 +18,7 @@ services:
       resources:
         limits:
           memory: 100M
+          cpus: '0.25' # 리버스 프록시. 실측에서 유의미하게 잡힌 적이 없다
 
   dockin-app:
     #build: .
@@ -62,6 +63,7 @@ services:
       resources:
         limits:
           memory: 512M # Spring Boot 최대치 제한
+          cpus: '1.0' # 색인 중에는 청킹과 HTTP 호출뿐이라 가볍다. 평시 API 처리에 1코어
 
   dockin-redis:
     image: redis:7-alpine
@@ -76,6 +78,7 @@ services:
       resources:
         limits:
           memory: 100M # 출근 분산락 전용, 소용량으로 제한
+          cpus: '0.25' # 분산락 SETNX 수준. 메모리와 같은 이유로 소용량
 
   # MySQL 8.0에서 PostgreSQL로 이관했다(ADR-0006 3절). 이관 근거 요약:
   #  - 벡터 검색: MySQL 8.0에 ANN 인덱스가 없다(9.x의 VECTOR도 인덱스는 HeatWave 전용).
@@ -130,6 +133,7 @@ services:
       resources:
         limits:
           memory: 512M # MySQL(300M)보다 여유를 둔다. 벡터 검색 시 공유 버퍼가 필요하다.
+          cpus: '1.5' # 색인 중 실측 180%. 그 수요를 거의 그대로 보장한다
 
   # RAG 임베딩 추론 서버 (HuggingFace text-embeddings-inference)
   # 팀원 FastAPI(AI_SERVER_URL)와는 별개 서비스다. 번역/STT와 무관하며 텍스트->벡터 변환만 담당한다.
@@ -152,10 +156,24 @@ services:
       - embedding_cache:/data # 모델 가중치 캐시. 최초 1회만 다운로드한다.
     networks:
       - dockin-network
+    # CPU 상한을 준 이유 (2026-08-06, SERVICE-SCALE-ASSUMPTIONS 6-8 실측 근거):
+    #  10만 건 색인을 돌렸을 때 TEI 단독 46~153ms/건이 파이프라인 전체에서는 214ms/건으로 떨어졌다.
+    #  그때 CPU가 dockin-embedding 560% / dockin-db 180%였고 호스트는 4스레드다.
+    #  제한이 없어(NanoCpus=0) TEI가 PostgreSQL을 굶긴 것이고, 임베딩을 아무리 빨리 만들어도
+    #  받아 쓸 DB가 느려지면 파이프라인은 그만큼 느려진다.
+    #
+    #  2.0으로 묶으면 나머지 2.0이 DB와 앱에 항상 남는다. 다섯 컨테이너 상한의 합은 5.0으로
+    #  4를 넘지만 상한은 예약이 아니므로, 한가한 쪽의 몫이 놀지 않으면서도
+    #  어느 하나가 전부를 가져가지는 못한다.
+    #
+    #  [미검증] 이 값이 색인 처리량을 실제로 개선하는지는 아직 모른다. TEI가 처리량을
+    #  지배하는 단계라 상한이 오히려 느리게 만들 수도 있다. 214ms/건을 같은 조건에서
+    #  다시 재는 것이 이 설정의 검증이다.
     deploy:
       resources:
         limits:
           memory: 2G
+          cpus: '2.0'
 
 networks:
   dockin-network:
