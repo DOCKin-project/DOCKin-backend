@@ -54,6 +54,11 @@ dependencies {
 	// HQL에 cosine_distance() 등 거리 함수가 등록된다.
 	implementation 'org.hibernate.orm:hibernate-vector'
 
+	// 관측(P2-11-2). 이 저장소에는 헬스 체크 엔드포인트도, 풀/GC/힙 메트릭도 없었다.
+	// P2-9-1(WebClient 타임아웃)이 막으려던 "Hikari 풀이 마르는" 장애가 실제로 나도
+	// 그것을 확인할 수단이 없었고, 기동 완료 여부조차 로그 문자열로만 알 수 있었다(이슈 #30).
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
 	//security
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 
@@ -107,6 +112,35 @@ dependencies {
 	// Redis distributed lock
 	implementation 'org.redisson:redisson:3.37.0'
 
+}
+
+// /actuator/info에 실린 빌드 정보. "지금 도는 코드가 무엇인가"에 답이 없던 것을 메운다.
+//
+// P2-13-1이 그 부재를 실제 사고로 확인했다 -- 배포 이미지가 소스보다 한 달 낡아 있었는데
+// 태그가 latest라 물어볼 방법이 없었고, 보안 수정(CORS)과 장애 전파 차단(타임아웃)이
+// 둘 다 빠진 채 돌고 있었다. 이제 /actuator/info가 커밋 해시까지 답한다.
+//
+// git이 없는 환경(소스만 복사한 빌드 컨테이너 등)에서도 빌드가 깨지면 안 되므로 실패는
+// "unknown"으로 떨어뜨린다. 값이 없는 것과 빌드가 안 되는 것은 다르다.
+def gitCommit = {
+	try {
+		def process = new ProcessBuilder('git', 'rev-parse', '--short', 'HEAD')
+				.directory(rootDir)
+				.redirectErrorStream(false)
+				.start()
+		def out = process.inputStream.text.trim()
+		return process.waitFor() == 0 && !out.isEmpty() ? out : 'unknown'
+	} catch (Exception ignored) {
+		return 'unknown'
+	}
+}()
+
+springBoot {
+	buildInfo {
+		properties {
+			additional = [commit: gitCommit]
+		}
+	}
 }
 
 tasks.named('test') {

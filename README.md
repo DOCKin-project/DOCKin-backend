@@ -226,6 +226,20 @@ DOCKin-spring/
 
 </details>
 
+<details>
+<summary><b>운영 · 관측</b></summary>
+
+| Method | Endpoint | 접근 | 설명 |
+|:---|:---|:---|:---|
+| `GET` | `/actuator/health` | **익명** | UP/DOWN. 로드밸런서·compose 헬스체크용. 세부 항목은 인증 시에만 |
+| `GET` | `/actuator/metrics` | 관리자 | 힙·GC·HikariCP 커넥션 풀 |
+| `GET` | `/actuator/info` | 관리자 | 빌드 버전과 **커밋 해시** — 지금 도는 코드가 무엇인지 |
+
+모든 응답에 `X-Trace-Id`가 실린다. 요청에 같은 헤더를 보내면 그 값을 이어 쓰고,
+AI 경로는 본문의 `traceId`가 우선한다 — `chat_history.trace_id`와 로그를 같은 ID로 묶기 위해서다.
+
+</details>
+
 ---
 
 ## 문서 — 이 저장소에서 가장 중요한 부분
@@ -262,8 +276,14 @@ DOCKin-spring/
 
 정직하게 남긴다. 자세한 내용과 우선순위는 [`docs/WORK-BACKLOG.md`](docs/WORK-BACKLOG.md)에 있다.
 
-- **관측 수단이 없다** — Actuator·Micrometer 미도입. 헬스 체크와 풀/GC/힙 메트릭이 없다
-- **HNSW recall 미측정** — 인덱스는 있으나 "켜도 되는가"에 아직 답하지 않았다
-- **CD 없음** — 테스트 CI만 있고 배포 자동화는 복구하지 않았다
+- **HNSW 설정이 코드에 없다** — recall을 재고 `ef_search=100` / `iterative_scan=relaxed_order`로
+  결정했으나(ADR-0006 8-4), 세션 변수로 잰 값이라 조회 경로에 `SET`이 아직 들어가지 않았다
+- **recall 수치는 하한선이다** — 생성 코퍼스는 문형이 여섯 개뿐이라 실제보다 조밀하다.
+  "켜도 되는가"의 판단에는 쓸 수 있어도 "recall이 몇 퍼센트인가"의 답으로 인용하면 안 된다
+- **CD 없음** — 테스트 CI만 있고 배포 자동화는 복구하지 않았다. 이미지 태그도 `latest` 고정이라
+  **무엇이 올라가 있는지 태그로는 알 수 없다**(`/actuator/info`로 물어볼 수는 있다)
 - **채팅 정합성** — 읽음 판정이 시각 기준이라 단조 증가 ID 기준으로 옮겨야 한다
-- **DB 테스트가 CI에서 skip** — Testcontainers 미도입으로 로컬 PostgreSQL에 의존한다
+- **관측이 "물어볼 수 있는" 단계까지다** — Actuator로 헬스·메트릭·빌드 정보를 답하고 로그에
+  `traceId`가 붙지만, **시계열 수집(Prometheus)과 구조적 로깅은 없다.** 알람도 없다
+- **추적 ID가 리액티브 경로에서 끊긴다** — MDC가 `ThreadLocal`이라 `/api/ai/rt-translate`의
+  WebClient 호출 이후 로그에는 추적 ID가 없다

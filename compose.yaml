@@ -10,8 +10,11 @@ services:
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d
       - /etc/localtime:/etc/localtime:ro
+    # 앱이 헬스체크를 통과한 뒤에 뜬다. 이전에는 컨테이너가 "시작됐다"는 것만 보고 올라와
+    # 기동 중인 수십 초 동안 502를 내보냈다. 헬스체크가 생겨서 가능해진 것이다(P2-11-2).
     depends_on:
-      - dockin-app
+      dockin-app:
+        condition: service_healthy
     networks:
       - dockin-network
     deploy:
@@ -57,6 +60,23 @@ services:
       - cloud.aws.s3.bucket=${S3_BUCKET_NAME}
     volumes:
       - /etc/localtime:/etc/localtime:ro
+    # 기동 완료를 기계가 판정할 수 있게 됐다(P2-11-2).
+    #
+    # 이전에는 "떴는가"를 로그 문자열(Started DocKinSpringApplication)로만 알 수 있었고,
+    # 그 로그가 com.DOCKin 로거라 warn 설정에 묻혀 아예 안 보이던 시기가 있었다(이슈 #30).
+    # 설정 하나로 사라지는 신호에 기동 판정을 의존하고 있었던 셈이다.
+    #
+    # wget은 alpine(busybox) 기본 제공이라 이미지에 추가할 것이 없다.
+    # /actuator/health는 토큰 없이 열려 있고 익명에게는 UP/DOWN만 나간다(SecurityConfig).
+    #
+    # start_period가 필요한 이유 -- Flyway 마이그레이션과 컨텍스트 기동에 수십 초가 걸린다.
+    # 없으면 그 사이의 실패가 retries를 소진해 정상 기동 중에 unhealthy로 떨어진다.
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health | grep -q '\"status\":\"UP\"'" ]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 90s
     depends_on:
       DOCKin-DB:
         condition: service_healthy

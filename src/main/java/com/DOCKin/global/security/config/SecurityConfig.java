@@ -46,6 +46,17 @@ public class SecurityConfig {
                 // 1. AI 관련 경로를 최상단에 배치
                 .requestMatchers("/api/ai/**").authenticated()
 
+                // 1-1. Actuator (P2-11-2). 화이트리스트보다 앞에 둔다 -- 순서가 곧 우선순위다.
+                //
+                // health만 공개한다. 로드밸런서와 compose 헬스체크가 토큰 없이 닿아야 하는 유일한
+                // 엔드포인트이고, 익명에게는 UP/DOWN만 나간다(show-details=when-authorized).
+                //
+                // 나머지는 ADMIN만 본다. metrics에는 힙·GC·커넥션 풀 수치가 그대로 있어
+                // 서버 상태를 밖에서 읽을 수 있고, info에는 빌드 버전과 커밋 해시가 들어간다.
+                // 공개하면 "어느 버전이 돌고 있는지"를 공격자가 먼저 알게 된다.
+                .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
+                .requestMatchers("/actuator/**").hasRole("ADMIN")
+
                 // 2. 화이트리스트 (배열을 그대로 전달)
                 .requestMatchers(securityPathConfig.getWhiteListArray()).permitAll()
 

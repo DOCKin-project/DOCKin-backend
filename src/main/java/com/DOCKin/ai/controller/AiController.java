@@ -5,6 +5,7 @@ import com.DOCKin.ai.dto.TranslateDomain;
 import com.DOCKin.ai.dto.OnlineTranslateDomain;
 import com.DOCKin.global.error.BusinessException;
 import com.DOCKin.global.error.ErrorCode;
+import com.DOCKin.global.logging.TraceId;
 import com.DOCKin.global.security.auth.CustomUserDetails;
 import com.DOCKin.member.model.UserRole;
 import com.DOCKin.rag.service.RagChatService;
@@ -40,6 +41,13 @@ public class AiController {
             @RequestPart("traceId") String traceId,
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token
             ){
+        // translate_logs.trace_id에 저장되고 FastAPI로도 넘어가는 값이다. 로그도 같은 값을 써야
+        // DB와 로그를 이을 수 있다(P2-11-3).
+        //
+        // 다만 이 경로는 Mono를 반환하므로 여기까지다 -- WebClient 호출 이후는 Reactor
+        // 스레드에서 이어지고 MDC는 ThreadLocal이라 따라가지 않는다. TraceIdFilter 주석 참고.
+        TraceId.override(traceId);
+
 return fastApiService.realtimeTranslate(file, source, target, traceId, token)
         .map(response->ResponseEntity.ok(response));
     }
@@ -52,6 +60,10 @@ return fastApiService.realtimeTranslate(file, source, target, traceId, token)
                                        @Valid @RequestBody ChatDomain.Request request) {
 
         if (customUserDetails == null) throw new BusinessException(ErrorCode.UNAUTHORIZED);
+
+        // chat_history.trace_id에 저장되는 값과 로그를 같은 ID로 묶는다(P2-11-3).
+        // 이 경로는 동기라 아래 RagChatService·FastApiService의 로그까지 전부 이어진다.
+        TraceId.override(request.traceId());
 
         String userId = customUserDetails.getMember().getUserId();
         boolean admin = customUserDetails.getMember().getRole() == UserRole.ADMIN;
@@ -67,6 +79,10 @@ return fastApiService.realtimeTranslate(file, source, target, traceId, token)
                                                      @PathVariable Long logId) {
 
         if (customUserDetails == null) throw new BusinessException(ErrorCode.UNAUTHORIZED);
+
+        // work_log_translations.trace_id와 로그를 잇는다(P2-11-3).
+        TraceId.override(request.traceId());
+
         String userId = customUserDetails.getMember().getUserId();
 
         TranslateDomain.Response response = fastApiService.saveTranslateLog(logId,request,userId);

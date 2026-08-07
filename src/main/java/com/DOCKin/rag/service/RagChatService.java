@@ -48,7 +48,9 @@ public class RagChatService {
 
         RetrievalResult retrieval = retrievalService.retrieve(question, userId, admin, topK);
         if (retrieval.isEmpty()) {
-            log.info("[RAG] 근거를 찾지 못해 원본 질문만 전달합니다. traceId={}", request.traceId());
+            // traceId를 인자로 붙이지 않는다 -- 로그 패턴의 %X{traceId}가 모든 줄에 이미 찍는다(P2-11-3).
+            // 줄마다 손으로 붙이면 빠뜨린 줄만 추적이 끊기고, 그 사실이 드러나지도 않는다.
+            log.info("[RAG] 근거를 찾지 못해 원본 질문만 전달합니다.");
         }
 
         ChatDomain.Request augmented = augment(request, question, retrieval);
