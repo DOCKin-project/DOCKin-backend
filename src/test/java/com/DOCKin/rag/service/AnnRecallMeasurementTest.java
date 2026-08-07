@@ -90,6 +90,23 @@ class AnnRecallMeasurementTest {
     private final HttpClient http = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(5)).build();
 
+    /**
+     * 선택도 스윕 지점 — {@code owner_user_id <= 임계값}으로 후보를 자른다.
+     *
+     * <p><b>왜 범위 조건인가.</b> 실제 경로는 {@code owner_user_id = ?} 등치이지만,
+     * 등치로는 선택도를 한 점(0.34%)밖에 만들지 못한다. 어디서 무너지는지 보려면 곡선이
+     * 필요하고, 곡선을 그리려면 같은 컬럼에 걸리는 <b>단일 조건</b>으로 후보 비율만
+     * 바꿔야 한다. {@code IN (...)} 목록은 개수에 따라 계획이 달라질 수 있어 피했다.
+     *
+     * <p>비율은 여기 적지 않는다 — 코퍼스가 바뀌면 틀린 주석이 되므로 <b>실행 시점에 센다.</b>
+     */
+    private static final String[] SELECTIVITY_CUTS = {
+            "gen0002", "gen0006", "gen0026", "gen0051", "gen0170", "gen0340", "zzzz",
+    };
+
+    /** {@code hnsw.ef_search} 스윕 지점. 40이 기본값이며 그 값을 고른 근거가 없었다. */
+    private static final int[] EF_SEARCH_SWEEP = {40, 100, 200, 400, 800};
+
     @Test
     @DisplayName("ANN(HNSW) recall 및 권한 선필터 영향 실측")
     void ann_recall_실측() throws Exception {
@@ -149,6 +166,274 @@ class AnnRecallMeasurementTest {
         } catch (SQLException e) {
             Assumptions.abort("PostgreSQL 접속 실패로 건너뜁니다: " + e.getMessage());
         }
+    }
+
+    /**
+     * 선택도 스윕 — 6-10이 남긴 미결 하나.
+     *
+     * <p>6-10은 선택도 <b>33.6%</b>에서 HNSW가 무너지지 않는 것을 보고
+     * <b>"해소된 것이 아니라 재현되지 않았다"</b>고 적었다. 근거가 둘이었다 —
+     * 8-2와 비교했을 때 <b>선택도와 질의 벡터가 동시에</b> 달랐고,
+     * HNSW가 필터에서 무너지는 것은 선택도가 <b>높을수록</b> 심해지므로
+     * 33.6%는 애초에 약한 조건이라는 것.
+     *
+     * <p>그래서 이번에는 <b>같은 코퍼스·같은 질의 벡터로 선택도만</b> 바꾼다.
+     * 변수가 하나면 곡선이 원인을 가리킨다.
+     *
+     * <h3>무엇을 보는가 — recall보다 반환 건수가 먼저다</h3>
+     * 필터가 걸린 HNSW의 실패는 "엉뚱한 것을 준다"가 아니라 <b>"덜 준다"</b>로 나타난다.
+     * 그래프를 따라가며 모은 후보가 필터에 걸려 버려지면 k를 채우지 못한 채 끝난다.
+     * 기밀성이 아니라 <b>완전성</b>이 깨지는 것이라(필터는 여전히 SQL 안에서 걸린다)
+     * 조용하다 — 사용자는 "검색이 좀 부실하네"로만 느낀다.
+     */
+    @Test
+    @DisplayName("선택도별 ANN recall — 어디서 무너지는가")
+    void 선택도_스윕() throws Exception {
+        String password = requireEnv();
+        try (Connection conn = DriverManager.getConnection(URL, "root", password)) {
+            int total = requireCorpus(conn);
+            List<String> vectors = embedAll();
+
+            System.out.println();
+            System.out.println("=== 선택도별 ANN recall (코퍼스 " + String.format("%,d", total)
+                    + " 청크 / 질의 " + QUERIES.length + "개 / top-" + TOP_K + ") ===");
+            System.out.println();
+            System.out.printf("%-24s | %-9s | %-9s | %-10s | %-9s | %-9s | %-9s%n",
+                    "선필터 조건", "선택도", "recall@5", "ANN 반환", "정확(ms)", "ANN(ms)", "실제 계획");
+            System.out.println("-".repeat(100));
+
+            // 실제 서비스 경로 — 소유자 1명(등치). 여기가 진짜 조건이다.
+            String owner = topOwner(conn);
+            row(conn, vectors, "owner = " + owner,
+                    base() + " AND owner_user_id = '" + owner + "'", total);
+
+            // 곡선 — 같은 컬럼에 범위 조건만 걸어 후보 비율을 넓혀 간다.
+            for (String cut : SELECTIVITY_CUTS) {
+                row(conn, vectors, "owner <= " + cut,
+                        base() + " AND owner_user_id <= '" + cut + "'", total);
+            }
+
+            // 선필터 없음 — 6-10의 0.840과 직접 비교되는 지점(코퍼스 크기 차이만 남는다).
+            row(conn, vectors, "(선필터 없음)", base(), total);
+
+            System.out.println();
+            // 되찾을 것이 있는 곳에서 시험한다 — recall이 이미 1.000인 지점에서는 시험이 되지 않는다.
+            measureIterativeScanRecovery(conn, vectors, "위험 구간",
+                    base() + " AND owner_user_id <= 'gen0026'");
+            measureIterativeScanRecovery(conn, vectors, "실제 경로 owner=" + owner,
+                    base() + " AND owner_user_id = '" + owner + "'");
+        } catch (SQLException e) {
+            Assumptions.abort("PostgreSQL 접속 실패로 건너뜁니다: " + e.getMessage());
+        }
+    }
+
+    /**
+     * {@code ef_search} 스윕 — 6-10이 남긴 미결 둘.
+     *
+     * <p>6-10의 지적: <b>기본값 40을 쓰고 있고 그 값을 고른 근거가 없다.</b>
+     * 그리고 브루트포스 110ms 자리에 1.11ms를 쓰고 있으니 <b>약 99배의 지연 예산</b>이 남는다.
+     * 즉 recall 0.84는 "HNSW를 쓸지 말지"가 아니라 <b>손잡이를 안 돌려본 문제</b>일 수 있다.
+     *
+     * <p>이 측정이 답하는 것은 하나다 — <b>얼마를 더 내면 recall을 얼마나 사는가.</b>
+     * 그리고 그 가격이 브루트포스보다 여전히 싼가.
+     */
+    @Test
+    @DisplayName("ef_search 스윕 — recall을 얼마에 사는가")
+    void efSearch_스윕() throws Exception {
+        String password = requireEnv();
+        try (Connection conn = DriverManager.getConnection(URL, "root", password)) {
+            int total = requireCorpus(conn);
+            List<String> vectors = embedAll();
+            String owner = topOwner(conn);
+
+            System.out.println();
+            System.out.println("=== ef_search 스윕 (코퍼스 " + String.format("%,d", total)
+                    + " 청크 / 질의 " + QUERIES.length + "개 / top-" + TOP_K + ") ===");
+
+            // 정확 최근접은 ef_search와 무관하므로 기준선을 한 번만 잰다.
+            double exactMs = avgExplain(conn, vectors, base(), false);
+            System.out.println();
+            System.out.printf("기준선 — 정확 최근접(브루트포스): %.2fms%n", exactMs);
+            System.out.println();
+
+            System.out.printf("%-12s | %-9s | %-9s | %-12s | %-14s | %-9s%n",
+                    "ef_search", "recall@5", "ANN(ms)", "정확 대비", "지연 예산 소모", "실제 계획");
+            System.out.println("-".repeat(84));
+
+            for (int ef : EF_SEARCH_SWEEP) {
+                setEfSearch(conn, ef);
+                double recall = avgRecall(conn, vectors, base());
+                double ms = avgExplain(conn, vectors, base(), true);
+                System.out.printf("%-12d | %-9.3f | %-9.2f | %-12s | %-14s | %-9s%n",
+                        ef, recall, ms,
+                        String.format("%.0f배 빠름", exactMs / Math.max(ms, 0.0001)),
+                        String.format("%.1f%%", 100.0 * ms / Math.max(exactMs, 0.0001)),
+                        planOf(conn, vectors.get(0), base()));
+            }
+            setEfSearch(conn, 40);
+
+            // 권한 선필터가 걸린 실제 경로에서도 같은 손잡이가 듣는지 본다.
+            // 필터 아래에서는 ef_search가 recall뿐 아니라 '반환 건수'를 되찾는 수단이기도 하다.
+            String userWhere = base() + " AND owner_user_id = '" + owner + "'";
+            System.out.println();
+            System.out.println("--- 권한 선필터를 건 채로 (owner = " + owner + ") ---");
+            System.out.printf("%-12s | %-9s | %-10s | %-9s%n", "ef_search", "recall@5", "ANN 반환", "ANN(ms)");
+            System.out.println("-".repeat(52));
+            for (int ef : EF_SEARCH_SWEEP) {
+                setEfSearch(conn, ef);
+                System.out.printf("%-12d | %-9.3f | %-10.2f | %-9.2f%n",
+                        ef, avgRecall(conn, vectors, userWhere), avgReturned(conn, vectors, userWhere),
+                        avgExplain(conn, vectors, userWhere, true));
+            }
+            setEfSearch(conn, 40);
+            System.out.println();
+        } catch (SQLException e) {
+            Assumptions.abort("PostgreSQL 접속 실패로 건너뜁니다: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 선필터로 k를 못 채울 때 {@code iterative_scan}이 되찾아 주는가.
+     *
+     * <p>6-10에서는 이 옵션이 아무 차이도 내지 않았는데, 그때는 <b>채워 넣을 것이 없어서</b>였다
+     * (필터를 걸어도 5건이 온전히 왔다). 선택도가 100배 가혹해진 지금이 이 옵션의 첫 시험대다.
+     */
+    private void measureIterativeScanRecovery(Connection conn, List<String> vectors,
+                                              String label, String where) throws SQLException {
+        System.out.println("=== iterative_scan — 못 채운 자리를 되찾는가 [" + label + "] ===");
+        System.out.printf("%-24s | %-9s | %-10s | %-9s | %-9s%n",
+                "설정", "recall@5", "ANN 반환", "지연(ms)", "실제 계획");
+        System.out.println("-".repeat(74));
+
+        System.out.printf("%-24s | %-9.3f | %-10.2f | %-9.2f | %-9s%n", "off (현재 기본값)",
+                avgRecall(conn, vectors, where), avgReturned(conn, vectors, where),
+                avgExplain(conn, vectors, where, true), planOf(conn, vectors.get(0), where));
+
+        for (String mode : new String[]{"relaxed_order", "strict_order"}) {
+            try (Statement st = conn.createStatement()) {
+                st.execute("SET hnsw.iterative_scan = " + mode);
+                System.out.printf("%-24s | %-9.3f | %-10.2f | %-9.2f | %-9s%n", mode,
+                        avgRecall(conn, vectors, where), avgReturned(conn, vectors, where),
+                        avgExplain(conn, vectors, where, true), planOf(conn, vectors.get(0), where));
+            } catch (SQLException e) {
+                System.out.println("(" + mode + " 미지원: " + e.getMessage() + ")");
+            }
+        }
+        try (Statement st = conn.createStatement()) {
+            st.execute("SET hnsw.iterative_scan = off");
+        }
+        System.out.println();
+    }
+
+    // ------------------------------------------------------------------
+    // 스윕 공용 — 질의 전체를 돌며 평균을 낸다. 질의 하나로는 편차에 묻힌다.
+
+    /** 한 줄 = 한 선택도 지점. 실제 선택도는 가정하지 않고 <b>센다.</b> */
+    private void row(Connection conn, List<String> vectors, String label, String where, int total)
+            throws SQLException {
+        int candidates = count(conn, "SELECT COUNT(*) FROM document_chunks WHERE " + where);
+        System.out.printf("%-24s | %-9s | %-9.3f | %-10.2f | %-9.2f | %-9.2f | %-9s%n",
+                label, String.format("%.2f%%", 100.0 * candidates / total),
+                avgRecall(conn, vectors, where), avgReturned(conn, vectors, where),
+                avgExplain(conn, vectors, where, false), avgExplain(conn, vectors, where, true),
+                planOf(conn, vectors.get(0), where));
+    }
+
+    /**
+     * 인덱스를 켠 채로 플래너가 <b>실제로 무엇을 골랐는지</b> 본다.
+     *
+     * <p>이 열이 없으면 숫자가 거짓말을 한다. {@code enable_indexscan = on}은
+     * "인덱스를 써라"가 아니라 <b>"써도 된다"</b>이고, 비용 추정이 뒤집히면 플래너는
+     * 순차 스캔으로 돌아선다. 그때 나오는 recall 1.000은 <b>HNSW가 완벽해서가 아니라
+     * HNSW를 안 썼기 때문</b>이며, 그것을 모르고 읽으면 정반대의 결론에 도달한다.
+     */
+    private String planOf(Connection conn, String vec, String where) throws SQLException {
+        try (Statement st = conn.createStatement()) {
+            st.execute("SET enable_indexscan = on");
+            try (ResultSet rs = st.executeQuery("EXPLAIN " + sql(vec, where))) {
+                while (rs.next()) {
+                    String line = rs.getString(1);
+                    if (line.contains("idx_chunk_embedding_hnsw")) return "HNSW";
+                    if (line.contains("Seq Scan")) return "Seq";
+                    if (line.contains("Bitmap Heap Scan")) return "Bitmap";
+                    if (line.contains("Index Scan") || line.contains("Index Only Scan")) return "Index(기타)";
+                }
+            }
+        }
+        return "?";
+    }
+
+    /**
+     * 질의 전체의 평균 recall.
+     *
+     * <p><b>분모가 k가 아니라 정확 최근접의 반환 건수다.</b> 선택도가 높으면 후보 자체가
+     * k보다 적을 수 있고, 그때 k로 나누면 <b>HNSW가 완벽해도 recall이 1을 못 채운다.</b>
+     * 재려는 것은 "ANN이 정확 최근접을 얼마나 따라잡는가"이므로 분모는 정확 최근접이어야 한다.
+     */
+    private double avgRecall(Connection conn, List<String> vectors, String where) throws SQLException {
+        double sum = 0;
+        int n = 0;
+        for (String vec : vectors) {
+            Set<Long> exact = search(conn, vec, where, false);
+            if (exact.isEmpty()) continue;   // 후보가 없으면 recall이 정의되지 않는다
+            sum += intersection(exact, search(conn, vec, where, true)) / (double) exact.size();
+            n++;
+        }
+        return n == 0 ? 0 : sum / n;
+    }
+
+    /** ANN이 실제로 돌려준 건수의 평균. k(5)에 못 미치면 그만큼을 조용히 잃고 있다는 뜻이다. */
+    private double avgReturned(Connection conn, List<String> vectors, String where) throws SQLException {
+        double sum = 0;
+        for (String vec : vectors) {
+            sum += search(conn, vec, where, true).size();
+        }
+        return sum / vectors.size();
+    }
+
+    /** 질의 전체의 평균 실행 시간. 질의마다 최소값을 취해 캐시 미스와 잡음을 걷어낸다. */
+    private double avgExplain(Connection conn, List<String> vectors, String where, boolean useIndex)
+            throws SQLException {
+        double sum = 0;
+        for (String vec : vectors) {
+            sum += explainMs(conn, vec, where, useIndex);
+        }
+        return sum / vectors.size();
+    }
+
+    private void setEfSearch(Connection conn, int ef) throws SQLException {
+        try (Statement st = conn.createStatement()) {
+            st.execute("SET hnsw.ef_search = " + ef);
+        }
+    }
+
+    private String base() {
+        return "embedding_model = '" + MODEL + "'";
+    }
+
+    /** 질의 벡터는 한 번만 만든다 — 스윕마다 다시 임베딩하면 느릴 뿐 아니라 조건이 흔들린다. */
+    private List<String> embedAll() {
+        List<String> out = new ArrayList<>();
+        for (String q : QUERIES) {
+            out.add(literal(embedQuerySafe(q)));
+        }
+        return out;
+    }
+
+    private String requireEnv() {
+        String password = System.getenv("DB_PASSWORD");
+        Assumptions.assumeTrue(password != null && !password.isBlank(),
+                "DB_PASSWORD가 없어 건너뜁니다.");
+        Assumptions.assumeTrue(System.getenv("RUN_ANN_RECALL") != null,
+                "RUN_ANN_RECALL이 없어 건너뜁니다. 코퍼스 색인이 끝난 뒤에만 의미가 있습니다.");
+        return password;
+    }
+
+    private int requireCorpus(Connection conn) throws SQLException {
+        int total = count(conn, "SELECT COUNT(*) FROM document_chunks WHERE " + base());
+        Assumptions.assumeTrue(total > 1000,
+                "청크가 " + total + "건뿐이라 ANN 측정이 의미가 없습니다. 색인을 먼저 끝내세요.");
+        return total;
     }
 
     /**
