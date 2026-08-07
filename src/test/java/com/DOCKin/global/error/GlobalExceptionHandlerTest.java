@@ -9,6 +9,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -103,6 +104,25 @@ class GlobalExceptionHandlerTest {
                 new HttpMessageNotReadableException("깨진 JSON", (org.springframework.http.HttpInputMessage) null));
 
         assertStatus(response, 400);
+    }
+
+    @Test
+    @DisplayName("P2-9-4 - 업로드 용량 초과는 413이다. nginx가 앞에서 자르면 앱은 이 예외를 보지도 못한다")
+    void maxUploadSizeReturns413() {
+        var response = handler.handleMaxUploadSize(new MaxUploadSizeExceededException(10 * 1024 * 1024));
+
+        assertStatus(response, 413);
+    }
+
+    @Test
+    @DisplayName("응답에 상한값이 새지 않는다 - 알려주면 상한을 탐색하는 데 쓸 수 있다")
+    void maxUploadSizeHidesTheLimit() {
+        var response = handler.handleMaxUploadSize(new MaxUploadSizeExceededException(10 * 1024 * 1024));
+
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getMessage())
+                .isEqualTo(ErrorCode.PAYLOAD_TOO_LARGE.getMessage())
+                .doesNotContain("10485760");
     }
 
     @Test

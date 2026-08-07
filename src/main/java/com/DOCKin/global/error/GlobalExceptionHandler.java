@@ -14,6 +14,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.LocalDateTime;
@@ -42,14 +43,12 @@ import java.util.stream.Collectors;
  *   <li>{@link AccessDeniedException} -- {@code RuntimeException}이라 <b>403이 500</b>으로 나갔다</li>
  *   <li>{@link NoResourceFoundException} -- 매핑 없는 경로가 <b>404가 아니라 500</b>으로 나갔다(이슈 #31).
  *       {@code GET /}가 500이었고, 로드밸런서가 그것을 헬스체크로 때리면 멀쩡한 서버가 죽은 것으로 판정된다</li>
+ *   <li>{@link MaxUploadSizeExceededException} -- 용량 초과 업로드가 <b>413이 아니라 500</b>이었다(P2-9-4)</li>
  * </ul>
  *
  * <p><b>그래서 클라이언트 오류는 하나씩 명시적으로 잡는다.</b> 아래 핸들러들이 그 목록이고,
  * 지우면 조용히 500으로 돌아간다. 캐치올에 걸린다는 것은 <b>"우리가 예상하지 못했다"</b>는 뜻이어야 한다.
  *
- * <p>남아 있는 후보 하나 -- {@code MaxUploadSizeExceededException}(413)은 아직 잡지 않는다.
- * nginx의 {@code client_max_body_size}와 응답 형식을 맞추는 문제가 함께 걸려 있어
- * 별도 항목으로 둔다(백로그 P2-9-4).
  */
 @Slf4j
 @RestControllerAdvice
@@ -143,6 +142,29 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponseDto> handleNoResourceFound(NoResourceFoundException e) {
         log.debug("매핑 없는 경로: {}", e.getResourcePath());
         return toResponse(ErrorCode.RESOURCE_NOT_FOUND, ErrorCode.RESOURCE_NOT_FOUND.getMessage());
+    }
+
+    /**
+     * 업로드 용량 초과. {@code spring.servlet.multipart.max-file-size}(10MB)를 넘은 경우다.
+     *
+     * <h4>이 핸들러가 생기려면 nginx를 먼저 고쳐야 했다</h4>
+     * 이전에는 nginx {@code client_max_body_size}도 10M이라 <b>앱이 이 예외를 볼 기회가 거의 없었다.</b>
+     * 멀티파트는 경계 문자열과 파트 헤더가 붙어 요청 전체가 파일보다 크므로,
+     * 정확히 10MB인 파일은 nginx에서 먼저 413으로 잘렸고 그 응답은 nginx의 기본 HTML이었다.
+     * <b>즉 한도를 정하는 주체가 앱이 아니라 우연히 앞에 선 프록시였다.</b>
+     *
+     * <p>nginx를 20M으로 올려 거절 주체를 앱으로 되돌렸다(P2-9-4). 이제 10MB 초과 업로드는
+     * 여기로 오고 {@link ErrorResponseDto} 형식으로 나간다. nginx에 남은 20M은 한도가 아니라
+     * 1GB 업로드를 앱까지 실어 나르지 않기 위한 바깥 울타리이며, 거기 걸리는 경우를 위해
+     * {@code error_page 413}으로 같은 형식의 JSON을 내도록 해뒀다.
+     *
+     * <p><b>실제 크기를 응답에 넣지 않는다.</b> {@code getMaxUploadSize()}는 서버 설정값이고,
+     * 그것을 알려주면 상한을 탐색하는 데 쓸 수 있다. 로그에는 남긴다.
+     */
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ErrorResponseDto> handleMaxUploadSize(MaxUploadSizeExceededException e) {
+        log.warn("업로드 용량 초과: 상한 {} bytes", e.getMaxUploadSize());
+        return toResponse(ErrorCode.PAYLOAD_TOO_LARGE, ErrorCode.PAYLOAD_TOO_LARGE.getMessage());
     }
 
     /**
