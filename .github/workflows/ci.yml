@@ -9,6 +9,26 @@
 #
 # 이전 워크플로는 `./gradlew clean build -x test`로 테스트를 아예 건너뛰었다.
 # 즉 살아 있을 때도 회귀를 잡은 적이 없다.
+#
+# ---------------------------------------------------------------------------
+# 2026-08-07: 이 파일의 전제가 한 번 뒤집혔다 (P2-11-5, Testcontainers 도입)
+#
+# 직전까지 이 워크플로는 "DB가 필요한 테스트는 CI에서 돌릴 수 없다"를 전제로 쓰여 있었고,
+# 그 근거는 아래 두 가지였다. 둘 다 더는 성립하지 않는다.
+#
+#   1. "벤치마크가 DB 테스트와 스위치를 공유한다"
+#      -> DB 제공이 DB_PASSWORD와 무관해졌다. 컨테이너는 테스트 코드가 직접 띄우므로
+#         이 변수는 이제 '무거운 벤치마크를 켜는' 용도로만 남았다. CI는 주지 않는다.
+#
+#   2. "GitHub 서비스 컨테이너에는 postgres 명령 인자를 넘길 자리가 없다"
+#      -> 서비스 컨테이너를 쓰지 않는다. Testcontainers가 코드에서 컨테이너를 만들므로
+#         compose.yaml과 같은 `-c lock_timeout=5s`를 그대로 줄 수 있다.
+#         (실제로 이 인자를 빼고 돌려봤더니 LockTimeoutVerificationTest가 실패가 아니라
+#          '멈췄다'. 예측이 맞았고, 동시에 이제 해결됐다는 근거이기도 하다.)
+#
+# 그 결과 CI에서 실제로 도는 테스트가 단위 테스트 중심에서 121개로 늘었고,
+# 스키마 / Flyway / pgvector / 락 / 배치 적재가 처음으로 자동 검증된다.
+# ---------------------------------------------------------------------------
 
 name: CI
 
@@ -43,8 +63,15 @@ jobs:
 
       - run: chmod +x gradlew
 
-      # 외부 의존이 필요한 테스트는 DB_PASSWORD 부재로 스스로 skip한다.
-      # 이 워크플로는 그 변수를 의도적으로 주지 않는다 -- 아래 "CI가 검증하지 않는 것" 참고.
+      # DB는 Testcontainers가 띄운다(PostgresTestSupport). ubuntu-latest에는 Docker가
+      # 미리 설치돼 있어 별도 서비스 정의가 필요 없다.
+      #
+      # 이미지를 먼저 받아두는 것은 실패 원인을 분리하기 위해서다 -- 레지스트리 지연이나
+      # 태그 오타로 테스트가 깨지면 원인이 테스트 안에 있는 것처럼 보인다.
+      # 여기서 받아두면 그 경우 이 단계가 먼저 빨간불이 된다.
+      - name: 테스트용 PostgreSQL 이미지 준비
+        run: docker pull pgvector/pgvector:pg17
+
       - name: 테스트
         run: ./gradlew test --no-daemon
 
@@ -63,27 +90,30 @@ jobs:
         run: ./gradlew assemble --no-daemon
 
 # ---------------------------------------------------------------------------
-# CI가 검증하지 않는 것 (알면서 뺀 것들 -- 조용히 빠지지 않도록 적어둔다)
+# CI가 검증하는 것
 #
-# DB_PASSWORD를 주지 않으므로 아래는 CI에서 전부 skip된다. 로컬에서만 돈다.
+# 로컬 전체 실행 기준 121개 중 115개가 돌고 6개가 skip된다(2026-08-07).
+# 아래는 이전에 "CI에서 전부 skip된다"고 적혀 있던 것들이며, 지금은 모두 돈다.
 #
 #   - 컨텍스트 로딩         DocKinSpringApplicationTests
-#   - pgvector 타입/검색    VectorTypeMappingTest, VectorSearchQueryTest
+#   - 스키마 정합성         SchemaValidationTest
 #   - Flyway 마이그레이션   FlywayMigrationTest
+#   - pgvector 타입/검색    VectorTypeMappingTest, VectorSearchQueryTest
 #   - 락 타임아웃           LockTimeoutVerificationTest
 #   - 배치 INSERT           HibernateBatchInsertVerificationTest
 #   - 연차 차감 동시성      LeaveBalanceConcurrencyTest
-#   - 브루트포스 벤치마크   BruteForceSearchBenchmarkTest
-#   - 교차언어 검색         CrossLingualRetrievalTest (임베딩 서버도 필요)
 #
-# 서비스 컨테이너로 PostgreSQL을 띄우면 위 절반은 살릴 수 있지만, 지금 구조로는 곤란하다.
+# CI가 검증하지 않는 것 (알면서 뺀 것들 -- 조용히 빠지지 않도록 적어둔다)
 #
-#   1. 벤치마크가 같은 스위치를 공유한다. DB_PASSWORD 하나로 열리므로 10만 청크 적재
-#      벤치마크와 10,000건 배치 테스트가 함께 깨어난다. CI에 넣을 시간이 아니다.
-#   2. LockTimeoutVerificationTest는 서버 파라미터 lock_timeout=5s를 전제한다.
-#      GitHub 서비스 컨테이너에는 postgres 명령 인자를 넘길 자리가 없어 기본값(무한 대기)이 되고,
-#      테스트는 실패가 아니라 '멈춘다'.
+#   - AnnRecallMeasurementTest        DB_PASSWORD + RUN_ANN_RECALL + 코퍼스 1000건 초과
+#   - BruteForceSearchBenchmarkTest   DB_PASSWORD
+#   - CorpusSeedGeneratorTest         DB_PASSWORD + SEED_CORPUS_SIZE (3개 중 1개)
+#   - CrossLingualRetrievalTest       localhost:8081 임베딩 서버
 #
-# 즉 선결 과제는 "DB가 필요한가"와 "오래 걸리는가"를 다른 스위치로 나누는 것이다.
-# 그 전까지 CI의 범위는 단위 테스트 + 컴파일이며, 이 범위를 실제보다 넓게 말하지 않는다.
+# 앞의 셋은 측정용이라 CI에 넣을 시간이 아니다(10만 청크 적재 등). 빼는 것 자체는 맞다.
+# 다만 그 스위치가 여전히 DB_PASSWORD인 것은 이름이 실제와 어긋난 상태다 --
+# 이제 DB 제공과 아무 상관이 없고 '오래 걸림'만 뜻한다. JUnit @Tag로 바꾸는 것이 P0-11이며,
+# 그때까지 이 변수명이 오해를 부를 수 있다는 점을 여기 적어둔다.
+#
+# 마지막 것은 외부 서비스가 필요해 성격이 다르다. 임베딩 서버를 CI에 띄울지는 별도 판단이다.
 # ---------------------------------------------------------------------------
