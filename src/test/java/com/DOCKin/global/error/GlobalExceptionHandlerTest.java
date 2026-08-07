@@ -27,13 +27,17 @@ import static org.assertj.core.api.Assertions.assertThat;
  * 그것이 이 테스트가 노리는 것이다.
  *
  * <h3>왜 MockMvc가 아니라 핸들러를 직접 호출하는가</h3>
- * {@code @WebMvcTest}는 스프링 컨텍스트를 띄우고, 이 저장소의 보안 설정은 그 과정에서
- * {@code UserDetailsService}를 거쳐 DB에 닿는다. 그러면 <b>CI에서 통째로 skip된다</b> --
- * {@code ci.yml}이 {@code DB_PASSWORD}를 의도적으로 주지 않기 때문이다(그 파일 하단 참고).
+ * 원래 이유는 <b>CI에 DB가 없다</b>는 것이었다. {@code @WebMvcTest}는 스프링 컨텍스트를 띄우고
+ * 이 저장소의 보안 설정은 그 과정에서 {@code UserDetailsService}를 거쳐 DB에 닿으므로,
+ * 회귀를 잡으려고 만든 테스트가 정작 CI에서 통째로 skip될 판이었다.
  *
- * <p>회귀를 잡는 것이 목적인데 CI에서 돌지 않으면 목적을 잃는다. 그래서 컨텍스트 없이
- * 매핑만 본다. <b>대신 "스프링이 이 예외를 이 핸들러로 보내는가"는 검증하지 못한다</b> --
+ * <p><b>그 제약은 사라졌다</b>(P2-11-5, Testcontainers). 지금 이 방식을 유지하는 것은
+ * 이제 필요가 아니라 선택이다 -- 컨텍스트 없이 도는 이 테스트는 1초 안에 끝나고,
+ * 검증 대상인 "예외 -> 상태 코드 매핑"에는 컨텍스트가 필요하지 않다.
+ *
+ * <p>대신 <b>"스프링이 이 예외를 이 핸들러로 보내는가"는 여전히 검증하지 못한다.</b>
  * 그것은 프레임워크의 계약이고, 실제 동작은 컨테이너를 띄워 확인했다.
+ * 이 부분이 불안해지면 {@code @WebMvcTest}로 옮기는 선택지가 이제는 열려 있다.
  *
  * <h3>무엇을 단언하는가</h3>
  * {@link ErrorResponseDto}는 {@code status / message / timestamp} 세 필드이고 프론트엔드와의

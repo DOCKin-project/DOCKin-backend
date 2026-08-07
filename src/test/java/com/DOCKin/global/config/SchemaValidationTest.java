@@ -1,8 +1,8 @@
 package com.DOCKin.global.config;
 
+import com.DOCKin.global.testsupport.PostgresTestSupport;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.test.context.TestPropertySource;
@@ -34,12 +34,7 @@ import org.springframework.test.context.TestPropertySource;
  */
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@EnabledIfEnvironmentVariable(named = "DB_PASSWORD", matches = ".+",
-        disabledReason = "PostgreSQL 접속 정보가 없어 스키마 검증을 건너뜁니다.")
 @TestPropertySource(properties = {
-        "spring.datasource.url=jdbc:postgresql://localhost:5432/dockindb",
-        "spring.datasource.username=root",
-        "spring.datasource.password=${DB_PASSWORD:}",
         "spring.datasource.driver-class-name=org.postgresql.Driver",
         // 이 테스트의 전부다. 어긋나면 컨텍스트가 뜨지 않는다.
         "spring.jpa.hibernate.ddl-auto=validate",
@@ -48,7 +43,7 @@ import org.springframework.test.context.TestPropertySource;
         "spring.flyway.baseline-on-migrate=true",
         "spring.flyway.baseline-version=0"
 })
-class SchemaValidationTest {
+class SchemaValidationTest extends PostgresTestSupport {
 
     @Test
     @DisplayName("모든 엔티티 매핑이 실제 테이블과 일치한다")

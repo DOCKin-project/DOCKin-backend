@@ -1,12 +1,12 @@
 package com.DOCKin.rag.repository;
 
+import com.DOCKin.global.testsupport.PostgresTestSupport;
 import com.DOCKin.rag.model.DocumentChunk;
 import com.DOCKin.rag.model.SourceType;
 import com.DOCKin.rag.model.Visibility;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
@@ -30,23 +30,21 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
  * 벡터만 뽑아 오는데(본문을 메모리에 올리지 않기 위한 설계), 투영에서도 {@code vector}가
  * {@code float[]}로 되살아나는지는 별개 문제다. 그래서 엔티티 왕복과 투영 왕복을 모두 본다.
  *
- * <h3>DB가 없으면 실행하지 않는다</h3>
- * {@code @EnabledIfEnvironmentVariable}을 <b>클래스에</b> 붙여 스프링 컨텍스트 로딩 자체를 막는다.
- * 테스트 메서드 안의 {@code Assumptions}로는 늦다 -- 컨텍스트가 먼저 뜨면서
- * "방언을 결정할 수 없다"로 <b>skip이 아니라 실패</b>한다.
+ * <h3>DB는 항상 있다</h3>
+ * {@link PostgresTestSupport}가 pgvector 컨테이너를 띄우므로 건너뛰는 경로가 없다.
+ * 이전에는 {@code @EnabledIfEnvironmentVariable}로 컨텍스트 로딩 자체를 막았는데,
+ * 그 결과 <b>CI에서 이 검증이 한 번도 돌지 않았다</b>. 지금은 매 실행마다 돈다.
+ *
+ * <p>공식 {@code postgres} 이미지가 아니라 {@code pgvector/pgvector}를 쓰는 것이 여기서 중요하다 --
+ * {@code vector} 확장이 없으면 이 테스트가 검증하려는 타입 자체가 존재하지 않는다.
  */
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@EnabledIfEnvironmentVariable(named = "DB_PASSWORD", matches = ".+",
-        disabledReason = "PostgreSQL 접속 정보가 없어 벡터 매핑 검증을 건너뜁니다.")
 @TestPropertySource(properties = {
-        "spring.datasource.url=jdbc:postgresql://localhost:5432/dockindb",
-        "spring.datasource.username=root",
-        "spring.datasource.password=${DB_PASSWORD:}",
         "spring.datasource.driver-class-name=org.postgresql.Driver",
         "spring.jpa.hibernate.ddl-auto=update"
 })
-class VectorTypeMappingTest {
+class VectorTypeMappingTest extends PostgresTestSupport {
 
     private static final String MODEL = "vector-mapping-test";
 

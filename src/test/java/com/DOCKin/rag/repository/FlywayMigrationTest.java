@@ -1,12 +1,12 @@
 package com.DOCKin.rag.repository;
 
+import com.DOCKin.global.testsupport.PostgresTestSupport;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -45,29 +45,24 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * 여기서는 프레임워크가 아니라 <b>마이그레이션 SQL 자체</b>를 검증한다.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@EnabledIfEnvironmentVariable(named = "DB_PASSWORD", matches = ".+",
-        disabledReason = "PostgreSQL 접속 정보가 없어 마이그레이션 검증을 건너뜁니다.")
-class FlywayMigrationTest {
+class FlywayMigrationTest extends PostgresTestSupport {
 
-    private static final String HOST = "jdbc:postgresql://localhost:5432/";
     private static final String ADMIN_DB = "postgres";
     private static final String SCRATCH_DB = "dockindb_flyway_verify";
-    private static final String USER = "root";
 
-    private String password;
     private Flyway flyway;
 
     @BeforeAll
     void createScratchDatabase() throws SQLException {
-        password = System.getenv("DB_PASSWORD");
-        try (Connection admin = DriverManager.getConnection(HOST + ADMIN_DB, USER, password);
+        try (Connection admin = DriverManager.getConnection(
+                jdbcUrlFor(ADMIN_DB), username(), password());
              Statement st = admin.createStatement()) {
             // CREATE DATABASE는 트랜잭션 안에서 실행할 수 없어 자동 커밋으로 던진다.
             st.execute("DROP DATABASE IF EXISTS " + SCRATCH_DB);
             st.execute("CREATE DATABASE " + SCRATCH_DB);
         }
         flyway = Flyway.configure()
-                .dataSource(HOST + SCRATCH_DB, USER, password)
+                .dataSource(jdbcUrlFor(SCRATCH_DB), username(), password())
                 .locations("classpath:db/migration")
                 .baselineOnMigrate(true)
                 .baselineVersion("0")
@@ -77,7 +72,8 @@ class FlywayMigrationTest {
 
     @AfterAll
     void dropScratchDatabase() throws SQLException {
-        try (Connection admin = DriverManager.getConnection(HOST + ADMIN_DB, USER, password);
+        try (Connection admin = DriverManager.getConnection(
+                jdbcUrlFor(ADMIN_DB), username(), password());
              Statement st = admin.createStatement()) {
             st.execute("DROP DATABASE IF EXISTS " + SCRATCH_DB);
         }
@@ -157,7 +153,7 @@ class FlywayMigrationTest {
         // V1은 이미 테이블이 있는 DB에도 baseline-version=0으로 적용된다.
         // 그때 실패하지 않으려면 모든 문장이 IF NOT EXISTS여야 한다. 직접 다시 던져 확인한다.
         assertDoesNotThrow(() -> {
-            try (Connection conn = DriverManager.getConnection(HOST + SCRATCH_DB, USER, password);
+            try (Connection conn = DriverManager.getConnection(jdbcUrlFor(SCRATCH_DB), username(), password());
                  Statement st = conn.createStatement()) {
                 st.execute("CREATE EXTENSION IF NOT EXISTS vector");
                 st.execute("CREATE SEQUENCE IF NOT EXISTS document_chunk_seq INCREMENT BY 50 START WITH 1");
@@ -168,7 +164,7 @@ class FlywayMigrationTest {
     }
 
     private String queryString(String sql) throws SQLException {
-        try (Connection conn = DriverManager.getConnection(HOST + SCRATCH_DB, USER, password);
+        try (Connection conn = DriverManager.getConnection(jdbcUrlFor(SCRATCH_DB), username(), password());
              Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
             return rs.next() ? rs.getString(1) : null;

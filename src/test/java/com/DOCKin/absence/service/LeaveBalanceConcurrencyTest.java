@@ -1,5 +1,6 @@
 package com.DOCKin.absence.service;
 
+import com.DOCKin.global.testsupport.PostgresTestSupport;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -32,13 +33,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * <p>실제 서비스 코드가 아니라 동일한 읽기-검사-쓰기 순서를 JDBC로 재현한다.
  * 스프링 컨텍스트 없이 <b>DB 락 동작 자체</b>를 격리해서 보기 위함이다.
  *
- * <p>MySQL이 없으면 실패가 아니라 skip 된다.
- * 실행: {@code DB_PASSWORD=... ./gradlew test --tests "*LeaveBalanceConcurrencyTest"}
+ * <p>DB는 {@link com.DOCKin.global.testsupport.PostgresTestSupport}가 컨테이너로 준다.
+ * 건너뛰는 경로가 없으므로 조건부 skip 설명도 두지 않는다.
+ * 실행: {@code ./gradlew test --tests "*LeaveBalanceConcurrencyTest"}
  */
-class LeaveBalanceConcurrencyTest {
-
-    private static final String URL =
-            "jdbc:postgresql://localhost:5432/dockindb";
+class LeaveBalanceConcurrencyTest extends PostgresTestSupport {
     private static final String TABLE = "bench_leave_balance";
     private static final String USER_ID = "10001";
 
@@ -49,9 +48,9 @@ class LeaveBalanceConcurrencyTest {
     @Test
     @DisplayName("락이 없으면 동시 승인 시 잔액을 초과해 차감된다 (lost update)")
     void 락_없으면_깨진다() throws Exception {
-        String password = requirePassword();
+        String password = password();
 
-        try (Connection setup = DriverManager.getConnection(URL, "root", password)) {
+        try (Connection setup = connect()) {
             prepare(setup);
             Result result = runConcurrentApprovals(password, false);
 
@@ -69,16 +68,16 @@ class LeaveBalanceConcurrencyTest {
                     INITIAL_DAYS, result.approved() * REQUEST_DAYS,
                     result.approved() * REQUEST_DAYS - INITIAL_DAYS);
         } catch (SQLException e) {
-            Assumptions.abort("PostgreSQL(localhost:5432) 접속 실패로 검증을 건너뜁니다: " + e.getMessage());
+            Assumptions.abort("테스트 컨테이너 접속 실패로 검증을 건너뜁니다: " + e.getMessage());
         }
     }
 
     @Test
     @DisplayName("SELECT ... FOR UPDATE를 걸면 한 건만 승인된다")
     void 비관적_락이_막는다() throws Exception {
-        String password = requirePassword();
+        String password = password();
 
-        try (Connection setup = DriverManager.getConnection(URL, "root", password)) {
+        try (Connection setup = connect()) {
             prepare(setup);
             Result result = runConcurrentApprovals(password, true);
 
@@ -93,7 +92,7 @@ class LeaveBalanceConcurrencyTest {
             assertEquals(INITIAL_DAYS - REQUEST_DAYS, result.finalBalance());
             System.out.println(">>> 잔액을 초과하지 않는다.");
         } catch (SQLException e) {
-            Assumptions.abort("PostgreSQL(localhost:5432) 접속 실패로 검증을 건너뜁니다: " + e.getMessage());
+            Assumptions.abort("테스트 컨테이너 접속 실패로 검증을 건너뜁니다: " + e.getMessage());
         }
     }
 
@@ -111,7 +110,7 @@ class LeaveBalanceConcurrencyTest {
 
         for (int i = 0; i < 2; i++) {
             pool.submit(() -> {
-                try (Connection conn = DriverManager.getConnection(URL, "root", password)) {
+                try (Connection conn = connect()) {
                     conn.setAutoCommit(false);
                     start.await();
 
@@ -136,7 +135,7 @@ class LeaveBalanceConcurrencyTest {
         assertTrue(done.await(30, TimeUnit.SECONDS), "동시 승인이 30초 안에 끝나지 않았다");
         pool.shutdown();
 
-        try (Connection conn = DriverManager.getConnection(URL, "root", password)) {
+        try (Connection conn = connect()) {
             return new Result(approved.get(), readBalance(conn, false));
         }
     }
@@ -168,13 +167,6 @@ class LeaveBalanceConcurrencyTest {
                     + "user_id VARCHAR(50) PRIMARY KEY, remaining_leave_days INT NOT NULL)");
             st.execute("INSERT INTO " + TABLE + " VALUES ('" + USER_ID + "', " + INITIAL_DAYS + ")");
         }
-    }
-
-    private String requirePassword() {
-        String password = System.getenv("DB_PASSWORD");
-        Assumptions.assumeTrue(password != null && !password.isBlank(),
-                "DB_PASSWORD 환경변수가 없어 검증을 건너뜁니다.");
-        return password;
     }
 
     private record Result(int approved, Integer finalBalance) {}

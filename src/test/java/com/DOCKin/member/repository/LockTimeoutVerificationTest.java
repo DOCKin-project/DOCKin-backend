@@ -1,17 +1,15 @@
 package com.DOCKin.member.repository;
 
+import com.DOCKin.global.testsupport.PostgresTestSupport;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.test.context.TestPropertySource;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -37,29 +35,24 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * 별도 커넥션으로 대상 행에 {@code FOR UPDATE} 락을 잡아둔 채,
  * 같은 행을 잠그려 할 때까지 걸리는 시간을 잰다.
  *
- * <h3>DB가 없으면 실행하지 않는다</h3>
- * 가드가 <b>클래스에</b> 있어야 한다. 아래 {@code Assumptions}만으로는 늦다 --
- * 메서드에 닿기 전에 스프링 컨텍스트가 먼저 뜨고, Flyway가 기동 시점에 DB로 접속하면서
- * {@code FlywaySqlUnableToConnectToDbException}으로 <b>skip이 아니라 실패</b>한다.
- * (Flyway 도입 전에는 Hibernate가 커넥션을 늦게 잡아 우연히 통과했다.)
+ * <h3>이 테스트는 컨테이너의 서버 파라미터에 의존한다</h3>
+ * {@link PostgresTestSupport}가 컨테이너에 {@code -c lock_timeout=5s}를 준다.
+ * 그 인자가 빠지면 기본값 0(무한 대기)이 되어 <b>실패가 아니라 멈춘다</b> --
+ * 락을 쥔 커넥션을 영원히 기다리므로 테스트가 끝나지 않는다.
+ * 실제로 도입 과정에서 이 인자를 빠뜨려 그렇게 됐다.
+ * 그래서 기대값을 여기 상수로 두지 않고 아래 {@code SERVER_TIMEOUT_MS}로 명시해 둔다.
  */
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@EnabledIfEnvironmentVariable(named = "DB_PASSWORD", matches = ".+",
-        disabledReason = "PostgreSQL 접속 정보가 없어 락 타임아웃 검증을 건너뜁니다.")
 @TestPropertySource(properties = {
-        "spring.datasource.url=jdbc:postgresql://localhost:5432/dockindb",
-        "spring.datasource.username=root",
-        "spring.datasource.password=${DB_PASSWORD:}",
         "spring.datasource.driver-class-name=org.postgresql.Driver",
         "spring.jpa.hibernate.ddl-auto=update"
 })
-class LockTimeoutVerificationTest {
+class LockTimeoutVerificationTest extends PostgresTestSupport {
 
-    private static final String URL = "jdbc:postgresql://localhost:5432/dockindb";
     private static final String USER_ID = "lock-test-user";
 
-    /** compose.yaml의 -c lock_timeout=5s 에 대응하는 기대값(ms). */
+    /** compose.yaml과 테스트 컨테이너가 함께 쓰는 -c lock_timeout=5s 에 대응하는 기대값(ms). */
     private static final long SERVER_TIMEOUT_MS = 5000;
     /** MySQL 시절 기본값. 비교용. */
     private static final long MYSQL_DEFAULT_MS = 50_000;
@@ -77,26 +70,20 @@ class LockTimeoutVerificationTest {
             lockHolder.rollback();
             lockHolder.close();
         }
-        String password = System.getenv("DB_PASSWORD");
-        if (password != null && !password.isBlank()) {
-            try (Connection conn = DriverManager.getConnection(URL, "root", password);
-                 Statement st = conn.createStatement()) {
-                st.execute("DELETE FROM users WHERE user_id = '" + USER_ID + "'");
-            } catch (SQLException ignored) {
-                // 정리 실패는 검증 결과에 영향을 주지 않는다.
-            }
+        try (Connection conn = connect();
+             Statement st = conn.createStatement()) {
+            st.execute("DELETE FROM users WHERE user_id = '" + USER_ID + "'");
+        } catch (SQLException ignored) {
+            // 정리 실패는 검증 결과에 영향을 주지 않는다.
         }
     }
 
     @Test
     @DisplayName("락 대기 한도가 서버 설정(5초)대로 적용되고, SET LOCAL로 트랜잭션 단위 조정이 되는지")
     void 락_타임아웃_검증() throws Exception {
-        String password = System.getenv("DB_PASSWORD");
-        Assumptions.assumeTrue(password != null && !password.isBlank(),
-                "DB_PASSWORD 환경변수가 없어 검증을 건너뜁니다.");
 
-        seedUser(password);
-        holdLock(password);
+        seedUser();
+        holdLock();
 
         // ① 리포지토리 경로 — 서버 기본값(5초)이 적용되어야 한다.
         long start = System.nanoTime();
@@ -110,7 +97,7 @@ class LockTimeoutVerificationTest {
         long serverMs = (System.nanoTime() - start) / 1_000_000;
 
         // ② SET LOCAL — 같은 락에 대해 트랜잭션 단위로 더 짧은 한도를 준다.
-        long localMs = measureWithLocalTimeout(password);
+        long localMs = measureWithLocalTimeout();
 
         System.out.println();
         System.out.println("=== 락 대기 한도 검증 (PostgreSQL) ===");
@@ -134,8 +121,8 @@ class LockTimeoutVerificationTest {
     }
 
     /** {@code SET LOCAL lock_timeout}을 건 트랜잭션에서 같은 락을 시도하고 대기 시간을 잰다. */
-    private long measureWithLocalTimeout(String password) throws SQLException {
-        try (Connection conn = DriverManager.getConnection(URL, "root", password)) {
+    private long measureWithLocalTimeout() throws SQLException {
+        try (Connection conn = connect()) {
             conn.setAutoCommit(false);
             try (Statement st = conn.createStatement()) {
                 // SET LOCAL은 현재 트랜잭션에만 적용되고 커밋/롤백 시 사라진다.
@@ -156,8 +143,8 @@ class LockTimeoutVerificationTest {
     }
 
     /** 다른 커넥션이 대상 행을 잠그고 커밋하지 않은 채 유지한다. */
-    private void holdLock(String password) throws SQLException {
-        lockHolder = DriverManager.getConnection(URL, "root", password);
+    private void holdLock() throws SQLException {
+        lockHolder = connect();
         lockHolder.setAutoCommit(false);
         try (Statement st = lockHolder.createStatement();
              ResultSet rs = st.executeQuery(
@@ -166,8 +153,8 @@ class LockTimeoutVerificationTest {
         }
     }
 
-    private void seedUser(String password) throws SQLException {
-        try (Connection conn = DriverManager.getConnection(URL, "root", password);
+    private void seedUser() throws SQLException {
+        try (Connection conn = connect();
              Statement st = conn.createStatement()) {
             st.execute("DELETE FROM users WHERE user_id = '" + USER_ID + "'");
             st.execute("INSERT INTO users "

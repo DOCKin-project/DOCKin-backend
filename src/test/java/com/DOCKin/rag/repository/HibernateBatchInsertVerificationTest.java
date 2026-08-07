@@ -1,5 +1,6 @@
 package com.DOCKin.rag.repository;
 
+import com.DOCKin.global.testsupport.PostgresTestSupport;
 import com.DOCKin.rag.model.DocumentChunk;
 import com.DOCKin.rag.model.SourceType;
 import com.DOCKin.rag.model.Visibility;
@@ -7,7 +8,6 @@ import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
@@ -47,32 +47,29 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * {@code nextval}이 200회 근처여야 한다. 10,000회가 나오면 시퀀스 최적화가 동작하지 않는 것이고,
  * 그 경우 배치도 의미가 없다(INSERT마다 왕복이 한 번씩 더 생기므로).
  *
- * <h3>DB가 없으면 실행하지 않는다</h3>
- * 가드가 <b>클래스에</b> 있어야 한다. 아래 {@code Assumptions}만으로는 늦다 --
- * 메서드에 닿기 전에 스프링 컨텍스트가 먼저 뜨고, Flyway가 기동 시점에 DB로 접속하면서
- * {@code FlywaySqlUnableToConnectToDbException}으로 <b>skip이 아니라 실패</b>한다.
- * (Flyway 도입 전에는 Hibernate가 커넥션을 늦게 잡아 우연히 통과했다.)
+ * <h3>관측에 {@code pg_stat_statements}가 필요하다</h3>
+ * 시퀀스 호출 횟수는 추정이 아니라 DB가 센 값으로 확인한다. 확장이 없으면 아래 {@code countCalls}가
+ * 0을 돌려주고, 그러면 이 테스트는 <b>아무것도 검증하지 않은 채 통과한다.</b>
+ * 그래서 {@link com.DOCKin.global.testsupport.PostgresTestSupport}가 컨테이너에
+ * {@code shared_preload_libraries=pg_stat_statements}를 주고 확장 생성까지 실패로 처리한다.
  *
- * <p>그리고 이 테스트는 10,000건을 적재한다. DB가 붙은 환경에서도 <b>CI에서 돌릴 성격이 아니다</b> --
- * 백로그 P0-7이 CI에 {@code DB_PASSWORD}를 주지 않기로 한 이유 중 하나다.
+ * <h3>10,000건이지만 CI에서 돌린다</h3>
+ * 실측 약 16초다. 이 정도는 CI에 넣을 만하다고 판단했다.
+ * 제외한 것은 10만 청크를 적재하는 벤치마크 쪽이며, 그 둘은 성격이 다르다 --
+ * 이건 <b>설정이 실제로 먹는가</b>를 보고, 저건 <b>얼마나 걸리는가</b>를 잰다.
  */
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@EnabledIfEnvironmentVariable(named = "DB_PASSWORD", matches = ".+",
-        disabledReason = "PostgreSQL 접속 정보가 없어 배치 INSERT 검증을 건너뜁니다.")
 @TestPropertySource(properties = {
-        "spring.datasource.url=jdbc:postgresql://localhost:5432/dockindb",
-        "spring.datasource.username=root",
-        "spring.datasource.password=${DB_PASSWORD:}",
         "spring.datasource.driver-class-name=org.postgresql.Driver",
         "spring.jpa.hibernate.ddl-auto=update",
         "spring.jpa.properties.hibernate.jdbc.batch_size=100",
         "spring.jpa.properties.hibernate.order_inserts=true",
         "spring.jpa.properties.hibernate.order_updates=true"
 })
-class HibernateBatchInsertVerificationTest {
+class HibernateBatchInsertVerificationTest extends PostgresTestSupport {
 
-    private static final String URL = "jdbc:postgresql://localhost:5432/dockindb";
+    
     private static final int TOTAL = 10_000;
     private static final int FLUSH_EVERY = 100;
     /** DocumentChunk의 @SequenceGenerator(allocationSize = 50)과 맞춰야 한다. */
@@ -90,11 +87,8 @@ class HibernateBatchInsertVerificationTest {
     @Test
     @DisplayName("SEQUENCE 전환 후 시퀀스 호출이 allocationSize만큼 묶이는지")
     void 대량_적재_검증() throws Exception {
-        String password = System.getenv("DB_PASSWORD");
-        Assumptions.assumeTrue(password != null && !password.isBlank(),
-                "DB_PASSWORD 환경변수가 없어 검증을 건너뜁니다.");
 
-        try (Connection stats = DriverManager.getConnection(URL, "root", password)) {
+        try (Connection stats = connect()) {
             resetStatements(stats);
 
             long start = System.nanoTime();
@@ -144,7 +138,7 @@ class HibernateBatchInsertVerificationTest {
                         "시퀀스가 " + sequenceCalls + "회 호출됐다 - allocationSize가 적용되지 않았다");
             }
         } catch (SQLException e) {
-            Assumptions.abort("PostgreSQL(localhost:5432) 접속 실패로 검증을 건너뜁니다: " + e.getMessage());
+            Assumptions.abort("테스트 컨테이너 접속 실패로 검증을 건너뜁니다: " + e.getMessage());
         }
     }
 

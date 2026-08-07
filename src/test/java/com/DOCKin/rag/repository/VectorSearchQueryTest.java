@@ -1,5 +1,6 @@
 package com.DOCKin.rag.repository;
 
+import com.DOCKin.global.testsupport.PostgresTestSupport;
 import com.DOCKin.rag.model.DocumentChunk;
 import com.DOCKin.rag.model.SourceType;
 import com.DOCKin.rag.model.Visibility;
@@ -7,7 +8,6 @@ import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
@@ -36,16 +36,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@EnabledIfEnvironmentVariable(named = "DB_PASSWORD", matches = ".+",
-        disabledReason = "PostgreSQL 접속 정보가 없어 벡터 검색 쿼리 검증을 건너뜁니다.")
 @TestPropertySource(properties = {
-        "spring.datasource.url=jdbc:postgresql://localhost:5432/dockindb",
-        "spring.datasource.username=root",
-        "spring.datasource.password=${DB_PASSWORD:}",
         "spring.datasource.driver-class-name=org.postgresql.Driver",
         "spring.jpa.hibernate.ddl-auto=update"
 })
-class VectorSearchQueryTest {
+class VectorSearchQueryTest extends PostgresTestSupport {
 
     private static final String MODEL = "vector-search-test";
     private static final String OWNER = "user-a";

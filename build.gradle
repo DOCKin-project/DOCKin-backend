@@ -90,6 +90,14 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
+	// Testcontainers — CI에서 실제 PostgreSQL로 테스트한다.
+	// 이전에는 로컬에 DB가 떠 있어야만 돌아서 CI에서 전부 skip됐고,
+	// 그 상태로 테스트가 1개에서 20개로 늘었다(백로그 P0-7).
+	// pgvector가 필요하므로 공식 postgres 이미지가 아니라 pgvector/pgvector를 쓴다.
+	testImplementation platform('org.testcontainers:testcontainers-bom:1.21.3')
+	testImplementation 'org.testcontainers:postgresql'
+	testImplementation 'org.testcontainers:junit-jupiter'
+
 	//s3 upload
 	implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
 
