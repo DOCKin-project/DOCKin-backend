@@ -24,7 +24,30 @@ services:
           cpus: '0.25' # 리버스 프록시. 실측에서 유의미하게 잡힌 적이 없다
 
   dockin-app:
-    #build: .
+    # build를 되살렸다 (P2-15-9, 2026-08-08).
+    #
+    # 주석 처리돼 있던 동안 `docker compose up`은 이미지를 만들지 않고 로컬에 남아 있는
+    # khyojae/dockin-app:latest 태그를 그대로 썼다. 소스가 바뀌어도 컨테이너는 옛 jar로 뜨고,
+    # 그때 에러는 나지 않는다.
+    #
+    # 그래서 V3/V4 마이그레이션이 커밋된 채 이틀간 로컬 DB에 도달하지 못했다. Flyway는 앱
+    # 기동 시 자동으로 도는데, 도는 것은 "그 jar 안에 든 파일"까지다. 이미지가 옛것이면
+    # Flyway는 정상 동작하면서 옛 상태를 유지한다 -- 밀렸다는 신호가 어디서도 안 나온다.
+    #
+    # image와 함께 둔다. 둘 다 있으면 --build를 줄 때만 빌드하고 안 주면 태그를 쓰므로,
+    # Docker Hub 이미지를 받아 쓰던 기존 방식이 그대로 남는다.
+    #
+    #   docker compose up -d --build dockin-app
+    #
+    # [이걸로 다 막히지는 않는다] Dockerfile이 build/libs의 jar를 COPY하므로 여기서
+    # 컴파일은 일어나지 않는다. bootJar를 먼저 돌리지 않으면 옛 jar로 이미지를 다시 만들 뿐
+    # 같은 일이 한 단계 뒤에서 반복된다.
+    #
+    #   ./gradlew bootJar && docker compose up -d --build dockin-app
+    #
+    # 완전히 닫으려면 Dockerfile을 멀티스테이지로 바꿔 컴파일을 이미지 안으로 넣어야 하는데,
+    # 이 호스트(2코어)에서 빌드 시간이 어떻게 되는지 재 보지 않았다. 재고 정한다.
+    build: .
     env_file:
       - .env
     image: khyojae/dockin-app:latest
