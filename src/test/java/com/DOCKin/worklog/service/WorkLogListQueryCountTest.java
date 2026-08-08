@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.TestPropertySource;
 
@@ -20,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * A5 실측 (1/2): <b>목록 API가 한 페이지에 쿼리를 몇 개 쓰는가.</b>
@@ -83,7 +84,14 @@ class WorkLogListQueryCountTest extends PostgresTestSupport {
     /** 다른 작업자 조회용. 같은 구역이어야 조회가 허용되므로 열람자와 대상을 함께 둔다. */
     private static final String AREA_OTHER = "A5타인조회구역";
 
-    /** 장비가 없는 행을 격리하는 구역. 측정용 페이지에 섞이면 아래 NPE로 측정이 중단된다. */
+    /**
+     * 장비가 없는 행을 격리하는 구역.
+     *
+     * <p>P2-15-2를 고치기 전에는 <b>이 행이 섞이면 측정이 NPE로 중단되기 때문에</b> 나눴다.
+     * 고친 뒤에도 그대로 두는 이유는 다르다 — {@code 표본_전제_검사}가 첫 페이지의
+     * <b>장비 20개가 모두 달라야</b> 성립한다고 요구하는데, 장비 없는 행이 섞이면
+     * {@code COUNT(DISTINCT equipment_id)}가 NULL을 세지 않아 그 전제가 무너진다.
+     */
     private static final String AREA_NULL_EQUIPMENT = "A5장비없음구역";
 
     /**
@@ -102,6 +110,12 @@ class WorkLogListQueryCountTest extends PostgresTestSupport {
 
     /** 이미지가 붙는 일지의 비율(1/N). 전부 붙이면 "이미지가 없어도 쿼리가 나가는가"를 못 본다. */
     private static final int IMAGE_EVERY = 3;
+
+    /** {@code createdAt}이 같은 행들을 격리하는 구역. 이유는 {@code 정렬이_실제로_먹는다}에 있다. */
+    private static final String AREA_TIE = "A5동시각구역";
+
+    /** 동점 표본 수. 둘이면 우연히 맞을 수 있어 셋으로 둔다. */
+    private static final int TIE_LOGS = 3;
 
     /** 이 테스트가 만든 행만 고르는 접두사. */
     private static final String PREFIX = "a5";
@@ -198,33 +212,86 @@ class WorkLogListQueryCountTest extends PostgresTestSupport {
     }
 
     /**
-     * 측정 중에 나온 것 — <b>장비 없는 작업일지가 하나라도 있으면 그 페이지 전체가 500이 된다.</b>
+     * P2-15-3 — <b>컨트롤러가 선언한 정렬이 세 목록 쿼리에 실제로 먹는가.</b>
      *
-     * <p>{@code WorkLogDto.from}이 {@code entity.getEquipment().getEquipmentId()}를 무조건 부른다.
-     * {@code equipment_id}는 <b>nullable</b>이고({@code V2__baseline_existing_tables.sql}),
-     * {@code @ManyToOne(LAZY)}는 FK가 NULL이면 프록시가 아니라 <b>null을 넣는다.</b>
-     * 위에서 "식별자만 읽으니 안전하다"고 한 그 접근이, NULL 앞에서는 반대로 터진다.
+     * <p>{@code PageableSortDefaultTest}는 <b>선언</b>만 본다 — {@code @PageableDefault}에
+     * {@code sort}가 있는지. 그 이름이 <b>쿼리로 번역되는지는 다른 문제</b>이고,
+     * 틀리면 애노테이션은 멀쩡한 채 런타임에 터진다. 특히 {@code searchWorkLogs}는
+     * {@code @Query}(JPQL)라 Spring Data가 정렬을 <b>문자열로 덧붙인다.</b>
+     * 이 저장소가 반복해서 잡아 온 "선언은 있는데 안 먹는다"가 그대로 들어설 수 있는 자리다.
      *
-     * <p>생성 API로는 이 상태가 만들어지지 않는다 — {@code createWorklog}가
-     * {@code equipmentRepository.findById(...)}로 장비를 필수로 요구한다. 그래서
-     * <b>API만 두드려서는 영영 드러나지 않는다.</b> 반면 컬럼은 NULL을 허용하고,
-     * 측정용 코퍼스 생성기는 여섯 건 중 하나를 장비 없이 넣는다(실제로 현재 로컬 DB에 3,331건 있다).
-     * <b>스키마가 허용하는 상태를 코드가 가정으로 배제하고 있다</b> — 이 저장소가 반복해서
-     * 잡아 온 "선언과 실제의 불일치"와 같은 부류다.
-     *
-     * <p>영향 범위가 행 하나가 아니라 <b>페이지</b>라는 점이 핵심이다. {@code Page.map}은
-     * 한 행에서 터지면 거기서 멈추므로, 장비 없는 일지 하나가 목록 전체를 못 보게 만든다.
+     * <h4>동점을 일부러 만든다</h4>
+     * {@code createdAt} 하나로 정렬하면 <b>같은 시각의 행들 사이 순서가 정해지지 않는다.</b>
+     * 그래서 {@code logId}를 뒤에 붙였는데, 표본의 시각이 전부 다르면 그 두 번째 키가
+     * <b>한 번도 쓰이지 않은 채</b> 테스트가 통과한다. {@link #AREA_TIE}에 시각이 같은
+     * 세 건을 따로 두는 이유다.
      */
     @Test
-    @DisplayName("장비 없는 일지가 섞이면 목록 전체가 NPE로 죽는다")
-    void 장비가_없으면_목록이_죽는다() {
-        NullPointerException e = assertThrows(NullPointerException.class,
-                () -> workLogsService.readWorklog(nullEquipmentUser(), PageRequest.of(0, 20)));
+    @DisplayName("선언한 정렬이 세 목록 쿼리에 모두 먹고 동점은 logId로 갈린다")
+    void 정렬이_실제로_먹는다() {
+        // 컨트롤러가 선언한 것과 같은 정렬. 여기서 예외가 나면 속성 이름이 쿼리로 번역되지 않는 것이다.
+        PageRequest sorted = PageRequest.of(0, 20,
+                Sort.by(Sort.Direction.DESC, "createdAt", "logId"));
+
+        assertEquals(20, workLogsService.readWorklog(user(0), sorted).getNumberOfElements(),
+                "전체 목록에 정렬이 붙자 결과가 달라졌다");
+        assertEquals(20, workLogsService.readOtherWorklog(otherViewer(), otherTarget(), sorted)
+                .getNumberOfElements(), "타인 목록에 정렬이 붙자 결과가 달라졌다");
+        // JPQL @Query. 정렬 속성이 엔티티 필드명과 어긋나면 여기서 터진다.
+        assertEquals(20, workLogsService.searchByKeyword(KEYWORD, sorted).getNumberOfElements(),
+                "키워드 검색에 정렬이 붙자 결과가 달라졌다");
+
+        // 시각이 같은 세 건. createdAt만으로는 순서가 정해지지 않는 구간이다.
+        List<Long> tieIds = workLogsService.readWorklog(tieUser(), sorted)
+                .getContent().stream().map(WorkLogDto::getLogId).toList();
+
+        assertEquals(TIE_LOGS, tieIds.size(), "동점 표본이 세 건이 아니다");
+        assertEquals(tieIds.stream().sorted(java.util.Comparator.reverseOrder()).toList(), tieIds,
+                "createdAt이 같은 행들이 logId 내림차순으로 갈리지 않았다 - 두 번째 정렬 키가 안 먹는다");
+
+        System.out.println();
+        System.out.println("=== 같은 createdAt 세 건의 반환 순서 ===");
+        System.out.println("  logId : " + tieIds);
+        System.out.println();
+    }
+
+    /**
+     * P2-15-2 — <b>장비 없는 작업일지가 섞여도 페이지가 나온다.</b>
+     *
+     * <h3>이 테스트는 원래 반대를 단언했다</h3>
+     * 측정 중에 나온 결함이라, 처음에는 {@code assertThrows(NullPointerException.class)}로
+     * <b>깨져 있는 상태를 고정</b>하고 있었다. {@link WorkLogDto#from}이
+     * {@code entity.getEquipment().getEquipmentId()}를 무조건 불렀기 때문이다.
+     * {@code equipment_id}는 {@code V2__baseline_existing_tables.sql}에서 <b>nullable</b>이고
+     * {@code @ManyToOne(LAZY)}는 FK가 NULL이면 프록시가 아니라 <b>null을 넣는다</b> —
+     * 위 측정이 "식별자만 읽으니 쿼리가 안 나간다"고 확인한 그 접근이, NULL 앞에서는 터진다.
+     *
+     * <p>영향 범위가 행 하나가 아니라 <b>페이지</b>였다. {@code Page.map}은 한 행에서 터지면
+     * 거기서 멈추므로 장비 없는 일지 한 건이 목록 전체를 못 보게 만든다.
+     * 그리고 P2-14-1이 404로 내려보낸 {@code NoResourceFoundException}과 달리 이건 진짜 500이다.
+     *
+     * <h3>단언을 셋으로 나눈 이유</h3>
+     * "예외가 안 난다"만 확인하면 <b>빈 페이지를 돌려주는 것으로 고쳐도</b> 통과한다.
+     * 그 행이 실제로 <b>실려 나오고</b>, {@code equipmentId}만 null이며, 나머지 필드는
+     * 멀쩡한 것까지 봐야 고친 것이 맞다.
+     */
+    @Test
+    @DisplayName("장비 없는 일지가 섞여도 목록이 나오고 equipmentId만 null이다")
+    void 장비가_없어도_목록이_나온다() {
+        Page<WorkLogDto> page = workLogsService.readWorklog(nullEquipmentUser(), PageRequest.of(0, 20));
+
+        assertEquals(1, page.getNumberOfElements(),
+                "장비 없는 행이 응답에서 빠졌다 - 예외를 안 내는 것과 행을 싣는 것은 다르다");
+
+        WorkLogDto dto = page.getContent().get(0);
+        assertNull(dto.getEquipmentId(), "장비가 없으면 equipmentId는 null이어야 한다");
+        assertEquals(nullEquipmentUser(), dto.getUserId(), "장비와 무관한 필드까지 비었다");
+        assertEquals("A5장비없음", dto.getTitle(), "장비와 무관한 필드까지 비었다");
 
         System.out.println();
         System.out.println("=== 장비 없는 일지 1건이 섞인 페이지 ===");
-        System.out.println("  결과 : " + e.getClass().getSimpleName());
-        System.out.println("  지점 : " + firstProjectFrame(e));
+        System.out.println("  반환 행     : " + page.getNumberOfElements());
+        System.out.println("  equipmentId : " + dto.getEquipmentId());
         System.out.println();
     }
 
@@ -279,16 +346,6 @@ class WorkLogListQueryCountTest extends PostgresTestSupport {
         System.out.println();
     }
 
-    /** 스택에서 이 프로젝트의 첫 프레임. 프레임워크 프레임만 찍히면 어디를 고칠지 알 수 없다. */
-    private String firstProjectFrame(Throwable t) {
-        for (StackTraceElement frame : t.getStackTrace()) {
-            if (frame.getClassName().startsWith("com.DOCKin")) {
-                return frame.toString();
-            }
-        }
-        return "(com.DOCKin 프레임 없음)";
-    }
-
     // ------------------------------------------------------------------
     // 표본
     // ------------------------------------------------------------------
@@ -307,6 +364,10 @@ class WorkLogListQueryCountTest extends PostgresTestSupport {
 
     private String nullEquipmentUser() {
         return PREFIX + "null";
+    }
+
+    private String tieUser() {
+        return PREFIX + "tie";
     }
 
     /**
@@ -330,6 +391,7 @@ class WorkLogListQueryCountTest extends PostgresTestSupport {
         insertUser(otherViewer(), AREA_OTHER);
         insertUser(otherTarget(), AREA_OTHER);
         insertUser(nullEquipmentUser(), AREA_NULL_EQUIPMENT);
+        insertUser(tieUser(), AREA_TIE);
 
         // 장비를 일지 수만큼 만든다. 첫 페이지에서 장비가 겹치면 프록시를 공유하게 되어
         // "식별자만 읽어 쿼리가 안 나간다"는 주장을 이 표본으로는 확인할 수 없다.
@@ -357,8 +419,15 @@ class WorkLogListQueryCountTest extends PostgresTestSupport {
                     base.plusMinutes(i), otherTarget(), equipmentIds.get(i));
         }
 
-        // 장비 없는 행. 위 구역들과 분리해야 나머지 측정이 이 행에 걸려 중단되지 않는다.
+        // 장비 없는 행. 구역을 나누는 이유는 AREA_NULL_EQUIPMENT 주석에 있다.
         insertWorkLog("A5장비없음", "장비를 지정하지 않은 작업일지다.", base, nullEquipmentUser(), null);
+
+        // createdAt이 같은 세 건. 두 번째 정렬 키(logId)가 실제로 쓰이는 유일한 구간이다.
+        // KEYWORD를 넣지 않아야 키워드 검색 측정에 섞이지 않는다.
+        for (int i = 0; i < TIE_LOGS; i++) {
+            insertWorkLog("A5동시각 %d".formatted(i), "정렬 동점 표본이다.",
+                    base, tieUser(), equipmentIds.get(i));
+        }
     }
 
     private Long insertWorkLog(String title, String text, LocalDateTime at,

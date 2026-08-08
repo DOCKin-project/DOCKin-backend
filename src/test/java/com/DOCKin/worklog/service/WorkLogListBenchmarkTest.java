@@ -205,11 +205,17 @@ class WorkLogListBenchmarkTest {
 
         List<Case> cases = new ArrayList<>();
 
-        // 1. 전체 목록 첫 페이지 - findByMemberIn의 본문.
-        //    정렬이 없다. 컨트롤러의 @PageableDefault(size=20, direction=DESC)는 sort 속성이 비어 있어
-        //    방향만으로는 정렬이 만들어지지 않기 때문이다 -- 즉 GET /api/work-logs는 지금
-        //    '정해지지 않은 순서'로 응답한다. 흉내가 아니라 실제로 나가는 문장을 재는 것이 목적이므로
-        //    그대로 둔다(④가 정렬이 붙었을 때를 따로 잰다).
+        // 1. 전체 목록 첫 페이지 - findByMemberIn의 본문. 정렬이 없다.
+        //
+        //    [2026-08-08 정정] 이 줄의 전제가 P2-15-3으로 뒤집혔다. 원래는 "컨트롤러의
+        //    @PageableDefault에 sort가 비어 있어 GET /api/work-logs가 정해지지 않은 순서로
+        //    응답한다"는 이유로 정렬 없이 뒀던 것인데, 그 결함을 고쳤다.
+        //    이제 실제 경로에 대응하는 것은 ①이 아니라 ④다.
+        //
+        //    그래도 ①을 지우지 않는다. 지금은 성격이 바뀌어 '정렬을 뺐을 때의 기준선'이고,
+        //    ④와의 차이가 곧 정렬의 비용이다 -- 인덱스 전후로 그 차이가 어떻게 변하는지가
+        //    (created_at 인덱스를 만들 것인가) 이 벤치의 판단 대상 중 하나다.
+        //    이미 잰 10만/100만 수치도 이 정의 위에서 나왔으므로 문장을 바꾸면 그 숫자를 버려야 한다.
         cases.add(new Case("① 구역 목록 1페이지",
                 "SELECT * FROM work_logs WHERE user_id IN (" + in + ") LIMIT " + PAGE_SIZE + " OFFSET 0",
                 owners));
@@ -224,7 +230,10 @@ class WorkLogListBenchmarkTest {
                 "SELECT * FROM work_logs WHERE user_id IN (" + in + ") LIMIT " + PAGE_SIZE
                         + " OFFSET " + (500 * PAGE_SIZE), owners));
 
-        // 4. 정렬을 붙인 첫 페이지. 컨트롤러 기본값이 createdAt DESC다.
+        // 4. 정렬을 붙인 첫 페이지. P2-15-3 이후 이것이 실제 경로다.
+        //    다만 컨트롤러 기본값은 이제 (created_at, log_id) DESC이고 여기는 created_at 하나다.
+        //    두 번째 키는 PK라 이미 정렬된 순서를 따라가므로 비용 측면에서는 첫 키가 지배한다.
+        //    측정을 이미 끝낸 문장이라 그대로 둔다 -- 다음 실행 때 log_id를 붙여 확인할 항목이다.
         cases.add(new Case("④ 구역 목록 1페이지 정렬",
                 "SELECT * FROM work_logs WHERE user_id IN (" + in + ")"
                         + " ORDER BY created_at DESC LIMIT " + PAGE_SIZE + " OFFSET 0", owners));
