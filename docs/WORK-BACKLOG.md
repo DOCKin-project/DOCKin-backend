@@ -828,6 +828,7 @@ Full  GC   8회   전부 (Metadata GC Threshold) — 기동 90초 안에 몰려 
 | ~~P2-15-6~~ | ~~**`work_logs.user_id`가 nullable이다**~~ | **완료**(2026-08-08) — 성립한 적이 없었다. 20,016행 중 NULL 0건. 아래 별도 | ☆ |
 | ~~P2-15-7~~ | ~~**`users`를 참조하는 FK 9개 중 8개에 인덱스가 없다**~~ | **완료**(2026-08-08) — 500명 삭제 13.6초 → 0.12초. 아래 별도 | ★ |
 | P2-15-8 | **복합 인덱스를 만들 것인가** | P2-15-5가 답하려던 질문인데 캐시 오염으로 판단 못 했다. 조건을 맞춰 다시 재야 한다 | ☆ |
+| P2-15-9 | **마이그레이션이 로컬 DB에 도달하는 경로가 사람 손이다** | **P2-15-6을 적용하다 나왔다.** V3·V4가 커밋만 되고 적용된 적이 없었다. 아래 별도 | ★ |
 
 ### P2-15-1 — 가설은 행당 3이었고 실측은 행당 1이었다
 
@@ -1250,6 +1251,31 @@ PostgreSQL이 알아서 거부하지만 그때 나오는 말은 `column contains
 > 전부 필수로 요구함)를 저 FK에 대해서는 확인한 적이 없다 — **한 컬럼에서 얻은 결론을
 > 옆 컬럼에 옮겨 적지 않는다.**
 
+#### 적용 (2026-08-08)
+
+로컬 DB에 적용했다. 돌려 보니 **V3·V4가 밀려 있어 셋이 함께 나갔다** — 그 자체가 별건이다(P2-15-9).
+
+```
+o.f.c.i.command.DbMigrate : Migrating schema "public" to version "3 - work log child fk indexes"
+o.f.c.i.command.DbMigrate : Migrating schema "public" to version "4 - users child fk indexes"
+o.f.c.i.command.DbMigrate : Migrating schema "public" to version "5 - work logs user id not null"
+o.f.c.i.command.DbMigrate : Successfully applied 3 migrations to schema "public", now at version v5
+```
+
+| 확인 | 결과 |
+|---|---|
+| `work_logs.user_id` | `is_nullable = NO` |
+| `work_logs.equipment_id` | `is_nullable = YES` — 건드리지 않았다 |
+| `log_images` | `to_regclass` → NULL. V3이 0행을 확인하고 DROP했다 |
+| `work_logs` 행 수 | 20,016 — 변동 없음 |
+
+**세는 가드는 통과했다.** `user_id IS NULL`이 0건이라 `RAISE EXCEPTION`에 걸리지 않았다.
+이 마이그레이션이 기존 데이터가 있는 스키마에서 실제로 돈 것은 이번이 처음이다 —
+그전까지 검증된 것은 빈 스키마 경로뿐이었다(P2-15-9).
+
+`ddl-auto=validate`로 기동이 성공했으므로 `WorkLog.member`의 `nullable = false` 매핑도
+실제 컬럼과 어긋나지 않는다.
+
 ### P2-15-7 — `users`를 참조하는 FK 9개 중 8개에 인덱스가 없었다 (완료)
 
 **P2-15-5를 돌리다 나왔다.** 벤치 사용자 500명을 지우는 `DELETE` 하나가 **5분을 넘겼다.**
@@ -1310,6 +1336,85 @@ P2-15-4와 같은 문제인데 **층위가 다르다.** `work_logs`의 자식들
 늘리지 않는다** — ADR-0002가 경계한 "실측 없이 튜닝했다"가 된다. → P2-15-8
 
 `attendance.user_id`에는 만들지 않았다. 이미 있다.
+
+### P2-15-9 — 커밋된 마이그레이션이 로컬 DB에 도달한 적이 없었다
+
+**P2-15-6을 적용하려고 `flyway_schema_history`를 열어 보다 나왔다.**
+
+```
+ installed_rank | version |         description          |        installed_on
+              1 | 0       | << Flyway Baseline >>        | 2026-08-05 15:15:31
+              2 | 1       | pgvector and document chunks | 2026-08-05 15:15:32
+              3 | 2       | baseline existing tables     | 2026-08-05 16:58:25
+```
+
+**V3과 V4가 없다.** 같은 날 커밋한 것들이다(`fa16373`, `df3e737`).
+
+#### 왜 안 갔나
+
+Flyway는 **앱 기동 시에만** 돈다. 그런데 로컬에서 도는 앱은 `khyojae/dockin-app:latest`이고,
+그 이미지는 `build/libs`의 jar를 사람이 `docker build`로 넣어 만든다. V3·V4를 쓴 뒤
+이미지를 다시 만든 적이 없으니 **컨테이너를 재시작해도 안에 든 마이그레이션은 계속 V1·V2였다.**
+당시 이미지를 열어 확인한 것이다(지금은 다시 빌드해 V5까지 들어 있다).
+
+```
+$ docker exec dockin-app-1 unzip -l app.jar | grep db/migration
+  BOOT-INF/classes/db/migration/V1__pgvector_and_document_chunks.sql
+  BOOT-INF/classes/db/migration/V2__baseline_existing_tables.sql
+```
+
+**커밋은 반영이 아니다.** `bootJar` → `docker build` → `compose up`을 사람이 기억해서
+해야 반영되고, 그 단계는 어디에도 자동화되어 있지 않다.
+
+#### CI에서는 돌았다 — 그래서 더 안 보였다
+
+`PostgresTestSupport`가 Testcontainers로 빈 PostgreSQL을 띄우고 실제 `application.properties`를
+그대로 쓰므로, CI(`./gradlew test`)에서는 V1~V5가 전부 실행된다. 즉 **초록불은 켜져 있었다.**
+
+| 검증된 것 | 검증되지 않은 것 |
+|---|---|
+| 빈 스키마에 처음부터 만드는 경로 | **기존 데이터가 있는 스키마에 대고 도는 경로** |
+
+V5처럼 20,016행을 세고 제약을 거는 마이그레이션에서는 **뒤쪽이 진짜 시험대다.**
+P2-15-6을 적용한 2026-08-08이 그게 처음 돈 날이다.
+
+#### 딸려 나온 것 둘
+
+**1. P2-15-4의 인덱스는 마이그레이션이 만든 것이 아니다.** 893배·13.6초→0.12초를 만든
+인덱스는 벤치마크를 돌리며 손으로 만든 것이고, V3·V4의 `CREATE INDEX`는 이 DB에서
+실행된 적이 없다. 이번에 밀린 것을 몰아 돌렸을 때도 `IF NOT EXISTS`라 조용히 지나갔다.
+컬럼 정의가 같으므로 **숫자 자체는 유효하다.** 다만 "측정한 대상"과 "커밋한 마이그레이션"이
+같은 것이라는 확인은 이 DB에서 이루어진 적이 없다.
+
+**2. 적용하고 나면 옛 이미지는 못 뜬다.** 추측이 아니라 확인한 것이다 — V5까지 적용한 뒤
+기존 컨테이너를 올리자 Flyway가 기동을 거부했다.
+
+```
+Detected applied migration not resolved locally: 3.
+Detected applied migration not resolved locally: 4.
+Detected applied migration not resolved locally: 5.
+```
+
+`ignore-migration-patterns=repeatable:missing`은 repeatable에만 걸리므로 versioned는
+그대로 잡힌다(그게 그 설정의 의도다). 이미지를 다시 빌드해 복구했다.
+
+> **이건 V3이 자기 주석에 적어 둔 것과 같은 종류다** — *"ddl-auto=validate도
+> SchemaValidationTest도 인덱스는 보지 않으므로, 정리 도구가 만든 인덱스가 남아
+> 운영 스키마인 것처럼 보여도 아무도 알려주지 않는다."* 그 지적이 인덱스에서 한 단계
+> 올라가 **마이그레이션 적용 여부 자체**에도 걸려 있었다.
+
+#### 아직 안 고쳤다
+
+고칠 방향은 정하지 않았다. 후보만 적어 둔다.
+
+| 후보 | 성격 |
+|---|---|
+| 이미지 빌드를 CI/배포 경로에 넣는다 | 근본적이지만 배포 파이프라인이 없는 지금 상태에서는 범위가 크다 |
+| 마이그레이션 전용 실행 경로를 만든다 | 앱 전체를 띄우지 않고 Flyway만 돌린다. 작지만 "사람이 기억해야 함"은 남는다 |
+| 적용 상태를 재는 것부터 한다 | 파일의 최대 버전과 `flyway_schema_history`의 최대 버전을 비교해 어긋나면 알린다. **밀린 것을 밀렸다고 말해 주는 장치가 지금 없다** |
+
+세 번째가 먼저다. 앞의 둘은 "어떻게 적용할 것인가"인데 이번에 문제가 된 것은
+**밀렸다는 사실을 아무도 몰랐다는 쪽**이다.
 
 ---
 
