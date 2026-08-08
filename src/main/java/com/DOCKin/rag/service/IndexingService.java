@@ -135,7 +135,14 @@ public class IndexingService {
     private IndexTarget toTarget(WorkLog workLog) {
         // 제목과 본문을 함께 임베딩한다. 제목만 검색어와 맞는 경우를 놓치지 않기 위함이다.
         String text = workLog.getTitle() + "\n" + workLog.getLogText();
-        String ownerUserId = workLog.getMember() == null ? null : workLog.getMember().getUserId();
+        // getMember()는 무조건 non-null이다 - work_logs.user_id가 NOT NULL이다(P2-15-6, V5).
+        // 원래 여기엔 null 가드가 있었고 같은 값을 읽는 WorkLogDto.from에는 없었다. 즉 한 컬럼을
+        // 두고 두 경로가 서로 다른 전제를 갖고 있었다. 어느 쪽 코드를 맞추는 대신 컬럼을
+        // NOT NULL로 만들어 전제를 하나로 만들었다.
+        //
+        // 가드를 남겨두면 owner_user_id가 null인 청크를 만들 수 있고, 그건 소유자 기반
+        // 접근 제어(Visibility.OWNER)가 걸리지 않는 행이라 조용히 지나가지 않는다.
+        String ownerUserId = workLog.getMember().getUserId();
         return new IndexTarget(SourceType.WORK_LOG, workLog.getLogId(), text,
                 "ko", Visibility.OWNER, ownerUserId);
     }
@@ -175,8 +182,11 @@ public class IndexingService {
     private IndexTarget toTarget(TranslateLog translation) {
         String text = translation.getTranslatedTitle() + "\n" + translation.getTranslatedText();
         WorkLog source = translation.getWorkLogs();
-        String ownerUserId = (source == null || source.getMember() == null)
-                ? null : source.getMember().getUserId();
+        // getMember()의 검사는 위와 같은 이유로 없앴다(P2-15-6, V5).
+        // source 자신의 검사는 남긴다 - NOT NULL로 만든 것은 work_logs.user_id 하나이고,
+        // work_log_translations.log_id는 여전히 nullable이다. 그 근거(NULL 0건, 생성 경로가
+        // 전부 필수로 요구함)를 이 FK에 대해서는 확인한 적이 없다.
+        String ownerUserId = source == null ? null : source.getMember().getUserId();
 
         // sourceId는 번역본 자신의 PK다. 원본 작업일지(WORK_LOG)와 source_type이 달라 충돌하지 않으며,
         // 원본 추적은 language_code와 함께 work_log_translations를 거쳐 가능하다.

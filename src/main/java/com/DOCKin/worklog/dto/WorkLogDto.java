@@ -75,12 +75,19 @@ public class WorkLogDto {
      * <b>스키마가 허용하는 상태를 코드가 가정으로 배제하고 있었고, 그 가정을 만드는 데이터가
      * 없어서 조용했다.</b>
      *
-     * <h4>{@code member}는 함께 고치지 않았다</h4>
-     * {@code user_id}도 스키마상 nullable이라 같은 자리에 있지만 <b>고칠 방향이 반대다.</b>
-     * {@code equipmentId}는 계약이 선택 필드라 null이 정당한 값이지만, {@code userId}는
-     * {@code requiredMode = REQUIRED}다. 여기에 null 가드를 두면 필수 필드에 null을 담은
-     * 응답을 <b>조용히</b> 내보내게 된다. 저 자리의 답은 가드가 아니라 <b>컬럼을 NOT NULL로
-     * 만드는 것</b>이고, 그건 마이그레이션이 딸린 별개 결정이다(P2-15-6).
+     * <h4>{@code member}는 반대 방향으로 고쳤다 — 가드가 아니라 NOT NULL이다</h4>
+     * {@code user_id}도 스키마상 nullable이라 바로 윗줄이 같은 자리에 있었지만
+     * <b>고칠 방향이 반대였다.</b> {@code equipmentId}는 계약이 선택 필드라 null이 정당한
+     * 값이지만, {@code userId}는 {@code requiredMode = REQUIRED}다. 여기에 null 가드를 두면
+     * <b>필수 필드에 null을 담은 응답을 조용히 내보내게 된다.</b>
+     *
+     * <p>그래서 P2-15-6이 컬럼을 {@code NOT NULL}로 바꿨다
+     * ({@code V5__work_logs_user_id_not_null.sql}). 데이터가 그 방향을 지지했다 —
+     * 같은 20,016행에서 {@code user_id}는 NULL이 <b>0건</b>이고 {@code equipment_id}는
+     * <b>3,331건</b>이다. 스키마에서는 똑같이 nullable인 두 컬럼인데 실제 값은 정반대다.
+     *
+     * <p><b>그래서 아래 {@code getMember()}에는 검사가 없다.</b> 빠뜨린 것이 아니라
+     * 방어할 상태 자체가 없어진 것이다.
      */
     public static WorkLogDto from(WorkLog entity) {
         return WorkLogDto.builder()

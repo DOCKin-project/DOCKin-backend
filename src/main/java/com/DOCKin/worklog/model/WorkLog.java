@@ -67,12 +67,28 @@ public class WorkLog {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="user_id")
+    /**
+     * 작성자. <b>필수다</b>(P2-15-6, {@code V5__work_logs_user_id_not_null.sql}).
+     *
+     * <p>스키마상 nullable이었으나 실제 값은 20,016행 중 NULL이 0건이었고, 생성 경로 둘
+     * 모두 {@code member}를 필수로 요구하며, {@code users} 삭제도 FK가 NO ACTION이라 막힌다.
+     * 즉 <b>"작성자 없는 작업일지"는 실재한 적이 없다.</b> 컬럼을 NOT NULL로 바꿔
+     * {@code WorkLogDto.from}이 이 값을 무조건 역참조해도 되는 근거를 만들었다 —
+     * 방어 코드를 넣는 대신 방어할 상태를 없앴다.
+     */
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private Member member;
 
+    /**
+     * 관련 장비. <b>선택이다</b> — 바로 위와 정반대이고, 그것이 P2-15-2의 결함이 나온 자리다.
+     *
+     * <p>같은 {@code @ManyToOne(LAZY)}인데 FK가 NULL이면 프록시가 아니라 <b>null이 들어온다.</b>
+     * 같은 20,016행에서 이쪽은 NULL이 3,331건이다. {@code WorkLogDto.from}이 이 값을
+     * 무조건 역참조해 페이지 전체를 500으로 만들었고, 지금은 null 검사가 있다.
+     */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="equipment_id")
+    @JoinColumn(name = "equipment_id")
     private Equipment equipment;
 
     @Builder.Default
