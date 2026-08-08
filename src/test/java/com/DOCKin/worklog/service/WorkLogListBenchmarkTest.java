@@ -85,20 +85,17 @@ class WorkLogListBenchmarkTest {
     private static final int WARMUP_RUNS = 2;
     private static final int MEASURED_RUNS = 5;
 
-    /**
-     * 뒷정리에만 쓰는 인덱스. 측정 대상이 아니라 <b>지우는 동안만</b> 필요하고 끝나면 없앤다.
-     * {@link #cleanUp}의 주석이 왜 필요한지 설명한다.
+    /*
+     * [2026-08-08] 뒷정리용 FK 인덱스(CLEANUP_FK_INDEXES)를 걷어냈다.
+     *
+     * 지우기 전에 자식 FK 인덱스를 임시로 만들었다가 끝나면 없애는 장치였다. 그 인덱스가
+     * P2-15-4로 V3__work_log_child_fk_indexes.sql에 들어가 스키마의 일부가 됐으므로
+     * 임시로 만들 것이 없다. 대상이던 log_images는 같은 마이그레이션에서 삭제됐다 --
+     * 남겨 뒀다면 이 테스트가 "relation does not exist"로 죽었을 자리다.
+     *
+     * 이 장치가 왜 필요했는지는 cleanUp()의 주석에 그대로 남긴다. 사라진 이유를 적어두지
+     * 않으면 다음에 같은 증상(뒷정리가 측정보다 오래 걸린다)을 만났을 때 처음부터 다시 판단하게 된다.
      */
-    private static final Map<String, String> CLEANUP_FK_INDEXES = new LinkedHashMap<>();
-
-    static {
-        CLEANUP_FK_INDEXES.put("cleanup_idx_work_log_images_log",
-                "CREATE INDEX cleanup_idx_work_log_images_log ON work_log_images (work_log_id)");
-        CLEANUP_FK_INDEXES.put("cleanup_idx_log_images_log",
-                "CREATE INDEX cleanup_idx_log_images_log ON log_images (log_id)");
-        CLEANUP_FK_INDEXES.put("cleanup_idx_work_log_comments_log",
-                "CREATE INDEX cleanup_idx_work_log_comments_log ON work_log_comments (log_id)");
-    }
 
     /** 이 테스트가 만드는 인덱스. 이름 접두사로 "내가 만든 것"을 구분한다. */
     private static final Map<String, String> BENCH_INDEXES = new LinkedHashMap<>();
@@ -111,10 +108,10 @@ class WorkLogListBenchmarkTest {
         // user_id만 걸면 정렬이 여전히 남는다.
         BENCH_INDEXES.put("bench_idx_work_logs_user_created",
                 "CREATE INDEX bench_idx_work_logs_user_created ON work_logs (user_id, created_at DESC)");
-        // 1/2에서 확인한 행당 1쿼리가 실제로 닿는 곳. 이 테이블에도 PK뿐이라
-        // 이미지 한 건을 찾을 때마다 전체를 훑는다.
-        BENCH_INDEXES.put("bench_idx_work_log_images_log",
-                "CREATE INDEX bench_idx_work_log_images_log ON work_log_images (work_log_id)");
+        // [2026-08-08] bench_idx_work_log_images_log를 뺐다. 같은 인덱스가 P2-15-4로
+        // 스키마에 들어갔으므로(V3) 이 테스트가 만들 것이 아니다. 만들면 같은 컬럼에
+        // 인덱스가 둘이 되고, "인덱스 없음" 열이 실제로는 인덱스가 있는 상태를 재게 된다.
+        // ⑥의 의미가 바뀐 것에 대해서는 cases()의 주석 참고.
     }
 
     @Test
@@ -245,6 +242,11 @@ class WorkLogListBenchmarkTest {
                 List.of("%크랭크축%", "%크랭크축%")));
 
         // 6. 1/2가 센 행당 1쿼리. 한 페이지가 20번 던지므로 20번을 한 단위로 잰다.
+        //
+        //    [2026-08-08] 이 줄의 "인덱스 없음 / 있음" 두 열은 이제 같은 상태를 잰다.
+        //    P2-15-4로 work_log_images(work_log_id)가 스키마에 들어갔기 때문이다.
+        //    인덱스 유무의 차이는 별도로 측정해 백로그에 적었다(조회 x20이 1,965ms -> 2.2ms).
+        //    여기 두 열이 비슷하게 나오는 것은 고장이 아니라 그 결과다.
         cases.add(new Case("⑥ 이미지 조회 ×" + PAGE_SIZE + " (N+1)",
                 "SELECT * FROM work_log_images WHERE work_log_id = ?",
                 List.of(1L), PAGE_SIZE));
@@ -489,17 +491,21 @@ class WorkLogListBenchmarkTest {
      * <b>죽은 튜플로 남아 페이지를 차지</b>하고, 순차 스캔은 그것을 전부 읽기 때문이다.
      * {@code VACUUM}으로 잘라내려 해도 <b>진행 중인 삭제가 잠금을 쥐고 있어 거부된다.</b>
      *
-     * <p>그래서 지우기 <b>전에</b> 인덱스를 만든다. 이 인덱스는 운영 스키마에 남기지 않는다 —
-     * 필요 여부는 P2-15-4에서 따로 결정할 일이고, 정리 도구가 스키마를 바꾸면 안 된다.
+     * <p>그래서 지우기 <b>전에</b> 인덱스를 만들었다. 운영 스키마에 남기지 않은 것은
+     * 필요 여부가 P2-15-4에서 따로 결정할 일이었고, 정리 도구가 스키마를 바꾸면 안 되기 때문이다.
+     *
+     * <h3>[2026-08-08] 그 임시 인덱스가 사라졌다 — 스키마로 들어갔기 때문이다</h3>
+     * P2-15-4가 결정됐다. 자식 FK 인덱스는 뒷정리용 임시물이 아니라
+     * {@code V3__work_log_child_fk_indexes.sql}의 일부다. 그래서 여기서 만들 것이 없다.
+     *
+     * <p>실측이 그 결정을 뒷받침한다 — 부모 2,000건 DELETE가 <b>103초 → 4.7초</b>(행당
+     * 51.6ms → 2.35ms)이고, 애초에 이 뒷정리를 24분으로 만든 것이 그 51.6ms였다.
+     * <b>이 주석을 지우지 않는 이유</b>는 다음에 같은 증상(뒷정리가 측정보다 오래 걸린다)을
+     * 만났을 때 원인을 처음부터 다시 찾지 않게 하기 위해서다.
      */
     private void cleanUp(Connection conn) throws SQLException {
         dropBenchIndexes(conn);
         try (Statement st = conn.createStatement()) {
-            for (Map.Entry<String, String> fk : CLEANUP_FK_INDEXES.entrySet()) {
-                st.execute("DROP INDEX IF EXISTS " + fk.getKey());
-                st.execute(fk.getValue());
-            }
-
             st.executeUpdate("""
                     DELETE FROM work_log_images
                      WHERE work_log_id IN (SELECT log_id FROM work_logs WHERE title LIKE '%s%%')
@@ -507,9 +513,13 @@ class WorkLogListBenchmarkTest {
             st.executeUpdate("DELETE FROM work_logs WHERE title LIKE '%s%%'".formatted(MARKER));
             st.executeUpdate("DELETE FROM users WHERE user_id LIKE '%s%%'".formatted(BENCH_USER_PREFIX));
 
-            for (String name : CLEANUP_FK_INDEXES.keySet()) {
-                st.execute("DROP INDEX IF EXISTS " + name);
-            }
+            // 앞선 실행이 남기고 간 임시 인덱스를 걷어낸다. V3가 같은 일을 하지만
+            // 마이그레이션은 이미 적용된 DB에서 다시 돌지 않으므로, 그 사이에 만들어진 것은
+            // 여기서만 지울 수 있다. 셋 다 없어도 IF EXISTS라 조용히 지나간다.
+            st.execute("DROP INDEX IF EXISTS cleanup_idx_work_log_images_log");
+            st.execute("DROP INDEX IF EXISTS cleanup_idx_work_log_comments_log");
+            st.execute("DROP INDEX IF EXISTS cleanup_idx_log_images_log");
+
             // 지운 자리를 회수한다. 안 하면 다음 실행이 죽은 튜플 위에서 측정한다 --
             // 순차 스캔이 읽는 페이지 수가 달라져 지연시간이 통째로 어긋난다.
             st.execute("VACUUM work_logs");
