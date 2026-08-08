@@ -101,13 +101,24 @@ class WorkLogListBenchmarkTest {
     private static final Map<String, String> BENCH_INDEXES = new LinkedHashMap<>();
 
     static {
-        // 목록의 필터 컬럼. 지금은 없어서 user_id IN (...)이 매번 전체를 훑는다.
-        BENCH_INDEXES.put("bench_idx_work_logs_user",
-                "CREATE INDEX bench_idx_work_logs_user ON work_logs (user_id)");
-        // 필터 + 정렬을 한 인덱스로. 목록 API의 기본 정렬이 created_at DESC이므로
-        // user_id만 걸면 정렬이 여전히 남는다.
+        // [2026-08-08] bench_idx_work_logs_user를 뺐다. P2-15-5의 실측(② COUNT 315배)이
+        // 근거가 되어 P2-15-7의 V4가 idx_work_logs_user를 스키마에 넣었다. 측정으로 결정했고
+        // 결정된 것은 더 이상 이 테스트가 만들 것이 아니다.
+        //
+        // 그래서 이 테스트의 "인덱스 없음" 열의 의미가 바뀌었다 --
+        // 이제 "아무 인덱스도 없음"이 아니라 "단일 인덱스는 있고 복합 인덱스가 없음"이다.
+        // 2026-08-08 실행분(백로그 P2-15-5의 표)은 그 전 상태에서 나온 값이므로,
+        // 다시 돌린 결과를 그 표와 나란히 두면 안 된다.
+
+        // 필터 + 정렬을 한 인덱스로. user_id만 걸면 정렬이 여전히 남는다.
         BENCH_INDEXES.put("bench_idx_work_logs_user_created",
                 "CREATE INDEX bench_idx_work_logs_user_created ON work_logs (user_id, created_at DESC)");
+        // 정렬 키를 끝까지 덮는 인덱스. P2-15-3으로 기본 정렬이 (created_at, log_id) DESC가
+        // 됐으므로 위 인덱스는 마지막 한 단계를 남긴다. 이 항목이 있어야
+        // "log_id까지 넣을 값이 있는가"를 숫자로 답할 수 있다 -- 인덱스가 커지는 대가가 있다.
+        BENCH_INDEXES.put("bench_idx_work_logs_user_created_log",
+                "CREATE INDEX bench_idx_work_logs_user_created_log"
+                        + " ON work_logs (user_id, created_at DESC, log_id DESC)");
         // [2026-08-08] bench_idx_work_log_images_log를 뺐다. 같은 인덱스가 P2-15-4로
         // 스키마에 들어갔으므로(V3) 이 테스트가 만들 것이 아니다. 만들면 같은 컬럼에
         // 인덱스가 둘이 되고, "인덱스 없음" 열이 실제로는 인덱스가 있는 상태를 재게 된다.
@@ -228,12 +239,14 @@ class WorkLogListBenchmarkTest {
                         + " OFFSET " + (500 * PAGE_SIZE), owners));
 
         // 4. 정렬을 붙인 첫 페이지. P2-15-3 이후 이것이 실제 경로다.
-        //    다만 컨트롤러 기본값은 이제 (created_at, log_id) DESC이고 여기는 created_at 하나다.
-        //    두 번째 키는 PK라 이미 정렬된 순서를 따라가므로 비용 측면에서는 첫 키가 지배한다.
-        //    측정을 이미 끝낸 문장이라 그대로 둔다 -- 다음 실행 때 log_id를 붙여 확인할 항목이다.
+        //    컨트롤러 기본값과 같은 (created_at, log_id) DESC로 맞췄다. 앞선 실행에서는
+        //    created_at 하나였는데, 그러면 bench_idx_work_logs_user_created가 정렬을 전부
+        //    커버해 "인덱스가 정렬을 없앤다"는 결과가 나온다. 두 번째 키가 붙으면 그 인덱스로도
+        //    마지막 한 단계가 남으므로, 실제 API가 내는 비용과 어긋난다.
         cases.add(new Case("④ 구역 목록 1페이지 정렬",
                 "SELECT * FROM work_logs WHERE user_id IN (" + in + ")"
-                        + " ORDER BY created_at DESC LIMIT " + PAGE_SIZE + " OFFSET 0", owners));
+                        + " ORDER BY created_at DESC, log_id DESC LIMIT " + PAGE_SIZE + " OFFSET 0",
+                owners));
 
         // 5. 키워드 검색. 양쪽 와일드카드라 B-tree로는 어떤 인덱스도 쓸 수 없다 --
         //    위 인덱스를 만들어도 이 줄만 안 변하는 것이 pg_trgm이 필요한 근거가 된다.
