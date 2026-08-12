@@ -70,6 +70,23 @@ public class IndexingService {
     @Value("${rag.indexing.enabled}")
     private boolean indexingEnabled;
 
+    /**
+     * 번역본을 같은 벡터 공간에 함께 색인할 것인가.
+     *
+     * <p><b>끌 수 있게 만든 이유는 이것이 "있으면 좋은 것"이기 때문이다.</b> 번역본 색인은
+     * 교차언어 검색의 성립 조건이 아니다 -- {@code CrossLingualRetrievalTest}가 <b>한국어
+     * 코퍼스만</b> 두고 영어 5/5, 베트남어 4/5로 통과한다. 다국어 모델을 쓰는 이상 번역본이
+     * 없어도 교차언어는 성립하며, 번역본은 <b>품질 보강</b>이고 대가가 붙는다:
+     * 저장·임베딩 비용이 배로 늘고, 원문과 번역본이 top-k 자리를 중복으로 차지한다
+     * (백로그 P2-8-2 / P2-8-3에 실측 재현이 있다).
+     *
+     * <p>그 이득을 아직 재지 않았으므로 기본값은 켬이다. <b>이 스위치는 그 측정(A2)을
+     * 가능하게 하는 수단이자, 측정 결과가 "이득 작음"으로 나왔을 때 내릴 조치 그 자체다.</b>
+     * 즉 측정이 끝나도 남는다.
+     */
+    @Value("${rag.indexing.translations.enabled:true}")
+    private boolean translationIndexingEnabled;
+
     @Scheduled(cron = "${rag.indexing.cron}")
     public void scheduledIndexing() {
         if (!indexingEnabled) {
@@ -98,7 +115,13 @@ public class IndexingService {
 
         try {
             indexWorkLogs(progress);
-            indexTranslations(progress);
+            if (translationIndexingEnabled) {
+                indexTranslations(progress);
+            } else {
+                // 조용히 건너뛰지 않는다. 검색 결과가 달라지는 설정이라 나중에 "왜 번역본이
+                // 안 잡히지"가 되면 이 줄이 답이 된다. chat_history.retrieval_mode를 남긴 것과 같다.
+                log.info("[RAG] 번역본 색인이 비활성화되어 있어 건너뜁니다. (rag.indexing.translations.enabled=false)");
+            }
             indexSafetyCourses(progress);
         } catch (Exception e) {
             // 이미 커밋된 페이지는 살아남고, 다음 주기에 남은 분부터 이어서 진행된다(해시 기반 멱등).
