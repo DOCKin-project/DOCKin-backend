@@ -49,7 +49,7 @@ psql_q() {
 # TEI에 실제로 걸린 상한. E1이 바꾸면 이 값이 따라 변하고, 그것이 곧 구간의 경계다.
 tei_cpus() {
     local id q p
-    id=$(dc ps -q "$SVC_TEI" 2>/dev/null | head -1) || true
+    id=$(dc ps -qa "$SVC_TEI" 2>/dev/null | head -1) || true
     [[ -n "$id" ]] || { echo "?"; return; }
     for d in "/sys/fs/cgroup/system.slice/docker-${id}.scope" "/sys/fs/cgroup/docker/${id}"; do
         if [[ -r "$d/cpu.max" ]]; then
@@ -63,9 +63,12 @@ tei_cpus() {
         | awk '{ if ($1==0) print "unlimited"; else printf "%.2f", $1/1000000000 }'
 }
 
+# -qa 여야 한다. -q 는 실행 중인 것만 돌려주므로, E1이 앱을 내려둔 구간에서 컨테이너를
+# 못 찾아 app_running이 "no"가 아니라 "컨테이너 없음"으로 같은 답을 내게 된다.
+# 두 상태가 구분되지 않으면 표본의 결측 이유를 나중에 못 가른다.
 app_running() {
     local id st
-    id=$(dc ps -q "$SVC_APP" 2>/dev/null | head -1) || true
+    id=$(dc ps -qa "$SVC_APP" 2>/dev/null | head -1) || true
     [[ -n "$id" ]] || { echo "no"; return; }
     st=$(docker inspect -f '{{.State.Running}}' "$id" 2>/dev/null || echo false)
     [[ "$st" == "true" ]] && echo "yes" || echo "no"

@@ -71,7 +71,10 @@ psql_q() {
     dc exec -T "$SVC_DB" psql -U "$DB_USER" -d "$DB_NAME" -qtAX -c "$1" | tr -d '\r'
 }
 
-cid() { dc ps -q "$1" 2>/dev/null | head -1; }
+# -qa 로 물어야 한다. -q 는 실행 중인 것만 돌려주는데, 이 스크립트는 조건마다 앱을
+# 내렸다 올리므로 "멈춰 있지만 존재하는" 앱의 ID가 계속 필요하다. 부트스트랩도 앱을
+# 내려둔 채 끝나므로 -q 였다면 첫 줄에서 "떠 있지 않다"로 죽는다.
+cid() { dc ps -qa "$1" 2>/dev/null | head -1; }
 
 # EC2 인스턴스 타입. IMDSv2 → 실패하면 n/a. 측정 조건에 적어야 하는 값이라 조용히 비우지 않는다.
 instance_type() {
@@ -177,7 +180,8 @@ command -v docker >/dev/null || die "docker가 없다"
 [[ -f compose.yaml ]] || die "저장소 루트에서 실행해야 한다"
 
 for s in "${ALL_SVCS[@]}"; do
-    [[ -n "$(cid "$s")" ]] || die "서비스 '$s' 가 떠 있지 않다. 먼저 docker compose $COMPOSE_FILES up -d"
+    [[ -n "$(cid "$s")" ]] \
+        || die "서비스 '$s' 의 컨테이너가 아예 없다. 먼저 docker compose $COMPOSE_FILES up -d"
 done
 
 ALLOW_NO_CGROUP=${ALLOW_NO_CGROUP:-0}
@@ -193,6 +197,13 @@ for s in "${ALL_SVCS[@]}"; do
        흐름만 확인하려면 ALLOW_NO_CGROUP=1 로 다시 실행한다 (스로틀 열은 전부 n/a가 된다)."
         say "!! '$s' cgroup 없음 — 스로틀 열이 n/a가 된다 (ALLOW_NO_CGROUP=1)"
     fi
+done
+
+# 앱은 멈춰 있어도 된다(이 스크립트가 올린다). 다만 DB와 임베딩 서버는 떠 있어야 한다 --
+# 없으면 창을 열어놓고 아무것도 안 늘어나는 것을 임베딩이 느린 것으로 읽게 된다.
+for s in "$SVC_DB" "$SVC_TEI"; do
+    [[ "$(docker inspect -f '{{.State.Running}}' "${CID[$s]}" 2>/dev/null)" == "true" ]] \
+        || die "'$s' 가 실행 중이 아니다. docker compose $COMPOSE_FILES up -d $SVC_DB $SVC_TEI"
 done
 
 HOST_CPUS=$(nproc)
