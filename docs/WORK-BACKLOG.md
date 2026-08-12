@@ -1487,10 +1487,35 @@ com.DOCKin.DocKinSpringApplication : Started DocKinSpringApplication in 60.194 s
 `a22eacb`의 blob은 히스토리에 그대로 있다. 줄이려면 히스토리를 다시 써야 하고,
 그건 push 안 된 커밋 8개와 다른 브랜치 둘이 걸려 있는 상태에서 따로 판단할 일이다 → 아래 표.
 
-**확인하지 못한 것 하나.** `.dockerignore`의 `build` + `!build/libs` 재포함이 실제로 도는지는
-**이번에 못 봤다** — 도커 데몬이 떠 있지 않았다. 부모를 뺀 뒤 자식을 되살리는 것은
-gitignore에서는 안 되고 도커에서는 되는 것으로 알려져 있지만, **여기서 재 본 적은 없다.**
-틀렸다면 다음 빌드가 `COPY failed`로 즉시 죽으므로 조용히 새지는 않는다.
+#### 빌드를 돌려 확인했다 (2026-08-12)
+
+**확인이 필요했던 것은 `build`를 뺀 뒤 `!build/libs`로 되살리는 것이 실제로 도는가**였다.
+부모를 제외한 뒤 자식을 되살리는 것은 gitignore에서는 안 되는 일이라 도커에서도
+안 되면 `COPY`가 죽는다. 돈다.
+
+```
+#4 [internal] load build context
+#4 transferring context: 115.47MB 55.4s done
+#7 [3/3] COPY build/libs/DOCKin-spring-0.0.1-SNAPSHOT.jar app.jar   DONE 2.3s
+```
+
+**115.47MB는 사실상 jar 하나다** — `build/libs`의 jar가 115,441,942바이트다.
+컨텍스트에 그것 말고 실린 것이 없다는 뜻이다.
+
+세 숫자가 맞아떨어진다. 디스크의 저장소 전체는 지금 **208MB**이고, 여기에 지운
+`app.jar` 84MB를 더하면 **292MB** — `.dockerignore`를 쓰기 전에 재 뒀던 그 숫자다.
+
+| 상태 | 컨텍스트 | |
+|---|---|---|
+| 둘 다 적용 전 | 292MB | 이전 측정 |
+| `app.jar` 삭제만 | ~208MB | 디스크 실측(`du -sh .`) |
+| `.dockerignore`까지 | **115.47MB** | 빌드 로그 |
+
+> **"없을 때"를 도커로 다시 재려던 것은 실패했다.** `.dockerignore`를 잠시 치우고 재니
+> 93.98MB가 나왔는데, 이건 **위 빌드보다 작다.** BuildKit이 컨텍스트를 빌드 사이에
+> 캐시하기 때문이다 — 직전 빌드에서 이미 보낸 jar는 다시 세지 않고 처음 보는 `.git`
+> 86MB만 실렸다. `--no-cache`는 레이어 캐시에만 걸리고 컨텍스트 전송에는 안 걸린다.
+> 그래서 위 표의 두 번째 줄은 도커 숫자가 아니라 디스크 숫자다.
 
 #### 남은 것 둘
 
