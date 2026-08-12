@@ -94,6 +94,79 @@ jobs:
       - name: 프로덕션 빌드
         run: ./gradlew assemble --no-daemon
 
+  # -------------------------------------------------------------------------
+  # 빨간불이 조용한 상태를 없앤다 (P2-16의 「남은 것」)
+  #
+  # 2026-08-07부터 닷새 동안 dev가 실패하고 있었는데 아무도 몰랐다. 닷새가 걸린
+  # 이유는 원인의 난이도가 아니라 아무도 보지 않았다는 것이다. 다른 일을 하다
+  # 우연히 봤다.
+  #
+  # 메일로는 부족하다는 것이 그 닷새로 증명됐다 -- GitHub는 실패할 때마다 이미
+  # 메일을 보내고 있었다. 그래서 읽지 않으면 사라지는 것 말고 닫을 때까지 남는
+  # 것에 건다. 열린 이슈는 저장소를 열 때마다 보인다.
+  #
+  # 푸시에만 건다. PR의 실패는 PR 화면에 이미 빨갛게 보이므로 이슈까지 만들면
+  # 같은 것을 두 번 말하는 셈이고, 두 번 말하면 곧 안 보게 된다.
+  # -------------------------------------------------------------------------
+  notify:
+    name: 빨간불 알림
+    needs: test
+    # 취소된 실행(concurrency)은 알리지 않는다 -- 뒤이은 실행이 곧 결과를 낸다.
+    if: always() && github.event_name == 'push' && contains(fromJSON('["success", "failure"]'), needs.test.result)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    # 저장소 기본 토큰 권한이 read다. 여기서 명시하지 않으면 이슈를 만들지 못한다.
+    permissions:
+      issues: write
+
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      LABEL: 🚨 CI
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+    steps:
+      # 라벨이 없으면 gh issue create가 통째로 실패한다. --force가 멱등이라 매번 시도한다.
+      - name: 라벨 준비
+        if: needs.test.result == 'failure'
+        run: gh label create "$LABEL" --color B60205 --description "CI 실패 자동 알림" --force
+
+      # 열린 것이 있으면 새로 만들지 않고 댓글만 단다. 연속으로 깨질 때 이슈가
+      # 커밋 수만큼 생기면 알림이 다시 소음이 되고, 소음은 안 보는 것과 같다.
+      #
+      # 담당자는 푸시한 사람이다. 팀 저장소라 "누군가 봐야 한다"는 아무도 안 본다는
+      # 뜻이 되기 쉽고, 배정은 메일과 달리 받는 사람이 정해진다.
+      - name: 실패 -> 이슈
+        if: needs.test.result == 'failure'
+        run: |
+          BODY="브랜치 $GITHUB_REF_NAME 의 CI가 실패했다.
+
+          커밋: $GITHUB_SHA
+          실행: $RUN_URL
+
+          같은 브랜치의 CI가 다시 통과하면 이 이슈는 자동으로 닫힌다."
+
+          OPEN=$(gh issue list --label "$LABEL" --state open --limit 1 --json number --jq '.[0].number // empty')
+
+          if [ -n "$OPEN" ]; then
+            gh issue comment "$OPEN" --body "$BODY"
+          else
+            NEW=$(gh issue create --title "CI 빨간불 — $GITHUB_REF_NAME" --label "$LABEL" --body "$BODY")
+            # 배정 실패로 이슈 자체를 잃지 않는다. 알리는 것이 배정보다 중요하다.
+            gh issue edit "$NEW" --add-assignee "$GITHUB_ACTOR" || true
+          fi
+
+      # 고친 뒤에도 이슈가 열려 있으면 다음 빨간불이 "이미 열려 있네"에 묻힌다.
+      # 여는 것과 닫는 것이 한 쌍이어야 이 신호를 계속 믿을 수 있다.
+      - name: 복구 -> 이슈 닫기
+        if: needs.test.result == 'success'
+        run: |
+          gh issue list --label "$LABEL" --state open --json number --jq '.[].number' 2>/dev/null \
+            | while read -r N; do
+                gh issue close "$N" --comment "브랜치 $GITHUB_REF_NAME 의 CI가 다시 통과했다. 실행: $RUN_URL"
+              done
+
 # ---------------------------------------------------------------------------
 # CI가 검증하는 것
 #
