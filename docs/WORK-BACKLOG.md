@@ -1176,7 +1176,7 @@ language_code)`의 **선두 컬럼이 `log_id`라 FK 검사에 그대로 쓰인�
 ### P2-15-5 설계 — 재는 것과 고정한 조건
 
 `WorkLogListBenchmarkTest`가 10만 / 100만 건에서 여섯 쿼리를 **인덱스 없음 ↔ 있음**으로
-나란히 잰다. 두 규모 모두 측정은 끝났고 **뒷정리(P2-15-4)에서 걸려 숫자를 아직 못 옮겼다.**
+나란히 잰다. 두 규모 모두 측정이 끝났고 **숫자는 위 「결과」 표로 옮겼다**(2026-08-08).
 
 | # | 쿼리 | 왜 재는가 |
 |---|---|---|
@@ -1481,7 +1481,7 @@ com.DOCKin.DocKinSpringApplication : Started DocKinSpringApplication in 60.194 s
 |---|---|
 | `app.jar` 삭제 | 추적에서 뺐다 |
 | `.gitignore`에 `*.jar` | **예외 줄보다 위에** 뒀다 — gitignore는 마지막 규칙이 이기므로 순서가 뒤집히면 래퍼 jar가 같이 죽는다. `git check-ignore -v gradle/wrapper/gradle-wrapper.jar` → **exit 1**(걸리지 않음)로 확인했다 |
-| `.dockerignore` 신설 | 컨텍스트는 `docker build`마다 통째로 데몬에 간다. **없을 때 292MB**였고 Dockerfile이 실제로 쓰는 것은 `build/libs`의 jar 하나다 |
+| `.dockerignore` 신설 | 컨텍스트는 `docker build`마다 통째로 데몬에 간다. **292MB → 115.47MB**(아래 실측). Dockerfile이 실제로 쓰는 것은 `build/libs`의 jar 하나다 |
 
 **`.git`은 이걸로 안 줄어든다.** 86MB 중 대부분이 이 blob인데 삭제는 HEAD에서만 뺀 것이고
 `a22eacb`의 blob은 히스토리에 그대로 있다. 줄이려면 히스토리를 다시 써야 하고,

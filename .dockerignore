@@ -2,11 +2,14 @@
 #
 # 컨텍스트는 docker build를 부를 때마다 통째로 데몬에 전송된다.
 # 없을 때 292MB였고, 그중 Dockerfile이 실제로 쓰는 것은 build/libs의 jar 하나뿐이다.
+# 넣은 뒤 115.47MB로 재졌다 -- jar 자체가 115,441,942바이트이므로 그것 말고 실린 것이 없다.
 
 .git
 .gradle
 
-# 루트에 굴러다니는 84MB 산출물. Dockerfile은 build/libs에서 COPY하므로 쓰이지 않는다.
+# 루트에 굴러다니던 84MB 산출물. 지금은 지웠고 .gitignore의 *.jar가 다시 들어오는 것을
+# 막지만, 빌드 전에 손으로 떨어뜨리는 경우가 있어 여기서도 뺀다.
+# Dockerfile은 build/libs에서 COPY하므로 어느 쪽이든 쓰이지 않는다.
 app.jar
 
 # JVM 크래시 덤프
