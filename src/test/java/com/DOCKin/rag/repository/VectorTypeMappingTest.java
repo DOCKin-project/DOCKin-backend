@@ -1,6 +1,6 @@
 package com.DOCKin.rag.repository;
 
-import com.DOCKin.global.testsupport.PostgresTestSupport;
+import com.DOCKin.global.testsupport.ContainerTestSupport;
 import com.DOCKin.rag.model.DocumentChunk;
 import com.DOCKin.rag.model.SourceType;
 import com.DOCKin.rag.model.Visibility;
@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
  * {@code float[]}로 되살아나는지는 별개 문제다. 그래서 엔티티 왕복과 투영 왕복을 모두 본다.
  *
  * <h3>DB는 항상 있다</h3>
- * {@link PostgresTestSupport}가 pgvector 컨테이너를 띄우므로 건너뛰는 경로가 없다.
+ * {@link ContainerTestSupport}가 pgvector 컨테이너를 띄우므로 건너뛰는 경로가 없다.
  * 이전에는 {@code @EnabledIfEnvironmentVariable}로 컨텍스트 로딩 자체를 막았는데,
  * 그 결과 <b>CI에서 이 검증이 한 번도 돌지 않았다</b>. 지금은 매 실행마다 돈다.
  *
@@ -44,7 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
         "spring.datasource.driver-class-name=org.postgresql.Driver",
         "spring.jpa.hibernate.ddl-auto=update"
 })
-class VectorTypeMappingTest extends PostgresTestSupport {
+class VectorTypeMappingTest extends ContainerTestSupport {
 
     private static final String MODEL = "vector-mapping-test";
 

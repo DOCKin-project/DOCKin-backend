@@ -1472,7 +1472,7 @@ $ docker exec dockin-app-1 unzip -l app.jar | grep db/migration
 
 #### CI에서는 돌았다 — 그래서 더 안 보였다
 
-`PostgresTestSupport`가 Testcontainers로 빈 PostgreSQL을 띄우고 실제 `application.properties`를
+`ContainerTestSupport`(당시 이름 `PostgresTestSupport`)가 Testcontainers로 빈 PostgreSQL을 띄우고 실제 `application.properties`를
 그대로 쓰므로, CI(`./gradlew test`)에서는 V1~V5가 전부 실행된다. 즉 **초록불은 켜져 있었다.**
 
 | 검증된 것 | 검증되지 않은 것 |
@@ -1649,6 +1649,70 @@ com.DOCKin.DocKinSpringApplication : Started DocKinSpringApplication in 60.194 s
 > **2-3이 못 본 것이 둘이다** — 행당 1쿼리(P2-15-1)와 자식 FK 인덱스(P2-15-4).
 > 둘 다 인덱스를 추가해도 줄지 않거나, 인덱스를 **다른 테이블에** 넣어야 하는 것들이다.
 > 2-3이 `work_logs` 한 테이블만 보고 있었기 때문이다.
+
+---
+
+## P2-16 — CI가 닷새 동안 빨간불이었다 (2026-08-12, 완료)
+
+### 무엇이 깨져 있었나
+
+`dev`의 CI가 **2026-08-07부터** 실패하고 있었다. 오늘 push한 커밋 12개의 CI를 확인하다
+드러났다 — 이번 push가 만든 회귀가 아니다. 실패 지점과 스택트레이스가 8월 7일 실행
+(`31188865740`)과 오늘 실행(`31584824093`)에서 동일하다.
+
+```
+DocKinSpringApplicationTests > Failed to load ApplicationContext
+  Caused by: BeanCreationException: 'redissonClient'
+  Caused by: RedisConnectionException: Unable to connect to Redis server: localhost/127.0.0.1:6379
+  Caused by: java.net.ConnectException: Connection refused
+```
+
+### 왜 이제 와서 — P2-11-5가 연 문이다
+
+**P0-12를 해소한 그 변경이 같은 자리에 구멍을 냈다.** DB를 Testcontainers로 옮기기 전까지
+`DocKinSpringApplicationTests`는 `DB_PASSWORD` 부재로 **스스로 skip**했다. 컨테이너가
+생기면서 이 테스트가 CI에서 처음으로 **진짜 실행**됐고, 그러자 전체 컨텍스트가 필요해졌다.
+그 컨텍스트에 `RedissonConfig`가 있고, 그것은 빈 생성 시점에 `localhost:6379`로 **실제로 접속한다.**
+
+**DB만 줬고 Redis는 안 줬다.** 워크플로에 "테스트용 PostgreSQL 이미지 준비"는 있어도
+Redis에 해당하는 것이 없었다. `application.properties`의 기본값이 `${REDIS_HOST:localhost}`라
+"설정이 없다"가 아니라 **"런너의 6379에 붙으려 든다"** 가 되고, 거기 아무것도 없으니 죽는다.
+
+> **P0-12 줄이 틀린 것을 말하고 있었다.** *"컨텍스트 로딩 검증이 CI에서 돈다 — 빈 순환·설정
+> 누락이 자동으로 잡힌다"* 고 적혀 있었는데, 실제로는 그 검증이 **닷새 동안 빨간불로 방치**돼
+> 있었다. 검증을 자동화한 것과 그 결과를 보는 것은 다른 일이다. → 아래 「남은 것」
+
+### 고친 방향 — Redis도 Testcontainers로
+
+셋 중 골랐다.
+
+| 후보 | 왜 아닌가 / 왜 이것인가 |
+|---|---|
+| **Redis도 Testcontainers** | **골랐다.** DB와 같은 방식이라 "인프라는 컨테이너가 준다" 하나로 설명된다. 운영과 같은 `redis:7-alpine`이라 분산락이 실물에서 검증된다 |
+| CI에 `services:` 컨테이너 | 워크플로 몇 줄로 가장 가볍다. 다만 **DB는 코드가, Redis는 워크플로가** 띄우게 되어 같은 종류의 것이 두 곳에 갈린다 — P2-15-9가 겪은 "설정이 두 곳에 있다"와 같은 모양이다 |
+| `RedissonClient`를 목으로 | 제일 빠르지만 이 테스트의 목적이 *"컨텍스트가 실제로 뜨는가"* 다. 목을 끼우면 **뜨지 않아도 통과**하므로 잡으려던 것을 못 잡는다 |
+
+`PostgresTestSupport` → **`ContainerTestSupport`로 이름을 바꿨다.** Redis를 띄우는 클래스가
+`Postgres...`라는 이름을 달고 있으면 이 저장소가 여러 번 지적한 "이름과 실제가 어긋난 상태"가
+된다. 참조 10개는 기계적 치환이다.
+
+### 확인 — 이 머신에 Redis가 0개인 채로 통과했다
+
+`dockin-redis`는 3일 전 종료 상태이고 실행 중인 Redis 컨테이너가 없다. 즉 `localhost:6379`에
+아무것도 없는데 컨텍스트가 떴다 — **Testcontainers가 띄운 쪽에 붙었다는 뜻이다.**
+설정이 실제로 갈아끼워졌는지를 이보다 직접 보여주는 조건이 없어서 그대로 뒀다.
+
+| | |
+|---|---|
+| `DocKinSpringApplicationTests` | tests=1, failures=0 |
+| `ActuatorEndpointTest` | tests=7, failures=0 |
+
+### 남은 것
+
+| 항목 | 성격 |
+|---|---|
+| **CI 실패를 알려주는 것이 없다** | 이번 건의 진짜 교훈이다. 닷새 동안 아무도 몰랐고, 다른 일을 하다 우연히 봤다. 알림이든 브랜치 보호든, **빨간불이 조용한 상태**를 없애야 같은 일이 반복되지 않는다. P2-15-9의 `LocalMigrationDriftTest`와 같은 종류의 문제다 |
+| P0-12 문구 정정 | 「완료」 표의 그 줄이 사실보다 앞서 있었다. 위 항목이 붙기 전까지는 "돈다"가 아니라 "돌지만 아무도 안 본다"가 맞다 |
 
 ---
 

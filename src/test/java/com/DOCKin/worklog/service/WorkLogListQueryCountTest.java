@@ -1,6 +1,6 @@
 package com.DOCKin.worklog.service;
 
-import com.DOCKin.global.testsupport.PostgresTestSupport;
+import com.DOCKin.global.testsupport.ContainerTestSupport;
 import com.DOCKin.worklog.dto.WorkLogDto;
 import jakarta.persistence.EntityManagerFactory;
 import org.hibernate.SessionFactory;
@@ -76,7 +76,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
         // 나중에 누가 운영에 켜면 이 테스트가 실패해서 알려주는 편이 낫다.
         "spring.jpa.properties.hibernate.default_batch_fetch_size=-1"
 })
-class WorkLogListQueryCountTest extends PostgresTestSupport {
+class WorkLogListQueryCountTest extends ContainerTestSupport {
 
     /** 측정 대상 구역. 다른 테스트가 만든 사용자와 섞이지 않도록 이 테스트만 쓰는 이름을 쓴다. */
     private static final String AREA = "A5측정구역";

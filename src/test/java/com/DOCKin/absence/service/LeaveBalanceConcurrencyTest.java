@@ -1,6 +1,6 @@
 package com.DOCKin.absence.service;
 
-import com.DOCKin.global.testsupport.PostgresTestSupport;
+import com.DOCKin.global.testsupport.ContainerTestSupport;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -33,11 +33,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * <p>실제 서비스 코드가 아니라 동일한 읽기-검사-쓰기 순서를 JDBC로 재현한다.
  * 스프링 컨텍스트 없이 <b>DB 락 동작 자체</b>를 격리해서 보기 위함이다.
  *
- * <p>DB는 {@link com.DOCKin.global.testsupport.PostgresTestSupport}가 컨테이너로 준다.
+ * <p>DB는 {@link com.DOCKin.global.testsupport.ContainerTestSupport}가 컨테이너로 준다.
  * 건너뛰는 경로가 없으므로 조건부 skip 설명도 두지 않는다.
  * 실행: {@code ./gradlew test --tests "*LeaveBalanceConcurrencyTest"}
  */
-class LeaveBalanceConcurrencyTest extends PostgresTestSupport {
+class LeaveBalanceConcurrencyTest extends ContainerTestSupport {
     private static final String TABLE = "bench_leave_balance";
     private static final String USER_ID = "10001";
 

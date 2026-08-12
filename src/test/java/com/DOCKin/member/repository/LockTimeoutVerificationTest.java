@@ -1,6 +1,6 @@
 package com.DOCKin.member.repository;
 
-import com.DOCKin.global.testsupport.PostgresTestSupport;
+import com.DOCKin.global.testsupport.ContainerTestSupport;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * 같은 행을 잠그려 할 때까지 걸리는 시간을 잰다.
  *
  * <h3>이 테스트는 컨테이너의 서버 파라미터에 의존한다</h3>
- * {@link PostgresTestSupport}가 컨테이너에 {@code -c lock_timeout=5s}를 준다.
+ * {@link ContainerTestSupport}가 컨테이너에 {@code -c lock_timeout=5s}를 준다.
  * 그 인자가 빠지면 기본값 0(무한 대기)이 되어 <b>실패가 아니라 멈춘다</b> --
  * 락을 쥔 커넥션을 영원히 기다리므로 테스트가 끝나지 않는다.
  * 실제로 도입 과정에서 이 인자를 빠뜨려 그렇게 됐다.
@@ -48,7 +48,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
         "spring.datasource.driver-class-name=org.postgresql.Driver",
         "spring.jpa.hibernate.ddl-auto=update"
 })
-class LockTimeoutVerificationTest extends PostgresTestSupport {
+class LockTimeoutVerificationTest extends ContainerTestSupport {
 
     private static final String USER_ID = "lock-test-user";
 

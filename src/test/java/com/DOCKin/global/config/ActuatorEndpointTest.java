@@ -1,6 +1,6 @@
 package com.DOCKin.global.config;
 
-import com.DOCKin.global.testsupport.PostgresTestSupport;
+import com.DOCKin.global.testsupport.ContainerTestSupport;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,7 +40,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @DisplayName("Actuator - 열려야 할 만큼만 열려 있다")
-class ActuatorEndpointTest extends PostgresTestSupport {
+class ActuatorEndpointTest extends ContainerTestSupport {
 
     @Autowired
     private MockMvc mockMvc;

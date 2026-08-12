@@ -6,11 +6,12 @@ import java.sql.SQLException;
 
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
 /**
- * 테스트용 PostgreSQL 컨테이너를 <b>단 한 번</b> 띄우고 모두가 공유한다.
+ * 앱이 뜨는 데 필요한 인프라 컨테이너를 <b>단 한 번</b> 띄우고 모두가 공유한다.
  *
  * <h3>왜 필요한가 — CI가 아무것도 검증하지 않고 있었다</h3>
  * DB가 필요한 테스트 13개가 전부 {@code DB_PASSWORD} 부재로 스스로 skip했다.
@@ -43,14 +44,38 @@ import org.testcontainers.utility.DockerImageName;
  * 별도 프로파일이나 테스트용 {@code application.properties}를 두지 않은 것은,
  * <b>테스트 클래스패스의 같은 이름 파일이 운영 설정을 통째로 가려</b> 무엇이 적용됐는지
  * 알기 어려워지기 때문이다. 여기 모아두면 한 곳만 보면 된다.
+ *
+ * <h3>왜 Redis도 여기 있는가 — 이름이 {@code PostgresTestSupport}로 충분하던 때가 끝났다</h3>
+ * P2-11-5가 DB를 컨테이너로 옮긴 뒤, {@code @SpringBootTest} 두 개
+ * ({@code DocKinSpringApplicationTests}, {@code ActuatorEndpointTest})가 <b>전체 컨텍스트</b>를
+ * 요구하게 됐다. 그 컨텍스트에는 {@code RedissonConfig}가 있고 그것은 빈 생성 시점에
+ * {@code localhost:6379}로 <b>실제로 접속한다.</b> DB만 주고 Redis를 안 주면 컨텍스트가
+ * 뜨지 않는다 — CI가 2026-08-07부터 그 이유로 빨간불이었다(백로그 P2-16).
+ *
+ * <p>즉 이 클래스가 주는 것은 "테스트용 DB"가 아니라 <b>"앱이 뜨는 데 필요한 인프라"</b>다.
+ * 이름을 {@code ContainerTestSupport}로 바꾼 것은 그래서다.
  */
-public abstract class PostgresTestSupport {
+public abstract class ContainerTestSupport {
 
     /** 운영과 같은 이미지. 태그를 고정하는 것은 CI 결과가 재현 가능해야 하기 때문이다. */
     private static final DockerImageName IMAGE =
             DockerImageName.parse("pgvector/pgvector:pg17").asCompatibleSubstituteFor("postgres");
 
+    /** {@code compose.yaml}의 DOCKin-Redis와 같은 이미지. 여기서도 운영과 맞춘다. */
+    private static final DockerImageName REDIS_IMAGE = DockerImageName.parse("redis:7-alpine");
+
+    private static final int REDIS_PORT = 6379;
+
     protected static final PostgreSQLContainer<?> POSTGRES;
+
+    /**
+     * 분산락과 컨텍스트 기동에 필요하다. <b>설정을 주지 않는다</b> —
+     * {@code compose.yaml}의 Redis도 기본 설정으로 뜨고, 이 저장소가 Redis에 기대하는 것은
+     * 출근 분산락의 {@code SETNX} 수준이라 튜닝할 파라미터가 없다. DB 쪽에
+     * {@code lock_timeout} 등을 준 것과 대비되는데, 그건 그 값이 없으면 테스트가
+     * <b>실패가 아니라 멈추기</b> 때문이었다. 여기는 그런 것이 없다.
+     */
+    protected static final GenericContainer<?> REDIS;
 
     static {
         POSTGRES = new PostgreSQLContainer<>(IMAGE)
@@ -71,6 +96,9 @@ public abstract class PostgresTestSupport {
                 // 마이그레이션이 검증되지 않으므로 일부러 비워 둔다.
                 .withReuse(false);
         POSTGRES.start();
+
+        REDIS = new GenericContainer<>(REDIS_IMAGE).withExposedPorts(REDIS_PORT);
+        REDIS.start();
 
         // shared_preload_libraries는 라이브러리를 적재할 뿐이고, 뷰를 쓰려면 확장을 만들어야 한다.
         // 없으면 HibernateBatchInsertVerificationTest가 시퀀스 호출 횟수를 관측하지 못한 채
@@ -100,6 +128,12 @@ public abstract class PostgresTestSupport {
         registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
         registry.add("spring.datasource.username", POSTGRES::getUsername);
         registry.add("spring.datasource.password", POSTGRES::getPassword);
+
+        // application.properties의 ${REDIS_HOST:localhost} / ${REDIS_PORT:6379}를 덮어쓴다.
+        // 기본값이 localhost:6379라 이걸 안 주면 "안 뜬다"가 아니라 "런너의 6379에 붙으려 든다" --
+        // CI에 그런 것이 없으므로 Connection refused로 컨텍스트가 죽는다.
+        registry.add("spring.data.redis.host", REDIS::getHost);
+        registry.add("spring.data.redis.port", () -> REDIS.getMappedPort(REDIS_PORT));
 
         // 컨텍스트 로딩에만 필요한 값들. 실제로 쓰이지 않으므로 형식만 맞춘다.
         // 다만 jwt.secret은 두 가지를 동시에 만족해야 한다 --

@@ -1,6 +1,6 @@
 package com.DOCKin.rag.repository;
 
-import com.DOCKin.global.testsupport.PostgresTestSupport;
+import com.DOCKin.global.testsupport.ContainerTestSupport;
 import com.DOCKin.rag.model.DocumentChunk;
 import com.DOCKin.rag.model.SourceType;
 import com.DOCKin.rag.model.Visibility;
@@ -50,7 +50,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * <h3>관측에 {@code pg_stat_statements}가 필요하다</h3>
  * 시퀀스 호출 횟수는 추정이 아니라 DB가 센 값으로 확인한다. 확장이 없으면 아래 {@code countCalls}가
  * 0을 돌려주고, 그러면 이 테스트는 <b>아무것도 검증하지 않은 채 통과한다.</b>
- * 그래서 {@link com.DOCKin.global.testsupport.PostgresTestSupport}가 컨테이너에
+ * 그래서 {@link com.DOCKin.global.testsupport.ContainerTestSupport}가 컨테이너에
  * {@code shared_preload_libraries=pg_stat_statements}를 주고 확장 생성까지 실패로 처리한다.
  *
  * <h3>10,000건이지만 CI에서 돌린다</h3>
@@ -67,7 +67,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
         "spring.jpa.properties.hibernate.order_inserts=true",
         "spring.jpa.properties.hibernate.order_updates=true"
 })
-class HibernateBatchInsertVerificationTest extends PostgresTestSupport {
+class HibernateBatchInsertVerificationTest extends ContainerTestSupport {
 
     
     private static final int TOTAL = 10_000;

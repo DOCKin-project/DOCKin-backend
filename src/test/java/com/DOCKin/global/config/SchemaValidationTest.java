@@ -1,6 +1,6 @@
 package com.DOCKin.global.config;
 
-import com.DOCKin.global.testsupport.PostgresTestSupport;
+import com.DOCKin.global.testsupport.ContainerTestSupport;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
@@ -43,7 +43,7 @@ import org.springframework.test.context.TestPropertySource;
         "spring.flyway.baseline-on-migrate=true",
         "spring.flyway.baseline-version=0"
 })
-class SchemaValidationTest extends PostgresTestSupport {
+class SchemaValidationTest extends ContainerTestSupport {
 
     @Test
     @DisplayName("모든 엔티티 매핑이 실제 테이블과 일치한다")

@@ -1,6 +1,6 @@
 package com.DOCKin.rag.repository;
 
-import com.DOCKin.global.testsupport.PostgresTestSupport;
+import com.DOCKin.global.testsupport.ContainerTestSupport;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -45,7 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * 여기서는 프레임워크가 아니라 <b>마이그레이션 SQL 자체</b>를 검증한다.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class FlywayMigrationTest extends PostgresTestSupport {
+class FlywayMigrationTest extends ContainerTestSupport {
 
     private static final String ADMIN_DB = "postgres";
     private static final String SCRATCH_DB = "dockindb_flyway_verify";

@@ -1,6 +1,6 @@
 package com.DOCKin.rag.repository;
 
-import com.DOCKin.global.testsupport.PostgresTestSupport;
+import com.DOCKin.global.testsupport.ContainerTestSupport;
 import com.DOCKin.rag.model.DocumentChunk;
 import com.DOCKin.rag.model.SourceType;
 import com.DOCKin.rag.model.Visibility;
@@ -40,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
         "spring.datasource.driver-class-name=org.postgresql.Driver",
         "spring.jpa.hibernate.ddl-auto=update"
 })
-class VectorSearchQueryTest extends PostgresTestSupport {
+class VectorSearchQueryTest extends ContainerTestSupport {
 
     private static final String MODEL = "vector-search-test";
     private static final String OWNER = "user-a";

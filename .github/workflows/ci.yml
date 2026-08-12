@@ -63,14 +63,19 @@ jobs:
 
       - run: chmod +x gradlew
 
-      # DB는 Testcontainers가 띄운다(PostgresTestSupport). ubuntu-latest에는 Docker가
+      # DB와 Redis는 Testcontainers가 띄운다(ContainerTestSupport). ubuntu-latest에는 Docker가
       # 미리 설치돼 있어 별도 서비스 정의가 필요 없다.
       #
       # 이미지를 먼저 받아두는 것은 실패 원인을 분리하기 위해서다 -- 레지스트리 지연이나
       # 태그 오타로 테스트가 깨지면 원인이 테스트 안에 있는 것처럼 보인다.
       # 여기서 받아두면 그 경우 이 단계가 먼저 빨간불이 된다.
-      - name: 테스트용 PostgreSQL 이미지 준비
-        run: docker pull pgvector/pgvector:pg17
+      #
+      # Redis가 목록에 늘어난 이유: @SpringBootTest가 전체 컨텍스트를 요구하는데 RedissonConfig가
+      # 빈 생성 시점에 실제로 접속한다. 2026-08-07부터 CI가 이것 때문에 깨져 있었다(P2-16).
+      - name: 테스트용 컨테이너 이미지 준비
+        run: |
+          docker pull pgvector/pgvector:pg17
+          docker pull redis:7-alpine
 
       - name: 테스트
         run: ./gradlew test --no-daemon
