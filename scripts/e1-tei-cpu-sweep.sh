@@ -45,6 +45,7 @@ COMPOSE_FILES=${COMPOSE_FILES:-"-f compose.yaml -f compose.gc.yaml"}
 OUT_ROOT=${OUT_ROOT:-measure}
 RESTORE_CPUS=${RESTORE_CPUS:-2.0}                      # 끝나고 되돌릴 값(compose.yaml의 값)
 SHUTDOWN_WHEN_DONE=${SHUTDOWN_WHEN_DONE:-0}
+S3_RESULT_URI=${S3_RESULT_URI:-}                       # 예: s3://버킷/dockin-measure/ (비우면 로컬만)
 
 SVC_APP=dockin-app
 SVC_TEI=dockin-embedding
@@ -95,8 +96,14 @@ cgroup_dir() {
 }
 
 # "nr_periods nr_throttled". 상한이 없으면 nr_periods가 0이고, 그것도 정보다.
+#
+# cgroup 디렉터리를 못 찾은 경우(CG[]가 비어 있음) 0을 돌려주고, 그러면 비율이 n/a가 된다.
+# Docker Desktop이 그 경우다 -- 컨테이너가 별도 VM에서 돌아 호스트의 /sys/fs/cgroup에
+# 보이지 않는다. 즉 **연습 주행에서는 통제군을 못 본다.** 본 측정은 EC2(리눅스 네이티브)라
+# 정상적으로 읽히며, 그 차이를 ALLOW_NO_CGROUP이 명시적으로 갈라 준다.
 read_throttle() {
     local d="$1"
+    [[ -n "$d" && -r "$d/cpu.stat" ]] || { echo "0 0"; return; }
     awk '/^nr_periods/{p=$2} /^nr_throttled/{t=$2} END{printf "%d %d", p+0, t+0}' "$d/cpu.stat"
 }
 
@@ -114,6 +121,29 @@ read_applied_cpus() {
         echo "unknown"; return
     fi
     awk -v q="$q" -v p="$p" 'BEGIN{printf "%.2f", q/p}'
+}
+
+# 결과를 S3로 올린다. 실패하면 0이 아닌 값을 돌려주고, 호출자는 그때 인스턴스를 끄지 않는다.
+#
+# [왜 옵션인가] 측정 산출물을 어느 버킷에 둘지는 이 스크립트가 정할 문제가 아니다.
+# 앱이 쓰는 서비스 버킷(S3_BUCKET_NAME)에 섞으면 운영 데이터와 측정 부산물이 한곳에 쌓인다.
+#
+# [자격증명] 앱의 AWS_ACCESS_KEY를 재사용하지 말고 인스턴스 역할(IAM role)로 준다.
+# 밤새 도는 EC2에 장기 키를 올려두는 것과 역할을 붙이는 것은 위험이 다르다.
+upload_results() {
+    [[ -n "$S3_RESULT_URI" ]] || return 0
+    command -v aws >/dev/null || { say "!! aws CLI가 없어 업로드하지 못했다"; return 1; }
+
+    local dest="${S3_RESULT_URI%/}/e1-$RUN_ID/"
+    say "S3 업로드 → $dest"
+    aws s3 cp "$OUT" "$dest" --recursive --only-show-errors || {
+        say "!! S3 업로드 실패"; return 1; }
+
+    # 올렸다고 적지 않고 되읽어 확인한다. 이 저장소가 알림을 일부러 깨뜨려 확인한 것과 같은 자리다.
+    local n
+    n=$(aws s3 ls "$dest" --recursive | wc -l)
+    (( n > 0 )) || { say "!! 업로드 후 조회에서 0개 — 올라가지 않았다"; return 1; }
+    say "업로드 확인: $n개 객체"
 }
 
 set_tei_cpus() {
@@ -150,11 +180,19 @@ for s in "${ALL_SVCS[@]}"; do
     [[ -n "$(cid "$s")" ]] || die "서비스 '$s' 가 떠 있지 않다. 먼저 docker compose $COMPOSE_FILES up -d"
 done
 
+ALLOW_NO_CGROUP=${ALLOW_NO_CGROUP:-0}
 declare -A CID CG
 for s in "${ALL_SVCS[@]}"; do
     CID[$s]=$(cid "$s")
-    CG[$s]=$(cgroup_dir "${CID[$s]}") \
-        || die "'$s' 의 cgroup 디렉터리를 찾지 못했다. nr_throttled를 못 읽으면 통제군이 없어진다"
+    if ! CG[$s]=$(cgroup_dir "${CID[$s]}"); then
+        CG[$s]=""
+        # 통제군 ①(nr_throttled)이 없으면 "조건이 실제로 걸렸는가"를 데이터가 증명하지 못한다.
+        # 본 측정에서는 중단 사유이고, 연습 주행에서만 명시적으로 넘긴다.
+        [[ "$ALLOW_NO_CGROUP" == "1" ]] \
+            || die "'$s' 의 cgroup 디렉터리를 찾지 못했다. 통제군이 사라지므로 본 측정은 여기서 멈춘다.
+       흐름만 확인하려면 ALLOW_NO_CGROUP=1 로 다시 실행한다 (스로틀 열은 전부 n/a가 된다)."
+        say "!! '$s' cgroup 없음 — 스로틀 열이 n/a가 된다 (ALLOW_NO_CGROUP=1)"
+    fi
 done
 
 HOST_CPUS=$(nproc)
@@ -317,7 +355,16 @@ say "TEI 상한을 $RESTORE_CPUS 로 복원 (cgroup: $(read_applied_cpus "${CG[$
 
 say "완료. CSV=$CSV  환경=$OUT/env.md"
 
+UPLOAD_OK=1
+upload_results || UPLOAD_OK=0
+
 if [[ "$SHUTDOWN_WHEN_DONE" == "1" ]]; then
+    if [[ -n "$S3_RESULT_URI" && "$UPLOAD_OK" == "0" ]]; then
+        # 정지는 EBS를 지우지 않으므로 결과가 사라지지는 않는다. 그래도 끄지 않는 이유는
+        # "업로드했다고 믿고 인스턴스를 종료하는" 다음 수순이 위험하기 때문이다.
+        say "!! 업로드가 실패해 정지하지 않는다. 결과는 $OUT 에 있다"
+        exit 1
+    fi
     say "SHUTDOWN_WHEN_DONE=1 — 60초 뒤 인스턴스를 정지한다"
     sleep 60; sudo shutdown -h now
 fi
