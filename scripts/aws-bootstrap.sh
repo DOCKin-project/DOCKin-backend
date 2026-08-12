@@ -65,6 +65,13 @@ info "compose $(docker compose version --short)"
 say "저장소"
 if [[ -d "$REPO_DIR/.git" ]]; then
     git -C "$REPO_DIR" pull --ff-only && info "갱신: $(git -C "$REPO_DIR" log -1 --oneline)"
+elif [[ -f "$REPO_DIR/compose.yaml" ]]; then
+    # git archive | tar 로 올린 경우다. .git이 없으니 갱신할 것도 없다.
+    #
+    # 이 경로를 남기는 이유는 편의가 아니라 자격증명이다 -- 클론하려면 PAT를 인스턴스에
+    # 넘겨야 하고 그 토큰은 .git/config에 평문으로 남는다. 측정용 임시 머신에 장기 자격증명을
+    # 올리지 않는 편이 낫고, 그러면 이 경로가 기본이 된다.
+    info "이미 올라와 있다 (scp/tar) — 클론을 건너뛴다"
 else
     [[ -n "$REPO_URL" ]] || die "REPO_URL이 필요하다. 비공개 저장소라 토큰이 든 URL이나 배포 키를 준다.
        예: REPO_URL=https://<PAT>@github.com/DOCKin-project/DOCKin-backend.git"
