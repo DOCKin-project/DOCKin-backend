@@ -159,11 +159,18 @@ class WorkLogListBenchmarkTest {
 
                     dropBenchIndexes(conn);
                     analyze(conn);
+                    long warmedBefore = prewarm(conn);
                     Map<String, Double> before = measureAll(conn, cases);
 
                     createBenchIndexes(conn);
                     analyze(conn);
+                    long warmedAfter = prewarm(conn);
                     Map<String, Double> after = measureAll(conn, cases);
+
+                    // 두 숫자를 나란히 찍는다. "있음"이 인덱스만큼 더 큰 것이 정상이고,
+                    // 둘 중 하나가 0이면 캐시 조건을 맞추지 못한 채 잰 것이므로 표를 믿으면 안 된다.
+                    System.out.printf("prewarm(read): 없음 %,d블록 / 있음 %,d블록%n",
+                            warmedBefore, warmedAfter);
 
                     for (Case c : cases) {
                         double b = before.get(c.name());
@@ -468,6 +475,48 @@ class WorkLogListBenchmarkTest {
         try (Statement st = conn.createStatement()) {
             st.execute("ANALYZE work_logs");
             st.execute("ANALYZE work_log_images");
+        }
+    }
+
+    /**
+     * 측정 직전에 대상 블록을 캐시에 올린다. <b>"없음"과 "있음"이 같은 캐시 조건에서 재지도록</b> 하는 장치다.
+     *
+     * <p><b>왜 필요한가.</b> 2026-08-08 실행의 100만 건 "인덱스 있음" 열은 신뢰할 수 없었다.
+     * ③④⑤가 "있음"에서 오히려 느리게 나왔는데(0.6~0.7배), 인덱스가 조회를 느리게 만들 수는 없다.
+     * 두 열을 <b>연달아</b> 재는 구조라 먼저 돈 "없음"이 캐시를 데워 놓았고, 100만 건에서는
+     * 그 차이가 인덱스의 효과보다 커진 것이다. 10만 건에서 이 역전이 없는 것이 방증이다 —
+     * 작아서 양쪽 다 캐시에 들어간다.
+     *
+     * <p><b>{@code 'buffer'}가 아니라 {@code 'read'}다.</b> 이 DB의 {@code shared_buffers}는
+     * <b>128MB</b>인데 100만 행의 {@code work_logs}는 그보다 크다. {@code 'buffer'}로 올리면
+     * 뒤쪽 블록이 앞쪽을 밀어내며 들어가서, 끝난 뒤 남는 것은 <b>테이블의 꼬리뿐</b>이다 —
+     * 데운 것이 아니라 어느 부분이 남았는지 알 수 없는 상태가 된다. {@code 'read'}는 OS 페이지
+     * 캐시로 읽어 올리고 그쪽은 이 호스트에서 8.3GB라 전부 들어간다. 즉 여기서 맞추는 조건은
+     * "shared_buffers가 더운 상태"가 아니라 <b>"디스크를 다시 안 읽어도 되는 상태"</b>다.
+     *
+     * <p><b>WARMUP_RUNS로는 안 되는 이유.</b> 그것은 쿼리 하나가 <b>실제로 건드린</b> 블록만
+     * 데운다. ②의 COUNT처럼 테이블 전체를 읽는 것과 ①처럼 20행만 보는 것이 같은 상태에서
+     * 출발하게 하려면 <b>쿼리와 무관하게</b> 대상 전체를 올려야 한다.
+     *
+     * @return 올린 블록 수. 0이면 이 장치가 아무 일도 안 한 것이므로 로그로 남긴다.
+     */
+    private long prewarm(Connection conn) throws SQLException {
+        try (Statement st = conn.createStatement()) {
+            st.execute("CREATE EXTENSION IF NOT EXISTS pg_prewarm");
+        }
+        // 힙 둘과 거기 달린 인덱스 전부. 인덱스를 빠뜨리면 "있음" 쪽만 찬 상태로 재게 되어
+        // 고치려는 편향이 방향만 바뀐 채 그대로 남는다.
+        String sql = """
+                SELECT coalesce(sum(pg_prewarm(c.oid, 'read')), 0)
+                  FROM pg_class c
+                 WHERE c.oid IN ('work_logs'::regclass, 'work_log_images'::regclass)
+                    OR c.oid IN (SELECT indexrelid FROM pg_index
+                                  WHERE indrelid IN ('work_logs'::regclass,
+                                                     'work_log_images'::regclass))
+                """;
+        try (PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            return rs.next() ? rs.getLong(1) : 0;
         }
     }
 
