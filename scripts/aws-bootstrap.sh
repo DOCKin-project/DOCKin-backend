@@ -83,6 +83,11 @@ if [[ -f .env ]]; then
 else
     cat > .env <<EOF
 # 측정 전용. 진짜 서비스 값이 아니다 (scripts/aws-bootstrap.sh가 생성).
+#
+# DB_USERNAME은 빼먹으면 안 된다. compose.yaml이 POSTGRES_USER=\${DB_USERNAME}로
+# DB 슈퍼유저를 만드는데, 비어 있으면 postgres 이미지가 기본값 'postgres'로 만들고
+# 앱은 root로 접속하려다 실패한다. 측정 스크립트의 psql -U root도 같이 막힌다.
+DB_USERNAME=root
 DB_PASSWORD=$(openssl rand -hex 16)
 JWT_SECRET=$(openssl rand -hex 48)
 JWT_EXPIRATION=3600000
@@ -96,6 +101,21 @@ EOF
     chmod 600 .env
     info "생성했다 (DB_PASSWORD/JWT는 난수)"
 fi
+
+# compose가 요구하는 변수를 .env가 전부 갖고 있는지 검사한다.
+#
+# 처음 이 스크립트를 쓸 때 DB_USERNAME 하나를 빠뜨렸다. compose는 없는 변수를 빈 문자열로
+# 치환하고 경고만 내므로, DB가 postgres 유저로 만들어지고 앱이 root로 붙으려다 실패한다 --
+# 틀린 곳(.env의 결번)과 터지는 곳(앱 기동)이 멀다. 사람이 두 파일을 대조하는 대신
+# 기계가 대조하게 둔다.
+say ".env 대조"
+MISSING=""
+for v in $(grep -ohE '\$\{[A-Z_][A-Z0-9_]*' compose.yaml compose.gc.yaml | sed 's/\${//' | sort -u); do
+    grep -q "^${v}=" .env || MISSING="$MISSING $v"
+done
+[[ -z "$MISSING" ]] || die "compose가 쓰는데 .env에 없는 변수:$MISSING
+       빈 문자열로 치환되어 경고만 나고 나중에 엉뚱한 곳에서 터진다."
+info "compose가 요구하는 변수 전부 있음"
 
 # 밤 1의 전제. 이것이 없으면 번역본까지 색인되어 E4의 기준선이 오염된다.
 if grep -q '^RAG_INDEXING_TRANSLATIONS_ENABLED=' .env; then
