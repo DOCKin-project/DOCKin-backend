@@ -159,16 +159,28 @@ set_tei_cpus() {
     fi
 }
 
-wait_healthy() {
+# healthy가 아니라 running을 기다린다.
+#
+# 실측에서 뒤집혔다 -- 색인 중인 앱은 unhealthy로 보고된다. /actuator/health가 db·redis·
+# diskSpace를 다 확인하는데, 앱 컨테이너 상한이 1.0 cpus인 상태에서 청킹과 임베딩 호출이
+# 그것을 채우면 헬스체크(timeout 5s)가 시간 안에 안 돌아온다. 앱은 멀쩡히 색인하고 있는데
+# 컨테이너는 unhealthy다.
+#
+# healthy를 기다리면 조건마다 HEALTH_WAIT_MAX만큼 서 있다가 죽는다. 그리고 이 스크립트가
+# 실제로 기다려야 하는 것은 "건강한가"가 아니라 "청크가 늘기 시작했는가"이고, 그 판정은
+# 아래 임베딩 대기 구간이 이미 하고 있다. 여기서는 프로세스가 살아 있는지만 본다.
+wait_running() {
     local svc="$1" id waited=0 st
     id=$(cid "$svc")
     [[ -n "$id" ]] || die "$svc 컨테이너를 찾지 못했다"
     while (( waited < HEALTH_WAIT_MAX )); do
-        st=$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$id")
-        [[ "$st" == "healthy" || "$st" == "none" ]] && return 0
-        sleep 5; waited=$((waited+5))
+        st=$(docker inspect -f '{{.State.Status}}' "$id" 2>/dev/null || echo missing)
+        [[ "$st" == "running" ]] && return 0
+        [[ "$st" == "exited" || "$st" == "dead" ]] \
+            && die "$svc 가 $st 상태다. docker compose $COMPOSE_FILES logs --tail=50 $svc"
+        sleep 3; waited=$((waited+3))
     done
-    die "$svc 가 ${HEALTH_WAIT_MAX}초 안에 healthy가 되지 않았다"
+    die "$svc 가 ${HEALTH_WAIT_MAX}초 안에 running이 되지 않았다"
 }
 
 # ─────────────────────────────────────────────────────────── 사전 점검
@@ -267,7 +279,7 @@ for C in $CONDITIONS; do
 
     # 4) 앱을 올린다 = 색인 시작(seed 프로파일의 SeedIndexingRunner).
     dc start "$SVC_APP" >/dev/null
-    wait_healthy "$SVC_APP"
+    wait_running "$SVC_APP"
 
     # 5) 건너뛰기 구간을 기다린다.
     #    indexAll은 lastId=0부터 훑으며 해시가 같은 문서를 건너뛴다. 그 구간에는
