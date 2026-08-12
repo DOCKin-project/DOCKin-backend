@@ -136,6 +136,10 @@ fi
 # bootJar를 먼저 돌리지 않으면 Dockerfile이 옛 jar를 COPY한다. P2-15-9가 겪은
 # "이미지가 옛것이면 Flyway는 정상 동작하면서 옛 상태를 유지한다"가 그 자리다.
 say "빌드"
+# 래퍼에 실행권한이 없을 수 있다. 저장소 인덱스의 모드가 100644이면 리눅스 체크아웃에서도
+# 그대로 없고, 그러면 여기서 Permission denied로 죽는다. 모드는 저장소에서 고쳤지만
+# 전달 경로가 tar/zip이면 다시 잃을 수 있어 여기서도 세운다.
+[[ -x ./gradlew ]] || chmod +x ./gradlew
 ./gradlew bootJar -q --console=plain
 info "jar: $(ls -lh build/libs/*.jar | awk '{print $9, $5}')"
 docker compose $COMPOSE_FILES build dockin-app
