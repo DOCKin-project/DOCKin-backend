@@ -1,0 +1,22 @@
+# 빌드 컨텍스트에서 뺄 것 — 현행(싱글스테이지) Dockerfile용
+#
+# 컨텍스트는 docker build를 부를 때마다 통째로 데몬에 전송된다.
+# 없을 때 292MB였고, 그중 Dockerfile이 실제로 쓰는 것은 build/libs의 jar 하나뿐이다.
+
+.git
+.gradle
+
+# 루트에 굴러다니는 84MB 산출물. Dockerfile은 build/libs에서 COPY하므로 쓰이지 않는다.
+app.jar
+
+# JVM 크래시 덤프
+hs_err_pid*.log
+
+# build 아래에서 필요한 것은 libs뿐이다(나머지 합쳐 3MB지만 파일 수가 많다).
+build
+!build/libs
+
+.idea
+*.iml
+.env
+.env.example

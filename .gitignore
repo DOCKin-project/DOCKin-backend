@@ -2,6 +2,12 @@
 HELP.md
 .gradle
 build/
+
+# 빌드 산출물이 저장소 루트에 커밋된 적이 있다 -- app.jar 84MB(a22eacb).
+# build/만 막고 있어서 루트에 떨어진 jar는 걸러지지 않았다. 그 파일이 .git 전체 86MB의
+# 대부분이었고, 도커 빌드 컨텍스트에도 매번 실려 갔다(P2-15-9).
+# 아래 예외보다 먼저 두어야 래퍼 jar가 다시 살아난다 -- gitignore는 마지막 규칙이 이긴다.
+*.jar
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
