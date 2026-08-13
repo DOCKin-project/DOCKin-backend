@@ -126,6 +126,65 @@ read_applied_cpus() {
     awk -v q="$q" -v p="$p" 'BEGIN{printf "%.2f", q/p}'
 }
 
+# ── 호스트 CPU 지문 ────────────────────────────────────────────────────────────
+# 고정 워크로드를 단일 스레드로 돌린 시간(ms). 절대값에는 의미가 없고 **밤 사이 비교용**이다.
+#
+# [왜 필요한가] 밤 1과 밤 2가 같은 2.0 상한에서 13.3 vs 16.0 원본/s로 20% 갈렸는데,
+# 사후에 원인을 못 짚었다. TEI 설정(4회 부팅 전부 동일), 코퍼스 본문 길이(251~263자로 균일),
+# 앱 핫패스 코드(무변경), cron(시각상 무관)까지 다 소거하고 나서도 남는 후보가 호스트인데,
+# **env.md에 인스턴스 타입만 있고 실효 성능이 없어 확인할 방법이 없었다.**
+# 지문이 밤마다 같으면 호스트는 용의선상에서 빠지고, 다르면 그 자체가 답이다.
+#
+# awk를 쓰는 이유 -- 이 스크립트가 이미 의존하는 도구라 새 설치가 없다. 대신 구현체가 바뀌면
+# 값이 통째로 달라지므로 awk 버전도 함께 적는다. 비교는 같은 버전끼리만 유효하다.
+cpu_fingerprint() {
+    local t0 t1
+    t0=$(date +%s%N)
+    awk 'BEGIN{x=0; for(i=0;i<20000000;i++) x+=i; if(x<0) print x}' >/dev/null 2>&1
+    t1=$(date +%s%N)
+    echo $(( (t1 - t0) / 1000000 ))
+}
+
+# ── TEI 내부 지연 ──────────────────────────────────────────────────────────────
+# TEI가 스스로 노출하는 큐/추론/토큰화 시간과 실제 추론 배치 크기를 가져온다.
+#
+# [왜 필요한가] cgroup 스로틀은 "TEI가 상한에 막혔는가"만 답한다. 막히지 않았는데도 처리량이
+# 안 오르는 구간(밤 1의 2.0~6.0)에서 **무엇이 직렬인지**는 답하지 못한다. 이 메트릭은 그것을
+# 직접 가른다 -- 2026-08-13 밤 2 중간에 한 번 긁어보니 큐 60.8% / 추론 39.0% / 토큰화 0.2%였고,
+# 추론 배치 실측 평균이 백엔드 상한 8에 한참 못 미치는 3.58이었다.
+# 조건마다 창 앞뒤로 떠야 조건별로 읽을 수 있다.
+#
+# 포트 -- 기동 인자의 prometheus_port(9000)는 붙지 않았고(연결 거부), 메트릭은 주 포트의
+# /metrics로 나온다. 호스트에 공개된 8081을 먼저 보고, 없으면 컨테이너 IP로 간다.
+tei_metrics() {
+    local ip
+    curl -sf --max-time 5 "http://127.0.0.1:8081/metrics" 2>/dev/null && return 0
+    ip=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' \
+         "${CID[$SVC_TEI]}" 2>/dev/null | awk '{print $1}')
+    [[ -n "$ip" ]] && curl -sf --max-time 5 "http://$ip:80/metrics" 2>/dev/null && return 0
+    return 1
+}
+
+# 스냅샷 문자열에서 카운터 하나를 뽑는다. 없으면 빈 문자열.
+tei_val() { awk -v k="$2" '$1==k{print $2; exit}' <<< "$1"; }
+
+# 두 스냅샷의 차분으로 창 구간의 비율을 낸다.
+# 출력: "큐% 추론% 토큰화% 평균배치"  — 못 재면 전부 n/a.
+tei_split() {
+    local a="$1" b="$2" dtot dq di dk dbs dbc
+    [[ -n "$a" && -n "$b" ]] || { echo "n/a n/a n/a n/a"; return; }
+    dtot=$(awk -v x="$(tei_val "$b" te_embed_duration_sum)" -v y="$(tei_val "$a" te_embed_duration_sum)" 'BEGIN{printf "%.6f", x-y}')
+    dq=$(awk -v x="$(tei_val "$b" te_embed_queue_duration_sum)" -v y="$(tei_val "$a" te_embed_queue_duration_sum)" 'BEGIN{printf "%.6f", x-y}')
+    di=$(awk -v x="$(tei_val "$b" te_embed_inference_duration_sum)" -v y="$(tei_val "$a" te_embed_inference_duration_sum)" 'BEGIN{printf "%.6f", x-y}')
+    dk=$(awk -v x="$(tei_val "$b" te_embed_tokenization_duration_sum)" -v y="$(tei_val "$a" te_embed_tokenization_duration_sum)" 'BEGIN{printf "%.6f", x-y}')
+    dbs=$(awk -v x="$(tei_val "$b" te_batch_next_size_sum)" -v y="$(tei_val "$a" te_batch_next_size_sum)" 'BEGIN{printf "%.0f", x-y}')
+    dbc=$(awk -v x="$(tei_val "$b" te_batch_next_size_count)" -v y="$(tei_val "$a" te_batch_next_size_count)" 'BEGIN{printf "%.0f", x-y}')
+    awk -v t="$dtot" -v q="$dq" -v i="$di" -v k="$dk" -v bs="$dbs" -v bc="$dbc" 'BEGIN{
+        if (t <= 0) { printf "n/a n/a n/a " } else { printf "%.1f %.1f %.1f ", 100*q/t, 100*i/t, 100*k/t }
+        if (bc <= 0) printf "n/a\n"; else printf "%.2f\n", bs/bc
+    }'
+}
+
 # 결과를 S3로 올린다. 실패하면 0이 아닌 값을 돌려주고, 호출자는 그때 인스턴스를 끄지 않는다.
 #
 # [왜 옵션인가] 측정 산출물을 어느 버킷에 둘지는 이 스크립트가 정할 문제가 아니다.
@@ -256,10 +315,15 @@ say "→ 포화 경계: TEI $(awk -v h="$HOST_CPUS" -v o="$OTHERS" 'BEGIN{printf
     echo "| 창 길이 | ${WINDOW_SEC}s (워밍업 ${WARMUP_CHUNKS}청크 이후) |"
     echo "| 조건 | $CONDITIONS |"
     echo "| 시작 시점 코퍼스 | $(psql_q 'SELECT count(*) FROM document_chunks;') 청크 |"
+    # 아래 두 줄이 밤과 밤을 잇는다. 없으면 "이 밤이 저 밤보다 느렸다"를 설명할 수단이 없다.
+    echo "| CPU 모델 | $(awk -F': ' '/^model name/{print $2; exit}' /proc/cpuinfo) |"
+    echo "| **CPU 지문** | **$(cpu_fingerprint) ms** (단일 스레드 고정 루프 / $(awk --version 2>/dev/null | head -1 | grep . || echo '알 수 없는 awk')) |"
 } > "$OUT/env.md"
 say "환경 기록 → $OUT/env.md"
 
-echo "seq,cpus_requested,cpus_applied,oversubscribed,window_s,chunks,sources,ms_per_chunk,ms_per_source,tei_throttle_pct,app_throttle_pct,db_throttle_pct,redis_throttle_pct,nginx_throttle_pct,corpus_at_start,note" > "$CSV"
+# 새 열은 반드시 note **뒤에** 붙인다. night1-run.sh의 승자 선택 awk가 원본당 ms를 $9로,
+# note를 $16으로 집는다 -- 중간에 끼우면 그 판정이 조용히 엉뚱한 열을 읽는다.
+echo "seq,cpus_requested,cpus_applied,oversubscribed,window_s,chunks,sources,ms_per_chunk,ms_per_source,tei_throttle_pct,app_throttle_pct,db_throttle_pct,redis_throttle_pct,nginx_throttle_pct,corpus_at_start,note,tei_queue_pct,tei_infer_pct,tei_token_pct,tei_batch_avg" > "$CSV"
 
 # ─────────────────────────────────────────────────────────── 스윕
 SEQ=0
@@ -302,7 +366,7 @@ for C in $CONDITIONS; do
         (( NOW >= WARMUP_CHUNKS )) && break
         (( waited >= EMBED_WAIT_MAX )) && {
             say "  !! ${EMBED_WAIT_MAX}초 안에 임베딩이 시작되지 않았다 — 이 조건은 버린다"
-            printf '%s,%s,%s,%s,0,0,0,,,,,,,,%s,embedding-never-started\n' \
+            printf '%s,%s,%s,%s,0,0,0,,,,,,,,%s,embedding-never-started,,,,\n' \
                 "$SEQ" "$C" "$APPLIED" "$OVER" "$CORPUS_AT_START" >> "$CSV"
             break
         }
@@ -318,12 +382,17 @@ for C in $CONDITIONS; do
         TP0[$s]="$_p"; TT0[$s]="$_t"
     done
     read -r C0 S0 <<< "$(psql_q "SELECT count(*), count(DISTINCT (source_type, source_id)) FROM document_chunks WHERE created_at > '$T0';" | tr '|' ' ')"
+    # TEI 내부 카운터도 여기서 뜬다. 못 떠도 측정은 계속한다 -- 있으면 좋은 것이지
+    # 통제군처럼 없으면 결론이 안 서는 종류가 아니다.
+    MET0=$(tei_metrics || true)
+    [[ -n "$MET0" ]] || say "  !! TEI /metrics를 못 읽었다 — 내부 지연 열이 n/a가 된다"
     W_START=$(date +%s)
 
     sleep "$WINDOW_SEC"
 
     # 7) 창 닫기
     W_END=$(date +%s)
+    MET1=$(tei_metrics || true)
     read -r C1 S1 <<< "$(psql_q "SELECT count(*), count(DISTINCT (source_type, source_id)) FROM document_chunks WHERE created_at > '$T0';" | tr '|' ' ')"
     declare -A TP1 TT1
     for s in "${ALL_SVCS[@]}"; do
@@ -348,15 +417,21 @@ for C in $CONDITIONS; do
         MSS=$(awk -v e="$ELAPSED" -v n="$DS" 'BEGIN{printf "%.1f", 1000*e/n}')
     else MSS=""; fi
 
+    read -r TQ TI TK TB <<< "$(tei_split "$MET0" "$MET1")"
+
     say "  창 ${ELAPSED}s — 청크 +$DC / 원본 +$DS → 청크당 ${MSC:-?}ms / 원본당 ${MSS:-?}ms"
     say "  스로틀: TEI $(thr_pct "$SVC_TEI")% / app $(thr_pct "$SVC_APP")% / db $(thr_pct "$SVC_DB")%"
+    say "  TEI 내부: 큐 ${TQ}% / 추론 ${TI}% / 토큰화 ${TK}% / 추론배치 평균 ${TB}"
 
-    echo "$SEQ,$C,$APPLIED,$OVER,$ELAPSED,$DC,$DS,$MSC,$MSS,$(thr_pct "$SVC_TEI"),$(thr_pct "$SVC_APP"),$(thr_pct "$SVC_DB"),$(thr_pct "$SVC_REDIS"),$(thr_pct "$SVC_NGINX"),$CORPUS_AT_START," >> "$CSV"
+    echo "$SEQ,$C,$APPLIED,$OVER,$ELAPSED,$DC,$DS,$MSC,$MSS,$(thr_pct "$SVC_TEI"),$(thr_pct "$SVC_APP"),$(thr_pct "$SVC_DB"),$(thr_pct "$SVC_REDIS"),$(thr_pct "$SVC_NGINX"),$CORPUS_AT_START,,$TQ,$TI,$TK,$TB" >> "$CSV"
 
     for s in "${ALL_SVCS[@]}"; do
         printf 'periods %s -> %s\nthrottled %s -> %s\n' \
             "${TP0[$s]}" "${TP1[$s]}" "${TT0[$s]}" "${TT1[$s]}" > "$OUT/raw/seq${SEQ}-${s}.txt"
     done
+    # 원본 스냅샷도 남긴다. 위 네 열은 요약이고, 나중에 다른 것을 묻고 싶어지면 여기서 답한다.
+    [[ -n "$MET0" ]] && printf '%s\n' "$MET0" > "$OUT/raw/seq${SEQ}-tei-metrics-open.txt"
+    [[ -n "$MET1" ]] && printf '%s\n' "$MET1" > "$OUT/raw/seq${SEQ}-tei-metrics-close.txt"
 
     # 8) 되돌리기 — 이번 조건이 만든 슬라이스만 지우고 P로 복귀
     dc stop "$SVC_APP" >/dev/null 2>&1 || true
