@@ -48,8 +48,15 @@ public class SeedIndexingRunner implements ApplicationRunner {
     public void run(ApplicationArguments args) {
         log.info("[RAG] seed 프로파일 - 기동 직후 색인을 시작합니다. (rag.indexing.on-startup=true)");
         try {
-            int embedded = indexingService.indexAll();
-            log.info("[RAG] 기동 직후 색인 완료 - 신규 임베딩 {}건", embedded);
+            // 예외 없이 돌아왔다고 완주한 것이 아니다. indexAll()은 안에서 예외를 잡고
+            // 커밋된 분량을 살린 뒤 정상 반환하므로, 완주 여부는 반환값에 물어야 한다.
+            IndexingService.IndexRun run = indexingService.indexAll();
+            if (run.completed()) {
+                log.info("[RAG] 기동 직후 색인 완주 - 신규 임베딩 {}건", run.embedded());
+            } else {
+                log.error("[RAG] 기동 직후 색인 중단 - 신규 임베딩 {}건까지 반영됨: {}",
+                        run.embedded(), run.abortReason());
+            }
         } catch (Exception e) {
             // 색인 실패로 앱이 뜨지 않으면 안 된다. 임베딩 서버가 없는 것은 로컬에서 흔한 상황이고,
             // RAG 외의 기능을 보려는 사람까지 막을 이유가 없다.

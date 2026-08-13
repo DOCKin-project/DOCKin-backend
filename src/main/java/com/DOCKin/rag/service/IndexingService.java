@@ -99,9 +99,16 @@ public class IndexingService {
     /**
      * 전체 코퍼스를 색인한다. 수동 실행과 테스트에서도 호출할 수 있도록 public으로 둔다.
      *
-     * @return 이번 실행에서 새로 임베딩한 청크 수 (변경이 없어 건너뛴 것은 제외)
+     * <p><b>완주와 중단은 다른 줄로 찍는다.</b> 예전에는 예외를 잡은 뒤에도 "인덱싱 종료"를
+     * 그대로 찍었다 -- 성공한 실행과 죽은 실행이 <b>같은 문자열</b>로 끝났다는 뜻이다.
+     * 2026-08-13 밤 1 무인 측정이 여기서 무너졌다. 03:00 정각 cron이 기동 직후 색인과 겹쳐
+     * {@code uk_chunk_source} 유니크 충돌로 죽은 실행이 "종료"를 찍었고, 그 줄 하나를 완주로
+     * 읽은 스크립트가 60초 뒤 인스턴스를 껐다. 그때 다른 스레드는 아직 색인 중이었고
+     * 코퍼스는 165,016원본 중 21,800원본에서 멈췄다.
+     *
+     * @return 이번 실행의 결과. 완주 여부와 중단 사유를 함께 담는다({@link IndexRun})
      */
-    public int indexAll() {
+    public IndexRun indexAll() {
         long start = System.currentTimeMillis();
 
         // 누산기를 필드가 아닌 지역 객체로 두되 하위 메서드에 넘긴다.
@@ -112,6 +119,7 @@ public class IndexingService {
         // "신규 임베딩 0건까지 반영됨"이 찍혔다. 재시작 지점을 알려주려고 만든 로그인데
         // 그 숫자가 틀리면 "얼마나 진행됐나"를 DB에 직접 물어봐야 한다.
         Progress progress = new Progress();
+        String abortReason = null;
 
         try {
             indexWorkLogs(progress);
@@ -125,14 +133,26 @@ public class IndexingService {
             indexSafetyCourses(progress);
         } catch (Exception e) {
             // 이미 커밋된 페이지는 살아남고, 다음 주기에 남은 분부터 이어서 진행된다(해시 기반 멱등).
-            log.error("[RAG] 인덱싱 중단 - 신규 임베딩 {}건까지 반영됨: {}", progress.embedded, e.getMessage(), e);
+            //
+            // 메시지가 없는 예외(NPE 등)는 getMessage()가 null이라 사유 자리가 "null"이 된다.
+            // 사유는 로그로만 쓰는 것이 아니라 무인 실행의 STATUS에 그대로 옮겨지므로,
+            // 최소한 예외 이름은 남게 한다.
+            abortReason = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
+            log.error("[RAG] 인덱싱 중단 - 신규 임베딩 {}건까지 반영됨: {}", progress.embedded, abortReason, e);
         }
-        int embedded = progress.embedded;
 
         long total = documentChunkRepository.countByEmbeddingModel(embeddingClient.getModelName());
-        log.info("[RAG] 인덱싱 종료 - 신규 임베딩 {}건 / 전체 청크 {}건 / {}ms",
-                embedded, total, System.currentTimeMillis() - start);
-        return embedded;
+        IndexRun run = new IndexRun(progress.embedded, total,
+                System.currentTimeMillis() - start, abortReason);
+
+        if (run.completed()) {
+            log.info("[RAG] 인덱싱 완주 - 신규 임베딩 {}건 / 전체 청크 {}건 / {}ms",
+                    run.embedded(), run.totalChunks(), run.elapsedMs());
+        } else {
+            log.error("[RAG] 인덱싱 중단 종료 - 신규 임베딩 {}건 / 전체 청크 {}건 / {}ms / 사유: {}",
+                    run.embedded(), run.totalChunks(), run.elapsedMs(), run.abortReason());
+        }
+        return run;
     }
 
     /** 작업일지는 작성자와 ADMIN만 조회 가능하므로 {@link Visibility#OWNER}로 색인한다. */
@@ -247,5 +267,26 @@ public class IndexingService {
      */
     private static final class Progress {
         private int embedded = 0;
+    }
+
+    /**
+     * 색인 한 번의 결과.
+     *
+     * <p>완주 여부를 <b>반환값으로</b> 가른다. 이전에는 신규 임베딩 수(int)만 돌려줬고,
+     * 호출자는 그 숫자로 완주를 판정할 수 없었다 -- 중단돼도 그때까지의 건수가 그대로 나오기
+     * 때문이다. 그래서 {@code SeedIndexingRunner}는 유니크 충돌로 죽은 실행에도
+     * "기동 직후 색인 완료"를 찍었다. 로그 문자열을 고치는 것만으로는 이 거짓말이 남는다.
+     *
+     * @param embedded    이번 실행에서 새로 임베딩한 청크 수 (변경이 없어 건너뛴 것은 제외)
+     * @param totalChunks 실행이 끝난 시점의 전체 청크 수
+     * @param elapsedMs   걸린 시간
+     * @param abortReason 중단 사유. 완주했으면 null이다
+     */
+    public record IndexRun(int embedded, long totalChunks, long elapsedMs, String abortReason) {
+
+        /** 코퍼스를 끝까지 훑었는가. 예외로 끊겼으면 false다. */
+        public boolean completed() {
+            return abortReason == null;
+        }
     }
 }
