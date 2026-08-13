@@ -18,6 +18,14 @@ services:
       - SPRING_PROFILES_ACTIVE=secret,seed
       # application-seed.properties의 기본값 false를 덮는다(환경변수가 우선한다).
       - RAG_INDEXING_ON_STARTUP=true
+      # 측정 중에는 cron 배치(rag.indexing.cron, 매일 03:00)를 끈다.
+      #
+      # 색인은 기동 러너가 시작하므로 배치는 필요가 없고, 겹치면 색인기 둘이 같은 행을 집어
+      # uk_chunk_source 유니크 충돌로 죽는다. 2026-08-13 밤 1이 그렇게 끝났다 -- 앱이
+      # 02:59:57에 뜨고 3초 뒤 정각 배치가 들어왔다. 상호배제가 없는 것은 앱의 결함이고
+      # 따로 고쳐야 하지만, 고친 뒤에도 측정 중에 배치가 끼어드는 것 자체가 오염이다.
+      # 스윕은 조건마다 앱을 내렸다 올리므로 새벽 어느 시각에든 이 창이 열릴 수 있다.
+      - RAG_INDEXING_ENABLED=false
       # gc+heap=debug를 넣은 이유 -- 힙이 400M에서 좁은지 넓은지 보려면 pause 시간만으로는
       # 부족하고 세대별 점유 추이가 필요하다. 400M이라는 값에 근거가 없다는 것이 이 측정의 출발점이다.
       # 파일로 빼는 이유 -- stdout으로 내면 색인 진행 로그와 섞여 둘 다 읽기 어려워진다.
