@@ -202,10 +202,20 @@ for s in "${ALL_SVCS[@]}"; do
     CID[$s]=$(cid "$s")
     if ! CG[$s]=$(cgroup_dir "${CID[$s]}"); then
         CG[$s]=""
+        # 못 찾는 이유가 둘인데 처방이 정반대라 여기서 가른다.
+        #
+        # **정지한 컨테이너에는 cgroup 디렉터리가 아예 없다.** 위의 존재 검사는 `docker ps -a`를
+        # 보므로 멈춘 것도 통과시킨다. 이때 아래 Docker Desktop 안내를 그대로 읽으면
+        # ALLOW_NO_CGROUP=1로 넘기게 되는데, 그것은 멀쩡히 잴 수 있는 통제군을 버리는 짓이다.
+        # 처방은 `up -d` 한 줄이다. 2026-08-13 밤 2가 nginx·redis가 멈춘 채로 두 번 죽었다.
+        if [[ "$(docker inspect -f '{{.State.Running}}' "${CID[$s]}" 2>/dev/null)" != "true" ]]; then
+            die "'$s' 컨테이너가 정지 상태다 — 멈춘 컨테이너에는 cgroup이 없어 통제군을 못 읽는다.
+       ALLOW_NO_CGROUP이 아니라 기동이 답이다: docker compose $COMPOSE_FILES up -d $s"
+        fi
         # 통제군 ①(nr_throttled)이 없으면 "조건이 실제로 걸렸는가"를 데이터가 증명하지 못한다.
         # 본 측정에서는 중단 사유이고, 연습 주행에서만 명시적으로 넘긴다.
         [[ "$ALLOW_NO_CGROUP" == "1" ]] \
-            || die "'$s' 의 cgroup 디렉터리를 찾지 못했다. 통제군이 사라지므로 본 측정은 여기서 멈춘다.
+            || die "'$s' 의 cgroup 디렉터리를 찾지 못했다(컨테이너는 실행 중이다). 통제군이 사라지므로 본 측정은 여기서 멈춘다.
        흐름만 확인하려면 ALLOW_NO_CGROUP=1 로 다시 실행한다 (스로틀 열은 전부 n/a가 된다)."
         say "!! '$s' cgroup 없음 — 스로틀 열이 n/a가 된다 (ALLOW_NO_CGROUP=1)"
     fi
