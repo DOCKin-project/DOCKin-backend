@@ -31,6 +31,8 @@ COMPOSE_FILES=${COMPOSE_FILES:-"-f compose.yaml -f compose.gc.yaml"}
 SVC_APP=dockin-app
 SVC_DB=DOCKin-DB
 SVC_TEI=dockin-embedding
+SVC_REDIS=dockin-redis
+SVC_NGINX=dockin-nginx
 DB_USER=${DB_USER:-root}
 DB_NAME=${DB_NAME:-dockindb}
 
@@ -82,9 +84,33 @@ trap finish EXIT
 
 # ── 1. 출발선 ---------------------------------------------------------------
 say "밤 1 시작 — run=$RUN_ID"
+
+# 앱을 뺀 스택을 여기서 올린다. E1 스윕이 nginx·redis를 포함한 다섯 컨테이너의 cgroup을
+# 통제군으로 읽는데 **정지한 컨테이너에는 cgroup 디렉터리가 없다.** 인스턴스를 껐다 켜면
+# nginx와 redis가 안 올라와 있는 것이 기본값이라, 그대로 걸면 1구간 색인 50분을 다 태우고
+# P에 닿은 뒤에야 스윕이 15초 만에 죽는다. 2026-08-13에 두 번 그렇게 끝났다.
+#
+# **nginx는 여기 낄 수 없다. 앞뒤가 다 막혀 있어서 3절로 간다** (2026-08-13에 양쪽을 다 봤다):
+#   - 조건 없이 올리면 `depends_on: dockin-app: service_healthy`가 앱을 끌고 올라온다.
+#     그러면 샘플러(2절)보다 색인이 먼저 시작해 **E8의 왼쪽 끝이 사라진다.**
+#   - --no-deps로 앱 없이 올리면 conf의 `upstream dockin-app`을 기동 시점에 해석하지 못해
+#     `[emerg] host not found in upstream` 으로 exit 1 한다.
+# 앱이 뜬 뒤에 --no-deps로 올리는 것만 남는다. 그 자리가 3절이다.
+say "앱과 nginx를 뺀 스택을 올린다"
+dc up -d --no-deps "$SVC_DB" "$SVC_TEI" "$SVC_REDIS" >/dev/null 2>&1 \
+    || { FAILED="DB·TEI·redis 기동에 실패했다"; exit 1; }
+for _ in $(seq 1 60); do psql_q "SELECT 1;" >/dev/null 2>&1 && break; sleep 2; done
+psql_q "SELECT 1;" >/dev/null 2>&1 || { FAILED="DB가 120초 안에 안 떴다"; exit 1; }
+
 WL=$(psql_q "SELECT count(*) FROM work_logs;")
 (( WL > 1000 )) || { FAILED="work_logs가 $WL 행뿐이다. 코퍼스를 먼저 만든다"; exit 1; }
 say "work_logs $WL 행"
+
+# 비우기 전에 앱을 내린다. 앱이 색인 중이면 그 트랜잭션이 document_chunks에 락을 쥐고 있어
+# TRUNCATE가 `canceling statement due to lock timeout`으로 죽는다. 앱이 이미 내려가 있다고
+# 가정하고 순서를 뒤에 두었다가 2026-08-13에 걸렸다 -- 앞선 시도나 예행이 앱을 띄워둔 채로
+# 끝나는 일이 실제로 있다.
+dc stop "$SVC_APP" >/dev/null 2>&1 || true
 
 # E8이 보려는 것은 빈 코퍼스 쪽 끝이다. 연습 주행이나 앞선 시도가 남긴 청크가 있으면
 # 곡선의 왼쪽이 이미 없는 상태로 시작하게 된다.
@@ -97,7 +123,6 @@ fi
 (( $(chunks) == 0 )) || { FAILED="청크를 0으로 만들지 못했다"; exit 1; }
 say "청크 0 — 출발선 확인"
 
-dc stop "$SVC_APP" >/dev/null 2>&1 || true
 docker update --cpus="$SEG1_CPUS" "$(dc ps -qa "$SVC_TEI" | head -1)" >/dev/null
 say "TEI 상한 $SEG1_CPUS 고정 (E8 1구간)"
 
@@ -113,6 +138,14 @@ say "샘플러 시작 (pid $SAMPLER_PID)"
 SINCE1=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 dc start "$SVC_APP" >/dev/null
 say "색인 시작 — 위치 P($P_CHUNKS 청크)까지 기다린다"
+
+# nginx를 여기서 올린다. 이유는 1절 주석에 있다 -- 앱보다 먼저 올리면 뜨지 못하고,
+# 의존 조건을 걸어 올리면 앱을 끌고 와 색인이 샘플러보다 앞선다. 필요한 이유는 통제군이다:
+# E1 스윕이 이 컨테이너의 cgroup을 읽고, 없으면 P에 닿은 뒤 15초 만에 밤이 끝난다.
+# 앱이 healthy가 되기를 기다리지 않는 이유 -- 색인 중이라 오래 걸리고, nginx는 DNS만 있으면 뜬다.
+dc up -d --no-deps "$SVC_NGINX" >/dev/null 2>&1 \
+    || { FAILED="nginx 기동 실패 — 스윕이 통제군을 못 읽는다"; exit 1; }
+say "nginx 기동 (스윕 통제군)"
 
 DEADLINE=$(( $(date +%s) + MAX_INDEX_HOURS*3600 ))
 while :; do
