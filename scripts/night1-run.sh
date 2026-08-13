@@ -110,6 +110,7 @@ kill -0 "$SAMPLER_PID" 2>/dev/null || { FAILED="샘플러가 즉시 죽었다"; 
 say "샘플러 시작 (pid $SAMPLER_PID)"
 
 # ── 3. 색인 시작 → 위치 P까지 -----------------------------------------------
+SINCE1=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 dc start "$SVC_APP" >/dev/null
 say "색인 시작 — 위치 P($P_CHUNKS 청크)까지 기다린다"
 
@@ -117,6 +118,15 @@ DEADLINE=$(( $(date +%s) + MAX_INDEX_HOURS*3600 ))
 while :; do
     C=$(chunks)
     (( C >= P_CHUNKS )) && break
+
+    # 완주 구간과 같은 신호를 여기서도 본다. 1구간에서 색인이 죽으면 청크가 안 늘 뿐이라,
+    # 이것을 안 보면 P를 기다리며 MAX_INDEX_HOURS를 통째로 태운다 -- 밤 하나가 그대로 날아간다.
+    SEG1_LOG=$(docker logs --since "$SINCE1" dockin-app-1 2>&1 || true)
+    if grep -q "인덱싱 중단" <<< "$SEG1_LOG"; then
+        FAILED="1구간 색인이 중단됐다 — $(grep "인덱싱 중단" <<< "$SEG1_LOG" | tail -1 | cut -c1-300)"
+        exit 1
+    fi
+
     (( $(date +%s) > DEADLINE )) && { FAILED="P에 도달하기 전에 ${MAX_INDEX_HOURS}시간을 넘겼다"; exit 1; }
     sleep 60
 done
