@@ -1,0 +1,2 @@
+periods 1329 -> 1488
+throttled 2 -> 2

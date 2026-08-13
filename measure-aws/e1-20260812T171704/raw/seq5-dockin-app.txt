@@ -1,0 +1,2 @@
+periods 367 -> 1771
+throttled 308 -> 308

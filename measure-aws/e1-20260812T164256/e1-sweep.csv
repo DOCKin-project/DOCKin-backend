@@ -1,0 +1,3 @@
+seq,cpus_requested,cpus_applied,oversubscribed,window_s,chunks,sources,ms_per_chunk,ms_per_source,tei_throttle_pct,app_throttle_pct,db_throttle_pct,redis_throttle_pct,nginx_throttle_pct,corpus_at_start,note
+1,2.0,2.00,no,60,967,800,62.0,75.0,7.0,1.4,0.0,0.0,n/a,3273,
+2,3.0,3.00,no,60,967,800,62.0,75.0,0.0,0.0,0.0,0.0,n/a,3273,

@@ -1,0 +1,2 @@
+periods 41931 -> 44936
+throttled 1638 -> 1845
