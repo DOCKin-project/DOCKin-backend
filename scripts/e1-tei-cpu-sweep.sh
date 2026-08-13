@@ -43,6 +43,7 @@ EMBED_WAIT_MAX=${EMBED_WAIT_MAX:-2400}                 # 건너뛰기 구간 대
 HEALTH_WAIT_MAX=${HEALTH_WAIT_MAX:-300}
 COMPOSE_FILES=${COMPOSE_FILES:-"-f compose.yaml -f compose.gc.yaml"}
 OUT_ROOT=${OUT_ROOT:-measure}
+VACUUM_OPTS=${VACUUM_OPTS:-"ANALYZE"}                 # 큰 코퍼스에서는 "ANALYZE, INDEX_CLEANUP OFF"
 RESTORE_CPUS=${RESTORE_CPUS:-2.0}                      # 끝나고 되돌릴 값(compose.yaml의 값)
 SHUTDOWN_WHEN_DONE=${SHUTDOWN_WHEN_DONE:-0}
 S3_RESULT_URI=${S3_RESULT_URI:-}                       # 예: s3://버킷/dockin-measure/ (비우면 로컬만)
@@ -268,6 +269,18 @@ for s in "${ALL_SVCS[@]}"; do
         # ALLOW_NO_CGROUP=1로 넘기게 되는데, 그것은 멀쩡히 잴 수 있는 통제군을 버리는 짓이다.
         # 처방은 `up -d` 한 줄이다. 2026-08-13 밤 2가 nginx·redis가 멈춘 채로 두 번 죽었다.
         if [[ "$(docker inspect -f '{{.State.Running}}' "${CID[$s]}" 2>/dev/null)" != "true" ]]; then
+            # **앱만은 예외다.** 이 스크립트가 조건마다 앱을 내렸다 올리므로, 시작 시점에
+            # 앱이 정지해 있는 것은 정상이고 오히려 흔한 상태다(앞선 측정이 앱을 내려둔
+            # 채 끝나는 경우가 그렇다). 그런데 2026-08-13 밤 3에서 이 줄이 그 정상 상태를
+            # 치명적 오류로 읽어 E1 확인이 시작도 못 했다 -- 바로 위 주석이 적은 밤 2의
+            # 사고(nginx·redis가 멈춘 채 시작)를 막으려던 검사가, 이 스크립트 자신의
+            # 전제("앱은 멈춰 있어도 된다", 아래 참조)와 충돌한 것이다.
+            #
+            # 앱의 cgroup은 조건 안에서 앱을 올린 뒤에 다시 찾는다(아래 '앱 cgroup 재확인').
+            if [[ "$s" == "$SVC_APP" ]]; then
+                say "앱이 정지 상태다 — 이 스크립트가 올린다. cgroup은 기동 후 다시 찾는다"
+                continue
+            fi
             die "'$s' 컨테이너가 정지 상태다 — 멈춘 컨테이너에는 cgroup이 없어 통제군을 못 읽는다.
        ALLOW_NO_CGROUP이 아니라 기동이 답이다: docker compose $COMPOSE_FILES up -d $s"
         fi
@@ -355,6 +368,14 @@ for C in $CONDITIONS; do
     dc start "$SVC_APP" >/dev/null
     wait_running "$SVC_APP"
 
+    # 앱 cgroup 재확인 — 시작 시점에 앱이 정지해 있었다면 위에서 못 찾았다.
+    # 여기서 찾아야 app 스로틀 열이 n/a로 비지 않는다. 컨테이너 ID는 start로 안 바뀌지만,
+    # cgroup 디렉터리는 컨테이너가 실행 중일 때만 존재한다.
+    if [[ -z "${CG[$SVC_APP]}" ]]; then
+        CG[$SVC_APP]=$(cgroup_dir "${CID[$SVC_APP]}") || CG[$SVC_APP]=""
+        [[ -n "${CG[$SVC_APP]}" ]] && say "  앱 cgroup 확보 — 스로틀 열이 살아난다"
+    fi
+
     # 5) 건너뛰기 구간을 기다린다.
     #    indexAll은 lastId=0부터 훑으며 해시가 같은 문서를 건너뛴다. 그 구간에는
     #    청크가 늘지 않으므로, "늘기 시작했다"가 곧 임베딩이 흐르기 시작했다는 뜻이다.
@@ -438,7 +459,14 @@ for C in $CONDITIONS; do
     DEL=$(psql_q "WITH d AS (DELETE FROM document_chunks WHERE created_at > '$T0' RETURNING 1) SELECT count(*) FROM d;")
     # 조건마다 같은 조건에서 출발하도록 죽은 튜플을 정리한다. 안 하면 뒤 조건일수록
     # 테이블이 부풀어 있어 상한 효과와 구분되지 않는다.
-    psql_q "VACUUM (ANALYZE) document_chunks;" >/dev/null
+    #
+    # [VACUUM_OPTS를 밖으로 뺀 이유] 이 기본값은 2~3만 청크에서 몇 초로 끝난다. 그런데
+    # 2026-08-13 밤 3이 19만 청크에서 같은 문장을 돌렸다가 **한 번에 40분을 넘겼다** --
+    # HNSW 인덱스를 통째로 훑기 때문이고, maintenance_work_mem 64MB / 컨테이너 512M에서는
+    # 그 비용이 조건 수만큼 곱해진다. 큰 코퍼스에서 돌릴 때는
+    # VACUUM_OPTS="ANALYZE, INDEX_CLEANUP OFF" 로 넘긴다.
+    # 그 경우 죽은 인덱스 항목이 조건을 넘어 쌓이므로 **드리프트 통제군이 필수**가 된다.
+    psql_q "VACUUM ($VACUUM_OPTS) document_chunks;" >/dev/null
     AFTER=$(psql_q "SELECT count(*) FROM document_chunks;")
     say "  슬라이스 $DEL행 삭제 → 코퍼스 $AFTER 청크"
     [[ "$AFTER" == "$CORPUS_AT_START" ]] \
