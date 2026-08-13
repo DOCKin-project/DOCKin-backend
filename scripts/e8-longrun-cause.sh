@@ -39,6 +39,17 @@ cd "$(dirname "$0")/.."
 
 HOLE_SOURCES=${HOLE_SOURCES:-60000}        # 연속 색인 길이를 정한다. 6만 원본 ≈ 60~100분
 RESTART_AFTER_MIN=${RESTART_AFTER_MIN:-40} # 이만큼 연속으로 돌린 뒤 앱만 재시작한다
+
+# 앱 재시작으로 안 돌아오면 그 다음에 DB를 재시작한다.
+#
+# [왜 두 단계인가] 처음에는 앱 재시작 하나만 두었다. 그런데 밤 4의 E1이 돌면서 근거가
+# 하나 더 나왔다 -- 밤 3은 같은 19만 청크에서 62.5ms였는데 세 시간 뒤 같은 조건이
+# 187.5ms다(3배). 두 밤의 차이가 **밤 3은 조건마다 DB를 재시작했다**는 것이고,
+# 밤 4의 E1은 앱만 재시작한다. 즉 DB 쪽이 유력한 용의자가 됐다.
+#
+# 순서를 앱 → DB로 두는 이유는 그 반대로 하면 못 가르기 때문이다. DB를 먼저 재시작하면
+# 앱의 커넥션도 함께 끊겨 두 후보가 한 번에 사라진다. 앱부터 지우면 남는 것이 DB다.
+DB_RESTART_AFTER_MIN=${DB_RESTART_AFTER_MIN:-60}
 STALL_MIN=${STALL_MIN:-6}                  # 이만큼 청크가 안 늘면 구멍이 메워진 것으로 본다
 MAX_HOURS=${MAX_HOURS:-3}
 SAMPLE_SEC=${SAMPLE_SEC:-60}
@@ -144,6 +155,21 @@ while :; do
         RESTARTED=1
         mark "앱 재시작 완료 — 여기부터 2회차"
         say "  (재시작 뒤에는 indexAll이 lastId=0부터 다시 훑으므로 건너뛰기 구간이 한 번 지나간다)"
+        STALL=0
+        continue
+    fi
+
+    # DB 재시작. 앱을 지우고도 안 돌아왔을 때만 의미가 있으므로 앱 재시작 뒤에 온다.
+    # 앱을 먼저 내렸다가 DB를 올리고 다시 띄운다 -- 앱이 붙어 있는 채로 DB를 내리면
+    # 색인이 예외로 죽어 그 밤의 남은 구간을 못 쓴다(밤 1이 그렇게 끝났다).
+    if (( RESTARTED == 1 )) && (( ELAPSED_MIN >= DB_RESTART_AFTER_MIN )); then
+        mark "DB 재시작 직전"
+        dc stop "$SVC_APP" >/dev/null 2>&1
+        dc restart "$SVC_DB" >/dev/null 2>&1
+        for _ in $(seq 1 60); do psql_q "SELECT 1;" >/dev/null 2>&1 && break; sleep 2; done
+        dc up -d "$SVC_APP" >/dev/null 2>&1
+        RESTARTED=2
+        mark "DB 재시작 완료 — 여기부터 3회차"
         STALL=0
         continue
     fi
