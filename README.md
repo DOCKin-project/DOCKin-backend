@@ -15,7 +15,7 @@ graph LR
     App["📱 App"]
     BE["⚙️ Spring Boot"]
     AI["🤖 FastAPI"]
-    DB[("🗄️ MySQL")]
+    DB[("🗄️ PostgreSQL + pgvector")]
     S3[("☁️ S3")]
 
     App -- "REST" --> BE
@@ -151,7 +151,7 @@ erDiagram
 
 ![Java](https://img.shields.io/badge/JAVA_21-ED8B00?style=flat-square&logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/SPRING_BOOT-6DB33F?style=flat-square&logo=springboot&logoColor=white)
-![MySQL](https://img.shields.io/badge/MYSQL-4479A1?style=flat-square&logo=mysql&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/POSTGRESQL_17-4169E1?style=flat-square&logo=postgresql&logoColor=white)
 ![JPA](https://img.shields.io/badge/JPA-59666C?style=flat-square&logo=hibernate&logoColor=white)
 ![WebSocket](https://img.shields.io/badge/WEBSOCKET_STOMP-010101?style=flat-square&logo=socketdotio&logoColor=white)
 ![JWT](https://img.shields.io/badge/JWT-000000?style=flat-square&logo=jsonwebtokens&logoColor=white)
