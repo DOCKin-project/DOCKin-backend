@@ -608,9 +608,9 @@ P0-9에서 **"값을 에코하면 비밀번호 같은 입력이 응답과 로그
 | # | 항목 | 근거 | 급함 |
 |---|---|---|---|
 | P2-12-1 | **방 목록 N+1 (확정)** | `ChatRoomService`가 `chatRoomsPage.map(room -> countByChatRoomsRoomIdAndCreatedAtAfter(...))`로 **방마다 COUNT**를 날린다. 방 20개면 21쿼리. ADR-0002 2-2가 진단만 하고 방치한 그것 | ★ |
-| P2-12-2 | **시계가 둘이다** | `ChatMessages.sentAt`은 `@PrePersist`의 **애플리케이션 시각**, `last_message_at`·`last_read_time`은 네이티브 쿼리의 **DB `NOW()`**. 두 시계가 어긋나면 읽음 경계와 최신 메시지가 함께 틀어진다 | ★ |
-| P2-12-3 | **읽음 기준이 시각이다** | `createdAt > lastReadTime`으로 안읽음을 센다. 같은 시각 메시지의 경계가 모호하고 P2-12-2와 겹치면 **읽은 것을 안 읽었다고 세거나 그 반대**가 된다. 기준을 `last_read_message_id`(단조 증가 PK)로 바꿔야 한다 | ★ |
-| P2-12-4 | **`last_message_content` 경합** | 동시에 두 메시지가 오면 UPDATE 순서 보장이 없어 방 목록의 "마지막 메시지"가 실제 마지막이 아닐 수 있다 | ☆ |
+| P2-12-2 | **시계가 둘이다** | **완료 (V6, 2026-09-13)** — `sent_at DEFAULT now()` + `@Generated`. 앱은 값을 넣지 않는다. ADR-0008 D6 | ★ |
+| P2-12-3 | **읽음 기준이 시각이다** | **컬럼은 V6에 있다**(`last_read_seq`). 안읽음 계산과 읽음 API가 아직 `last_read_time`을 쓴다 — ADR-0008 11-1의 `PATCH /read {upToSeq}`가 남았다. 기준은 `message_id`가 **아니라** `room_seq`다(M3가 PK도 반증했다) | ★ |
+| P2-12-4 | **`last_message_content` 경합** | **완료 (V6, 2026-09-13)** — 갱신이 `room_seq` 발급과 같은 행 락 안에 있어 마지막에 쓴 것이 곧 마지막 메시지다. `ChatJdbcRepository.nextRoomSeq` | ☆ |
 | P2-12-5 | 재연결 시 유실 | STOMP heartbeat 미설정이고, 끊긴 동안의 메시지를 따라잡는 경로가 없다. 마지막 수신 `message_id` 기준 동기화가 필요 | ☆ |
 | P2-12-8 | **방 목록에 정렬이 없다** | `ChatRoomController#findAllRooms`의 `@PageableDefault`에 `sort`가 비어 있다 — 작업일지에서 고친 P2-15-3과 같은 결함이다. **거기서 함께 고치지 않은 이유는 정렬 키가 제품 결정이기 때문**이다. `last_message_at`이 자연스럽지만 그 컬럼은 **P2-12-4가 경합으로 실제 마지막이 아닐 수 있다고 지목한 자리**라, 순서의 기준으로 삼기 전에 P2-12-4를 먼저 정해야 한다. `PageableSortDefaultTest`가 이 한 건을 `KNOWN_UNSORTED`로 들고 있다 | ★ |
 

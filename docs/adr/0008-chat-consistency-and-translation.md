@@ -1,7 +1,7 @@
 # ADR-0008: 채팅 — 저장이 먼저고, 번역은 그 밖에 있다
 
-- 상태: **초안. 결정은 했고 구현은 전이다.** M3(5-4)는 2026-09-13에 실측해 D7·D8을 확정했다. M1·M2는 기준값 실측 전이다
-- 대상 코드: `chat/controller/ChatController`, `chat/service/ChatService`, `chat/model/ChatMessages`, `chat/repository/*`, `global/config/{AsyncConfig, WebSocketConfig, StompHandler}`, `ai/service/FastApiService`, `db/migration/V6*`(예정)
+- 상태: **일부 구현.** M3(5-4)는 2026-09-13에 실측해 D7·D8을 확정했고, 같은 날 **V6 + 저장 경로(D6·D7·D8, D9의 제약)** 를 넣었다(10절). D1·D2·D3·D10과 읽음/따라잡기 API(11-1)는 전이다. M1·M2는 기준값 실측 전이다
+- 대상 코드: `chat/controller/ChatController`, `chat/service/ChatService`, `chat/model/ChatMessages`, `chat/repository/*`(요약 컬럼 UPDATE는 `ChatJdbcRepository`가 JdbcClient로 친다 — 엔티티를 거치지 않는 SQL은 JPA 리포지토리에 두지 않는다), `global/config/{AsyncConfig, WebSocketConfig, StompHandler}`, `ai/service/FastApiService`, `db/migration/V6*`(예정)
 - 관련 문서: `docs/WORK-BACKLOG.md` P2-12(정합성 진단)·P2-8-5(언어 컬럼)·P2-17-5(채팅 번역), `docs/SERVICE-SCALE-ASSUMPTIONS.md` 3-3(채팅 규모 가정), `docs/adr/0001`(근태 멱등성), `docs/adr/0004`(기준값 먼저 재는 관례)
 - 작성 목적: 채팅은 이 서비스에서 사용자가 하루 종일 열어두는 유일한 화면인데(발표 자료 9P의 인터뷰 두 건이 전부 이걸 가리킨다), 정합성 진단만 있고(P2-12) 결정이 없다. 번역을 붙이기 전에 **저장·전파·번역의 순서**를 정해두지 않으면, 번역이 붙는 순간 지금의 결함 위에 지연이 하나 더 얹힌다. ADR-0001과 같이 **숫자를 지어내지 않는다** — 가정은 가정으로, 측정 전인 것은 [측정 필요]로 적는다.
 
@@ -235,7 +235,9 @@ P2-12-6이 적은 기준이 여기서 코드가 된다:
 | 번역 품질·언어 감지 | FastAPI(팀원 담당, `PROJECT-SCOPE.md`). 이 문서는 호출 시점과 실패 처리만 정한다 |
 | 방 목록 N+1 (P2-12-1) | 이 문서와 독립이다. 따로 고친다 |
 
-## 10. 스키마 변경 (V6, 예정)
+## 10. 스키마 변경 (V6 — 적용, 2026-09-13)
+
+`V6__chat_room_seq_and_translations.sql`. `FlywayMigrationTest`(빈 DB 적용·멱등)와 `SchemaValidationTest`(엔티티 일치)를 통과했다.
 
 | 테이블 | 변경 |
 |---|---|
@@ -249,6 +251,19 @@ P2-12-6이 적은 기준이 여기서 코드가 된다:
 
 기존 행의 `room_seq` 채우기는 `ROW_NUMBER() OVER (PARTITION BY room_id ORDER BY message_id)`로 한 번 한다 —
 과거 메시지의 역전은 이미 일어난 일이라 되돌릴 수 없고, ID 순서가 그나마 가장 가까운 근사다.
+
+### 10-1. V6와 함께 바뀐 코드
+
+| 자리 | 변경 | 검증 |
+|---|---|---|
+| `ChatJdbcRepository.nextRoomSeq` | `updateLastMessage`를 대체. `last_message_seq + 1 ... RETURNING`이 락·번호·요약 갱신을 한 문장에 | `ChatServiceRoomSeqTest` 방_시퀀스 |
+| `ChatService.saveMessage` | 순서가 **UPDATE(락+번호) → INSERT → 멤버 UPDATE**. 번호를 락 밖에서 받으면 5-4의 구멍이 그대로라 INSERT가 뒤로 갔다 | 〃 |
+| `ChatMessages.sentAt` | `@Generated(INSERT)` + `insertable=false`. 앱이 넣지 않고 DB `DEFAULT now()`를 RETURNING으로 읽는다(D6) | 〃 시계와_언어 |
+| `ChatMessages.languageCode` | 발신자 `users.language_code`로 채운다(P2-8-5). PK 조회 하나가 늘었다 | 〃 |
+| `ChatMessages.clientMsgId` / DTO | 컬럼과 제약만. "기존 행을 돌려준다"(D9)는 D1과 함께 — 지금은 `@Async`가 유니크 위반 예외를 삼켜 호출자가 알 수 없다. 테스트가 그 사실을 그대로 적어뒀다 | 〃 재전송_멱등 |
+| `MessageIdCommitOrderMeasurementTest` | V6 이전 경로를 흉내 내는 두 변형이 락 밖 시퀀스(`nextval`)로 번호를 받게 바꿨다. 결과는 같다(유실 21% / 56~78% / 0) | 자체 |
+
+**V7로 미룬 것**: `chat_members.last_read_time` 제거 — 읽음 API가 `last_read_seq`를 쓰게 바뀐 뒤(11-1). 그전까지 `saveMessage`는 예전대로 발신자의 `last_read_time`만 갱신한다. `last_read_seq`는 읽음 API가 올리는 값이고, 발신자 본인의 것도 그 API가 함께 처리하는 편이 "자기가 보낸 것은 읽은 것"을 한 곳에 두는 길이다.
 
 ## 11. 계약과 비용
 

@@ -5,8 +5,6 @@ import com.DOCKin.chat.model.ChatRooms;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
 
@@ -28,8 +26,5 @@ boolean existsByChatRoomsAndMemberUserId(ChatRooms chatRooms, String userId);
 
     List<ChatMembers> findByChatRoomsRoomId(Integer roomId);
 
-    @Modifying @Transactional
-    @Query(value = "UPDATE chat_members SET last_read_time = NOW() WHERE room_id = :roomId AND user_id = :userId", nativeQuery = true)
-    void updateLastReadTimeNative(@Param("roomId") Integer roomId, @Param("userId") String userId);
-
+    // last_read_time 갱신은 ChatJdbcRepository에 있다. 엔티티를 거치지 않는 UPDATE라 여기 두지 않는다.
 }

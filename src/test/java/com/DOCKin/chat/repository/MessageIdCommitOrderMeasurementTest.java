@@ -87,11 +87,11 @@ class MessageIdCommitOrderMeasurementTest extends ContainerTestSupport {
                 .baselineVersion("0")
                 .load()
                 .migrate();
-        // ROOM_SEQ 변형이 쓰는 컬럼. 운영에는 없고(V6 예정) 스크래치 DB에만 더한다.
+        // 처음 쟀을 때는 room_seq가 운영 스키마에 없어 여기서 ALTER로 더했다. V6가 그 컬럼을 만들고
+        // NOT NULL을 걸었으므로, "V6 이전 경로"를 흉내 내는 두 변형은 락 밖에서 번호를 받는 시퀀스가
+        // 따로 필요하다 — IDENTITY와 같은 시점(INSERT 때, 커밋 전)에 번호가 나오게 하는 것이 요점이다.
         try (Connection c = connect(SCRATCH_DB); Statement st = c.createStatement()) {
-            st.execute("ALTER TABLE chat_rooms ADD COLUMN last_message_seq bigint NOT NULL DEFAULT 0");
-            st.execute("ALTER TABLE chat_messages ADD COLUMN room_seq bigint");
-            st.execute("CREATE INDEX idx_m3_room_seq ON chat_messages (room_id, room_seq)");
+            st.execute("CREATE SEQUENCE m3_unlocked_seq");
         }
     }
 
@@ -275,14 +275,18 @@ class MessageIdCommitOrderMeasurementTest extends ContainerTestSupport {
         }
     }
 
-    /** {@code ChatMessages} INSERT. {@code seq}는 ROOM_SEQ 변형에서만 있다. */
+    /**
+     * {@code ChatMessages} INSERT. {@code seq}는 ROOM_SEQ 변형에서만 있다. 나머지 변형은 V6 이전처럼
+     * 락 밖에서 번호를 받는다 — {@code nextval}은 IDENTITY와 같이 INSERT 시점에, 커밋 전에 나온다.
+     */
     private static long insert(Connection c, int roomId, String sender, Long seq) throws SQLException {
+        String seqExpr = seq == null ? "nextval('m3_unlocked_seq')" : "?";
         try (PreparedStatement ps = c.prepareStatement(
-                "INSERT INTO chat_messages (content, message_type, sender_id, sent_at, room_id, room_seq) VALUES (?, 'TEXT', ?, now(), ?, ?) RETURNING message_id")) {
+                "INSERT INTO chat_messages (content, message_type, sender_id, room_id, room_seq) VALUES (?, 'TEXT', ?, ?, " + seqExpr + ") RETURNING message_id")) {
             ps.setString(1, "m3");
             ps.setString(2, sender);
             ps.setInt(3, roomId);
-            if (seq == null) ps.setNull(4, java.sql.Types.BIGINT); else ps.setLong(4, seq);
+            if (seq != null) ps.setLong(4, seq);
             try (ResultSet rs = ps.executeQuery()) { rs.next(); return rs.getLong(1); }
         }
     }
