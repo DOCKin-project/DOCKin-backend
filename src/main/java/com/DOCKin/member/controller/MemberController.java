@@ -8,7 +8,9 @@ import com.DOCKin.member.service.MemberService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import com.DOCKin.global.security.auth.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -47,8 +49,10 @@ public class MemberController {
 
     @Operation(summary="회원탈퇴", description = "회원탈퇴를 할 수 있음")
     @DeleteMapping("/{userId}")
-    public ResponseEntity<Void> deleteMember(@PathVariable("userId") String userId){
-        memberService.deleteAccount(userId);
+    public ResponseEntity<Void> deleteMember(@PathVariable("userId") String userId,
+                                             @AuthenticationPrincipal CustomUserDetails customUserDetails){
+        // 경로의 userId만 믿으면 남의 계정을 지운다(P2-18-2). 인증 주체와 대조한다.
+        memberService.deleteAccount(userId, customUserDetails.getMember().getUserId());
         return ResponseEntity.noContent().build();
     }
 

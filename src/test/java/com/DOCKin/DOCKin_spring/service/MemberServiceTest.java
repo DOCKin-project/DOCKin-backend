@@ -1,6 +1,12 @@
 package com.DOCKin.DOCKin_spring.service;
 
+import com.DOCKin.global.error.BusinessException;
+import com.DOCKin.global.error.ErrorCode;
 import com.DOCKin.member.dto.LogOutRequestDto;
+import com.DOCKin.member.dto.MemberRequestDto;
+import com.DOCKin.member.model.UserRole;
+import org.mockito.ArgumentCaptor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import com.DOCKin.global.security.jwt.JwtBlacklist;
 import com.DOCKin.global.security.jwt.JwtUtil;
 import com.DOCKin.member.model.Member;
@@ -16,6 +22,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -34,6 +42,9 @@ public class MemberServiceTest {
     @Mock
     private RefreshTokenRepository refreshTokenRepository; // 가짜 리포지토리
 
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
     @InjectMocks
     private MemberService memberService; // 위 가짜 객체들을 주입받은 서비스
 
@@ -47,8 +58,8 @@ public class MemberServiceTest {
         // memberRepository가 해당 ID를 찾으면 가짜 member 객체를 반환하도록 설정
         when(memberRepository.findByUserId(userId)).thenReturn(Optional.of(member));
 
-        // 2. 실행 (when)
-        memberService.deleteAccount(userId);
+        // 2. 실행 (when) - 본인이 본인을 지운다
+        memberService.deleteAccount(userId, userId);
 
         // 3. 검증 (then)
         // memberRepository의 delete 메서드가 한 번 호출되었는지 확인
@@ -56,6 +67,36 @@ public class MemberServiceTest {
 
         // refreshTokenRepository의 deleteByUserId 메서드가 해당 ID로 호출되었는지 확인
         verify(refreshTokenRepository, times(1)).deleteByUserId(userId);
+    }
+
+    @Test
+    @DisplayName("남의 계정은 지울 수 없다 - 존재 여부를 묻기도 전에 거부한다 (P2-18-2)")
+    void deleteAccount_남의_계정() {
+        BusinessException e = assertThrows(BusinessException.class,
+                () -> memberService.deleteAccount("victim", "attacker"));
+
+        assertEquals(ErrorCode.ACCESS_DENIED, e.getErrorCode());
+        // 조회조차 하지 않는다 - "없는 사용자"와 "있는 사용자"를 다르게 답하면 계정 목록을 캐는 데 쓰인다.
+        verify(memberRepository, never()).findByUserId(any());
+        verify(memberRepository, never()).delete(any(Member.class));
+        verify(refreshTokenRepository, never()).deleteByUserId(any());
+    }
+
+    @Test
+    @DisplayName("가입자는 무엇을 보내든 USER다 - 요청 본문으로 ADMIN이 되지 않는다 (P2-18-1)")
+    void signup_권한은_서버가_정한다() {
+        // MemberRequestDto에는 role 필드가 없다. 그래도 서비스가 무엇을 저장하는지 직접 본다 -
+        // 필드가 나중에 되살아나도 이 테스트가 잡는다.
+        MemberRequestDto dto = new MemberRequestDto("newbie", "이름", "pw", "ko", true, "제1조선소", null);
+        when(memberRepository.existsById("newbie")).thenReturn(false);
+        when(passwordEncoder.encode("pw")).thenReturn("encoded");
+
+        memberService.signup(dto);
+
+        ArgumentCaptor<Member> saved = ArgumentCaptor.forClass(Member.class);
+        verify(memberRepository).save(saved.capture());
+        assertEquals(UserRole.USER, saved.getValue().getRole());
+        assertEquals("encoded", saved.getValue().getPassword());
     }
 
     @Test

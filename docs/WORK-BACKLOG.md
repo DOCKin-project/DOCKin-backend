@@ -1794,10 +1794,10 @@ Redis에 해당하는 것이 없었다. `application.properties`의 기본값이
 
 | # | 항목 | 어디 | 어떻게 뚫리나 | 고치는 크기 | 급함 |
 |---|---|---|---|---|---|
-| P2-18-1 | **회원가입으로 ADMIN 획득** | `MemberService.java:79` `.role(dto.getRole())`, `/member/signup`은 화이트리스트 | 가입 본문에 `"role":"ADMIN"`. 그 뒤 휴가 승인·actuator·전 관리자 API가 열린다 | 서버에서 `USER` 고정, 승격은 별도 경로 | ★★ |
-| P2-18-2 | **남의 계정 탈퇴 (IDOR)** | `MemberController.java:49` `DELETE /member/{userId}` | principal과 대조하지 않는다 | 경로 변수 대신 `@AuthenticationPrincipal` | ★★ |
-| P2-18-3 | **남의 채팅방 도청·투고** | `StompHandler.java:75` SUBSCRIBE 목적지 검사 없음, `ChatController.java:23` 발신 시 멤버십 검사 없음 | `/sub/chat/room/{아무 방}` 구독하면 실시간으로 다 받는다. `/pub/chat/message`에 아무 `roomId`를 넣으면 그 방에 저장된다. REST 쪽은 `validChatRoomMember`를 보는데 WebSocket만 비어 있다 | SUBSCRIBE·`message()`에 `validChatRoomMember`, 또는 Spring Security message authorization | ★★ |
-| P2-18-4 | **WebSocket 토큰 원문이 INFO 로그에** | `StompHandler.java:37` | 로드맵 S4에서 HTTP 쪽만 고쳤다. STOMP CONNECT는 그대로 | "있음/없음"만 debug로 | ★ |
+| ~~P2-18-1~~ | ~~**회원가입으로 ADMIN 획득**~~ **완료**(2026-09-13) — `MemberRequestDto`에서 `role`을 뺐고 서비스가 `USER`로 고정한다. 승격은 가입 밖(DB)에서 | `MemberService.java:79` `.role(dto.getRole())`, `/member/signup`은 화이트리스트 | 가입 본문에 `"role":"ADMIN"`. 그 뒤 휴가 승인·actuator·전 관리자 API가 열린다 | 서버에서 `USER` 고정, 승격은 별도 경로 | ★★ |
+| ~~P2-18-2~~ | ~~**남의 계정 탈퇴 (IDOR)**~~ **완료**(2026-09-13) — `deleteAccount(userId, requesterId)`. 조회보다 먼저 거부해 존재 여부가 새지 않는다 | `MemberController.java:49` `DELETE /member/{userId}` | principal과 대조하지 않는다 | 경로 변수 대신 `@AuthenticationPrincipal` | ★★ |
+| ~~P2-18-3~~ | ~~**남의 채팅방 도청·투고**~~ **완료**(2026-09-13) — SUBSCRIBE는 허용 목적지 둘만, 방은 멤버·목록은 본인. 발신은 세션 사용자로 고정하고 `validChatRoomMember`를 전파 앞에. `StompHandlerSubscribeAuthorizationTest`·`ChatControllerMembershipTest` | `StompHandler.java:75` SUBSCRIBE 목적지 검사 없음, `ChatController.java:23` 발신 시 멤버십 검사 없음 | `/sub/chat/room/{아무 방}` 구독하면 실시간으로 다 받는다. `/pub/chat/message`에 아무 `roomId`를 넣으면 그 방에 저장된다. REST 쪽은 `validChatRoomMember`를 보는데 WebSocket만 비어 있다 | SUBSCRIBE·`message()`에 `validChatRoomMember`, 또는 Spring Security message authorization | ★★ |
+| ~~P2-18-4~~ | ~~**WebSocket 토큰 원문이 INFO 로그에**~~ **완료**(2026-09-13, P2-18-3과 같은 파일이라 함께) | `StompHandler.java:37` | 로드맵 S4에서 HTTP 쪽만 고쳤다. STOMP CONNECT는 그대로 | "있음/없음"만 debug로 | ★ |
 | P2-18-5 | **토큰 생명주기가 없다** | `MemberService.login`이 refresh 토큰을 저장만 한다. 갱신 엔드포인트 없음 | 만료 = 재로그인. 로그아웃 폐기는 in-memory(P2-5)라 재시작하면 풀린다 | `/member/refresh` + P2-5 | ★ |
 | P2-18-6 | **관리자 경로를 한 곳에서 막지 않는다** | `SecurityConfig`는 `/actuator/**`만 `hasRole`. 서비스가 손으로 검사 | `SafetyAdminController` `/courses`·`/courses/user/{userId}`·`/courses/search`, `ChecklistAdminController` `GET /checklists/{id}`가 일반 사용자에게 열려 있다(읽기라 낮음). 관례가 "하나 빠지면 구멍"인 것이 문제 | `/api/*/admin/**`를 `hasRole("ADMIN")` 한 줄 | ★ |
 | P2-18-7 | S3 버킷 전체 열람 | `SpringFileDownloadController.java:14` `GET /download`가 body의 objectKey를 그대로 | 인증만 있으면 아무 키. 휴가 증빙서류 포함. `Content-Disposition`에 키를 그대로 넣어 헤더 인젝션(`SpringFileDownloadService.java:28`) | 키를 소유 레코드에서 찾는다 | ★ |

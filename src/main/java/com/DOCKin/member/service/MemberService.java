@@ -76,7 +76,8 @@ public class MemberService{
                 .userId(dto.getUserId())
                 .name(dto.getName())
                 .password(encodedPassword)
-                .role(dto.getRole())
+                // 가입자는 언제나 USER다. 요청 본문의 값을 믿으면 누구나 ADMIN으로 가입한다(P2-18-1).
+                .role(UserRole.USER)
                 .language_code(dto.getLanguage_code())
                 .tts_enabled(dto.getTts_enabled())
                 .shipYardArea(dto.getShipYardArea())
@@ -86,9 +87,21 @@ public class MemberService{
         return member.getUserId();
     }
 
-    //회원탈퇴 로직
+    /**
+     * 회원탈퇴. <b>본인만.</b>
+     *
+     * <p>이전에는 경로 변수의 userId를 그대로 지웠다 — 인증만 있으면 남의 계정을 탈퇴시킬 수
+     * 있었다(P2-18-2). 존재 여부보다 먼저 본인인지를 본다: 남의 ID로 왔을 때 "없는 사용자"와
+     * "있는 사용자"를 다르게 답하면 계정 목록을 캐는 데 쓰인다.
+     *
+     * @param userId      지우려는 계정 (경로 변수)
+     * @param requesterId 요청한 사람 (인증 주체)
+     */
     @Transactional
-    public void deleteAccount(String userId){
+    public void deleteAccount(String userId, String requesterId){
+        if (!userId.equals(requesterId)) {
+            throw new BusinessException(ErrorCode.ACCESS_DENIED);
+        }
         Member member = memberRepository.findByUserId(userId)
                 .orElseThrow(()-> new BusinessException(ErrorCode.USER_NOT_FOUND));
         memberRepository.delete(member);
