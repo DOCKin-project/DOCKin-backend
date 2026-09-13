@@ -24,10 +24,10 @@
 | G2 | 남의 계정 탈퇴 (IDOR) | ✅ 2026-09-13 | `MemberController.java:49` `DELETE /member/{userId}` | principal과 대조하지 않는다 |
 | G3 | 남의 채팅방 도청·투고 | ✅ 2026-09-13 | `StompHandler.java:75` SUBSCRIBE 목적지 검사 없음, `ChatController.java:23` 발신 시 멤버십 검사 없음 | REST(`ChatRoomController`)는 멤버십을 보는데 WebSocket만 비어 있다 |
 | G4 | WebSocket 토큰 원문이 INFO 로그에 | ✅ 2026-09-13 | `StompHandler.java:37` | HTTP 쪽(`JwtAuthFilter`)에서 2026-08-07에 지운 그 결함이 STOMP에 남아 있다(로드맵 7-3 S4) |
-| G5 | 토큰 생명주기가 없다 | ❌ | refresh 토큰을 저장만 하고(`MemberService.login`) 갱신 엔드포인트가 없다. 로그아웃 폐기는 `JwtBlacklist` in-memory(P2-5) | 만료되면 재로그인뿐이고, 재시작하면 로그아웃이 풀린다. **액세스 토큰이 곧 세션**인 구조라 블랙리스트가 유일한 폐기 수단 |
-| G6 | 관리자 경로를 한 곳에서 막지 않는다 | △ | `SecurityConfig`는 `/actuator/**`만 `hasRole`. `/api/*/admin/**`은 서비스가 손으로 `role != ADMIN` 검사 | 메서드 하나 빠지면 그대로 구멍 — `SafetyAdminController` 읽기 3개·`ChecklistAdminController` 상세 조회가 이미 그렇다 |
+| G5 | 토큰 생명주기가 없다 | ✅ 2026-09-14 | refresh 토큰을 저장만 하고(`MemberService.login`) 갱신 엔드포인트가 없다. 로그아웃 폐기는 `JwtBlacklist` in-memory(P2-5) | 만료되면 재로그인뿐이고, 재시작하면 로그아웃이 풀린다. **액세스 토큰이 곧 세션**인 구조라 블랙리스트가 유일한 폐기 수단 |
+| G6 | 관리자 경로를 한 곳에서 막지 않는다 | ✅ 2026-09-14 | `SecurityConfig`는 `/actuator/**`만 `hasRole`. `/api/*/admin/**`은 서비스가 손으로 `role != ADMIN` 검사 | 메서드 하나 빠지면 그대로 구멍 — `SafetyAdminController` 읽기 3개·`ChecklistAdminController` 상세 조회가 이미 그렇다 |
 
-> **G1~G4는 각각 몇 줄이었고 같은 날 닫았다** (백로그 P2-18-1~4). G5는 엔드포인트 하나 + Redis 이관(P2-5). G6은 `SecurityConfig` 한 줄.
+> **1절은 이틀에 닫았다** (백로그 P2-18-1~6, P2-5). G5는 `/member/refresh`(회전·재사용 감지) + 블랙리스트 Redis 이관, G6은 `SecurityConfig` 한 줄 + `AdminPathSecurityTest`.
 
 ---
 
@@ -89,7 +89,7 @@
 
 | 무엇 | 왜 깨지나 | 대응 |
 |---|---|---|
-| `JwtBlacklist` | in-memory Map. 로그아웃이 한 인스턴스에만 | Redis(P2-5) |
+| `JwtBlacklist` | — | **Redis로 옮겼다**(P2-5, 2026-09-14) |
 | `StompHandler.onlineUsers` | static Map. 접속 상태가 인스턴스별 | Redis |
 | SimpleBroker | 인스턴스 간 전파 없음 — A에 붙은 사람이 B에서 보낸 메시지를 못 받는다 | Redis pub/sub 또는 외부 STOMP 브로커 |
 | Flyway 기동 | 동시에 돈다 | D4 |
@@ -111,7 +111,7 @@
 ## 8. 순서
 
 ```
-0  1절 G1~G6                          ← 이거 없이는 아무것도 못 내보낸다
+0  1절 G1~G6  ✅ 2026-09-14           ← 닫았다
 1  D1 백업·복구 리허설                   ← 이거 없이는 내보내면 안 된다
 2  R2 CD + R3 환경 분리 + R4 시크릿      ← 이거 없이는 고칠 때마다 손으로 배포
 3  O2 알림 4개 + O3 로그 집계            ← 이거 없이는 사용자가 QA

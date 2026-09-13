@@ -291,7 +291,14 @@ private float[] embedding;
 
 작업량 대비 닫히는 항목이 많다. P1 완주 후 착수한다.
 
-### P2-5 — `JwtBlacklist` Redis 이관
+### P2-5 — `JwtBlacklist` Redis 이관 (완료, 2026-09-14)
+
+**옮겼다.** Redisson `RBucket` + 토큰 만료까지의 TTL. 키는 토큰의 SHA-256이라 Redis에 원문이 없고, TTL이 청소를 대신해 `@Scheduled cleanup`이 사라졌다. Redis가 죽으면 인증이 막힌다(401) — 열어 두면 "로그아웃한 토큰이 통한다"가 되므로 ADR-0001의 분산락과 반대로 닫는 쪽을 골랐다. `JwtBlacklistRedisTest`가 두 번째 인스턴스에서 보이는지와 만료 후 사라지는지를 본다.
+
+---
+
+#### 원래 진단
+
 
 `JwtBlacklist`가 `ConcurrentHashMap` **인메모리**다(`JwtBlacklist.java:11`). 단일 인스턴스에서도 문제가 된다:
 **재배포하면 블랙리스트가 통째로 사라져, 로그아웃했던 토큰이 만료 전까지 되살아난다.**
@@ -1798,8 +1805,8 @@ Redis에 해당하는 것이 없었다. `application.properties`의 기본값이
 | ~~P2-18-2~~ | ~~**남의 계정 탈퇴 (IDOR)**~~ **완료**(2026-09-13) — `deleteAccount(userId, requesterId)`. 조회보다 먼저 거부해 존재 여부가 새지 않는다 | `MemberController.java:49` `DELETE /member/{userId}` | principal과 대조하지 않는다 | 경로 변수 대신 `@AuthenticationPrincipal` | ★★ |
 | ~~P2-18-3~~ | ~~**남의 채팅방 도청·투고**~~ **완료**(2026-09-13) — SUBSCRIBE는 허용 목적지 둘만, 방은 멤버·목록은 본인. 발신은 세션 사용자로 고정하고 `validChatRoomMember`를 전파 앞에. `StompHandlerSubscribeAuthorizationTest`·`ChatControllerMembershipTest` | `StompHandler.java:75` SUBSCRIBE 목적지 검사 없음, `ChatController.java:23` 발신 시 멤버십 검사 없음 | `/sub/chat/room/{아무 방}` 구독하면 실시간으로 다 받는다. `/pub/chat/message`에 아무 `roomId`를 넣으면 그 방에 저장된다. REST 쪽은 `validChatRoomMember`를 보는데 WebSocket만 비어 있다 | SUBSCRIBE·`message()`에 `validChatRoomMember`, 또는 Spring Security message authorization | ★★ |
 | ~~P2-18-4~~ | ~~**WebSocket 토큰 원문이 INFO 로그에**~~ **완료**(2026-09-13, P2-18-3과 같은 파일이라 함께) | `StompHandler.java:37` | 로드맵 S4에서 HTTP 쪽만 고쳤다. STOMP CONNECT는 그대로 | "있음/없음"만 debug로 | ★ |
-| P2-18-5 | **토큰 생명주기가 없다** | `MemberService.login`이 refresh 토큰을 저장만 한다. 갱신 엔드포인트 없음 | 만료 = 재로그인. 로그아웃 폐기는 in-memory(P2-5)라 재시작하면 풀린다 | `/member/refresh` + P2-5 | ★ |
-| P2-18-6 | **관리자 경로를 한 곳에서 막지 않는다** | `SecurityConfig`는 `/actuator/**`만 `hasRole`. 서비스가 손으로 검사 | `SafetyAdminController` `/courses`·`/courses/user/{userId}`·`/courses/search`, `ChecklistAdminController` `GET /checklists/{id}`가 일반 사용자에게 열려 있다(읽기라 낮음). 관례가 "하나 빠지면 구멍"인 것이 문제 | `/api/*/admin/**`를 `hasRole("ADMIN")` 한 줄 | ★ |
+| ~~P2-18-5~~ | ~~**토큰 생명주기가 없다**~~ **완료**(2026-09-14) — `POST /member/refresh`(회전, 재사용 감지 시 폐기). 액세스 토큰을 리프레시 자리에 넣어도 저장된 것과 달라 거부된다. 블랙리스트는 P2-5로 Redis에 | `MemberService.login`이 refresh 토큰을 저장만 한다. 갱신 엔드포인트 없음 | 만료 = 재로그인. 로그아웃 폐기는 in-memory(P2-5)라 재시작하면 풀린다 | `/member/refresh` + P2-5 | ★ |
+| ~~P2-18-6~~ | ~~**관리자 경로를 한 곳에서 막지 않는다**~~ **완료**(2026-09-14) — `SecurityConfig`에 `/api/*/admin/**` → `hasRole("ADMIN")`. 서비스의 수동 검사는 두 겹으로 남긴다. `AdminPathSecurityTest`가 서비스 검사가 없던 경로 셋으로 시험 | `SecurityConfig`는 `/actuator/**`만 `hasRole`. 서비스가 손으로 검사 | `SafetyAdminController` `/courses`·`/courses/user/{userId}`·`/courses/search`, `ChecklistAdminController` `GET /checklists/{id}`가 일반 사용자에게 열려 있다(읽기라 낮음). 관례가 "하나 빠지면 구멍"인 것이 문제 | `/api/*/admin/**`를 `hasRole("ADMIN")` 한 줄 | ★ |
 | P2-18-7 | S3 버킷 전체 열람 | `SpringFileDownloadController.java:14` `GET /download`가 body의 objectKey를 그대로 | 인증만 있으면 아무 키. 휴가 증빙서류 포함. `Content-Disposition`에 키를 그대로 넣어 헤더 인젝션(`SpringFileDownloadService.java:28`) | 키를 소유 레코드에서 찾는다 | ★ |
 | P2-18-8 | 로그인 응답으로 계정 존재 여부 노출 | `MemberService.java:32,35` `USER_NOT_FOUND` vs `LOGIN_INPUT_INVALID` | 사원번호 목록 수집. 시도 제한도 없다 | 둘 다 `LOGIN_INPUT_INVALID` | ☆ |
 | P2-18-9 | 업로드 검증 없음 | `S3PresignedService.java:22` 확장자는 원본 파일명에서, Content-Type은 클라이언트 값 | SVG/HTML 올리면 버킷 도메인에서 스크립트. 점 없는 파일명이면 `StringIndexOutOfBounds` → 500 | 허용 목록 + 매직 바이트 | ☆ |

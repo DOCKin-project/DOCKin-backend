@@ -12,10 +12,12 @@ import com.DOCKin.member.model.WorkShift;
 import com.DOCKin.member.repository.MemberRepository;
 import com.DOCKin.member.repository.RefreshTokenRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -51,6 +53,55 @@ public class MemberService{
                 .build();
         refreshTokenRepository.save(refreshTokenEntity);
     return new LoginResponseDto(accessToken,refreshToken,name,role);
+    }
+
+    /**
+     * 액세스 토큰 갱신. <b>리프레시 토큰은 한 번 쓰면 버린다(회전).</b>
+     *
+     * <p>이전에는 이 경로가 없었다(백로그 P2-18-5). 로그인이 리프레시 토큰을 저장까지 해 두고
+     * 아무도 쓰지 않아, 액세스 토큰이 만료되면 재로그인뿐이었다.
+     *
+     * <h3>서명만으로는 부족하다 — DB에 있는 것과 같아야 한다</h3>
+     * 액세스 토큰과 리프레시 토큰은 클레임 모양이 같다({@code JwtUtil.createToken}). 서명만 보면
+     * <b>액세스 토큰을 리프레시 토큰 자리에 넣어도 통과한다.</b> 그래서 {@code refresh_token} 테이블에
+     * 저장된 것과 원문이 같은지까지 본다. 액세스 토큰은 거기 없다.
+     *
+     * <h3>재사용은 탈취로 본다</h3>
+     * 서명은 유효한데 저장된 것과 다르면, 이미 회전돼 버린 옛 토큰이다. 정상 클라이언트는 옛 것을
+     * 다시 낼 일이 없으므로 누군가 복사해 둔 것이다. 그 사용자의 리프레시 토큰을 지워 양쪽 다
+     * 다시 로그인하게 한다 — 도둑과 주인 중 누가 진짜인지 서버는 모르고, 둘 다 끊는 것이 안전하다.
+     */
+    @Transactional
+    public LoginResponseDto refresh(String refreshToken) {
+        if (!jwtUtil.isValidToken(refreshToken)) {
+            throw new BusinessException(ErrorCode.INVALID_TOKEN);
+        }
+        String userId = jwtUtil.getUserId(refreshToken);
+
+        RefreshToken stored = refreshTokenRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_TOKEN));
+        if (!stored.getToken().equals(refreshToken)) {
+            log.warn("리프레시 토큰 재사용 감지 - 사용자의 토큰을 폐기합니다. userId={}", userId);
+            refreshTokenRepository.deleteByUserId(userId);
+            throw new BusinessException(ErrorCode.INVALID_TOKEN);
+        }
+
+        Member member = memberRepository.findByUserId(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        CustomUserInfoDto info = CustomUserInfoDto.builder()
+                .userId(member.getUserId())
+                .name(member.getName())
+                .role(member.getRole())
+                .build();
+
+        String newAccessToken = jwtUtil.createAccessToken(info);
+        String newRefreshToken = jwtUtil.createRefreshToken(info);
+        // PK가 user_id라 save가 덮어쓴다 - 사용자당 리프레시 토큰은 하나다.
+        refreshTokenRepository.save(RefreshToken.builder()
+                .userId(userId)
+                .token(newRefreshToken)
+                .build());
+        return new LoginResponseDto(newAccessToken, newRefreshToken, member.getName(), member.getRole());
     }
 
     //로그아웃 로직

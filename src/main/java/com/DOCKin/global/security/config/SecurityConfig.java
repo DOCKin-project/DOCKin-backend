@@ -57,6 +57,12 @@ public class SecurityConfig {
                 .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
                 .requestMatchers("/actuator/**").hasRole("ADMIN")
 
+                // 1-2. 관리자 API (P2-18-6). 서비스마다 손으로 role != ADMIN을 검사하는 관례는
+                // 메서드 하나 빠지면 그대로 구멍이다 -- SafetyAdminController의 읽기 셋과
+                // ChecklistAdminController의 상세 조회가 실제로 그랬다. 경로 하나로 막는다.
+                // 서비스의 수동 검사는 그대로 둔다: 두 겹이 한 겹보다 낫고, 어느 쪽이 먼저 걸리든 같은 답이다.
+                .requestMatchers("/api/*/admin/**").hasRole("ADMIN")
+
                 // 2. 화이트리스트 (배열을 그대로 전달)
                 .requestMatchers(securityPathConfig.getWhiteListArray()).permitAll()
 

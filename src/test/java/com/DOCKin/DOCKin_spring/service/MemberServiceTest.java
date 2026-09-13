@@ -3,6 +3,8 @@ package com.DOCKin.DOCKin_spring.service;
 import com.DOCKin.global.error.BusinessException;
 import com.DOCKin.global.error.ErrorCode;
 import com.DOCKin.member.dto.LogOutRequestDto;
+import com.DOCKin.member.dto.LoginResponseDto;
+import com.DOCKin.member.model.RefreshToken;
 import com.DOCKin.member.dto.MemberRequestDto;
 import com.DOCKin.member.model.UserRole;
 import org.mockito.ArgumentCaptor;
@@ -97,6 +99,54 @@ public class MemberServiceTest {
         verify(memberRepository).save(saved.capture());
         assertEquals(UserRole.USER, saved.getValue().getRole());
         assertEquals("encoded", saved.getValue().getPassword());
+    }
+
+    @Test
+    @DisplayName("갱신 - 저장된 리프레시 토큰과 같으면 새 토큰 한 쌍을 주고 옛 것은 덮어쓴다 (P2-18-5)")
+    void refresh_회전() {
+        Member member = Member.builder().userId("u1").name("이름").role(UserRole.USER).build();
+        when(jwtUtil.isValidToken("old-refresh")).thenReturn(true);
+        when(jwtUtil.getUserId("old-refresh")).thenReturn("u1");
+        when(refreshTokenRepository.findById("u1"))
+                .thenReturn(Optional.of(RefreshToken.builder().userId("u1").token("old-refresh").build()));
+        when(memberRepository.findByUserId("u1")).thenReturn(Optional.of(member));
+        when(jwtUtil.createAccessToken(any())).thenReturn("new-access");
+        when(jwtUtil.createRefreshToken(any())).thenReturn("new-refresh");
+
+        LoginResponseDto out = memberService.refresh("old-refresh");
+
+        assertEquals("new-access", out.getAccessToken());
+        assertEquals("new-refresh", out.getRefreshToken());
+        ArgumentCaptor<RefreshToken> saved = ArgumentCaptor.forClass(RefreshToken.class);
+        verify(refreshTokenRepository).save(saved.capture());
+        assertEquals("new-refresh", saved.getValue().getToken(), "옛 리프레시 토큰이 남아 있으면 회전이 아니다");
+    }
+
+    @Test
+    @DisplayName("갱신 - 서명은 맞는데 저장된 것과 다르면(액세스 토큰이거나 회전된 옛 토큰) 폐기하고 거부한다")
+    void refresh_재사용_감지() {
+        when(jwtUtil.isValidToken("stale")).thenReturn(true);
+        when(jwtUtil.getUserId("stale")).thenReturn("u1");
+        when(refreshTokenRepository.findById("u1"))
+                .thenReturn(Optional.of(RefreshToken.builder().userId("u1").token("current").build()));
+
+        BusinessException e = assertThrows(BusinessException.class, () -> memberService.refresh("stale"));
+
+        assertEquals(ErrorCode.INVALID_TOKEN, e.getErrorCode());
+        // 도둑과 주인 중 누가 진짜인지 모르므로 둘 다 끊는다.
+        verify(refreshTokenRepository).deleteByUserId("u1");
+        verify(jwtUtil, never()).createAccessToken(any());
+    }
+
+    @Test
+    @DisplayName("갱신 - 서명이 틀리거나 만료된 리프레시 토큰은 DB를 묻지 않고 거부한다")
+    void refresh_무효_토큰() {
+        when(jwtUtil.isValidToken("garbage")).thenReturn(false);
+
+        BusinessException e = assertThrows(BusinessException.class, () -> memberService.refresh("garbage"));
+
+        assertEquals(ErrorCode.INVALID_TOKEN, e.getErrorCode());
+        verify(refreshTokenRepository, never()).findById(any());
     }
 
     @Test
