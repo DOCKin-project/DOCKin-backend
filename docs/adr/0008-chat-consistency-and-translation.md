@@ -1,6 +1,6 @@
 # ADR-0008: 채팅 — 저장이 먼저고, 번역은 그 밖에 있다
 
-- 상태: **초안. 결정은 했고 구현·측정은 전이다.** 숫자가 필요한 결정 두 개(5-4, 7절)는 기준값 실측 뒤로 미뤘다
+- 상태: **초안. 결정은 했고 구현은 전이다.** M3(5-4)는 2026-09-13에 실측해 D7·D8을 확정했다. M1·M2는 기준값 실측 전이다
 - 대상 코드: `chat/controller/ChatController`, `chat/service/ChatService`, `chat/model/ChatMessages`, `chat/repository/*`, `global/config/{AsyncConfig, WebSocketConfig, StompHandler}`, `ai/service/FastApiService`, `db/migration/V6*`(예정)
 - 관련 문서: `docs/WORK-BACKLOG.md` P2-12(정합성 진단)·P2-8-5(언어 컬럼)·P2-17-5(채팅 번역), `docs/SERVICE-SCALE-ASSUMPTIONS.md` 3-3(채팅 규모 가정), `docs/adr/0001`(근태 멱등성), `docs/adr/0004`(기준값 먼저 재는 관례)
 - 작성 목적: 채팅은 이 서비스에서 사용자가 하루 종일 열어두는 유일한 화면인데(발표 자료 9P의 인터뷰 두 건이 전부 이걸 가리킨다), 정합성 진단만 있고(P2-12) 결정이 없다. 번역을 붙이기 전에 **저장·전파·번역의 순서**를 정해두지 않으면, 번역이 붙는 순간 지금의 결함 위에 지연이 하나 더 얹힌다. ADR-0001과 같이 **숫자를 지어내지 않는다** — 가정은 가정으로, 측정 전인 것은 [측정 필요]로 적는다.
@@ -35,13 +35,13 @@ chatService.saveMessage(message);                                         // ③
 | # | 결정 | 근거 |
 |---|---|---|
 | D1 | **저장이 먼저, 전파는 커밋 뒤** — `@TransactionalEventListener(AFTER_COMMIT)` | 보이는 것은 저장된 것이어야 한다 (3절) |
-| D2 | 전파 페이로드에 **DB가 준 `message_id`·`sent_at`** 을 싣는다 | 중복 제거와 커서의 축이 생긴다 (3절) |
+| D2 | 전파 페이로드에 **DB가 준 `message_id`·`room_seq`·`sent_at`** 을 싣는다 | 중복 제거와 커서의 축이 생긴다 (3절) |
 | D3 | **번역은 저장 트랜잭션 밖.** 원문을 먼저 전파하고, 번역은 별도 이벤트로 **수신자 언어별 1회** 호출해 두 번째 전파로 붙인다 | 저장 지연을 번역 지연에 묶지 않는다 (4절) |
 | D4 | 번역 결과는 `chat_message_translations(message_id, language_code)` **UNIQUE** | `work_log_translations`와 같은 꼴. 이미 있는 패턴을 따른다 (4-2절) |
 | D5 | 번역 실패는 **원문만 보이는 상태로 열화**한다. 저장·전파를 막지 않는다 | 번역은 있으면 좋은 것, 메시지는 있어야 하는 것 (4-3절) |
 | D6 | **시계는 DB 하나.** `sent_at`을 DB 기본값으로 옮긴다 | 시계가 둘이면 경계가 어긋난다 (5-1절) |
-| D7 | 읽음·최신 기준은 **`message_id`**. `last_read_message_id`, `last_message_id` 컬럼 추가, 갱신은 `WHERE last_message_id < :id` 가드 | 시각으로 상태를 판단하지 않는다 (5-2·5-3절) |
-| D8 | 재접속 따라잡기의 **구멍 대응은 기준값 실측 뒤 결정** [측정 필요] | P2-12-7이 지적한 `IDENTITY` 역전이 실제로 나는지부터 (5-4절) |
+| D7 | 읽음·최신·커서의 축은 **방 단위 시퀀스 `room_seq`** (`message_id`가 아니다). `chat_rooms.last_message_seq`, `chat_members.last_read_seq` | 시각으로도, `IDENTITY`로도 상태를 판단하지 않는다 — M3가 후자를 반증했다 (5-2·5-3·5-4절) |
+| D8 | `room_seq`는 **`saveMessage`가 이미 잡는 `chat_rooms` 행 락 안에서** `last_message_seq + 1 RETURNING`으로 발급 | 순서를 깨뜨린 락이 순서를 고치는 자리다. 새 락이 아니다. M3 실측으로 유실 0 (5-4절) |
 | D9 | 클라이언트 발급 `client_msg_id`로 **재전송 멱등** | ADR-0001의 더블클릭과 같은 문제 (6절) |
 | D10 | FCM은 **같은 AFTER_COMMIT 이벤트**에서 미접속자에게만 | 근태 이벤트와 반대 경계를 쓰는 기준은 "함께 실패해야 하는가" (8절) |
 | — | 오프라인 동기화·메시지 편집/삭제·번역 품질은 **다루지 않는다** | 9절 |
@@ -57,13 +57,13 @@ chatService.saveMessage(message);                                         // ③
 ```
 STOMP 인바운드 스레드
   └─ saveMessage()  ── 트랜잭션 ──┐
+       UPDATE chat_rooms          │   ← 행 락 + room_seq 발급 (5-3절)
        INSERT chat_messages       │   ← message_id·sent_at은 DB가 준다
-       UPDATE chat_rooms (가드)   │
        UPDATE chat_members        │
        publish(MessageSaved)      │
   ─────────────────── COMMIT ─────┘
 AFTER_COMMIT 리스너
-  ├─ 방 구독자 전파   (message_id·sent_at 포함)
+  ├─ 방 구독자 전파   (message_id·room_seq·sent_at 포함)
   ├─ 멤버 방 목록 전파
   ├─ publish(TranslationRequested)   → 4절
   └─ publish(PushRequested)          → 8절 (미접속자만)
@@ -133,32 +133,55 @@ chat_message_translations (
 `sentAt`을 `@PrePersist`의 `LocalDateTime.now()`에서 **DB `DEFAULT now()`** 로 옮긴다. `last_message_at`·`last_read_time`은 이미 네이티브 쿼리의 `NOW()`라 그쪽에 맞춘다.
 근태에서 `Clock`을 주입한 것과 방향이 반대로 보이지만 같은 원칙이다 — **시각의 출처를 하나로.** 근태는 테스트 가능성 때문에 앱 시계를, 채팅은 네이티브 쿼리가 이미 DB 시계를 쓰고 있어 DB 시계를 고른다.
 
-### 5-2. 읽음은 `message_id` (D7)
+### 5-2. 읽음은 `room_seq` (D7) — 처음엔 `message_id`로 적었다가 M3로 고쳤다
 
-`chat_members.last_read_time` → `last_read_message_id`. 안읽음은 `message_id > last_read_message_id`.
-같은 초에 두 메시지가 와도 경계가 갈리고, 시계가 하나라도 시각 비교는 "같음"이 애매하다. 단조 증가 PK는 그렇지 않다.
+`chat_members.last_read_time` → `last_read_seq`. 안읽음은 `last_message_seq − last_read_seq`, **두 정수의 차**다.
+같은 초에 두 메시지가 와도 경계가 갈리고, 방마다 `COUNT(*)`를 날리던 P2-12-1의 N+1이 **구조적으로 사라진다** — 정합성을 고치니 성능 문제가 따라 없어지는 경우다.
 
-### 5-3. 최신은 가드로 (D7)
+이 문서의 첫 판은 축을 `message_id`로 잡았다. 5-4의 실측이 그것을 반증했다 — `last_read_message_id = 37`인 상태에서
+id 20이 **뒤에** 커밋되면, 한 번도 화면에 뜬 적 없는 메시지가 읽음 처리된다. 커서만이 아니라 읽음 경계도 같은 구멍을 갖는다.
+
+### 5-3. 최신은 락 안에서 (D7)
 
 ```sql
 UPDATE chat_rooms
-   SET last_message_id = :id, last_message_content = :content, last_message_at = :sentAt
- WHERE room_id = :roomId AND (last_message_id IS NULL OR last_message_id < :id)
+   SET last_message_seq = last_message_seq + 1, last_message_content = :content, last_message_at = now()
+ WHERE room_id = :roomId
+RETURNING last_message_seq
 ```
 
-동시에 두 메시지가 와도 **큰 ID가 이긴다.** "최신"의 정의를 ID로 두면 P2-12-4의 경합이 사라지고, 그러면 P2-12-8(방 목록 정렬 키)이 `last_message_id`를 안전하게 쓸 수 있다. `PageableSortDefaultTest`의 `KNOWN_UNSORTED` 한 건이 그때 빠진다.
+이 한 문장이 세 가지를 한 번에 한다 — 방 시퀀스 발급, 최신 메시지 갱신, 그리고 `saveMessage`가 **원래 잡던 행 락**.
+가드가 필요 없다: 락 안에서 증가하므로 동시에 두 메시지가 와도 순서가 곧 seq다. P2-12-4의 경합이 사라지고,
+P2-12-8(방 목록 정렬 키)이 `last_message_seq`를 안전하게 쓴다. `PageableSortDefaultTest`의 `KNOWN_UNSORTED` 한 건이 그때 빠진다.
 
-### 5-4. 재접속 따라잡기의 구멍 — 결정 보류 (D8) [측정 필요]
+### 5-4. 재접속 따라잡기의 구멍 — 실측으로 확정 (D8)
 
-P2-12-7이 지적한 대로 `IDENTITY`는 시퀀스를 트랜잭션 밖에서 발급하므로 **ID 순서와 커밋 순서가 다를 수 있다.** 3절로 실시간 전파는 커밋 순서를 따르게 됐지만, 재접속 시 `message_id > lastSeen`으로 따라잡는 경로는 여전히 "11을 본 뒤 커밋된 10"을 놓칠 수 있다.
+P2-12-7이 지적한 대로 `IDENTITY`는 시퀀스를 트랜잭션 밖에서 발급하므로 ID 순서와 커밋 순서가 다를 수 있다.
+"실제로 나는가"를 `MessageIdCommitOrderMeasurementTest`로 쟀다 (2026-09-13, 조건은 7절 M3).
 
-| 대응 | 대가 | 언제 고르나 |
-|---|---|---|
-| 아무것도 안 함 | 역전이 실제로 나면 유실 | 실측에서 역전이 0건이면 |
-| 따라잡기 커서에 여유(watermark, 예: `lastSeen − k`) + 클라이언트 중복 제거(D9의 키로) | 재접속 시 몇 건 더 받는다. 단순하다 | 역전이 드물게 나면 |
-| 방 단위 시퀀스를 **트랜잭션 안에서** 발급 | 방 단위 직렬화. 채팅방은 원래 순서가 있는 곳이라 받아들일 만하지만 경합 비용을 재야 한다 | 역전이 잦으면 |
+| 변형 | 발신자 10 / 30 / 60 | 역전 | **순진한 커서 유실** |
+|---|---|---|---|
+| INSERT만 → 커밋 | 500 / 1,500 / 3,000건 | 53~58 / 75~78 / 81% | **21 / 21 / 17~20%** |
+| `saveMessage` 모양 (INSERT + UPDATE 2) | 〃 | 56~60 / 68~69 / 78% | **56~60 / 68~69 / 78%** |
+| **방 시퀀스, 락 안에서 발급** | 〃 | **0 / 0 / 0** | **0 / 0 / 0** |
 
-**먼저 잰다.** 동시 전송 부하에서 커밋 순서와 ID 순서를 비교해 역전 빈도를 본다(7절). `SENTENCE_LOOKBACK`과 `HibernateBatchInsertVerificationTest`가 한 방식이다 — 가설을 어서션으로 걸고, 틀리면 그 결과를 근거로 쓴다.
+두 번 돌렸고 범위는 두 실행의 값이다. 읽는 법:
+
+- **구멍은 실재하고 크다.** INSERT만으로도 5건 중 1건을 순진한 커서가 놓친다. `IDENTITY` 자체의 문제다.
+- **실제 코드 모양에서는 행 락이 유실을 3배로 증폭한다.** `updateLastMessageNative`가 같은 방의 같은 행을 잠그므로
+  동시 트랜잭션이 거기서 줄을 선다. ID는 줄 서기 **전에** 받았고, 락을 먼저 얻은 쪽이 먼저 커밋되면 커서가 그 ID로
+  튀고, 기다리던 작은 ID 전부가 그 뒤에 커밋돼 사라진다. `saveMessage` 모양에서 역전 수와 유실 수가 같은 이유다.
+- **같은 락 안에서 번호를 받으면 0이다.** 락 획득 순서 = 커밋 순서 = seq 순서. 새 락이 아니라 이미 내던 비용이다.
+
+첫 판의 세 후보 중 "아무것도 안 함"은 탈락했고, watermark는 **폭을 정할 수 없어** 탈락했다 — 락 대기가
+`lock_timeout` 5초까지 갈 수 있어 건수로도 시간으로도 안전 여유가 없다. 방 단위 시퀀스가 남았는데,
+첫 판이 걱정한 "방 단위 직렬화의 경합 비용"은 **새로 생기는 비용이 아니다.** 지금 코드가 이미 그 행을
+잠근다. 그래서 D8은 비용 없는 결정이 됐다.
+
+> **측정의 한계.** 리더는 sleep 없이 폴링하는 최악 조건이다. 실제 재접속 따라잡기는 한 번의 조회이고,
+> 그때 유실되는 것은 **그 순간 커밋 전인 트랜잭션 중 ID가 작은 것**뿐이다. 즉 이 표는 "재접속 한 번당
+> 몇 %를 잃는가"가 아니라 **"ID 순서를 믿는 가정이 얼마나 자주 깨지는가"** 다. 한 방에 몰리는 버스트(TBM
+> 직전)에서는 기전이 같으므로, 빈도가 낮아도 구멍은 같은 구멍이다.
 
 ## 6. 멱등 — 근태의 더블클릭과 같은 문제 (D9)
 
@@ -178,10 +201,15 @@ ADR-0004의 관례대로 **바꾸기 전의 값을 먼저 잰다.** 지금 코�
 |---|---|---|---|
 | M1 | 메시지 수신 지연 p50/p99 — 현재 vs 저장 후 전파 | D1의 대가가 얼마인가 | D1 유지 여부 |
 | M2 | 저장 p99 — 번역 동기 vs 비동기(D3) | 동기로 붙였으면 얼마나 나빴을 것인가 | D3의 근거 |
-| M3 | 동시 전송 N건에서 커밋 순서 ↔ `message_id` 역전 빈도 | 5-4의 구멍이 실재하는가 | D8 |
-| M4 | 동시 전송 후 `last_message_id`가 실제 최대 ID와 일치하는 비율 — 가드 전/후 | P2-12-4가 재현되는가 | D7 검증 |
+| M3 | 동시 전송 N건에서 커밋 순서 ↔ `message_id` 역전 빈도 | 5-4의 구멍이 실재하는가 | **완료 (2026-09-13)** — 실재한다. 5-4의 표. D7·D8 확정 |
+| M4 | 동시 전송 후 `last_message_seq`가 실제 건수와 일치하는가 | P2-12-4가 재현되는가 | M3의 방 시퀀스 변형이 사실상 이것이다 — 3,000건에서 유실 0이면 seq도 빠짐없다. 별도 측정은 하지 않는다 |
 | M5 | 세션 1,000개 · 10명 방에서 팬아웃 지연 | 300 push/s의 무릎이 어디인가 | 2차 전파 방식 |
-| M6 | 연결을 끊고 재접속했을 때 유실 건수 — 커서 전/후 | P2-12-5 | D8·FCM 근거 |
+| M6 | 연결을 끊고 재접속했을 때 유실 건수 — 커서 전/후 | P2-12-5 | D8·FCM 근거. M3의 "순진한 커서 유실"이 서버 쪽 절반을 이미 답했다 |
+
+**M3 조건** (재현용): 로컬 Windows 10, Docker Desktop, Testcontainers `pgvector/pgvector:pg17`(PostgreSQL 17.11),
+`lock_timeout=5s`. raw JDBC, 스크래치 DB에 운영 Flyway 마이그레이션 적용. 발신자 10/30/60 × 50건, 같은 방.
+리더는 별도 커넥션에서 sleep 없이 `WHERE room_id=? AND key > cursor ORDER BY key` 폴링, `cursor = max(seen)`.
+방 시퀀스 변형은 스크래치 DB에만 `chat_rooms.last_message_seq`·`chat_messages.room_seq`를 더해 돌렸다(V6 예정).
 
 밀어 올리는 상한은 가정치의 10배(300 msg/s)다. "300에서도 멀쩡하다"가 나오면 그대로 적는다 — 근태에서 "3 TPS에 분산락이 필요한가"에 "처리량 때문이 아니다"로 답한 것과 같은 결론이 될 수 있고, 그것도 결론이다.
 
@@ -212,8 +240,42 @@ P2-12-6이 적은 기준이 여기서 코드가 된다:
 | 테이블 | 변경 |
 |---|---|
 | `chat_messages` | `language_code VARCHAR(8)`, `client_msg_id UUID`, `UNIQUE(room_id, client_msg_id)`, `sent_at DEFAULT now()` |
-| `chat_members` | `last_read_message_id BIGINT` (기존 `last_read_time`은 한 릴리스 동안 병행 후 제거) |
-| `chat_rooms` | `last_message_id BIGINT` |
+| `chat_messages` | `room_seq BIGINT NOT NULL`, `UNIQUE(room_id, room_seq)` — 기존 `(room_id, sent_at)` 인덱스를 `(room_id, room_seq)`로 대체 |
+| `chat_members` | `last_read_seq BIGINT NOT NULL DEFAULT 0` (기존 `last_read_time`은 한 릴리스 동안 병행 후 제거) |
+| `chat_rooms` | `last_message_seq BIGINT NOT NULL DEFAULT 0` |
 | `chat_message_translations` | 신규 (4-2절) |
 
 `ddl-auto=validate`이므로 엔티티와 함께 바꾸지 않으면 기동이 실패한다. 그게 의도다.
+
+기존 행의 `room_seq` 채우기는 `ROW_NUMBER() OVER (PARTITION BY room_id ORDER BY message_id)`로 한 번 한다 —
+과거 메시지의 역전은 이미 일어난 일이라 되돌릴 수 없고, ID 순서가 그나마 가장 가까운 근사다.
+
+## 11. 계약과 비용
+
+### 11-1. 입출력 — 바뀌는 것
+
+| 경로 | 지금 | 설계 |
+|---|---|---|
+| STOMP `/pub/chat/message` (입력) | `{roomId, senderId, content, messageType, fileUrl}` | + `clientMsgId: UUID` (D9). `senderId`는 세션이 덮어쓰므로 입력에서 뺀다 |
+| STOMP `/sub/chat/room/{id}` (1차 전파) | 요청 DTO 그대로 | `{messageId, roomSeq, clientMsgId, senderId, content, messageType, fileUrl, languageCode, sentAt}` — 전부 DB가 준 값 |
+| STOMP 2차 전파 (번역) | 없음 | `{messageId, languageCode, translated}` — 수신자 언어별 1회 |
+| STOMP `ERROR` (저장 실패) | 로그만 | 보낸 사람에게만 `{clientMsgId, code}` |
+| `GET /room/{id}/messages` | `lastMessageId` 커서 | `afterSeq` 커서, 정렬 `roomSeq` |
+| 읽음 처리 | 메시지 저장 시 `NOW()` | `PATCH /room/{id}/read {upToSeq}` → `last_read_seq = GREATEST(last_read_seq, :upToSeq)` |
+| 방 목록 | 정렬 없음 (P2-12-8) | `ORDER BY last_message_seq DESC`, 안읽음 = `last_message_seq − last_read_seq` |
+
+클라이언트가 지킬 것은 둘이다 — 재접속 시 `afterSeq = 마지막으로 받은 roomSeq`로 따라잡기 한 번, `clientMsgId`로 재전송 중복 제거.
+
+### 11-2. 복잡도 — 어디가 O(1)이고 어디가 병목인가
+
+| 연산 | 비용 | 비고 |
+|---|---|---|
+| 메시지 1건 저장 | **O(1)**: UPDATE(방 행 락 + seq) → INSERT → UPDATE(멤버) | 지금과 쿼리 수가 같다(3). 락도 같은 락. **추가 비용 0** |
+| 방당 처리량 상한 | 락 보유 시간의 역수 | 방 단위 직렬화는 **이미 있던 것**(`updateLastMessageNative`). 방끼리 독립이라 전체는 방 수에 비례 |
+| 따라잡기 `afterSeq` | **O(log n + k)** — `(room_id, room_seq)` 인덱스 | 기존 `(room_id, sent_at)`과 같은 모양 |
+| 안읽음 수 | **O(1)** — 두 정수의 차 | 지금은 방마다 `COUNT(*)` (P2-12-1). 구조적으로 사라진다 |
+| 방 목록 정렬 | O(m log m), m = 내 방 수 | `last_message_seq`는 락 안에서만 증가하므로 경합 없음 |
+| 1차 전파 | **O(멤버 수)** | 지금과 같다. 300 push/s의 무릎이 있다면 여기다 (M5) |
+| 번역 | O(언어 수 − 1) 외부 호출, 저장 경로 밖 | 수신자 수가 아니라 언어 수 (4-2절) |
+
+한 줄로: **저장 경로에 새 비용이 없고, 안읽음이 O(n)에서 O(1)로 내려가며, 대가인 방 단위 직렬화는 이미 내고 있던 것이다.**
