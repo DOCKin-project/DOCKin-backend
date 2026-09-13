@@ -48,3 +48,5 @@ out/
 ### VS Code ###
 .vscode/
 application-secret.properties
+# DB 백업 덤프. scripts/backup/db-backup.sh가 만든다. 저장소에 넣지 않는다.
+backups/
