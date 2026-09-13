@@ -37,6 +37,15 @@ public class ChatRooms {
     @Column(name = "last_message_at")
     private LocalDateTime lastMessageAt;
 
+    /**
+     * 이 방에서 마지막으로 발급된 {@code room_seq}(V6). 발급은 {@code ChatJdbcRepository.nextRoomSeq}가
+     * 행 락 안에서 {@code +1 RETURNING}으로 하며, 엔티티는 읽기 전용으로만 든다 — 같은 트랜잭션에서
+     * 올린 이 객체는 발급 뒤에도 옛 값이다. 안읽음은 {@code last_message_seq - last_read_seq}, 두 정수의 차다.
+     */
+    @Builder.Default
+    @Column(name = "last_message_seq", nullable = false)
+    private Long lastMessageSeq = 0L;
+
     @Builder.Default
     @OneToMany(mappedBy = "chatRooms", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true)
     private List<ChatMembers> members = new ArrayList<>();

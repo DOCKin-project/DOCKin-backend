@@ -1,0 +1,475 @@
+package com.DOCKin.worklog.service;
+
+import com.DOCKin.global.testsupport.ContainerTestSupport;
+import com.DOCKin.worklog.dto.WorkLogDto;
+import jakarta.persistence.EntityManagerFactory;
+import org.hibernate.SessionFactory;
+import org.hibernate.stat.Statistics;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.TestPropertySource;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
+/**
+ * A5 실측 (1/2): <b>목록 API가 한 페이지에 쿼리를 몇 개 쓰는가.</b>
+ *
+ * <h3>왜 이것부터 재는가 — 로드맵 2-3의 진단은 "한 쿼리가 얼마나 느린가"만 본다</h3>
+ * 로드맵 2-3은 {@code work_logs}에 인덱스가 PK 하나뿐이라는 데서 출발해
+ * 풀스캔 / COUNT / OFFSET / 정렬을 지목했다. 전부 <b>쿼리 하나의 비용</b> 이야기다.
+ * 그 앞에 <b>쿼리가 몇 개 나가는가</b>가 있고, 이쪽은 인덱스로 줄어들지 않는다.
+ *
+ * <p>측정을 둘로 나눈 이유이기도 하다. 쿼리 개수는 <b>규모와 무관</b>해서 60건짜리 표본으로
+ * 정확히 셀 수 있다. 그래서 이 테스트는 <b>CI에서 돈다.</b> 100만 건을 적재해야 하는
+ * 지연시간 쪽은 {@code WorkLogListBenchmarkTest}가 따로 맡는다.
+ *
+ * <h3>측정 전 가설 — 그리고 그것이 틀린 지점</h3>
+ * {@link WorkLogDto#from}이 지연 로딩을 세 번 건드린다고 읽었다.
+ * <pre>
+ *   entity.getMember().getUserId()          -- @ManyToOne(LAZY)
+ *   entity.getEquipment().getEquipmentId()  -- @ManyToOne(LAZY)
+ *   entity.getImages().stream()             -- @OneToMany(LAZY)
+ * </pre>
+ * 그러면 페이지 크기 20에 지연 로딩이 60번이어야 한다. <b>실측은 20번이었다.</b>
+ *
+ * <p>앞의 둘이 <b>식별자만 읽기</b> 때문이다. {@code getUserId()}와 {@code getEquipmentId()}는
+ * 각 엔티티의 {@code @Id}이고, 지연 프록시는 <b>식별자를 이미 갖고 있다</b> —
+ * FK 컬럼이 {@code work_logs} 행 안에 있으므로 프록시를 만들 때 함께 채워진다.
+ * 그래서 이 두 줄은 프록시를 초기화하지 않고 쿼리도 내지 않는다.
+ * {@code getMember().getName()}이었다면 얘기가 달라진다.
+ *
+ * <p>아래 {@code 장비와 작성자가 행마다 모두 다른} 표본이 그 주장을 증명한다 —
+ * 프록시가 초기화된다면 행마다 두 개씩 더 나가야 하는데, 늘어나지 않는다.
+ *
+ * <h3>남는 것 — 이미지 컬렉션은 진짜 N+1이다</h3>
+ * {@code getImages()}는 컬렉션이라 식별자로 답할 수 없다. <b>행마다 정확히 한 번</b> 나간다.
+ * 이미지가 <b>없는 행도</b> 나간다 — 비어 있다는 것을 확인하려면 조회해야 하기 때문이다.
+ *
+ * <h3>세는 주체를 Hibernate로 둔다</h3>
+ * {@link Statistics#getPrepareStatementCount()}가 센 값을 쓴다. 코드를 읽고 센 수에는
+ * 읽는 사람의 가정이 섞이고, 이 측정에서 실제로 그 가정이 틀렸다.
+ * {@code HibernateBatchInsertVerificationTest}가 시퀀스 호출을 {@code pg_stat_statements}로
+ * 센 것과 같은 이유다.
+ *
+ * <h3>이 테스트는 결함을 고정한다</h3>
+ * 아래 단언은 <b>현재 상태</b>를 식으로 못 박는다. N+1을 고치면 이 테스트가 실패해야 하고,
+ * 그때 {@code docs/WORK-BACKLOG.md}의 A5 항목과 함께 갱신하는 것이 맞다.
+ */
+@SpringBootTest
+@TestPropertySource(properties = {
+        // 이것이 없으면 Statistics가 전부 0을 돌려주고 테스트는 아무것도 세지 않은 채 통과한다.
+        "spring.jpa.properties.hibernate.generate_statistics=true",
+        // 배치 페치가 켜지면 컬렉션 초기화가 묶여 N+1의 크기가 달라진다.
+        // 운영(application.properties)에 이 값이 없으므로 꺼진 상태를 명시한다 --
+        // 나중에 누가 운영에 켜면 이 테스트가 실패해서 알려주는 편이 낫다.
+        "spring.jpa.properties.hibernate.default_batch_fetch_size=-1"
+})
+class WorkLogListQueryCountTest extends ContainerTestSupport {
+
+    /** 측정 대상 구역. 다른 테스트가 만든 사용자와 섞이지 않도록 이 테스트만 쓰는 이름을 쓴다. */
+    private static final String AREA = "A5측정구역";
+
+    /** 다른 작업자 조회용. 같은 구역이어야 조회가 허용되므로 열람자와 대상을 함께 둔다. */
+    private static final String AREA_OTHER = "A5타인조회구역";
+
+    /**
+     * 장비가 없는 행을 격리하는 구역.
+     *
+     * <p>P2-15-2를 고치기 전에는 <b>이 행이 섞이면 측정이 NPE로 중단되기 때문에</b> 나눴다.
+     * 고친 뒤에도 그대로 두는 이유는 다르다 — {@code 표본_전제_검사}가 첫 페이지의
+     * <b>장비 20개가 모두 달라야</b> 성립한다고 요구하는데, 장비 없는 행이 섞이면
+     * {@code COUNT(DISTINCT equipment_id)}가 NULL을 세지 않아 그 전제가 무너진다.
+     */
+    private static final String AREA_NULL_EQUIPMENT = "A5장비없음구역";
+
+    /**
+     * 측정 구역의 작성자 수. <b>한 페이지(20)를 채우고도 남게</b> 둔다.
+     *
+     * <p>작성자가 적으면 같은 프록시를 여러 행이 공유해서, 프록시가 초기화되더라도
+     * 쿼리가 행 수만큼 늘지 않는다. 그러면 "식별자만 읽어서 안 나간 것"인지
+     * "공유해서 안 나간 것"인지 구별할 수 없다.
+     */
+    private static final int MEMBERS = 25;
+
+    private static final int LOGS = 60;
+
+    /** 다른 작업자 조회 대상이 가진 일지 수. 한 페이지를 채워야 행당 비용이 보인다. */
+    private static final int OTHER_USER_LOGS = 25;
+
+    /** 이미지가 붙는 일지의 비율(1/N). 전부 붙이면 "이미지가 없어도 쿼리가 나가는가"를 못 본다. */
+    private static final int IMAGE_EVERY = 3;
+
+    /** {@code createdAt}이 같은 행들을 격리하는 구역. 이유는 {@code 정렬이_실제로_먹는다}에 있다. */
+    private static final String AREA_TIE = "A5동시각구역";
+
+    /** 동점 표본 수. 둘이면 우연히 맞을 수 있어 셋으로 둔다. */
+    private static final int TIE_LOGS = 3;
+
+    /** 이 테스트가 만든 행만 고르는 접두사. */
+    private static final String PREFIX = "a5";
+
+    /** 키워드 검색이 이 테스트의 행만 잡도록 하는 표식. */
+    private static final String KEYWORD = "A5측정본문";
+
+    @Autowired
+    private WorkLogsService workLogsService;
+
+    @Autowired
+    private JdbcTemplate jdbc;
+
+    @Autowired
+    private EntityManagerFactory entityManagerFactory;
+
+    private Statistics statistics;
+
+    @BeforeEach
+    void setUp() {
+        statistics = entityManagerFactory.unwrap(SessionFactory.class).getStatistics();
+        seed();
+    }
+
+    /**
+     * 세 목록 엔드포인트가 모두 <b>고정 비용 + 행당 1</b>이라는 것을 고정한다.
+     *
+     * <p>고정 비용이 엔드포인트마다 다른 것이 그 자체로 정보다.
+     * <ul>
+     *   <li>전체 목록 4개 — 내 정보 / <b>구역 사용자 전체</b> / 본문 / COUNT</li>
+     *   <li>타인 목록 4개 — 내 정보 / 대상자 정보 / 본문 / COUNT</li>
+     *   <li>키워드 검색 4개 — 내 정보 / 구역 사용자 전체 / 본문 / COUNT. 원래 2개였다 —
+     *       검색만 구역 필터가 없어 전체를 뒤졌기 때문이고(P2-18-10), 전체 목록과 같은 범위로
+     *       맞추면서 같은 고정 비용이 됐다</li>
+     * </ul>
+     * 전체 목록의 두 번째가 {@code findByShipYardArea}이고, 이것은 <b>구역 사용자를 전부</b>
+     * 메모리로 올린 뒤 {@code IN} 절에 통째로 넣는다. 쿼리 <b>개수</b>로는 1이라 여기서는
+     * 작아 보이지만, 규모가 커지면 이 한 줄이 가장 비싸진다 — 그쪽은 2/2 벤치마크가 잰다.
+     */
+    @Test
+    @DisplayName("목록 API 쿼리 수 = 고정 비용 + 행당 1 (이미지 컬렉션)")
+    void 목록_쿼리_수() {
+        Measurement all10 = measure("전체 목록", 10,
+                () -> workLogsService.readWorklog(user(0), PageRequest.of(0, 10)));
+        Measurement all20 = measure("전체 목록", 20,
+                () -> workLogsService.readWorklog(user(0), PageRequest.of(0, 20)));
+        Measurement other = measure("타인 목록", 20,
+                () -> workLogsService.readOtherWorklog(otherViewer(), otherTarget(), PageRequest.of(0, 20)));
+        Measurement search = measure("키워드 검색", 20,
+                () -> workLogsService.searchByKeyword(user(0), KEYWORD, PageRequest.of(0, 20)));
+
+        print(all10, all20, other, search);
+
+        assertEquals(20, all20.rows(), "표본이 한 페이지를 채우지 못하면 행당 비용을 볼 수 없다");
+        assertEquals(20, other.rows(), "타인 목록 표본이 한 페이지를 채우지 못했다");
+        assertEquals(20, search.rows(), "키워드 검색 표본이 한 페이지를 채우지 못했다");
+
+        assertEquals(4 + 10, all10.queries(), explain("전체 목록(10)", all10));
+        assertEquals(4 + 20, all20.queries(), explain("전체 목록(20)", all20));
+        assertEquals(4 + 20, other.queries(), explain("타인 목록(20)", other));
+        assertEquals(4 + 20, search.queries(), explain("키워드 검색(20)", search));
+
+        // 행당 1이 어디서 나오는지까지 고정한다. 개수만 고정하면 다음 사람이 다시 세야 한다.
+        assertEquals(all20.rows(), all20.collectionFetches(),
+                "행당 1의 출처는 이미지 컬렉션이어야 한다");
+    }
+
+    /**
+     * 위 식의 근거를 직접 확인한다 — <b>@ManyToOne 둘은 쿼리를 내지 않는다.</b>
+     *
+     * <p>표본은 작성자와 장비가 <b>행마다 모두 다르게</b> 만들어져 있다. 프록시가 초기화된다면
+     * 행마다 두 개가 더 나가 페이지 20에서 64개가 되어야 한다. 위 테스트가 24를 단언하므로
+     * 이 테스트는 그 <b>전제</b>(표본이 정말 전부 다른가)를 지킨다 — 표본이 공유 상태로
+     * 되돌아가면 위 숫자는 같은 값을 유지하면서 <b>의미만 잃는다.</b> 조용히 틀리는 쪽이다.
+     */
+    @Test
+    @DisplayName("첫 페이지의 작성자와 장비가 행마다 모두 다르다 - 위 측정의 전제")
+    void 표본_전제_검사() {
+        // 첫 페이지에 해당하는 20건을 뽑아 그 안의 서로 다른 값 개수를 센다.
+        // 정렬을 log_id로 두는 것은 findByMemberIn이 정렬 없는 Pageable을 받아
+        // 삽입 순서로 돌려주기 때문이다(측정 호출도 정렬 없는 PageRequest를 쓴다).
+        Sample sample = jdbc.queryForObject("""
+                SELECT COUNT(*), COUNT(DISTINCT user_id), COUNT(DISTINCT equipment_id)
+                  FROM (SELECT log_id, user_id, equipment_id
+                          FROM work_logs
+                         WHERE user_id LIKE ? AND title LIKE 'A5측정%'
+                         ORDER BY log_id
+                         LIMIT 20) first_page
+                """,
+                (rs, n) -> new Sample(rs.getInt(1), rs.getInt(2), rs.getInt(3)),
+                PREFIX + "%");
+
+        assertEquals(20, sample.rows(), "첫 페이지 표본이 20건이 아니다");
+        assertEquals(20, sample.distinctUsers(), "작성자가 겹치면 프록시를 공유해 측정이 무의미해진다");
+        assertEquals(20, sample.distinctEquipment(), "장비가 겹치면 프록시를 공유해 측정이 무의미해진다");
+    }
+
+    /**
+     * P2-15-3 — <b>컨트롤러가 선언한 정렬이 세 목록 쿼리에 실제로 먹는가.</b>
+     *
+     * <p>{@code PageableSortDefaultTest}는 <b>선언</b>만 본다 — {@code @PageableDefault}에
+     * {@code sort}가 있는지. 그 이름이 <b>쿼리로 번역되는지는 다른 문제</b>이고,
+     * 틀리면 애노테이션은 멀쩡한 채 런타임에 터진다. 특히 {@code searchWorkLogs}는
+     * {@code @Query}(JPQL)라 Spring Data가 정렬을 <b>문자열로 덧붙인다.</b>
+     * 이 저장소가 반복해서 잡아 온 "선언은 있는데 안 먹는다"가 그대로 들어설 수 있는 자리다.
+     *
+     * <h4>동점을 일부러 만든다</h4>
+     * {@code createdAt} 하나로 정렬하면 <b>같은 시각의 행들 사이 순서가 정해지지 않는다.</b>
+     * 그래서 {@code logId}를 뒤에 붙였는데, 표본의 시각이 전부 다르면 그 두 번째 키가
+     * <b>한 번도 쓰이지 않은 채</b> 테스트가 통과한다. {@link #AREA_TIE}에 시각이 같은
+     * 세 건을 따로 두는 이유다.
+     */
+    @Test
+    @DisplayName("선언한 정렬이 세 목록 쿼리에 모두 먹고 동점은 logId로 갈린다")
+    void 정렬이_실제로_먹는다() {
+        // 컨트롤러가 선언한 것과 같은 정렬. 여기서 예외가 나면 속성 이름이 쿼리로 번역되지 않는 것이다.
+        PageRequest sorted = PageRequest.of(0, 20,
+                Sort.by(Sort.Direction.DESC, "createdAt", "logId"));
+
+        assertEquals(20, workLogsService.readWorklog(user(0), sorted).getNumberOfElements(),
+                "전체 목록에 정렬이 붙자 결과가 달라졌다");
+        assertEquals(20, workLogsService.readOtherWorklog(otherViewer(), otherTarget(), sorted)
+                .getNumberOfElements(), "타인 목록에 정렬이 붙자 결과가 달라졌다");
+        // JPQL @Query. 정렬 속성이 엔티티 필드명과 어긋나면 여기서 터진다.
+        assertEquals(20, workLogsService.searchByKeyword(user(0), KEYWORD, sorted).getNumberOfElements(),
+                "키워드 검색에 정렬이 붙자 결과가 달라졌다");
+
+        // 시각이 같은 세 건. createdAt만으로는 순서가 정해지지 않는 구간이다.
+        List<Long> tieIds = workLogsService.readWorklog(tieUser(), sorted)
+                .getContent().stream().map(WorkLogDto::getLogId).toList();
+
+        assertEquals(TIE_LOGS, tieIds.size(), "동점 표본이 세 건이 아니다");
+        assertEquals(tieIds.stream().sorted(java.util.Comparator.reverseOrder()).toList(), tieIds,
+                "createdAt이 같은 행들이 logId 내림차순으로 갈리지 않았다 - 두 번째 정렬 키가 안 먹는다");
+
+        System.out.println();
+        System.out.println("=== 같은 createdAt 세 건의 반환 순서 ===");
+        System.out.println("  logId : " + tieIds);
+        System.out.println();
+    }
+
+    /**
+     * P2-15-2 — <b>장비 없는 작업일지가 섞여도 페이지가 나온다.</b>
+     *
+     * <h3>이 테스트는 원래 반대를 단언했다</h3>
+     * 측정 중에 나온 결함이라, 처음에는 {@code assertThrows(NullPointerException.class)}로
+     * <b>깨져 있는 상태를 고정</b>하고 있었다. {@link WorkLogDto#from}이
+     * {@code entity.getEquipment().getEquipmentId()}를 무조건 불렀기 때문이다.
+     * {@code equipment_id}는 {@code V2__baseline_existing_tables.sql}에서 <b>nullable</b>이고
+     * {@code @ManyToOne(LAZY)}는 FK가 NULL이면 프록시가 아니라 <b>null을 넣는다</b> —
+     * 위 측정이 "식별자만 읽으니 쿼리가 안 나간다"고 확인한 그 접근이, NULL 앞에서는 터진다.
+     *
+     * <p>영향 범위가 행 하나가 아니라 <b>페이지</b>였다. {@code Page.map}은 한 행에서 터지면
+     * 거기서 멈추므로 장비 없는 일지 한 건이 목록 전체를 못 보게 만든다.
+     * 그리고 P2-14-1이 404로 내려보낸 {@code NoResourceFoundException}과 달리 이건 진짜 500이다.
+     *
+     * <h3>단언을 셋으로 나눈 이유</h3>
+     * "예외가 안 난다"만 확인하면 <b>빈 페이지를 돌려주는 것으로 고쳐도</b> 통과한다.
+     * 그 행이 실제로 <b>실려 나오고</b>, {@code equipmentId}만 null이며, 나머지 필드는
+     * 멀쩡한 것까지 봐야 고친 것이 맞다.
+     */
+    @Test
+    @DisplayName("장비 없는 일지가 섞여도 목록이 나오고 equipmentId만 null이다")
+    void 장비가_없어도_목록이_나온다() {
+        Page<WorkLogDto> page = workLogsService.readWorklog(nullEquipmentUser(), PageRequest.of(0, 20));
+
+        assertEquals(1, page.getNumberOfElements(),
+                "장비 없는 행이 응답에서 빠졌다 - 예외를 안 내는 것과 행을 싣는 것은 다르다");
+
+        WorkLogDto dto = page.getContent().get(0);
+        assertNull(dto.getEquipmentId(), "장비가 없으면 equipmentId는 null이어야 한다");
+        assertEquals(nullEquipmentUser(), dto.getUserId(), "장비와 무관한 필드까지 비었다");
+        assertEquals("A5장비없음", dto.getTitle(), "장비와 무관한 필드까지 비었다");
+
+        System.out.println();
+        System.out.println("=== 장비 없는 일지 1건이 섞인 페이지 ===");
+        System.out.println("  반환 행     : " + page.getNumberOfElements());
+        System.out.println("  equipmentId : " + dto.getEquipmentId());
+        System.out.println();
+    }
+
+    // ------------------------------------------------------------------
+    // 측정
+    // ------------------------------------------------------------------
+
+    private record Measurement(String name, int pageSize, long rows, long queries,
+                               long entityLoads, long collectionFetches) {}
+
+    /** 첫 페이지 표본의 형태. 세 값을 한 쿼리로 가져와야 서로 다른 20건을 본 것이 보장된다. */
+    private record Sample(int rows, int distinctUsers, int distinctEquipment) {}
+
+    /**
+     * 한 번 호출하고 그동안 나간 JDBC 문장 수를 센다.
+     *
+     * <p><b>{@code clear()}를 호출 직전에 둔다.</b> 통계는 SessionFactory 단위로 누적되므로
+     * 앞선 호출의 수가 섞이면 배수가 실제보다 크게 나온다.
+     */
+    private Measurement measure(String name, int pageSize,
+                                java.util.function.Supplier<Page<WorkLogDto>> call) {
+        statistics.clear();
+        Page<WorkLogDto> page = call.get();
+        return new Measurement(name, pageSize, page.getNumberOfElements(),
+                statistics.getPrepareStatementCount(),
+                statistics.getEntityLoadCount(),
+                statistics.getCollectionFetchCount());
+    }
+
+    private String explain(String label, Measurement m) {
+        return """
+                %s의 쿼리 수가 예상과 다르다: %d개 (행 %d / 컬렉션 페치 %d).
+                줄었다면 N+1이 해소된 것이므로 이 테스트와 docs/WORK-BACKLOG.md의 A5를 함께 갱신하라.
+                늘었다면 매핑이 지연 로딩을 하나 더 건드리기 시작한 것이다."""
+                .formatted(label, m.queries(), m.rows(), m.collectionFetches());
+    }
+
+    private void print(Measurement... measurements) {
+        System.out.println();
+        System.out.println("=== A5 (1/2) 목록 API 한 페이지당 쿼리 수 ===");
+        System.out.printf("%-11s | %-11s | %-7s | %-9s | %-9s | %-11s | %-11s%n",
+                "엔드포인트", "페이지 크기", "반환 행", "JDBC 문장", "고정 비용", "컬렉션 페치", "엔티티 로드");
+        System.out.println("-".repeat(96));
+        for (Measurement m : measurements) {
+            System.out.printf("%-11s | %-11d | %-7d | %-9d | %-9d | %-11d | %-11d%n",
+                    m.name(), m.pageSize(), m.rows(), m.queries(),
+                    m.queries() - m.rows(), m.collectionFetches(), m.entityLoads());
+        }
+        System.out.println();
+        System.out.println("  고정 비용 = 쿼리 수 - 행 수. 행당 정확히 1개가 이미지 컬렉션이다.");
+        System.out.println("  @ManyToOne 둘(member/equipment)은 식별자만 읽으므로 쿼리를 내지 않는다.");
+        System.out.println();
+    }
+
+    // ------------------------------------------------------------------
+    // 표본
+    // ------------------------------------------------------------------
+
+    private String user(int index) {
+        return "%su%02d".formatted(PREFIX, index);
+    }
+
+    /**
+     * 검색이 목록보다 넓게 보이면 안 된다 (P2-18-10). 다른 구역의 사용자가 같은 키워드로
+     * 검색하면 0건이어야 한다 — 이전에는 전체 60건이 그대로 나왔다.
+     */
+    @Test
+    @DisplayName("키워드 검색은 같은 구역만 — 다른 구역 사용자에게는 0건")
+    void 검색_구역_범위() {
+        assertEquals(20, workLogsService.searchByKeyword(user(0), KEYWORD, PageRequest.of(0, 20))
+                .getNumberOfElements(), "같은 구역 사용자는 표본을 본다");
+        assertEquals(0, workLogsService.searchByKeyword(otherViewer(), KEYWORD, PageRequest.of(0, 20))
+                .getTotalElements(), "다른 구역 사용자에게 이 구역의 작업일지가 검색된다");
+    }
+
+    private String otherViewer() {
+        return PREFIX + "ov";
+    }
+
+    private String otherTarget() {
+        return PREFIX + "ot";
+    }
+
+    private String nullEquipmentUser() {
+        return PREFIX + "null";
+    }
+
+    private String tieUser() {
+        return PREFIX + "tie";
+    }
+
+    /**
+     * 표본을 넣는다. <b>JPA가 아니라 JDBC로 넣는 이유</b>가 둘이다.
+     * <ul>
+     *   <li>{@code equipment_id}가 NULL인 행을 만들어야 하는데 생성 서비스가 그것을 막는다</li>
+     *   <li>영속성 컨텍스트에 엔티티가 남아 있으면 뒤이은 조회가 <b>1차 캐시에서 나와</b>
+     *       쿼리가 아예 안 나간다 — 세려는 대상이 사라진다</li>
+     * </ul>
+     */
+    private void seed() {
+        jdbc.update("DELETE FROM work_log_images WHERE work_log_id IN "
+                + "(SELECT log_id FROM work_logs WHERE user_id LIKE ?)", PREFIX + "%");
+        jdbc.update("DELETE FROM work_logs WHERE user_id LIKE ?", PREFIX + "%");
+        jdbc.update("DELETE FROM users WHERE user_id LIKE ?", PREFIX + "%");
+        jdbc.update("DELETE FROM equipment WHERE nfc_tag LIKE ?", PREFIX + "-nfc-%");
+
+        for (int i = 0; i < MEMBERS; i++) {
+            insertUser(user(i), AREA);
+        }
+        insertUser(otherViewer(), AREA_OTHER);
+        insertUser(otherTarget(), AREA_OTHER);
+        insertUser(nullEquipmentUser(), AREA_NULL_EQUIPMENT);
+        insertUser(tieUser(), AREA_TIE);
+
+        // 장비를 일지 수만큼 만든다. 첫 페이지에서 장비가 겹치면 프록시를 공유하게 되어
+        // "식별자만 읽어 쿼리가 안 나간다"는 주장을 이 표본으로는 확인할 수 없다.
+        List<Long> equipmentIds = new ArrayList<>();
+        for (int i = 0; i < LOGS; i++) {
+            equipmentIds.add(insertEquipment(i));
+        }
+
+        LocalDateTime base = LocalDateTime.of(2026, 1, 1, 9, 0);
+        for (int i = 0; i < LOGS; i++) {
+            // 작성자를 순서대로 배정한다. MEMBERS가 페이지 크기보다 크므로 첫 페이지는 전부 다른 사람이다.
+            Long logId = insertWorkLog("A5측정제목 %03d".formatted(i),
+                    "%s %03d - 목록 API 쿼리 수 측정용 표본이다.".formatted(KEYWORD, i),
+                    base.plusMinutes(i), user(i % MEMBERS), equipmentIds.get(i));
+
+            if (i % IMAGE_EVERY == 0) {
+                jdbc.update("INSERT INTO work_log_images (image_url, work_log_id) VALUES (?, ?)",
+                        "https://example.invalid/a5-%03d.jpg".formatted(i), logId);
+            }
+        }
+
+        // 타인 조회 대상. 키워드 표식을 빼서 검색 측정에 섞이지 않게 한다.
+        for (int i = 0; i < OTHER_USER_LOGS; i++) {
+            insertWorkLog("A5타인제목 %03d".formatted(i), "타인 목록 측정용 표본이다.",
+                    base.plusMinutes(i), otherTarget(), equipmentIds.get(i));
+        }
+
+        // 장비 없는 행. 구역을 나누는 이유는 AREA_NULL_EQUIPMENT 주석에 있다.
+        insertWorkLog("A5장비없음", "장비를 지정하지 않은 작업일지다.", base, nullEquipmentUser(), null);
+
+        // createdAt이 같은 세 건. 두 번째 정렬 키(logId)가 실제로 쓰이는 유일한 구간이다.
+        // KEYWORD를 넣지 않아야 키워드 검색 측정에 섞이지 않는다.
+        for (int i = 0; i < TIE_LOGS; i++) {
+            insertWorkLog("A5동시각 %d".formatted(i), "정렬 동점 표본이다.",
+                    base, tieUser(), equipmentIds.get(i));
+        }
+    }
+
+    private Long insertWorkLog(String title, String text, LocalDateTime at,
+                               String userId, Long equipmentId) {
+        return jdbc.queryForObject("""
+                INSERT INTO work_logs (title, log_text, created_at, updated_at, user_id, equipment_id)
+                VALUES (?, ?, ?, ?, ?, ?)
+                RETURNING log_id
+                """, Long.class, title, text, at, at, userId, equipmentId);
+    }
+
+    private void insertUser(String userId, String area) {
+        jdbc.update("""
+                INSERT INTO users (user_id, name, password, role, language_code,
+                                   ship_yard_area, remaining_leave_days, tts_enabled, work_shift, created_at)
+                VALUES (?, ?, ?, 'USER', 'ko', ?, 15, false, 'MORNING', ?)
+                """, userId, userId, "$2a$10$" + "0".repeat(53), area,
+                LocalDateTime.of(2026, 1, 1, 0, 0));
+    }
+
+    private Long insertEquipment(int index) {
+        return jdbc.queryForObject("""
+                INSERT INTO equipment (name, qr_code, nfc_tag) VALUES (?, ?, ?)
+                RETURNING equipment_id
+                """, Long.class,
+                "A5측정장비%03d".formatted(index),
+                "%s-qr-%03d".formatted(PREFIX, index),
+                "%s-nfc-%03d".formatted(PREFIX, index));
+    }
+}

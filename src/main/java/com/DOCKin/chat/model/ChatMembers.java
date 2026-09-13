@@ -34,6 +34,14 @@ public class ChatMembers {
     @Column(name="last_read_time")
     private LocalDateTime lastReadTime;
 
+    /**
+     * 이 멤버가 읽은 마지막 {@code room_seq}(V6, ADR-0008 D7). 0은 "아무것도 안 읽음"이다.
+     * {@code lastReadTime}은 한 릴리스 동안 병행하고 V7에서 내린다 — 읽음 API가 seq를 쓰게 바뀐 뒤.
+     */
+    @Builder.Default
+    @Column(name = "last_read_seq", nullable = false)
+    private Long lastReadSeq = 0L;
+
     @PrePersist
     public void prePersist(){
         this.joinedAt=LocalDateTime.now();

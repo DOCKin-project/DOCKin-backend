@@ -17,10 +17,10 @@ public class WorkLogImage {
 
     @ManyToOne(fetch=FetchType.LAZY)
     @JoinColumn(name = "work_log_id")
-    private Work_logs workLog;
+    private WorkLog workLog;
 
     @Builder
-    public WorkLogImage(String imageUrl, Work_logs workLog){
+    public WorkLogImage(String imageUrl, WorkLog workLog){
         this.imageUrl=imageUrl;
         this.workLog=workLog;
     }

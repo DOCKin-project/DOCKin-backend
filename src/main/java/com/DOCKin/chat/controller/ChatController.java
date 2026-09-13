@@ -1,8 +1,11 @@
 package com.DOCKin.chat.controller;
 
 import com.DOCKin.chat.dto.ChatMessageRequestDto;
+import com.DOCKin.chat.dto.ChatSendErrorDto;
 import com.DOCKin.chat.service.ChatRoomService;
 import com.DOCKin.chat.service.ChatService;
+import com.DOCKin.global.error.BusinessException;
+import com.DOCKin.global.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -10,7 +13,6 @@ import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
-import java.util.List;
 
 @Slf4j
 @Controller
@@ -23,26 +25,35 @@ public class ChatController {
     @MessageMapping("/chat/message")
     public void message(ChatMessageRequestDto message, SimpMessageHeaderAccessor headerAccessor){
 
-        //세션에서 인증된 실제 userId 추출
-        if (headerAccessor.getSessionAttributes() != null) {
-            String actualUserId = (String) headerAccessor.getSessionAttributes().get("userId");
-            if (actualUserId != null) {
-                message.setSenderId(actualUserId);
-            }
+        // 발신자는 세션이 정한다. 이전에는 세션에 없으면 본문의 senderId를 그대로 썼다 —
+        // 그러면 아무나 남의 이름으로 보낼 수 있다. 세션에 없으면 CONNECT를 거치지 않은 것이다.
+        String actualUserId = headerAccessor.getSessionAttributes() == null
+                ? null
+                : (String) headerAccessor.getSessionAttributes().get("userId");
+        if (actualUserId == null) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED);
         }
+        message.setSenderId(actualUserId);
 
         log.info("메시지 수신: 방번호={}, 보낸이={}, 내용={}",
-                message.getRoomId(),message.getSenderId(),message.getContent());
+                message.getRoomId(), message.getSenderId(), message.getContent());
 
-        messagingTemplate.convertAndSend("/sub/chat/room/" + message.getRoomId(), message);
-
-        List<String> memberIds = chatRoomService.getParticipantsIds(message.getRoomId());
-
-        for (String userId : memberIds) {
-            messagingTemplate.convertAndSend("/sub/user/" + userId + "/rooms", message);
+        // 순서가 바뀌었다(ADR-0008 D1). 이전에는 여기서 방·멤버에게 먼저 전파하고 저장을 @Async로 뒤에
+        // 했다 — 저장이 실패해도 이미 다 본 뒤였다. 이제 저장이 이 스레드에서 끝나고, 전파는 커밋 뒤
+        // ChatBroadcaster가 한다. 이 메서드는 전파하지 않는다.
+        try {
+            // 방의 멤버만 보낸다. 이전에는 아무 roomId로나 보내면 그 방에 전파되고 저장됐다(P2-18-3).
+            chatRoomService.validChatRoomMember(actualUserId, message.getRoomId());
+            chatService.saveMessage(message);
+        } catch (Exception e) {
+            // 실패의 반경은 보낸 사람 하나다. 다른 사람은 애초에 못 봤다.
+            // STOMP ERROR 프레임이 아니라 사용자 큐로 보낸다 — ERROR는 연결을 닫는다(ChatSendErrorDto 참고).
+            ErrorCode code = e instanceof BusinessException be ? be.getErrorCode() : ErrorCode.INTERNAL_SERVER_ERROR;
+            log.warn("발신 실패 - room={}, sender={}, clientMsgId={}, code={}",
+                    message.getRoomId(), actualUserId, message.getClientMsgId(), code.getCode(), e);
+            messagingTemplate.convertAndSend("/sub/user/" + actualUserId + "/errors",
+                    new ChatSendErrorDto(message.getClientMsgId(), code.getCode(), code.getMessage()));
         }
-        
-        chatService.saveMessage(message);
     }
 
 

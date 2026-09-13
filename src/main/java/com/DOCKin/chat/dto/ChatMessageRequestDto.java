@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
+import java.util.UUID;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -31,5 +33,7 @@ public class ChatMessageRequestDto {
 
     @Schema(description = "파일 링크", example = "파일 보낼 때에만 사용함")
     private String fileUrl;
+    @Schema(description = "클라이언트가 발급한 재전송 키(UUID). 같은 방에서 같은 키는 한 번만 저장된다", example = "6f1c2e2a-3b7d-4c0e-9a1f-2d8e5b7c4a10")
+    private UUID clientMsgId;
 }
 

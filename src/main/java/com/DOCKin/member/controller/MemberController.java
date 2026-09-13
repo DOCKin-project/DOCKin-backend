@@ -4,11 +4,14 @@ import com.DOCKin.member.dto.LogOutRequestDto;
 import com.DOCKin.member.dto.LoginRequestDto;
 import com.DOCKin.member.dto.LoginResponseDto;
 import com.DOCKin.member.dto.MemberRequestDto;
+import com.DOCKin.member.dto.RefreshRequestDto;
 import com.DOCKin.member.service.MemberService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import com.DOCKin.global.security.auth.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +33,12 @@ public class MemberController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
+    @Operation(summary="토큰 갱신", description = "리프레시 토큰으로 새 액세스·리프레시 토큰을 받는다. 낸 리프레시 토큰은 무효가 된다")
+    @PostMapping("/refresh")
+    public ResponseEntity<LoginResponseDto> refresh(@Valid @RequestBody RefreshRequestDto dto){
+        return ResponseEntity.ok(memberService.refresh(dto.getRefreshToken()));
+    }
+
     @Operation(summary="로그아웃",description = "로그아웃을 할 수 있음")
     @PostMapping("/logout")
     public ResponseEntity<Void> Logout(@Valid @RequestBody LogOutRequestDto dto){
@@ -47,8 +56,10 @@ public class MemberController {
 
     @Operation(summary="회원탈퇴", description = "회원탈퇴를 할 수 있음")
     @DeleteMapping("/{userId}")
-    public ResponseEntity<Void> deleteMember(@PathVariable("userId") String userId){
-        memberService.deleteAccount(userId);
+    public ResponseEntity<Void> deleteMember(@PathVariable("userId") String userId,
+                                             @AuthenticationPrincipal CustomUserDetails customUserDetails){
+        // 경로의 userId만 믿으면 남의 계정을 지운다(P2-18-2). 인증 주체와 대조한다.
+        memberService.deleteAccount(userId, customUserDetails.getMember().getUserId());
         return ResponseEntity.noContent().build();
     }
 
