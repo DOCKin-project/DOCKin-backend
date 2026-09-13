@@ -10,7 +10,7 @@
 
 - **Checklist**(템플릿, equipment+phase 유니크) → **ChecklistItem**(순서 있는 항목) → **ChecklistResult**(append-only 점검 기록, 항목 단위로 재설계).
 - `checklist_results`를 upsert 없이 매 체크/해제마다 새 행을 쌓는 감사 로그로 설계 — `docs/adr/0005`가 별도로 짚었던 "감사 로그 부재" 갭도 같이 해소.
-- "현재 상태" 조회는 네이티브 쿼리로 항목별 최신 결과를 배치 1회 조회(`MAX(result_id)` 기준) — N+1 방지, `docs/adr/0002` 원칙 준수.
+- "현재 상태" 조회는 항목별 최신 결과를 배치 1회 조회(`MAX(result_id)` 기준) — N+1 방지, `docs/adr/0002` 원칙 준수. 처음엔 네이티브 SQL이었고 2026-09-13에 JPQL로 옮겼다 — 결과가 엔티티라 JPA 쪽이 맞다. `ChecklistResultRepositoryTest`가 실제 DB에서 뜻이 같은지 본다.
 - RBAC은 프로젝트 관례대로(`@PreAuthorize` 미사용) 서비스 레이어 수동 체크(`SafetyCourseService` 패턴).
 - 관리자(`ChecklistAdminController`, `/api/checklist/admin`)와 사용자(`ChecklistUserController`, `/api/checklist/user`) 컨트롤러 분리.
 - `ErrorCode`에 `CK001~CK007` 추가, `schema.sql` 갱신(컬럼명 `role`→`phase`, `checklist_results`를 `checklist_item_id` 참조로 변경, 중복 `equipment_id` 컬럼 제거).

@@ -7,6 +7,7 @@ import com.DOCKin.rag.model.DocumentChunk;
 import com.DOCKin.rag.model.SourceType;
 import com.DOCKin.rag.repository.DocumentChunkRepository;
 import com.DOCKin.rag.repository.NearestChunk;
+import com.DOCKin.rag.repository.NearestChunkJdbcRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,6 +35,8 @@ class RetrievalServiceTest {
 
     @Mock
     private DocumentChunkRepository documentChunkRepository;
+    @Mock
+    private NearestChunkJdbcRepository nearestChunkJdbcRepository;
     @Mock
     private EmbeddingClient embeddingClient;
 
@@ -79,7 +82,7 @@ class RetrievalServiceTest {
         // 이 코드여야 retrieve()가 잡아 키워드 폴백으로 내려보낸다.
         assertEquals(ErrorCode.EMBEDDING_DIMENSION_MISMATCH, e.getErrorCode());
         // 차원이 맞지 않으면 쿼리 자체를 보내지 않는다(DB가 거부할 쿼리다).
-        verify(documentChunkRepository, never()).findNearestPublic(anyString(), anyString(), anyInt());
+        verify(nearestChunkJdbcRepository, never()).findNearestPublic(anyString(), anyString(), anyInt());
     }
 
     @Test
@@ -87,10 +90,10 @@ class RetrievalServiceTest {
     void 거리_정렬과_topK() {
         stubQuery();
         // 두 목록으로 나뉘어 오므로 합친 뒤의 정렬이 맞는지 본다.
-        when(documentChunkRepository.findNearestPublic(eq(MODEL), anyString(), anyInt())).thenReturn(List.of(
+        when(nearestChunkJdbcRepository.findNearestPublic(eq(MODEL), anyString(), anyInt())).thenReturn(List.of(
                 chunk(1L, SourceType.SAFETY_COURSE, 100L, "먼 것", 0.90),
                 chunk(2L, SourceType.SAFETY_COURSE, 200L, "가장 가까운 것", 0.05)));
-        when(documentChunkRepository.findNearestOwned(eq(MODEL), eq(USER), anyString(), anyInt())).thenReturn(List.of(
+        when(nearestChunkJdbcRepository.findNearestOwned(eq(MODEL), eq(USER), anyString(), anyInt())).thenReturn(List.of(
                 chunk(3L, SourceType.WORK_LOG, 300L, "중간", 0.40)));
 
         List<RetrievedChunk> result = retrievalService.search("안전", USER, false, 2);
@@ -108,12 +111,12 @@ class RetrievalServiceTest {
     void 문서당_상한() {
         stubQuery();
         // 같은 작업일지(sourceId=500)에서 나온 청크 3개가 모두 상위
-        when(documentChunkRepository.findNearestPublic(eq(MODEL), anyString(), anyInt())).thenReturn(List.of(
+        when(nearestChunkJdbcRepository.findNearestPublic(eq(MODEL), anyString(), anyInt())).thenReturn(List.of(
                 chunk(1L, SourceType.WORK_LOG, 500L, "A-0", 0.01),
                 chunk(2L, SourceType.WORK_LOG, 500L, "A-1", 0.02),
                 chunk(3L, SourceType.WORK_LOG, 500L, "A-2", 0.03),
                 chunk(4L, SourceType.WORK_LOG, 600L, "B-0", 0.50)));
-        when(documentChunkRepository.findNearestOwned(eq(MODEL), eq(USER), anyString(), anyInt()))
+        when(nearestChunkJdbcRepository.findNearestOwned(eq(MODEL), eq(USER), anyString(), anyInt()))
                 .thenReturn(List.of());
 
         List<RetrievedChunk> result = retrievalService.search("용접", USER, false, 3);
@@ -128,30 +131,30 @@ class RetrievalServiceTest {
     @DisplayName("문서당 상한 때문에 버려질 몫까지 감안해 후보를 넉넉히 요청한다")
     void 후보_배수_요청() {
         stubQuery();
-        when(documentChunkRepository.findNearestPublic(eq(MODEL), anyString(), anyInt()))
+        when(nearestChunkJdbcRepository.findNearestPublic(eq(MODEL), anyString(), anyInt()))
                 .thenReturn(List.of(chunk(1L, SourceType.WORK_LOG, 1L, "x", 0.1)));
-        when(documentChunkRepository.findNearestOwned(eq(MODEL), eq(USER), anyString(), anyInt()))
+        when(nearestChunkJdbcRepository.findNearestOwned(eq(MODEL), eq(USER), anyString(), anyInt()))
                 .thenReturn(List.of());
 
         retrievalService.search("용접", USER, false, 5);
 
         // topK=5인데 정확히 5건만 가져오면, 한 문서에서 3건이 상위를 차지했을 때 결과가 모자란다.
-        verify(documentChunkRepository).findNearestPublic(eq(MODEL), anyString(), eq(20));
+        verify(nearestChunkJdbcRepository).findNearestPublic(eq(MODEL), anyString(), eq(20));
     }
 
     @Test
     @DisplayName("관리자는 권한 선필터 없이 전체 청크를 검색 대상으로 삼는다")
     void 관리자_전체_조회() {
         stubQuery();
-        when(documentChunkRepository.findNearestAll(eq(MODEL), anyString(), anyInt())).thenReturn(List.of(
+        when(nearestChunkJdbcRepository.findNearestAll(eq(MODEL), anyString(), anyInt())).thenReturn(List.of(
                 chunk(1L, SourceType.WORK_LOG, 700L, "남의 작업일지", 0.2)));
 
         List<RetrievedChunk> result = retrievalService.search("용접", "admin", true, 5);
 
         assertEquals(1, result.size());
         // 권한 필터가 걸린 쿼리는 호출되지 않아야 한다.
-        verify(documentChunkRepository, never()).findNearestPublic(anyString(), anyString(), anyInt());
-        verify(documentChunkRepository, never()).findNearestOwned(anyString(), anyString(), anyString(), anyInt());
+        verify(nearestChunkJdbcRepository, never()).findNearestPublic(anyString(), anyString(), anyInt());
+        verify(nearestChunkJdbcRepository, never()).findNearestOwned(anyString(), anyString(), anyString(), anyInt());
     }
 
     // --- helpers ---
@@ -164,17 +167,10 @@ class RetrievalServiceTest {
     }
 
     /**
-     * 네이티브 쿼리 투영 스텁. {@code distance}는 코사인 <b>거리</b>이므로 작을수록 가깝다.
+     * 검색 결과 한 건. {@code distance}는 코사인 <b>거리</b>이므로 작을수록 가깝다.
      */
     private static NearestChunk chunk(Long chunkId, SourceType type, Long sourceId,
                                       String content, double distance) {
-        return new NearestChunk() {
-            @Override public Long getChunkId() { return chunkId; }
-            @Override public String getSourceType() { return type.name(); }
-            @Override public Long getSourceId() { return sourceId; }
-            @Override public Integer getChunkIndex() { return 0; }
-            @Override public String getContent() { return content; }
-            @Override public Double getDistance() { return distance; }
-        };
+        return new NearestChunk(chunkId, type, sourceId, 0, content, distance);
     }
 }

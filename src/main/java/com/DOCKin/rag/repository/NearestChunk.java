@@ -1,7 +1,9 @@
 package com.DOCKin.rag.repository;
 
+import com.DOCKin.rag.model.SourceType;
+
 /**
- * 벡터 검색 결과 한 건. 네이티브 쿼리의 컬럼을 그대로 받는 인터페이스 투영이다.
+ * 벡터 검색 결과 한 건. {@link NearestChunkJdbcRepository}가 SQL 결과 행을 그대로 옮긴다.
  *
  * <h3>{@link ChunkVector}와의 차이 — 본문을 싣는다</h3>
  * {@code ChunkVector}는 <b>후보 전체</b>를 메모리에 올려야 했기에 본문을 뺐다.
@@ -15,20 +17,13 @@ package com.DOCKin.rag.repository;
  * <h3>distance는 유사도가 아니다</h3>
  * pgvector의 {@code <=>}는 <b>코사인 거리</b>이며 {@code 1 - 코사인 유사도}다.
  * 작을수록 가깝다. 유사도로 쓰려면 {@code 1 - distance}로 뒤집어야 한다.
+ *
+ * @param distance 코사인 <b>거리</b>(0에 가까울수록 유사). 유사도는 {@code 1 - distance}
  */
-public interface NearestChunk {
-
-    Long getChunkId();
-
-    /** {@code SourceType} enum의 이름. 네이티브 쿼리라 문자열로 온다. */
-    String getSourceType();
-
-    Long getSourceId();
-
-    Integer getChunkIndex();
-
-    String getContent();
-
-    /** 코사인 <b>거리</b>(0에 가까울수록 유사). 유사도는 {@code 1 - distance}. */
-    Double getDistance();
+public record NearestChunk(Long chunkId,
+                           SourceType sourceType,
+                           Long sourceId,
+                           Integer chunkIndex,
+                           String content,
+                           double distance) {
 }

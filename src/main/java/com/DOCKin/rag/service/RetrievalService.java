@@ -5,9 +5,9 @@ import com.DOCKin.global.error.ErrorCode;
 import com.DOCKin.rag.dto.RetrievalResult;
 import com.DOCKin.rag.dto.RetrievedChunk;
 import com.DOCKin.rag.model.DocumentChunk;
-import com.DOCKin.rag.model.SourceType;
 import com.DOCKin.rag.repository.DocumentChunkRepository;
 import com.DOCKin.rag.repository.NearestChunk;
+import com.DOCKin.rag.repository.NearestChunkJdbcRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -74,7 +74,10 @@ public class RetrievalService {
     /** 폴백에서 사용할 최대 키워드 수. 질의가 길어도 LIKE 쿼리가 무한정 늘지 않게 한다. */
     private static final int MAX_FALLBACK_KEYWORDS = 3;
 
+    /** 엔티티 경로(키워드 폴백). */
     private final DocumentChunkRepository documentChunkRepository;
+    /** SQL 경로(벡터 검색). 둘을 나눈 이유는 {@link NearestChunkJdbcRepository} 참고. */
+    private final NearestChunkJdbcRepository nearestChunkJdbcRepository;
     private final EmbeddingClient embeddingClient;
 
     /**
@@ -153,12 +156,12 @@ public class RetrievalService {
 
         List<NearestChunk> candidates;
         if (admin) {
-            candidates = documentChunkRepository.findNearestAll(model, literal, limit);
+            candidates = nearestChunkJdbcRepository.findNearestAll(model, literal, limit);
         } else {
             // 공개 청크와 본인 소유 청크를 각각 top-n으로 뽑아 합친다.
             // 각 목록이 자기 집합의 상위 n건이므로, 합집합의 상위 n건은 이 안에 들어 있다.
-            candidates = new ArrayList<>(documentChunkRepository.findNearestPublic(model, literal, limit));
-            candidates.addAll(documentChunkRepository.findNearestOwned(model, userId, literal, limit));
+            candidates = new ArrayList<>(nearestChunkJdbcRepository.findNearestPublic(model, literal, limit));
+            candidates.addAll(nearestChunkJdbcRepository.findNearestOwned(model, userId, literal, limit));
         }
         return selectTopK(candidates, topK);
     }
@@ -171,30 +174,30 @@ public class RetrievalService {
      */
     private List<RetrievedChunk> selectTopK(List<NearestChunk> candidates, int topK) {
         List<NearestChunk> sorted = new ArrayList<>(candidates);
-        sorted.sort(Comparator.comparingDouble(NearestChunk::getDistance));
+        sorted.sort(Comparator.comparingDouble(NearestChunk::distance));
 
         List<RetrievedChunk> selected = new ArrayList<>(topK);
         Map<String, Integer> perSource = new HashMap<>();
 
         for (NearestChunk candidate : sorted) {
             // pgvector의 <=> 는 코사인 "거리"다. 유사도로 쓰려면 뒤집어야 한다.
-            double similarity = 1.0 - candidate.getDistance();
+            double similarity = 1.0 - candidate.distance();
             if (similarity < minScore) {
                 // 거리 오름차순이므로 이후는 모두 더 낮다.
                 break;
             }
-            String sourceKey = candidate.getSourceType() + ":" + candidate.getSourceId();
+            String sourceKey = candidate.sourceType() + ":" + candidate.sourceId();
             int used = perSource.getOrDefault(sourceKey, 0);
             if (used >= MAX_PER_SOURCE) {
                 continue;
             }
             perSource.put(sourceKey, used + 1);
             selected.add(new RetrievedChunk(
-                    candidate.getChunkId(),
-                    SourceType.valueOf(candidate.getSourceType()),
-                    candidate.getSourceId(),
-                    candidate.getChunkIndex(),
-                    candidate.getContent(),
+                    candidate.chunkId(),
+                    candidate.sourceType(),
+                    candidate.sourceId(),
+                    candidate.chunkIndex(),
+                    candidate.content(),
                     similarity));
 
             if (selected.size() >= topK) {

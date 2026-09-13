@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.TestPropertySource;
 
 import java.util.List;
@@ -20,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * 검증: 유사도 계산을 DB로 옮긴 네이티브 쿼리가 실제로 동작하는가?
+ * 검증: 유사도 계산을 DB로 옮긴 {@link NearestChunkJdbcRepository}의 SQL이 실제로 동작하는가?
  *
  * <h3>단위 테스트로는 확인할 수 없는 것들</h3>
  * {@code RetrievalServiceTest}는 리포지토리를 목킹하므로 <b>SQL이 한 줄도 실행되지 않는다.</b>
@@ -29,13 +30,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * <ul>
  *   <li>{@code CAST(:queryVector AS vector)} 바인딩이 통하는가 — 문자열로 넘긴 벡터가 타입 변환되는가</li>
  *   <li>{@code LIMIT :limit} 파라미터 바인딩이 되는가</li>
- *   <li>인터페이스 투영이 컬럼 별칭과 맞물리는가 ({@code "chunkId"} → {@code getChunkId()})</li>
+ *   <li>RowMapper가 컬럼과 맞물리는가 ({@code source_type} 문자열이 enum으로 되살아나는가)</li>
+ *   <li>JPA로 저장하고 flush만 한 행을 같은 트랜잭션의 JdbcClient가 보는가 (커넥션이 하나인가)</li>
  *   <li>{@code <=>}가 주는 값이 정말 코사인 거리인가 (= 1 - 코사인 유사도)</li>
  *   <li>권한 선필터가 실제로 남의 청크를 후보에서 빼는가</li>
  * </ul>
  */
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@Import(NearestChunkJdbcRepository.class)
 @TestPropertySource(properties = {
         "spring.datasource.driver-class-name=org.postgresql.Driver",
         "spring.jpa.hibernate.ddl-auto=update"
@@ -49,8 +52,13 @@ class VectorSearchQueryTest extends ContainerTestSupport {
     /** 질의 벡터. 0번 축을 가리킨다. */
     private static final float[] QUERY = axis(0);
 
+    /** 저장은 JPA로. */
     @Autowired
     private DocumentChunkRepository repository;
+
+    /** 검색은 SQL로. 검증 대상이다. */
+    @Autowired
+    private NearestChunkJdbcRepository search;
 
     @Autowired
     private EntityManager entityManager;
@@ -71,17 +79,17 @@ class VectorSearchQueryTest extends ContainerTestSupport {
         save(3L, axis(1), Visibility.PUBLIC, null);
         entityManager.flush();
 
-        List<NearestChunk> found = repository.findNearestAll(MODEL, queryLiteral, 10);
+        List<NearestChunk> found = search.findNearestAll(MODEL, queryLiteral, 10);
 
         assertEquals(3, found.size());
-        assertEquals(1L, found.get(0).getSourceId());
-        assertEquals(2L, found.get(1).getSourceId());
-        assertEquals(3L, found.get(2).getSourceId());
+        assertEquals(1L, found.get(0).sourceId());
+        assertEquals(2L, found.get(1).sourceId());
+        assertEquals(3L, found.get(2).sourceId());
 
-        assertEquals(0.0, found.get(0).getDistance(), 1e-6);
+        assertEquals(0.0, found.get(0).distance(), 1e-6);
         // 1 - cos(45도) = 1 - 0.7071
-        assertEquals(1 - Math.sqrt(0.5), found.get(1).getDistance(), 1e-5);
-        assertEquals(1.0, found.get(2).getDistance(), 1e-6);
+        assertEquals(1 - Math.sqrt(0.5), found.get(1).distance(), 1e-5);
+        assertEquals(1.0, found.get(2).distance(), 1e-6);
     }
 
     @Test
@@ -90,11 +98,11 @@ class VectorSearchQueryTest extends ContainerTestSupport {
         save(1L, axis(0), Visibility.PUBLIC, null);
         entityManager.flush();
 
-        NearestChunk chunk = repository.findNearestAll(MODEL, queryLiteral, 1).get(0);
+        NearestChunk chunk = search.findNearestAll(MODEL, queryLiteral, 1).get(0);
 
-        assertEquals("청크 본문 1", chunk.getContent());
-        assertEquals(SourceType.WORK_LOG.name(), chunk.getSourceType());
-        assertEquals(0, chunk.getChunkIndex());
+        assertEquals("청크 본문 1", chunk.content());
+        assertEquals(SourceType.WORK_LOG, chunk.sourceType());
+        assertEquals(0, chunk.chunkIndex());
     }
 
     @Test
@@ -105,7 +113,7 @@ class VectorSearchQueryTest extends ContainerTestSupport {
         save(3L, axis(2), Visibility.PUBLIC, null);
         entityManager.flush();
 
-        assertEquals(2, repository.findNearestAll(MODEL, queryLiteral, 2).size());
+        assertEquals(2, search.findNearestAll(MODEL, queryLiteral, 2).size());
     }
 
     @Test
@@ -116,10 +124,10 @@ class VectorSearchQueryTest extends ContainerTestSupport {
         save(3L, axis(0), Visibility.OWNER, OTHER);        // 남의 것 - 가장 가깝지만 보이면 안 된다
         entityManager.flush();
 
-        List<Long> visible = repository.findNearestPublic(MODEL, queryLiteral, 10).stream()
-                .map(NearestChunk::getSourceId).toList();
-        List<Long> owned = repository.findNearestOwned(MODEL, OWNER, queryLiteral, 10).stream()
-                .map(NearestChunk::getSourceId).toList();
+        List<Long> visible = search.findNearestPublic(MODEL, queryLiteral, 10).stream()
+                .map(NearestChunk::sourceId).toList();
+        List<Long> owned = search.findNearestOwned(MODEL, OWNER, queryLiteral, 10).stream()
+                .map(NearestChunk::sourceId).toList();
 
         assertEquals(List.of(1L), visible);
         assertEquals(List.of(2L), owned);
@@ -127,7 +135,7 @@ class VectorSearchQueryTest extends ContainerTestSupport {
         assertFalse(owned.contains(3L), "남의 청크가 소유 후보에 섞이면 안 된다");
 
         // 관리자 경로는 전부 본다.
-        assertEquals(3, repository.findNearestAll(MODEL, queryLiteral, 10).size());
+        assertEquals(3, search.findNearestAll(MODEL, queryLiteral, 10).size());
     }
 
     @Test
@@ -144,10 +152,10 @@ class VectorSearchQueryTest extends ContainerTestSupport {
         repository.save(otherModel);
         entityManager.flush();
 
-        List<NearestChunk> found = repository.findNearestAll(MODEL, queryLiteral, 10);
+        List<NearestChunk> found = search.findNearestAll(MODEL, queryLiteral, 10);
 
         assertEquals(1, found.size());
-        assertTrue(found.stream().noneMatch(c -> c.getSourceId() == 99L));
+        assertTrue(found.stream().noneMatch(c -> c.sourceId() == 99L));
     }
 
     // --- helpers ---
