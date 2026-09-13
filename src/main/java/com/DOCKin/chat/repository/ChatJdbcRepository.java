@@ -4,7 +4,15 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
+import com.DOCKin.chat.dto.ChatRoomListRow;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * 메시지 저장에 따라오는 부수 갱신 두 개. <b>SQL을 SQL로 친다.</b>
@@ -33,12 +41,89 @@ public class ChatJdbcRepository {
 
     private final JdbcClient jdbcClient;
 
-    /** 발신자 자신의 읽음 시각을 지금으로. 자기가 보낸 것은 읽은 것이다. */
-    public void updateLastReadTime(Integer roomId, String userId) {
-        jdbcClient.sql("UPDATE chat_members SET last_read_time = NOW() WHERE room_id = :roomId AND user_id = :userId")
+    /**
+     * "여기까지 읽었다" (ADR-0008 11-1). 축은 {@code room_seq}다.
+     *
+     * <p>{@code GREATEST}라 멱등이다 — 같은 값이 두 번 와도, 늦게 도착한 작은 값이 와도 되돌아가지 않는다.
+     * 발신자 본인도 이 메서드로 처리한다: 자기가 보낸 것은 읽은 것이므로 {@code saveMessage}가 방금 발급한
+     * 번호로 부른다. {@code last_read_time}은 V7까지 병행해서 함께 올린다 — 읽는 곳은 이제 없다.
+     *
+     * @return 갱신된 행 수. 0이면 멤버가 아니다
+     */
+    public int markRead(Integer roomId, String userId, long upToSeq) {
+        return jdbcClient.sql("UPDATE chat_members "
+                        + "SET last_read_seq = GREATEST(last_read_seq, :seq), last_read_time = NOW() "
+                        + "WHERE room_id = :roomId AND user_id = :userId")
+                .param("seq", upToSeq)
                 .param("roomId", roomId)
                 .param("userId", userId)
                 .update();
+    }
+
+    /**
+     * 내 방 목록 한 페이지 — 조회 <b>한 번</b>. 안읽음은 {@code last_message_seq − last_read_seq}로 뺀다.
+     *
+     * <p>이전에는 JPA로 방을 받은 뒤 방마다 멤버 조회 + {@code chat_messages} COUNT를 했다(P2-12-1, 방 20개면
+     * 쿼리 41개). 여기서는 {@code chat_messages}를 아예 읽지 않는다 — 메시지가 100만 건이어도 비용이 같다.
+     *
+     * <p>정렬은 {@code last_message_seq DESC}가 아니라 {@code last_message_at DESC}다. seq는 방 <b>안</b>의 번호라
+     * 방끼리 비교하면 의미가 없다(메시지가 많은 방이 항상 위로 온다). 방 사이의 "최근"은 시각뿐이고,
+     * 그 시각은 seq 발급과 같은 UPDATE·같은 락에서 DB {@code NOW()}로 찍히므로 경합이 없다(P2-12-4·8).
+     * 메시지가 없는 방({@code NULL})은 맨 뒤, 동률은 {@code room_id}로 전순서를 만든다.
+     */
+    public List<ChatRoomListRow> roomsOf(String userId, int limit, long offset) {
+        return jdbcClient.sql("SELECT r.room_id, r.room_name, r.creator_id, r.created_at, "
+                        + "       r.last_message_content, r.last_message_at, r.last_message_seq, m.last_read_seq "
+                        + "  FROM chat_members m JOIN chat_rooms r ON r.room_id = m.room_id "
+                        + " WHERE m.user_id = :userId "
+                        + " ORDER BY r.last_message_at DESC NULLS LAST, r.room_id DESC "
+                        + " LIMIT :limit OFFSET :offset")
+                .param("userId", userId)
+                .param("limit", limit)
+                .param("offset", offset)
+                .query((rs, i) -> new ChatRoomListRow(
+                        rs.getInt("room_id"),
+                        rs.getString("room_name"),
+                        rs.getString("creator_id"),
+                        rs.getObject("created_at", LocalDateTime.class),
+                        rs.getString("last_message_content"),
+                        rs.getObject("last_message_at", LocalDateTime.class),
+                        rs.getLong("last_message_seq"),
+                        rs.getLong("last_read_seq")))
+                .list();
+    }
+
+    public long countRoomsOf(String userId) {
+        return jdbcClient.sql("SELECT count(*) FROM chat_members WHERE user_id = :userId")
+                .param("userId", userId)
+                .query(Long.class)
+                .single();
+    }
+
+    /**
+     * 여러 방의 멤버를 한 번에. 방마다 {@code getMembers()}로 LAZY 로딩하면 페이지의 방 수만큼 쿼리가 나간다 —
+     * 목록을 한 번으로 줄여 놓고 참가자에서 다시 N+1을 만들 이유가 없다.
+     */
+    public Map<Integer, List<String>> participantsOf(Collection<Integer> roomIds) {
+        if (roomIds.isEmpty()) return Map.of();
+        Map<Integer, List<String>> out = new HashMap<>();
+        jdbcClient.sql("SELECT room_id, user_id FROM chat_members WHERE room_id IN (:ids) ORDER BY id")
+                .param("ids", roomIds)
+                .query((rs, i) -> Map.entry(rs.getInt("room_id"), rs.getString("user_id")))
+                .list()
+                .forEach(e -> out.computeIfAbsent(e.getKey(), k -> new ArrayList<>()).add(e.getValue()));
+        return out;
+    }
+
+    /** 한 방에서의 내 읽음 위치와 방의 현재 번호. 상세 조회의 안읽음 계산용. */
+    public Optional<long[]> seqPairOf(Integer roomId, String userId) {
+        return jdbcClient.sql("SELECT r.last_message_seq, m.last_read_seq "
+                        + "  FROM chat_members m JOIN chat_rooms r ON r.room_id = m.room_id "
+                        + " WHERE m.room_id = :roomId AND m.user_id = :userId")
+                .param("roomId", roomId)
+                .param("userId", userId)
+                .query((rs, i) -> new long[]{rs.getLong(1), rs.getLong(2)})
+                .optional();
     }
 
     /**

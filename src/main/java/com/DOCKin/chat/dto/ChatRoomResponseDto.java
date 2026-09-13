@@ -40,8 +40,11 @@ public class ChatRoomResponseDto {
     @Schema(description = "마지막 메시지 시간",requiredMode = Schema.RequiredMode.REQUIRED)
     private LocalDateTime lastMessageAt;
 
-    @Schema(description = "안 읽은 메시지 수",requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "안 읽은 메시지 수 = lastMessageSeq − 내 lastReadSeq",requiredMode = Schema.RequiredMode.REQUIRED)
     private long unreadCount;
+
+    @Schema(description = "이 방의 마지막 roomSeq. 따라잡기·읽음의 상한", requiredMode = Schema.RequiredMode.REQUIRED)
+    private long lastMessageSeq;
 
     public static ChatRoomResponseDto from(ChatRooms entity, long unreadCount){
         return ChatRoomResponseDto.builder()
@@ -53,6 +56,22 @@ public class ChatRoomResponseDto {
                 .lastMessageContent(entity.getLastMessageContent())
                 .lastMessageAt(entity.getLastMessageAt())
                 .unreadCount(unreadCount)
+                .lastMessageSeq(entity.getLastMessageSeq())
+                .build();
+    }
+
+    /** 목록 조회용 — 조인 한 줄에서. {@code entity.getMembers()}를 타지 않으므로 방마다 LAZY 로딩이 없다. */
+    public static ChatRoomResponseDto from(ChatRoomListRow row, List<String> participantIds) {
+        return ChatRoomResponseDto.builder()
+                .roomId(row.roomId())
+                .roomName(row.roomName())
+                .creatorId(row.creatorId())
+                .createdAt(row.createdAt())
+                .participantIds(participantIds)
+                .lastMessageContent(row.lastMessageContent())
+                .lastMessageAt(row.lastMessageAt())
+                .unreadCount(row.unreadCount())
+                .lastMessageSeq(row.lastMessageSeq())
                 .build();
     }
 }

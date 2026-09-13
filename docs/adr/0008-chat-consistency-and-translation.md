@@ -1,6 +1,6 @@
 # ADR-0008: 채팅 — 저장이 먼저고, 번역은 그 밖에 있다
 
-- 상태: **일부 구현.** M3(5-4)는 2026-09-13에 실측해 D7·D8을 확정했고, 같은 날 **V6 + 저장 경로(D6·D7·D8)** 를 넣었다(10절). 2026-09-14에 **D1·D2·D9**(저장 → 커밋 → 전파, 실패는 발신자에게만, 재전송은 같은 행)를 넣었다(3-1절). D3·D10과 읽음/따라잡기 API(11-1)는 전이다. M1·M2는 기준값 실측 전이다 — M1의 "현재"는 이제 커밋 `5aeab94` 이전 코드를 뜻한다
+- 상태: **일부 구현.** M3(5-4)는 2026-09-13에 실측해 D7·D8을 확정했고, 같은 날 **V6 + 저장 경로(D6·D7·D8)** 를 넣었다(10절). 2026-09-14에 **D1·D2·D9**(저장 → 커밋 → 전파, 실패는 발신자에게만, 재전송은 같은 행)와 **읽음/따라잡기 API**(11-1)를 넣었다. D3·D10과 V7(`last_read_time` 제거)은 전이다. M1·M2는 기준값 실측 전이다 — M1의 "현재"는 이제 커밋 `5aeab94` 이전 코드를 뜻한다
 - 대상 코드: `chat/controller/ChatController`, `chat/service/ChatService`, `chat/model/ChatMessages`, `chat/repository/*`(요약 컬럼 UPDATE는 `ChatJdbcRepository`가 JdbcClient로 친다 — 엔티티를 거치지 않는 SQL은 JPA 리포지토리에 두지 않는다), `global/config/{AsyncConfig, WebSocketConfig, StompHandler}`, `ai/service/FastApiService`, `db/migration/V6*`(예정)
 - 관련 문서: `docs/WORK-BACKLOG.md` P2-12(정합성 진단)·P2-8-5(언어 컬럼)·P2-17-5(채팅 번역), `docs/SERVICE-SCALE-ASSUMPTIONS.md` 3-3(채팅 규모 가정), `docs/adr/0001`(근태 멱등성), `docs/adr/0004`(기준값 먼저 재는 관례)
 - 작성 목적: 채팅은 이 서비스에서 사용자가 하루 종일 열어두는 유일한 화면인데(발표 자료 9P의 인터뷰 두 건이 전부 이걸 가리킨다), 정합성 진단만 있고(P2-12) 결정이 없다. 번역을 붙이기 전에 **저장·전파·번역의 순서**를 정해두지 않으면, 번역이 붙는 순간 지금의 결함 위에 지연이 하나 더 얹힌다. ADR-0001과 같이 **숫자를 지어내지 않는다** — 가정은 가정으로, 측정 전인 것은 [측정 필요]로 적는다.
@@ -282,7 +282,7 @@ P2-12-6이 적은 기준이 여기서 코드가 된다:
 
 ## 11. 계약과 비용
 
-### 11-1. 입출력 — 바뀌는 것
+### 11-1. 입출력 — 바뀌는 것 (2026-09-14 구현. 아래 표의 '설계' 열이 현재 계약이다)
 
 | 경로 | 지금 | 설계 |
 |---|---|---|
@@ -290,11 +290,14 @@ P2-12-6이 적은 기준이 여기서 코드가 된다:
 | STOMP `/sub/chat/room/{id}` (1차 전파) | 요청 DTO 그대로 | `{messageId, roomSeq, clientMsgId, senderId, content, messageType, fileUrl, languageCode, sentAt}` — 전부 DB가 준 값 |
 | STOMP 2차 전파 (번역) | 없음 | `{messageId, languageCode, translated}` — 수신자 언어별 1회 |
 | `/sub/user/{id}/errors` (발신 실패) | 로그만 | 보낸 사람에게만 `{clientMsgId, code, message}`. `ERROR` 프레임이 아닌 이유는 3절 |
-| `GET /room/{id}/messages` | `lastMessageId` 커서 | `afterSeq` 커서, 정렬 `roomSeq` |
-| 읽음 처리 | 메시지 저장 시 `NOW()` | `PATCH /room/{id}/read {upToSeq}` → `last_read_seq = GREATEST(last_read_seq, :upToSeq)` |
-| 방 목록 | 정렬 없음 (P2-12-8) | `ORDER BY last_message_seq DESC`, 안읽음 = `last_message_seq − last_read_seq` |
+| `GET /room/{id}/messages` (위로 스크롤) | `lastMessageId` 커서, `messageId DESC` | `beforeSeq` 커서, `roomSeq DESC`. `lastMessageId`는 옛 커서로 받아 `roomSeq`로 옮겨 쓴다(deprecated) |
+| `GET /room/{id}/messages/after?seq=&limit=` (따라잡기) | 없음 — P2-12-5의 뿌리 | `roomSeq > seq ASC`, `Slice`의 `hasNext`로 이어 부른다. limit 1~500, 기본 100 |
+| 읽음 처리 | `GET /room/{id}`의 **부수효과**로 `last_read_time = now()`, 저장 시 발신자 `NOW()` | `PATCH /room/{id}/read {upToSeq}` → `last_read_seq = GREATEST(last_read_seq, :upToSeq)`, 204. 발신자는 저장이 방금 발급한 seq로 같은 메서드를 부른다. 상세 조회는 아무것도 바꾸지 않는다 |
+| 방 목록 | 정렬 없음 (P2-12-8), 방마다 멤버 조회 + COUNT (P2-12-1) | 조인 한 번: 안읽음 = `last_message_seq − last_read_seq`. 정렬은 **`last_message_at DESC`** — seq는 방 *안*의 번호라 방끼리 비교할 수 없다. 그 시각은 seq 발급과 같은 UPDATE·같은 락에서 찍히므로 P2-12-4의 경합이 없다. 참가자는 `IN` 한 번. 쿼리 3개 고정 |
 
-클라이언트가 지킬 것은 둘이다 — 재접속 시 `afterSeq = 마지막으로 받은 roomSeq`로 따라잡기 한 번, `clientMsgId`로 재전송 중복 제거.
+클라이언트가 지킬 것은 셋이다 — 재접속 시 `after?seq=마지막으로 받은 roomSeq`로 따라잡기(`hasNext`면 이어서), `clientMsgId`로 재전송 중복 제거, 화면에 보인 최대 `roomSeq`로 읽음 보고(메시지마다가 아니라 방을 벗어날 때나 몇 초 디바운스).
+
+**11-1의 첫 판과 달라진 것 하나.** 방 목록 정렬을 `last_message_seq DESC`로 적었는데 틀렸다. seq는 방마다 1부터 시작하는 번호라 메시지가 많은 방이 항상 위로 온다. 방 사이의 "최근"은 시각이어야 하고, 그 시각이 믿을 만해진 이유가 D8이다 — 같은 락 안에서만 바뀐다. 검증: `ChatReadCatchUpTest`.
 
 ### 11-2. 복잡도 — 어디가 O(1)이고 어디가 병목인가
 

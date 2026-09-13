@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -112,9 +113,9 @@ public class ChatService {
         chatMessagesRepository.saveAndFlush(msg);
         log.info("### [2] 메시지 저장 완료 id={}", msg.getMessageId());
 
-        // 3. 자기가 보낸 것은 읽은 것이다. last_read_time은 V7까지 병행한다.
-        chatJdbcRepository.updateLastReadTime(dto.getRoomId(), dto.getSenderId());
-        log.info("### [3] 멤버 업데이트(JDBC) 완료");
+        // 3. 자기가 보낸 것은 읽은 것이다 — 방금 받은 번호까지. 안 올리면 내가 보낸 메시지가 내 안읽음에 잡힌다.
+        chatJdbcRepository.markRead(dto.getRoomId(), dto.getSenderId(), roomSeq);
+        log.info("### [3] 발신자 읽음 위치 {} (JDBC) 완료", roomSeq);
 
         // 4. 커밋되면 전파된다. 여기서 직접 보내면 롤백돼도 이미 나간 뒤다.
         ChatMessageResponseDto saved = ChatMessageResponseDto.from(msg);
@@ -122,19 +123,54 @@ public class ChatService {
         return saved;
     }
 
-    //이전 채팅 내역 불러오기
+    /**
+     * 위로 스크롤 — {@code beforeSeq}보다 작은 것을 최신순으로.
+     *
+     * @param beforeSeq     새 커서. 첫 페이지면 null
+     * @param lastMessageId 옛 커서. {@code beforeSeq}가 없을 때만 보고, 그 메시지의 {@code roomSeq}로 옮겨 쓴다.
+     *                      응답에 {@code roomSeq}가 실리므로 클라이언트가 넘어오면 이 인자는 지운다
+     */
     @Transactional(readOnly = true)
-    public Slice<ChatMessageResponseDto> getChatHistory(Integer roomId,String userId, Long lastMessageId,Pageable pageable){
-       ChatMembers memberInfo = chatMembersRepository.findByChatRoomsRoomIdAndMemberUserId(roomId,userId)
-               .orElseThrow(()->new BusinessException(ErrorCode.CHATROOM_NOT_FOUND));
+    public Slice<ChatMessageResponseDto> getChatHistory(Integer roomId, String userId, Long beforeSeq, Long lastMessageId, Pageable pageable) {
+        ChatMembers memberInfo = chatMembersRepository.findByChatRoomsRoomIdAndMemberUserId(roomId, userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.CHATROOM_NOT_FOUND));
 
-       Slice<ChatMessages> messages = chatMessagesRepository.findChatHistory(
-               roomId,
-               memberInfo.getJoinedAt(),
-               lastMessageId,
-               pageable
-       );
-        return messages.map(ChatMessageResponseDto::from);
+        Long cursor = beforeSeq;
+        if (cursor == null && lastMessageId != null) {
+            cursor = chatMessagesRepository.findRoomSeqByMessageId(lastMessageId).orElse(null);
+        }
+
+        // 정렬은 쿼리가 정한다(roomSeq DESC). 클라이언트의 sort 파라미터는 받지 않는다 — 커서와 정렬이
+        // 어긋나면 페이지 경계에서 행이 겹치거나 빠진다.
+        Pageable sizeOnly = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
+        return chatMessagesRepository.findChatHistory(roomId, memberInfo.getJoinedAt(), cursor, sizeOnly)
+                .map(ChatMessageResponseDto::from);
+    }
+
+    /**
+     * 따라잡기 — 끊겼다 붙은 뒤 {@code afterSeq}보다 큰 것을 오래된 순으로 (ADR-0008 11-1, P2-12-5).
+     * WebSocket은 끊긴 동안의 것을 다시 주지 않는다. 클라이언트는 마지막으로 받은 {@code roomSeq}를 넣고,
+     * {@code hasNext}면 마지막 원소의 {@code roomSeq}로 이어 부른다.
+     */
+    @Transactional(readOnly = true)
+    public Slice<ChatMessageResponseDto> catchUp(Integer roomId, String userId, long afterSeq, int limit) {
+        ChatMembers memberInfo = chatMembersRepository.findByChatRoomsRoomIdAndMemberUserId(roomId, userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.CHATROOM_AUTHOR));
+
+        return chatMessagesRepository.findAfterSeq(roomId, memberInfo.getJoinedAt(), afterSeq, PageRequest.of(0, limit))
+                .map(ChatMessageResponseDto::from);
+    }
+
+    /**
+     * "여기까지 읽었다". 방 상세 조회의 부수효과였던 것을 명시적 호출로 바꿨다 — 이전에는 서버가
+     * "지금 시각"으로 추측했고, 앱은 어디까지 봤는지 말할 수 없었다(P2-12-3).
+     */
+    @Transactional
+    public void markRead(Integer roomId, String userId, long upToSeq) {
+        int updated = chatJdbcRepository.markRead(roomId, userId, upToSeq);
+        if (updated == 0) {
+            throw new BusinessException(ErrorCode.CHATROOM_AUTHOR);
+        }
     }
 
     //메시지 검색

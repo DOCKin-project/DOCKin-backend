@@ -21,6 +21,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import org.springframework.data.domain.PageImpl;
+import com.DOCKin.chat.dto.ChatRoomListRow;
+import com.DOCKin.chat.repository.ChatJdbcRepository;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,6 +35,7 @@ public class ChatRoomService {
     private final ChatMembersRepository chatMembersRepository;
     private final MemberRepository memberRepository;
     private final ChatMessagesRepository chatMessagesRepository;
+    private final ChatJdbcRepository chatJdbcRepository;
 
     //채팅방 개설 (처음 채팅방 만들 때 해당)
     @Transactional
@@ -60,46 +65,42 @@ public class ChatRoomService {
         return ChatRoomResponseDto.from(savedRoom,0L);
     }
 
-    //채팅방 목록 가져오기
+    /**
+     * 내 방 목록. 쿼리 3개로 고정이다 — 목록(안읽음 포함) 1, 참가자 1, 총 건수 1.
+     *
+     * <p>이전에는 방마다 멤버 조회와 {@code chat_messages} COUNT를 했다. 방 20개면 41개(P2-12-1, ADR-0002 2-2가
+     * 진단만 하고 둔 자리). 안읽음을 세지 않고 {@code last_message_seq − last_read_seq}로 빼면서 COUNT 자체가
+     * 없어졌다 — 정합성을 seq로 옮기자 성능 문제가 따라 없어진 경우다(ADR-0008 5-2).
+     *
+     * <p>정렬은 컨트롤러의 기본값이 아니라 SQL이 정한다({@code last_message_at DESC}). 클라이언트의 sort는 받지 않는다.
+     */
     @Transactional(readOnly = true)
     public Page<ChatRoomResponseDto> getChatRooms(String userId, Pageable pageable){
-        Member member = memberRepository.findByUserId(userId)
-                .orElseThrow(()->new BusinessException(ErrorCode.USER_NOT_FOUND));
+        List<ChatRoomListRow> rows = chatJdbcRepository.roomsOf(userId, pageable.getPageSize(), pageable.getOffset());
+        Map<Integer, List<String>> participants = chatJdbcRepository.participantsOf(
+                rows.stream().map(ChatRoomListRow::roomId).toList());
+        long total = chatJdbcRepository.countRoomsOf(userId);
 
-        Page<ChatRooms> chatRoomsPage = chatRoomsRepository.findByMembers(member,pageable);
-
-        return chatRoomsPage.map(room ->{
-            ChatMembers participant = chatMembersRepository.findByChatRoomsRoomIdAndMemberUserId(room.getRoomId(),userId)
-                    .orElseThrow(()->new BusinessException(ErrorCode.CHATMEMBER_NOT_FOUND));
-
-            long unreadCount = chatMessagesRepository.countByChatRoomsRoomIdAndCreatedAtAfter(
-                    room.getRoomId(),
-                    participant.getLastReadTime()
-            );
-            return ChatRoomResponseDto.from(room,unreadCount);
-        });
+        List<ChatRoomResponseDto> content = rows.stream()
+                .map(row -> ChatRoomResponseDto.from(row, participants.getOrDefault(row.roomId(), List.of())))
+                .toList();
+        return new PageImpl<>(content, pageable, total);
     }
 
-    //특정 채팅방 목록 가져오기
-    @Transactional
+    /**
+     * 방 상세. <b>읽음 처리를 하지 않는다.</b> 이전에는 이 조회가 {@code last_read_time = now()}를 부수효과로
+     * 남겼다 — 앱이 어디까지 봤는지와 무관하게 "열었으면 다 읽은 것"으로 쳤다. 이제 읽음은
+     * {@code PATCH /room/{id}/read}가 {@code roomSeq}로 명시한다(ADR-0008 11-1).
+     */
+    @Transactional(readOnly = true)
     public ChatRoomResponseDto getChatRoomsInfo(String userId,Integer roomId){
-
-        Member member = memberRepository.findByUserId(userId)
-                .orElseThrow(()->new BusinessException(ErrorCode.USER_NOT_FOUND));
-
-
-        validChatRoomMember(userId,roomId);
+        long[] seqs = chatJdbcRepository.seqPairOf(roomId, userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.CHATROOM_AUTHOR));
 
         ChatRooms rooms = chatRoomsRepository.findById(roomId)
                 .orElseThrow(()->new BusinessException(ErrorCode.CHATROOM_NOT_FOUND));
 
-        //읽음 처리 업데이트
-        ChatMembers participant = chatMembersRepository.findByChatRoomsRoomIdAndMemberUserId(roomId, userId)
-                .orElseThrow(()->new BusinessException(ErrorCode.CHATMEMBER_NOT_FOUND));
-
-        participant.updateLastReadTime(LocalDateTime.now());
-
-        return  ChatRoomResponseDto.from(rooms,0L);
+        return ChatRoomResponseDto.from(rooms, Math.max(0, seqs[0] - seqs[1]));
     }
 
     //유저가 채팅방 멤버인지 입증

@@ -614,12 +614,12 @@ P0-9에서 **"값을 에코하면 비밀번호 같은 입력이 응답과 로그
 
 | # | 항목 | 근거 | 급함 |
 |---|---|---|---|
-| P2-12-1 | **방 목록 N+1 (확정)** | `ChatRoomService`가 `chatRoomsPage.map(room -> countByChatRoomsRoomIdAndCreatedAtAfter(...))`로 **방마다 COUNT**를 날린다. 방 20개면 21쿼리. ADR-0002 2-2가 진단만 하고 방치한 그것 | ★ |
+| P2-12-1 | **방 목록 N+1 (확정)** | **완료 (2026-09-14)** — `ChatJdbcRepository.roomsOf` 조인 한 번 + 참가자 `IN` 한 번 + count. 안읽음은 COUNT가 아니라 `last_message_seq − last_read_seq`. 방 20개에 41개였던 쿼리가 3개 고정. ADR-0008 11-1 | ★ |
 | P2-12-2 | **시계가 둘이다** | **완료 (V6, 2026-09-13)** — `sent_at DEFAULT now()` + `@Generated`. 앱은 값을 넣지 않는다. ADR-0008 D6 | ★ |
-| P2-12-3 | **읽음 기준이 시각이다** | **컬럼은 V6에 있다**(`last_read_seq`). 안읽음 계산과 읽음 API가 아직 `last_read_time`을 쓴다 — ADR-0008 11-1의 `PATCH /read {upToSeq}`가 남았다. 기준은 `message_id`가 **아니라** `room_seq`다(M3가 PK도 반증했다) | ★ |
+| P2-12-3 | **읽음 기준이 시각이다** | **완료 (2026-09-14)** — `PATCH /room/{id}/read {upToSeq}`, `GREATEST`로 멱등. 방 상세 조회의 읽음 부수효과 제거. `last_read_time`은 쓰기만 남았고 읽는 곳이 0 → V7에서 제거 | ★ |
 | P2-12-4 | **`last_message_content` 경합** | **완료 (V6, 2026-09-13)** — 갱신이 `room_seq` 발급과 같은 행 락 안에 있어 마지막에 쓴 것이 곧 마지막 메시지다. `ChatJdbcRepository.nextRoomSeq` | ☆ |
-| P2-12-5 | 재연결 시 유실 | STOMP heartbeat 미설정이고, 끊긴 동안의 메시지를 따라잡는 경로가 없다. **전파 페이로드에 `roomSeq`가 실리므로(D1·D2, 2026-09-14) 커서는 이제 있다.** 남은 것은 `GET ...?afterSeq=` 따라잡기 API(ADR-0008 11-1)와 heartbeat. 기준은 `message_id`가 아니라 `room_seq`다(M3) | ☆ |
-| P2-12-8 | **방 목록에 정렬이 없다** | `ChatRoomController#findAllRooms`의 `@PageableDefault`에 `sort`가 비어 있다 — 작업일지에서 고친 P2-15-3과 같은 결함이다. **거기서 함께 고치지 않은 이유는 정렬 키가 제품 결정이기 때문**이다. `last_message_at`이 자연스럽지만 그 컬럼은 **P2-12-4가 경합으로 실제 마지막이 아닐 수 있다고 지목한 자리**라, 순서의 기준으로 삼기 전에 P2-12-4를 먼저 정해야 한다. `PageableSortDefaultTest`가 이 한 건을 `KNOWN_UNSORTED`로 들고 있다 | ★ |
+| P2-12-5 | 재연결 시 유실 | **서버 몫 완료 (2026-09-14)** — `GET /room/{id}/messages/after?seq=`. 전파 페이로드의 `roomSeq`가 커서다. 남은 것은 STOMP heartbeat(클라이언트와 함께)와 FCM(P2-12-6) | ☆ |
+| P2-12-8 | **방 목록에 정렬이 없다** | **완료 (2026-09-14)** — `last_message_at DESC, room_id DESC`. P2-12-4가 V6로 사라지자 그 컬럼을 정렬 키로 쓸 수 있게 됐다. `PageableSortDefaultTest`의 `KNOWN_UNSORTED`가 비었다 | ★ |
 
 > **P2-12-2·3은 "시각으로 상태를 판단하면 안 된다"는 한 문제다.** 근태 배치에 `Clock`을
 > 주입한 판단과 같은 계열이고, 해법(단조 증가 ID 기준)은 인덱싱에서 OFFSET을 커서로 바꾼
