@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Getter
 @NoArgsConstructor
@@ -23,8 +24,17 @@ public class ChatMessageResponseDto {
     @Schema(description = "보내는 사람 사원번호", requiredMode = Schema.RequiredMode.REQUIRED)
     private String senderId;
 
-    @Schema(description = "메시지 번호", example = "이건 전역번호로 설정함, 채팅방마다 번호 매기지 x", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "메시지 번호(전역 PK). 순서·커서의 축이 아니다 - roomSeq를 쓴다", requiredMode = Schema.RequiredMode.REQUIRED)
     private Long messageId;
+
+    @Schema(description = "방 안의 순번. 재접속 따라잡기 커서와 읽음 경계의 축 (ADR-0008 D7)", requiredMode = Schema.RequiredMode.REQUIRED)
+    private Long roomSeq;
+
+    @Schema(description = "클라이언트가 붙인 재전송 키. 수신 측 중복 제거용. 없으면 null")
+    private UUID clientMsgId;
+
+    @Schema(description = "원문 언어 코드. 발신자 설정값. 없으면 null")
+    private String languageCode;
 
     @Schema(description = "보내는 내용",requiredMode = Schema.RequiredMode.REQUIRED)
     private String content;
@@ -45,6 +55,9 @@ public class ChatMessageResponseDto {
                 .roomId(entity.getChatRooms().getRoomId())
                 .senderId(entity.getSenderId())
                 .messageId(entity.getMessageId())
+                .roomSeq(entity.getRoomSeq())
+                .clientMsgId(entity.getClientMsgId())
+                .languageCode(entity.getLanguageCode())
                 .content(entity.getContent())
                 .fileUrl(entity.getFileUrl())
                 .messageType(entity.getMessageType())

@@ -7,8 +7,14 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import java.time.LocalDateTime;
+import java.util.Optional;
+import java.util.UUID;
 
 public interface ChatMessagesRepository extends JpaRepository<ChatMessages, Long> {
+
+    /** 재전송 멱등(ADR-0008 D9). 같은 방·같은 클라이언트 키는 한 행이다 — {@code UNIQUE(room_id, client_msg_id)}. */
+    Optional<ChatMessages> findByChatRoomsRoomIdAndClientMsgId(Integer roomId, UUID clientMsgId);
+
 
     // 1. 내역 조회 및 무한 스크롤
     @Query("SELECT m FROM ChatMessages m " +

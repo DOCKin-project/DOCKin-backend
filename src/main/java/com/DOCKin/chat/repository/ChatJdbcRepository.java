@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 /**
  * 메시지 저장에 따라오는 부수 갱신 두 개. <b>SQL을 SQL로 친다.</b>
  *
@@ -53,6 +55,17 @@ public class ChatJdbcRepository {
      *
      * @return 이 메시지가 받은 {@code room_seq}. 호출자가 {@code chat_messages.room_seq}에 넣는다
      */
+    /**
+     * 방 멤버의 {@code user_id}만. 전파 팬아웃용이다({@code ChatBroadcaster}).
+     * 엔티티를 올려 {@code getMember().getUserId()}로 역참조하면 멤버 수만큼 쿼리가 더 나간다 — 그래서 SQL이다.
+     */
+    public List<String> memberIds(Integer roomId) {
+        return jdbcClient.sql("SELECT user_id FROM chat_members WHERE room_id = :roomId")
+                .param("roomId", roomId)
+                .query(String.class)
+                .list();
+    }
+
     public long nextRoomSeq(Integer roomId, String content) {
         return jdbcClient.sql("UPDATE chat_rooms "
                         + "SET last_message_seq = last_message_seq + 1, last_message_content = :content, last_message_at = NOW() "

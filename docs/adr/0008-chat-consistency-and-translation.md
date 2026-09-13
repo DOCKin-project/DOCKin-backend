@@ -1,6 +1,6 @@
 # ADR-0008: 채팅 — 저장이 먼저고, 번역은 그 밖에 있다
 
-- 상태: **일부 구현.** M3(5-4)는 2026-09-13에 실측해 D7·D8을 확정했고, 같은 날 **V6 + 저장 경로(D6·D7·D8, D9의 제약)** 를 넣었다(10절). D1·D2·D3·D10과 읽음/따라잡기 API(11-1)는 전이다. M1·M2는 기준값 실측 전이다
+- 상태: **일부 구현.** M3(5-4)는 2026-09-13에 실측해 D7·D8을 확정했고, 같은 날 **V6 + 저장 경로(D6·D7·D8)** 를 넣었다(10절). 2026-09-14에 **D1·D2·D9**(저장 → 커밋 → 전파, 실패는 발신자에게만, 재전송은 같은 행)를 넣었다(3-1절). D3·D10과 읽음/따라잡기 API(11-1)는 전이다. M1·M2는 기준값 실측 전이다 — M1의 "현재"는 이제 커밋 `5aeab94` 이전 코드를 뜻한다
 - 대상 코드: `chat/controller/ChatController`, `chat/service/ChatService`, `chat/model/ChatMessages`, `chat/repository/*`(요약 컬럼 UPDATE는 `ChatJdbcRepository`가 JdbcClient로 친다 — 엔티티를 거치지 않는 SQL은 JPA 리포지토리에 두지 않는다), `global/config/{AsyncConfig, WebSocketConfig, StompHandler}`, `ai/service/FastApiService`, `db/migration/V6*`(예정)
 - 관련 문서: `docs/WORK-BACKLOG.md` P2-12(정합성 진단)·P2-8-5(언어 컬럼)·P2-17-5(채팅 번역), `docs/SERVICE-SCALE-ASSUMPTIONS.md` 3-3(채팅 규모 가정), `docs/adr/0001`(근태 멱등성), `docs/adr/0004`(기준값 먼저 재는 관례)
 - 작성 목적: 채팅은 이 서비스에서 사용자가 하루 종일 열어두는 유일한 화면인데(발표 자료 9P의 인터뷰 두 건이 전부 이걸 가리킨다), 정합성 진단만 있고(P2-12) 결정이 없다. 번역을 붙이기 전에 **저장·전파·번역의 순서**를 정해두지 않으면, 번역이 붙는 순간 지금의 결함 위에 지연이 하나 더 얹힌다. ADR-0001과 같이 **숫자를 지어내지 않는다** — 가정은 가정으로, 측정 전인 것은 [측정 필요]로 적는다.
@@ -70,12 +70,27 @@ AFTER_COMMIT 리스너
 ```
 
 **`@Async`를 저장에서 뗀다.** 저장이 인바운드 스레드에서 동기로 끝나야 실패가 호출자에게 돌아온다.
-실패 시 STOMP `ERROR` 프레임(`StompExceptionHandler`가 이미 있다)으로 보낸 사람에게만 알린다 — 다른 사람은 애초에 못 봤으므로 알릴 것이 없다. 이것이 D1의 요점이다: **실패의 반경이 보낸 사람 하나로 준다.**
+실패는 보낸 사람에게만 알린다 — 다른 사람은 애초에 못 봤으므로 알릴 것이 없다. 이것이 D1의 요점이다: **실패의 반경이 보낸 사람 하나로 준다.**
+
+첫 판은 그 통지를 STOMP `ERROR` 프레임으로 적었다. 구현하며 뺐다 — **`ERROR`는 프로토콜상 연결 종료**이고 Spring도 보낸 뒤 세션을 닫는다. 메시지 한 건이 실패했다고 연결을 끊으면 그 뒤 도착할 다른 방의 메시지까지 잃는다. 실패의 반경을 "보낸 사람 하나"로 줄이려다 "그 사람의 모든 방"으로 키우는 셈이다. 그래서 본인만 구독하는 `/sub/user/{userId}/errors` 큐로 `{clientMsgId, code, message}`를 보낸다. `clientMsgId`가 유일한 짝맞춤 키다 — 서버 ID는 저장이 안 됐으니 없다.
 
 `getParticipantsIds`의 LAZY 역참조(1절 #3)는 리스너로 옮기면서 `user_id`만 뽑는 조회 하나로 바꾼다. 인바운드 스레드에서 쿼리 11개를 돌릴 이유가 없어진다.
 
 > **전파가 커밋 뒤로 밀리는 만큼 지연이 붙는다.** 얼마인지는 [측정 필요]. 7절의 첫 항목이다.
 > 결과가 "무시할 수준"이면 D1이 공짜인 것이고, 아니면 그 숫자를 두고 다시 정한다.
+
+### 3-1. 구현 (2026-09-14)
+
+| 자리 | 내용 |
+|---|---|
+| `ChatService.saveMessage` | `@Async` 제거. `@Transactional` 대신 `TransactionTemplate`으로 경계를 직접 긋는다 — D9의 동시 재전송에서 유니크 위반은 **중단된 트랜잭션 안에서 복구할 수 없어** 밖에서 잡아 다시 찾아야 하기 때문. 반환값은 DB가 채운 `ChatMessageResponseDto`(D2) |
+| `ChatMessageSaved` + `ChatBroadcaster` | 트랜잭션 안에서 발행, `@TransactionalEventListener(AFTER_COMMIT)`에서 방·멤버에게 전파. 멤버는 `user_id`만 뽑는 SQL 하나(`ChatJdbcRepository.memberIds`) — 1절 #3의 쿼리 11개가 1개로 |
+| `ChatController` | 전파 코드 삭제. 멤버십 검사 + 저장을 `try`로 감싸 실패를 `/sub/user/{id}/errors`로. `StompHandler`의 구독 허용 패턴에 `errors` 추가 |
+| D9 | `clientMsgId`가 있으면 먼저 찾고, 있으면 저장·전파 없이 그 행을 돌려준다. 동시 재전송의 진 쪽은 유니크 위반 뒤 다시 찾아 이긴 쪽의 행을 돌려준다 |
+
+검증: `ChatBroadcasterTest`(커밋 후 전파 페이로드에 `messageId`·`roomSeq`·`sentAt` / 롤백 시 침묵 / 재전송은 재전파 없음), `ChatControllerMembershipTest`(컨트롤러는 전파하지 않는다, 실패는 발신자 큐로), `ChatServiceRoomSeqTest`(재전송이 같은 `messageId`).
+
+**부수 효과 하나.** `AsyncConfig.messageExecutor`(core 10 / max 50 / queue 10,000)를 이제 아무도 쓰지 않는다. 1절이 "큐가 차면 저장이 유실된다"고 한 그 실행기다. D3(번역)가 붙을 때 그쪽이 쓴다 — 그때 거부되는 것은 번역뿐이다(4-3절).
 
 ## 4. 번역은 저장 트랜잭션 밖이다
 
@@ -199,7 +214,7 @@ ADR-0004의 관례대로 **바꾸기 전의 값을 먼저 잰다.** 지금 코�
 
 | # | 재는 것 | 답하는 질문 | 결정 |
 |---|---|---|---|
-| M1 | 메시지 수신 지연 p50/p99 — 현재 vs 저장 후 전파 | D1의 대가가 얼마인가 | D1 유지 여부 |
+| M1 | 메시지 수신 지연 p50/p99 — D1 이전(`5aeab94` 이전 코드) vs 이후 | D1의 대가가 얼마인가 | D1 유지 여부. 이전 코드는 git에서 꺼내 돌린다 |
 | M2 | 저장 p99 — 번역 동기 vs 비동기(D3) | 동기로 붙였으면 얼마나 나빴을 것인가 | D3의 근거 |
 | M3 | 동시 전송 N건에서 커밋 순서 ↔ `message_id` 역전 빈도 | 5-4의 구멍이 실재하는가 | **완료 (2026-09-13)** — 실재한다. 5-4의 표. D7·D8 확정 |
 | M4 | 동시 전송 후 `last_message_seq`가 실제 건수와 일치하는가 | P2-12-4가 재현되는가 | M3의 방 시퀀스 변형이 사실상 이것이다 — 3,000건에서 유실 0이면 seq도 빠짐없다. 별도 측정은 하지 않는다 |
@@ -274,7 +289,7 @@ P2-12-6이 적은 기준이 여기서 코드가 된다:
 | STOMP `/pub/chat/message` (입력) | `{roomId, senderId, content, messageType, fileUrl}` | + `clientMsgId: UUID` (D9). `senderId`는 세션이 덮어쓰므로 입력에서 뺀다 |
 | STOMP `/sub/chat/room/{id}` (1차 전파) | 요청 DTO 그대로 | `{messageId, roomSeq, clientMsgId, senderId, content, messageType, fileUrl, languageCode, sentAt}` — 전부 DB가 준 값 |
 | STOMP 2차 전파 (번역) | 없음 | `{messageId, languageCode, translated}` — 수신자 언어별 1회 |
-| STOMP `ERROR` (저장 실패) | 로그만 | 보낸 사람에게만 `{clientMsgId, code}` |
+| `/sub/user/{id}/errors` (발신 실패) | 로그만 | 보낸 사람에게만 `{clientMsgId, code, message}`. `ERROR` 프레임이 아닌 이유는 3절 |
 | `GET /room/{id}/messages` | `lastMessageId` 커서 | `afterSeq` 커서, 정렬 `roomSeq` |
 | 읽음 처리 | 메시지 저장 시 `NOW()` | `PATCH /room/{id}/read {upToSeq}` → `last_read_seq = GREATEST(last_read_seq, :upToSeq)` |
 | 방 목록 | 정렬 없음 (P2-12-8) | `ORDER BY last_message_seq DESC`, 안읽음 = `last_message_seq − last_read_seq` |

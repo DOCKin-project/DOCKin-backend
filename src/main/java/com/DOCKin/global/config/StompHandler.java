@@ -35,7 +35,8 @@ public class StompHandler implements ChannelInterceptor {
      * REST 쪽({@code ChatRoomController})은 멤버십을 보는데 WebSocket만 비어 있었다.
      */
     private static final Pattern ROOM_DESTINATION = Pattern.compile("^/sub/chat/room/(\\d+)$");
-    private static final Pattern USER_ROOMS_DESTINATION = Pattern.compile("^/sub/user/([^/]+)/rooms$");
+    /** 방 목록 갱신({@code rooms})과 발신 실패 통지({@code errors}, ADR-0008 D1). 둘 다 본인만 구독한다. */
+    private static final Pattern USER_ROOMS_DESTINATION = Pattern.compile("^/sub/user/([^/]+)/(rooms|errors)$");
 
     // 접속 중인 세션 관리 (sessionId -> userId)
     private static final Map<String, String> onlineUsers = new ConcurrentHashMap<>();

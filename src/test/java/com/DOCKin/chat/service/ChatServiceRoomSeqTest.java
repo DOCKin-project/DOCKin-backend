@@ -1,6 +1,7 @@
 package com.DOCKin.chat.service;
 
 import com.DOCKin.chat.dto.ChatMessageRequestDto;
+import com.DOCKin.chat.dto.ChatMessageResponseDto;
 import com.DOCKin.chat.dto.MessageType;
 import com.DOCKin.chat.model.ChatMessages;
 import com.DOCKin.chat.repository.ChatJdbcRepository;
@@ -13,11 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
-import org.springframework.core.task.SyncTaskExecutor;
-import org.springframework.core.task.TaskExecutor;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -40,15 +37,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * 번호가 방 행 락 안에서 1부터 이어지는지, 방의 {@code last_message_seq}가 따라가는지,
  * {@code sent_at}을 앱이 아니라 DB가 채우는지, 같은 {@code client_msg_id}가 두 번 저장되지 않는지.
  *
- * <p>{@code saveMessage}는 아직 {@code @Async}다. {@code @DataJpaTest}도 애플리케이션 클래스의
- * {@code @EnableAsync}를 물려받으므로 그대로 두면 저장이 다른 스레드에서 돌아 이 테스트가 아무것도
- * 못 본다 — 처음 돌렸을 때 실제로 세 건 모두 "저장된 것이 없다"로 실패했다. 그래서 실행기를
- * {@link SyncTaskExecutor}로 바꿔 호출 스레드에서 돌게 한다. ADR-0008 D1이 {@code @Async}를 떼면
- * 이 우회는 필요 없어지고, 그때 {@code SyncExecutor}를 지운다.
+ * <p>D1 이전에는 {@code saveMessage}가 {@code @Async}라 이 테스트가 실행기를 동기로 바꿔 끼워야 했다.
+ * 이제 호출 스레드에서 끝나므로 그 우회가 없다. 전파는 {@code ChatBroadcasterTest}가 본다.
  */
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import({ChatService.class, ChatJdbcRepository.class, ChatServiceRoomSeqTest.SyncExecutor.class})
+@Import({ChatService.class, ChatJdbcRepository.class})
 @TestPropertySource(properties = {
         "spring.datasource.driver-class-name=org.postgresql.Driver",
         "spring.jpa.hibernate.ddl-auto=validate",
@@ -62,12 +56,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 // 처음엔 'u1'을 썼다가 같은 DB를 롤백 트랜잭션으로 쓰는 ChecklistResultRepositoryTest의 INSERT를 깨뜨렸다.
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 class ChatServiceRoomSeqTest extends ContainerTestSupport {
-
-    @TestConfiguration
-    static class SyncExecutor {
-        @Bean
-        TaskExecutor taskExecutor() { return new SyncTaskExecutor(); }
-    }
 
     @Autowired private ChatService chatService;
     @Autowired private ChatMessagesRepository messages;
@@ -125,9 +113,7 @@ class ChatServiceRoomSeqTest extends ContainerTestSupport {
         // 그 인스턴스를 돌려주며, 그 인스턴스의 sentAt이 채워져 있는지가 곧 @Generated가 동작했는지다.
         // 트랜잭션을 나눠 읽으면 어차피 DB에서 읽어 오므로 아무것도 검증하지 못한다.
         ChatMessages saved = new TransactionTemplate(txManager).execute(tx -> {
-            chatService.saveMessage(dto("a", null));
-            long id = jdbc.sql("SELECT max(message_id) FROM chat_messages WHERE room_id = :r")
-                    .param("r", roomId).query(Long.class).single();
+            long id = chatService.saveMessage(dto("a", null)).getMessageId();
             return messages.findById(id).orElseThrow();
         });
 
@@ -142,12 +128,12 @@ class ChatServiceRoomSeqTest extends ContainerTestSupport {
     @DisplayName("같은 client_msg_id는 같은 방에 두 번 저장되지 않는다")
     void 재전송_멱등() {
         UUID key = UUID.randomUUID();
-        chatService.saveMessage(dto("a", key));
-        // 두 번째는 유니크 위반이다. 그런데 예외가 여기까지 오지 않는다 — void @Async는 실행기가 동기여도
-        // 예외를 AsyncUncaughtExceptionHandler로 보내 로그만 남긴다. ADR-0008 1절이 말한 "실패는 로그에만
-        // 남는다"가 이 자리에서 그대로 보인다. 그래서 지금은 건수만 검증하고, D1(@Async 제거) 뒤에
-        // assertThrows로 바꾸고 D9의 "기존 행을 돌려준다"를 붙인다.
-        chatService.saveMessage(dto("a", key));
+        ChatMessageResponseDto first = chatService.saveMessage(dto("a", key));
+        // 재전송은 예외가 아니라 같은 행이다(D9). 클라이언트는 응답을 못 받았을 뿐이므로 첫 저장의 ID를 받아야
+        // "내 메시지가 갔다"를 확정할 수 있다. D1 이전에는 @Async가 유니크 위반을 삼켜 아무것도 돌아오지 않았다.
+        ChatMessageResponseDto again = chatService.saveMessage(dto("a", key));
+        assertEquals(first.getMessageId(), again.getMessageId());
+        assertEquals(first.getRoomSeq(), again.getRoomSeq());
         long count = jdbc.sql("SELECT count(*) FROM chat_messages WHERE room_id = :r")
                 .param("r", roomId).query(Long.class).single();
         assertEquals(1L, count);
