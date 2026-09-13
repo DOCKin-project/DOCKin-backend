@@ -1787,6 +1787,30 @@ Redis에 해당하는 것이 없었다. `application.properties`의 기본값이
 
 ---
 
+## P2-18 — 보안 점검에서 나온 것 (2026-09-13)
+
+`PRODUCTION-READINESS.md`를 쓰면서 코드를 훑은 결과다. 로드맵 7-3의 S1~S4와 겹치지 않는 것만 적는다.
+**P2-18-1~3은 로그인만 있으면(1은 없어도) 뚫리는 것**이라 P2 안에서 가장 앞이다.
+
+| # | 항목 | 어디 | 어떻게 뚫리나 | 고치는 크기 | 급함 |
+|---|---|---|---|---|---|
+| P2-18-1 | **회원가입으로 ADMIN 획득** | `MemberService.java:79` `.role(dto.getRole())`, `/member/signup`은 화이트리스트 | 가입 본문에 `"role":"ADMIN"`. 그 뒤 휴가 승인·actuator·전 관리자 API가 열린다 | 서버에서 `USER` 고정, 승격은 별도 경로 | ★★ |
+| P2-18-2 | **남의 계정 탈퇴 (IDOR)** | `MemberController.java:49` `DELETE /member/{userId}` | principal과 대조하지 않는다 | 경로 변수 대신 `@AuthenticationPrincipal` | ★★ |
+| P2-18-3 | **남의 채팅방 도청·투고** | `StompHandler.java:75` SUBSCRIBE 목적지 검사 없음, `ChatController.java:23` 발신 시 멤버십 검사 없음 | `/sub/chat/room/{아무 방}` 구독하면 실시간으로 다 받는다. `/pub/chat/message`에 아무 `roomId`를 넣으면 그 방에 저장된다. REST 쪽은 `validChatRoomMember`를 보는데 WebSocket만 비어 있다 | SUBSCRIBE·`message()`에 `validChatRoomMember`, 또는 Spring Security message authorization | ★★ |
+| P2-18-4 | **WebSocket 토큰 원문이 INFO 로그에** | `StompHandler.java:37` | 로드맵 S4에서 HTTP 쪽만 고쳤다. STOMP CONNECT는 그대로 | "있음/없음"만 debug로 | ★ |
+| P2-18-5 | **토큰 생명주기가 없다** | `MemberService.login`이 refresh 토큰을 저장만 한다. 갱신 엔드포인트 없음 | 만료 = 재로그인. 로그아웃 폐기는 in-memory(P2-5)라 재시작하면 풀린다 | `/member/refresh` + P2-5 | ★ |
+| P2-18-6 | **관리자 경로를 한 곳에서 막지 않는다** | `SecurityConfig`는 `/actuator/**`만 `hasRole`. 서비스가 손으로 검사 | `SafetyAdminController` `/courses`·`/courses/user/{userId}`·`/courses/search`, `ChecklistAdminController` `GET /checklists/{id}`가 일반 사용자에게 열려 있다(읽기라 낮음). 관례가 "하나 빠지면 구멍"인 것이 문제 | `/api/*/admin/**`를 `hasRole("ADMIN")` 한 줄 | ★ |
+| P2-18-7 | S3 버킷 전체 열람 | `SpringFileDownloadController.java:14` `GET /download`가 body의 objectKey를 그대로 | 인증만 있으면 아무 키. 휴가 증빙서류 포함. `Content-Disposition`에 키를 그대로 넣어 헤더 인젝션(`SpringFileDownloadService.java:28`) | 키를 소유 레코드에서 찾는다 | ★ |
+| P2-18-8 | 로그인 응답으로 계정 존재 여부 노출 | `MemberService.java:32,35` `USER_NOT_FOUND` vs `LOGIN_INPUT_INVALID` | 사원번호 목록 수집. 시도 제한도 없다 | 둘 다 `LOGIN_INPUT_INVALID` | ☆ |
+| P2-18-9 | 업로드 검증 없음 | `S3PresignedService.java:22` 확장자는 원본 파일명에서, Content-Type은 클라이언트 값 | SVG/HTML 올리면 버킷 도메인에서 스크립트. 점 없는 파일명이면 `StringIndexOutOfBounds` → 500 | 허용 목록 + 매직 바이트 | ☆ |
+| P2-18-10 | 작업일지 가시성이 API마다 다르다 | `/api/work-logs/search`는 소유자 필터 없음. RAG는 `WORK_LOG`를 `OWNER`로 막는다 | "남의 작업일지가 보이는가"에 답이 둘 | 제품 결정. 정하고 한쪽에 맞춘다 | ☆ |
+| P2-18-11 | 스레드 컨텍스트 전파 (잠복) | `SecurityConfig.java:36` `MODE_INHERITABLETHREADLOCAL` | 풀 스레드가 생성 시점의 사용자를 계속 든다. 지금은 `@Async`가 `SecurityContextHolder`를 안 읽어 무사. ADR-0008 리스너가 읽는 순간 터진다 | `DelegatingSecurityContextAsyncTaskExecutor` | ☆ |
+
+> **괜찮았던 것.** SQL 인젝션(전부 바인딩), CORS(완료), actuator(health만), bcrypt, 시크릿(커밋 이력 없음),
+> 작업일지·댓글·채팅방 REST의 소유자 검사, HTTP JWT 로깅(S4 완료).
+
+---
+
 ## P3 — 이후 (하지 않아도 무방)
 
 우선순위가 낮다. P0~P2를 끝낸 뒤에만 손댄다.
