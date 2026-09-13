@@ -615,8 +615,8 @@ P0-9에서 **"값을 에코하면 비밀번호 같은 입력이 응답과 로그
 | # | 항목 | 근거 | 급함 |
 |---|---|---|---|
 | P2-12-1 | **방 목록 N+1 (확정)** | **완료 (2026-09-14)** — `ChatJdbcRepository.roomsOf` 조인 한 번 + 참가자 `IN` 한 번 + count. 안읽음은 COUNT가 아니라 `last_message_seq − last_read_seq`. 방 20개에 41개였던 쿼리가 3개 고정. ADR-0008 11-1 | ★ |
-| P2-12-2 | **시계가 둘이다** | **완료 (V6, 2026-09-13)** — `sent_at DEFAULT now()` + `@Generated`. 앱은 값을 넣지 않는다. ADR-0008 D6 | ★ |
-| P2-12-3 | **읽음 기준이 시각이다** | **완료 (2026-09-14)** — `PATCH /room/{id}/read {upToSeq}`, `GREATEST`로 멱등. 방 상세 조회의 읽음 부수효과 제거. `last_read_time`은 쓰기만 남았고 읽는 곳이 0 → V7에서 제거 | ★ |
+| P2-12-2 | **시계가 둘이다** | **완료 (V6·V7)** — `sent_at DEFAULT now()` + `@Generated`(V6). 시각 기준이던 `last_read_time`은 V7이 내렸다. ADR-0008 D6·D7 | ★ |
+| P2-12-3 | **읽음 기준이 시각이다** | **완료 (2026-09-14)** — `PATCH /room/{id}/read {upToSeq}`, `GREATEST`로 멱등. 방 상세 조회의 읽음 부수효과 제거. `last_read_time`은 V7(2026-09-14)이 내렸다 | ★ |
 | P2-12-4 | **`last_message_content` 경합** | **완료 (V6, 2026-09-13)** — 갱신이 `room_seq` 발급과 같은 행 락 안에 있어 마지막에 쓴 것이 곧 마지막 메시지다. `ChatJdbcRepository.nextRoomSeq` | ☆ |
 | P2-12-5 | 재연결 시 유실 | **서버 몫 완료 (2026-09-14)** — `GET /room/{id}/messages/after?seq=`. 전파 페이로드의 `roomSeq`가 커서다. 남은 것은 STOMP heartbeat(클라이언트와 함께)와 FCM(P2-12-6) | ☆ |
 | P2-12-8 | **방 목록에 정렬이 없다** | **완료 (2026-09-14)** — `last_message_at DESC, room_id DESC`. P2-12-4가 V6로 사라지자 그 컬럼을 정렬 키로 쓸 수 있게 됐다. `PageableSortDefaultTest`의 `KNOWN_UNSORTED`가 비었다 | ★ |

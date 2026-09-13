@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  *
  * <h3>무엇을 흉내 내는가</h3>
  * {@code ChatService.saveMessage}의 트랜잭션 모양 그대로다 — INSERT 뒤에 요약 컬럼 UPDATE 둘
- * ({@code chat_members.last_read_time}, {@code chat_rooms.last_message_*})이 있고 그 뒤 커밋이다.
+ * ({@code chat_members.last_read_seq}, {@code chat_rooms.last_message_*})이 있고 그 뒤 커밋이다.
  * 두 번째 UPDATE는 <b>같은 방의 같은 행</b>을 갱신하므로 동시 트랜잭션이 여기서 줄을 선다.
  * ID는 줄을 서기 <b>전에</b> 받았으므로, 줄의 순서가 ID 순서와 다르면 그대로 역전이다.
  * 비교를 위해 INSERT만 하고 커밋하는 변형도 함께 잰다 — 역전이 UPDATE의 행 락 때문인지
@@ -305,10 +305,14 @@ class MessageIdCommitOrderMeasurementTest extends ContainerTestSupport {
         }
     }
 
-    /** {@code ChatJdbcRepository.updateLastReadTime} 그대로. */
+    /**
+     * 발신자 자신의 멤버 행 UPDATE — {@code ChatJdbcRepository.markRead}의 모양. 처음 쟀을 때는
+     * {@code last_read_time = NOW()}였고 V7이 그 컬럼을 내렸다. 여기서 중요한 것은 컬럼이 아니라
+     * <b>발신자마다 다른 행</b>을 건드린다는 점이다 — 방 행과 달리 여기서는 줄을 서지 않는다.
+     */
     private static void touchMember(Connection c, int roomId, String sender) throws SQLException {
         try (PreparedStatement ps = c.prepareStatement(
-                "UPDATE chat_members SET last_read_time = NOW() WHERE room_id = ? AND user_id = ?")) {
+                "UPDATE chat_members SET last_read_seq = last_read_seq WHERE room_id = ? AND user_id = ?")) {
             ps.setInt(1, roomId);
             ps.setString(2, sender);
             ps.executeUpdate();

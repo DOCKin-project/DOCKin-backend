@@ -19,7 +19,7 @@ import java.util.Optional;
  *
  * <h3>왜 JPA 리포지토리가 아닌가</h3>
  * {@code ChatService.saveMessage}는 메시지 한 건을 INSERT한 뒤 방과 멤버의 요약 컬럼
- * ({@code last_message_*}, {@code last_read_time})을 갱신한다. 이 갱신은 <b>엔티티를 거치지
+ * ({@code last_message_*}, {@code last_read_seq})을 갱신한다. 이 갱신은 <b>엔티티를 거치지
  * 않는 것이 목적</b>이다 — {@code ChatRooms}를 로드해 setter로 고치면 더티 체킹이 방 행 전체를
  * UPDATE하고, 동시 발신자끼리 서로의 값을 덮어쓴다. 그래서 처음부터 네이티브 UPDATE였는데,
  * 그것을 {@code JpaRepository} 안에 {@code @Query(nativeQuery = true)}로 두면
@@ -46,13 +46,13 @@ public class ChatJdbcRepository {
      *
      * <p>{@code GREATEST}라 멱등이다 — 같은 값이 두 번 와도, 늦게 도착한 작은 값이 와도 되돌아가지 않는다.
      * 발신자 본인도 이 메서드로 처리한다: 자기가 보낸 것은 읽은 것이므로 {@code saveMessage}가 방금 발급한
-     * 번호로 부른다. {@code last_read_time}은 V7까지 병행해서 함께 올린다 — 읽는 곳은 이제 없다.
+     * 번호로 부른다. 시각 컬럼 {@code last_read_time}은 V7이 내렸다 — 시각으로 상태를 판단하지 않는다.
      *
      * @return 갱신된 행 수. 0이면 멤버가 아니다
      */
     public int markRead(Integer roomId, String userId, long upToSeq) {
         return jdbcClient.sql("UPDATE chat_members "
-                        + "SET last_read_seq = GREATEST(last_read_seq, :seq), last_read_time = NOW() "
+                        + "SET last_read_seq = GREATEST(last_read_seq, :seq) "
                         + "WHERE room_id = :roomId AND user_id = :userId")
                 .param("seq", upToSeq)
                 .param("roomId", roomId)
