@@ -16,6 +16,8 @@ public class AsyncConfig {
         executor.setMaxPoolSize(50);
         executor.setQueueCapacity(10000);
         executor.setThreadNamePrefix("AsyncMsg-");
+        // 제출 시점의 SecurityContext·traceId를 작업 단위로 실어 보낸다(P2-18-11).
+        executor.setTaskDecorator(new ContextPropagatingTaskDecorator());
         executor.initialize();
         return  executor;
     }

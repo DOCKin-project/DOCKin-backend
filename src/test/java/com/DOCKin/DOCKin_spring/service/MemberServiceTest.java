@@ -3,6 +3,7 @@ package com.DOCKin.DOCKin_spring.service;
 import com.DOCKin.global.error.BusinessException;
 import com.DOCKin.global.error.ErrorCode;
 import com.DOCKin.member.dto.LogOutRequestDto;
+import com.DOCKin.member.dto.LoginRequestDto;
 import com.DOCKin.member.dto.LoginResponseDto;
 import com.DOCKin.member.model.RefreshToken;
 import com.DOCKin.member.dto.MemberRequestDto;
@@ -99,6 +100,25 @@ public class MemberServiceTest {
         verify(memberRepository).save(saved.capture());
         assertEquals(UserRole.USER, saved.getValue().getRole());
         assertEquals("encoded", saved.getValue().getPassword());
+    }
+
+    @Test
+    @DisplayName("로그인 - 없는 사원번호와 틀린 비밀번호는 같은 답이고, 없는 사원번호에도 bcrypt를 돌린다 (P2-18-8)")
+    void login_계정_존재_비노출() {
+        when(memberRepository.findByUserId("nobody")).thenReturn(Optional.empty());
+        when(memberRepository.findByUserId("someone"))
+                .thenReturn(Optional.of(Member.builder().userId("someone").password("hash").build()));
+        when(passwordEncoder.matches(any(), any())).thenReturn(false);
+
+        BusinessException unknown = assertThrows(BusinessException.class,
+                () -> memberService.login(new LoginRequestDto("nobody", "x")));
+        BusinessException wrongPw = assertThrows(BusinessException.class,
+                () -> memberService.login(new LoginRequestDto("someone", "x")));
+
+        assertEquals(ErrorCode.LOGIN_INPUT_INVALID, unknown.getErrorCode());
+        assertEquals(unknown.getErrorCode(), wrongPw.getErrorCode(), "두 경우가 다르게 답하면 사원번호 목록을 캘 수 있다");
+        // 없는 사용자 쪽에서도 matches가 불려야 응답 시간으로도 가르지 못한다.
+        verify(passwordEncoder, times(2)).matches(any(), any());
     }
 
     @Test

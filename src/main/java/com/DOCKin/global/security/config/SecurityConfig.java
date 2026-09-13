@@ -4,7 +4,6 @@ import com.DOCKin.global.security.jwt.JwtAuthFilter;
 import com.DOCKin.global.security.jwt.JwtBlacklist;
 import com.DOCKin.global.security.jwt.JwtUtil;
 import com.DOCKin.member.service.CustomUserDetailsService;
-import jakarta.annotation.PostConstruct;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,7 +14,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -30,11 +28,10 @@ public class SecurityConfig {
     private final CustomAuthenticationEntryPoint authenticationEntryPoint;
     private final SecurityPathConfig securityPathConfig;
 
-    @PostConstruct
-    public void setupSecurityContext() {
-        // 비동기 스레드(워커 스레드)로 SecurityContext를 전파하는 설정
-        SecurityContextHolder.setStrategyName(SecurityContextHolder.MODE_INHERITABLETHREADLOCAL);
-    }
+    // MODE_INHERITABLETHREADLOCAL은 여기 없다(P2-18-11). 그 전략은 풀 스레드가 "만들어질 때"
+    // 부모의 SecurityContext를 복사해 그 사용자를 계속 든다 -- 나중에 다른 사용자의 작업을 그
+    // 스레드가 집으면 앞 사용자로 실행된다. 비동기 전파는 AsyncConfig의 TaskDecorator가
+    // 작업 단위로 한다.
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, JwtBlacklist jwtBlacklist) throws Exception {

@@ -22,11 +22,12 @@ public class S3Processor {
                 .getDelegateStream();
     }
 
-    public String uploadFile(String bucketName, String objectKey, MultipartFile file){
+    /** @param contentType 내용을 보고 판정한 값. 클라이언트가 보낸 {@code file.getContentType()}은 쓰지 않는다 */
+    public String uploadFile(String bucketName, String objectKey, MultipartFile file, String contentType){
         try{
             ObjectMetadata metadata = new ObjectMetadata();
             metadata.setContentLength(file.getSize());
-            metadata.setContentType(file.getContentType());
+            metadata.setContentType(contentType);
             amazonS3.putObject(bucketName,objectKey,file.getInputStream(),metadata);
             return amazonS3.getUrl(bucketName,objectKey).toString();
         } catch (Exception e){

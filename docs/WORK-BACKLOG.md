@@ -618,7 +618,7 @@ P0-9에서 **"값을 에코하면 비밀번호 같은 입력이 응답과 로그
 | P2-12-2 | **시계가 둘이다** | **완료 (V6, 2026-09-13)** — `sent_at DEFAULT now()` + `@Generated`. 앱은 값을 넣지 않는다. ADR-0008 D6 | ★ |
 | P2-12-3 | **읽음 기준이 시각이다** | **컬럼은 V6에 있다**(`last_read_seq`). 안읽음 계산과 읽음 API가 아직 `last_read_time`을 쓴다 — ADR-0008 11-1의 `PATCH /read {upToSeq}`가 남았다. 기준은 `message_id`가 **아니라** `room_seq`다(M3가 PK도 반증했다) | ★ |
 | P2-12-4 | **`last_message_content` 경합** | **완료 (V6, 2026-09-13)** — 갱신이 `room_seq` 발급과 같은 행 락 안에 있어 마지막에 쓴 것이 곧 마지막 메시지다. `ChatJdbcRepository.nextRoomSeq` | ☆ |
-| P2-12-5 | 재연결 시 유실 | STOMP heartbeat 미설정이고, 끊긴 동안의 메시지를 따라잡는 경로가 없다. 마지막 수신 `message_id` 기준 동기화가 필요 | ☆ |
+| P2-12-5 | 재연결 시 유실 | STOMP heartbeat 미설정이고, 끊긴 동안의 메시지를 따라잡는 경로가 없다. **전파 페이로드에 `roomSeq`가 실리므로(D1·D2, 2026-09-14) 커서는 이제 있다.** 남은 것은 `GET ...?afterSeq=` 따라잡기 API(ADR-0008 11-1)와 heartbeat. 기준은 `message_id`가 아니라 `room_seq`다(M3) | ☆ |
 | P2-12-8 | **방 목록에 정렬이 없다** | `ChatRoomController#findAllRooms`의 `@PageableDefault`에 `sort`가 비어 있다 — 작업일지에서 고친 P2-15-3과 같은 결함이다. **거기서 함께 고치지 않은 이유는 정렬 키가 제품 결정이기 때문**이다. `last_message_at`이 자연스럽지만 그 컬럼은 **P2-12-4가 경합으로 실제 마지막이 아닐 수 있다고 지목한 자리**라, 순서의 기준으로 삼기 전에 P2-12-4를 먼저 정해야 한다. `PageableSortDefaultTest`가 이 한 건을 `KNOWN_UNSORTED`로 들고 있다 | ★ |
 
 > **P2-12-2·3은 "시각으로 상태를 판단하면 안 된다"는 한 문제다.** 근태 배치에 `Clock`을
@@ -1807,11 +1807,11 @@ Redis에 해당하는 것이 없었다. `application.properties`의 기본값이
 | ~~P2-18-4~~ | ~~**WebSocket 토큰 원문이 INFO 로그에**~~ **완료**(2026-09-13, P2-18-3과 같은 파일이라 함께) | `StompHandler.java:37` | 로드맵 S4에서 HTTP 쪽만 고쳤다. STOMP CONNECT는 그대로 | "있음/없음"만 debug로 | ★ |
 | ~~P2-18-5~~ | ~~**토큰 생명주기가 없다**~~ **완료**(2026-09-14) — `POST /member/refresh`(회전, 재사용 감지 시 폐기). 액세스 토큰을 리프레시 자리에 넣어도 저장된 것과 달라 거부된다. 블랙리스트는 P2-5로 Redis에 | `MemberService.login`이 refresh 토큰을 저장만 한다. 갱신 엔드포인트 없음 | 만료 = 재로그인. 로그아웃 폐기는 in-memory(P2-5)라 재시작하면 풀린다 | `/member/refresh` + P2-5 | ★ |
 | ~~P2-18-6~~ | ~~**관리자 경로를 한 곳에서 막지 않는다**~~ **완료**(2026-09-14) — `SecurityConfig`에 `/api/*/admin/**` → `hasRole("ADMIN")`. 서비스의 수동 검사는 두 겹으로 남긴다. `AdminPathSecurityTest`가 서비스 검사가 없던 경로 셋으로 시험 | `SecurityConfig`는 `/actuator/**`만 `hasRole`. 서비스가 손으로 검사 | `SafetyAdminController` `/courses`·`/courses/user/{userId}`·`/courses/search`, `ChecklistAdminController` `GET /checklists/{id}`가 일반 사용자에게 열려 있다(읽기라 낮음). 관례가 "하나 빠지면 구멍"인 것이 문제 | `/api/*/admin/**`를 `hasRole("ADMIN")` 한 줄 | ★ |
-| P2-18-7 | S3 버킷 전체 열람 | `SpringFileDownloadController.java:14` `GET /download`가 body의 objectKey를 그대로 | 인증만 있으면 아무 키. 휴가 증빙서류 포함. `Content-Disposition`에 키를 그대로 넣어 헤더 인젝션(`SpringFileDownloadService.java:28`) | 키를 소유 레코드에서 찾는다 | ★ |
-| P2-18-8 | 로그인 응답으로 계정 존재 여부 노출 | `MemberService.java:32,35` `USER_NOT_FOUND` vs `LOGIN_INPUT_INVALID` | 사원번호 목록 수집. 시도 제한도 없다 | 둘 다 `LOGIN_INPUT_INVALID` | ☆ |
-| P2-18-9 | 업로드 검증 없음 | `S3PresignedService.java:22` 확장자는 원본 파일명에서, Content-Type은 클라이언트 값 | SVG/HTML 올리면 버킷 도메인에서 스크립트. 점 없는 파일명이면 `StringIndexOutOfBounds` → 500 | 허용 목록 + 매직 바이트 | ☆ |
-| P2-18-10 | 작업일지 가시성이 API마다 다르다 | `/api/work-logs/search`는 소유자 필터 없음. RAG는 `WORK_LOG`를 `OWNER`로 막는다 | "남의 작업일지가 보이는가"에 답이 둘 | 제품 결정. 정하고 한쪽에 맞춘다 | ☆ |
-| P2-18-11 | 스레드 컨텍스트 전파 (잠복) | `SecurityConfig.java:36` `MODE_INHERITABLETHREADLOCAL` | 풀 스레드가 생성 시점의 사용자를 계속 든다. 지금은 `@Async`가 `SecurityContextHolder`를 안 읽어 무사. ADR-0008 리스너가 읽는 순간 터진다 | `DelegatingSecurityContextAsyncTaskExecutor` | ☆ |
+| ~~P2-18-7~~ | ~~S3 버킷 전체 열람~~ **완료**(2026-09-14) — 키가 붙은 레코드의 권한을 따른다: 작업일지 사진은 같은 구역, 휴가 증빙은 본인·ADMIN. 없는 키와 못 보는 키는 둘 다 404. 키 꼴(`UUID.ext`)을 먼저 보므로 헤더 인젝션도 막힌다. GET body → `?key=` | `SpringFileDownloadController.java:14` `GET /download`가 body의 objectKey를 그대로 | 인증만 있으면 아무 키. 휴가 증빙서류 포함. `Content-Disposition`에 키를 그대로 넣어 헤더 인젝션(`SpringFileDownloadService.java:28`) | 키를 소유 레코드에서 찾는다 | ★ |
+| ~~P2-18-8~~ | ~~로그인 응답으로 계정 존재 여부 노출~~ **완료**(2026-09-14) — 둘 다 `LOGIN_INPUT_INVALID`, 없는 사용자에게도 bcrypt를 돌려 응답 시간으로도 못 가른다 | `MemberService.java:32,35` `USER_NOT_FOUND` vs `LOGIN_INPUT_INVALID` | 사원번호 목록 수집. 시도 제한도 없다 | 둘 다 `LOGIN_INPUT_INVALID` | ☆ |
+| ~~P2-18-9~~ | ~~업로드 검증 없음~~ **완료**(2026-09-14) — `UploadedFileType`이 첫 바이트로 JPEG·PNG·GIF·WebP·PDF만 받는다. 확장자·Content-Type이 거기서 나오고 파일명·헤더는 안 쓴다. 그 밖은 415 | `S3PresignedService.java:22` 확장자는 원본 파일명에서, Content-Type은 클라이언트 값 | SVG/HTML 올리면 버킷 도메인에서 스크립트. 점 없는 파일명이면 `StringIndexOutOfBounds` → 500 | 허용 목록 + 매직 바이트 | ☆ |
+| ~~P2-18-10~~ | ~~작업일지 가시성이 API마다 다르다~~ **결정**(2026-09-14) — 목록·타인 조회가 이미 "같은 구역"이었다. 검색만 전체를 뒤졌으므로 검색을 구역으로 맞췄다. RAG는 본인 것만(OWNER)으로 **더 좁게** 남긴다 — 좁은 쪽은 유출이 아니고, 넓히려면 `document_chunks` 가시성 모델을 바꿔야 해서 ADR-0006의 일이다 | `/api/work-logs/search`는 소유자 필터 없음. RAG는 `WORK_LOG`를 `OWNER`로 막는다 | "남의 작업일지가 보이는가"에 답이 둘 | 제품 결정. 정하고 한쪽에 맞춘다 | ☆ |
+| ~~P2-18-11~~ | ~~스레드 컨텍스트 전파 (잠복)~~ **완료**(2026-09-14) — `MODE_INHERITABLETHREADLOCAL`을 지우고 `ContextPropagatingTaskDecorator`가 작업 단위로 SecurityContext·MDC를 옮긴다. 스레드 하나짜리 풀에서 u1→u2→익명 순으로 도는 것을 시험 | `SecurityConfig.java:36` `MODE_INHERITABLETHREADLOCAL` | 풀 스레드가 생성 시점의 사용자를 계속 든다. 지금은 `@Async`가 `SecurityContextHolder`를 안 읽어 무사. ADR-0008 리스너가 읽는 순간 터진다 | `DelegatingSecurityContextAsyncTaskExecutor` | ☆ |
 
 > **괜찮았던 것.** SQL 인젝션(전부 바인딩), CORS(완료), actuator(health만), bcrypt, 시크릿(커밋 이력 없음),
 > 작업일지·댓글·채팅방 REST의 소유자 검사, HTTP JWT 로깅(S4 완료).

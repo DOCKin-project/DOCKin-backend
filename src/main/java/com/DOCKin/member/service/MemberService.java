@@ -27,15 +27,21 @@ public class MemberService{
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtBlacklist jwtBlacklist;
+
+    /** 없는 사용자에게 돌릴 bcrypt 해시. 값은 무의미하고 비용만 같으면 된다("dummy"의 해시). */
+    private static final String DUMMY_HASH = "$2a$10$7EqJtq98hPqEX7fNZaFWoOhi5XkfM9x1Sgb4c5Z0zVfLg5T5Yqz0K";
     //로그인 로직
     @Transactional
     public LoginResponseDto login(LoginRequestDto dto){
-        Member member = memberRepository.findByUserId(dto.getUserId()).
-                orElseThrow(()-> new BusinessException(ErrorCode.USER_NOT_FOUND));
-
-    if(!passwordEncoder.matches(dto.getPassword(), member.getPassword())){
-        throw new BusinessException(ErrorCode.LOGIN_INPUT_INVALID);
-    }
+        // "없는 사원번호"와 "틀린 비밀번호"를 같은 답으로 돌려준다. 다르게 답하면 로그인 창이
+        // 사원번호 목록을 확인해 주는 도구가 된다(P2-18-8). 없는 사용자에게도 bcrypt를 한 번 돌려
+        // 응답 시간으로도 가르지 못하게 한다 — 그래서 orElseThrow가 아니라 map이다.
+        Member member = memberRepository.findByUserId(dto.getUserId()).orElse(null);
+        String storedHash = member != null ? member.getPassword() : DUMMY_HASH;
+        boolean matches = passwordEncoder.matches(dto.getPassword(), storedHash);
+        if (member == null || !matches) {
+            throw new BusinessException(ErrorCode.LOGIN_INPUT_INVALID);
+        }
         CustomUserInfoDto info = CustomUserInfoDto.builder()
                 .userId(member.getUserId())
                 .name(member.getName())

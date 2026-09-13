@@ -16,8 +16,32 @@ public interface WorkLogRepository extends JpaRepository<WorkLog, Long> {
     Page<WorkLog> findByMemberIn(List<Member> members, Pageable pageable);
     Page<WorkLog> findAllByMemberUserId(String targetUserId, Pageable pageable);
 
-    @Query("SELECT w FROM WorkLog w WHERE w.title LIKE %:keyword% OR w.logText LIKE %:keyword%")
-    Page<WorkLog> searchWorkLogs(@Param("keyword") String keyword, Pageable pageable);
+    /**
+     * 키워드 검색. <b>같은 구역의 작업일지만.</b>
+     *
+     * <p>목록({@code findByMemberIn})과 타인 조회({@code readOtherWorklog})는 구역으로 가리는데
+     * 검색만 전체를 뒤졌다(백로그 P2-18-10). 검색이 목록보다 넓게 보이면 안 된다.
+     */
+    @Query("""
+            SELECT w FROM WorkLog w
+            WHERE w.member IN :members
+              AND (w.title LIKE %:keyword% OR w.logText LIKE %:keyword%)
+            """)
+    Page<WorkLog> searchWorkLogs(@Param("keyword") String keyword,
+                                 @Param("members") List<Member> members,
+                                 Pageable pageable);
+
+    /**
+     * 작업일지 사진 다운로드 권한(P2-18-7). 그 사진이 붙은 작업일지가 요청자와 같은 구역이면 된다 —
+     * 목록·검색이 보여주는 범위와 같다. imageUrl은 S3 URL 전체라 키로 끝나는지 본다.
+     */
+    @Query("""
+            SELECT CASE WHEN COUNT(i) > 0 THEN true ELSE false END
+            FROM WorkLogImage i
+            WHERE i.imageUrl LIKE CONCAT('%/', :objectKey)
+              AND i.workLog.member.shipYardArea = :shipYardArea
+            """)
+    boolean imageVisibleFromArea(@Param("objectKey") String objectKey, @Param("shipYardArea") String shipYardArea);
 
     /**
      * RAG 인덱싱 배치 전용 조회.

@@ -156,10 +156,13 @@ public class WorkLogsService {
         return workLogs.map(WorkLogDto::from);
     }
 
-    //키워드로 게시물 조회
+    //키워드로 게시물 조회 - 목록과 같은 범위(같은 구역)만 (P2-18-10)
     @Transactional(readOnly = true)
-    public Page<WorkLogDto> searchByKeyword(String keyword,Pageable pageable){
-        Page<WorkLog> workLog = workLogsRepository.searchWorkLogs(keyword,pageable);
+    public Page<WorkLogDto> searchByKeyword(String userId, String keyword, Pageable pageable){
+        Member member = memberRepository.findByUserId(userId)
+                .orElseThrow(()->new BusinessException(ErrorCode.USER_NOT_FOUND));
+        List<Member> areaMembers = memberRepository.findByShipYardArea(member.getShipYardArea());
+        Page<WorkLog> workLog = workLogsRepository.searchWorkLogs(keyword, areaMembers, pageable);
         return workLog.map(WorkLogDto::from);
     }
 

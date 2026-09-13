@@ -112,9 +112,11 @@ public class WorkLogsController {
     @Operation(summary = "키워드로 게시물 검색", description = "키워드로 게시물 검색이 가능함")
     @GetMapping("/search")
     // 여기만 원래 sort가 있었다. logId를 더한 것은 createdAt이 유니크하지 않기 때문이다 -- 위 참고.
-    public ResponseEntity<Page<WorkLogDto>> searchByKeyword( @PageableDefault(size = 20, sort = {"createdAt", "logId"}, direction = Sort.Direction.DESC)Pageable pageable,
+    public ResponseEntity<Page<WorkLogDto>> searchByKeyword( @AuthenticationPrincipal CustomUserDetails customUserDetails,
+                                                              @PageableDefault(size = 20, sort = {"createdAt", "logId"}, direction = Sort.Direction.DESC)Pageable pageable,
                                                               String keyword){
-        Page<WorkLogDto> workLogsDtos = workLogsService.searchByKeyword(keyword,pageable);
+        String userId = customUserDetails.getMember().getUserId();
+        Page<WorkLogDto> workLogsDtos = workLogsService.searchByKeyword(userId, keyword, pageable);
         return ResponseEntity.ok(workLogsDtos);
     }
 

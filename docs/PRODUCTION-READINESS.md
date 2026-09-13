@@ -79,7 +79,7 @@
 | F2 | 폴백·서킷 브레이커 | △ | RAG만 키워드 폴백. FastAPI(번역·STT)·S3·Redis는 없다(P2-11-4) | Resilience4j. 색인 분산락은 Redis 장애 시 경고 후 진행으로 이미 처리했다(`IndexingService`) |
 | F3 | 레이트 리밋 | ❌ | 로그인·STT·번역·챗봇 전부 무제한 | 외부 호출 비용이 붙는 경로(임베딩·번역·STT)부터 |
 | F4 | 비동기 큐 포화 시 유실 | ❌ | `messageExecutor` `AbortPolicy` → 채팅 저장이 조용히 유실(ADR-0008 1절) | ADR-0008 D1(저장을 동기로, 전파를 AFTER_COMMIT으로)이 곧 이 항목 |
-| F5 | 스레드 컨텍스트 전파 | △ | `SecurityConfig.java:36` `MODE_INHERITABLETHREADLOCAL`. 풀 스레드는 **만들어질 때** 컨텍스트를 복사해 그 사용자를 계속 든다. 지금은 `@Async` 코드가 `SecurityContextHolder`를 안 읽어 무사하다 | ADR-0008 리스너에서 "현재 사용자"를 읽는 순간 다른 사용자로 실행될 수 있다. `DelegatingSecurityContextAsyncTaskExecutor`로 |
+| F5 | 스레드 컨텍스트 전파 | ✅ 2026-09-14 | `ContextPropagatingTaskDecorator`가 제출 시점의 SecurityContext·traceId를 작업 단위로 옮긴다(P2-18-11) | 유지 |
 
 ---
 

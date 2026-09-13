@@ -147,7 +147,9 @@ class WorkLogListQueryCountTest extends ContainerTestSupport {
      * <ul>
      *   <li>전체 목록 4개 — 내 정보 / <b>구역 사용자 전체</b> / 본문 / COUNT</li>
      *   <li>타인 목록 4개 — 내 정보 / 대상자 정보 / 본문 / COUNT</li>
-     *   <li>키워드 검색 2개 — 본문 / COUNT</li>
+     *   <li>키워드 검색 4개 — 내 정보 / 구역 사용자 전체 / 본문 / COUNT. 원래 2개였다 —
+     *       검색만 구역 필터가 없어 전체를 뒤졌기 때문이고(P2-18-10), 전체 목록과 같은 범위로
+     *       맞추면서 같은 고정 비용이 됐다</li>
      * </ul>
      * 전체 목록의 두 번째가 {@code findByShipYardArea}이고, 이것은 <b>구역 사용자를 전부</b>
      * 메모리로 올린 뒤 {@code IN} 절에 통째로 넣는다. 쿼리 <b>개수</b>로는 1이라 여기서는
@@ -163,7 +165,7 @@ class WorkLogListQueryCountTest extends ContainerTestSupport {
         Measurement other = measure("타인 목록", 20,
                 () -> workLogsService.readOtherWorklog(otherViewer(), otherTarget(), PageRequest.of(0, 20)));
         Measurement search = measure("키워드 검색", 20,
-                () -> workLogsService.searchByKeyword(KEYWORD, PageRequest.of(0, 20)));
+                () -> workLogsService.searchByKeyword(user(0), KEYWORD, PageRequest.of(0, 20)));
 
         print(all10, all20, other, search);
 
@@ -174,7 +176,7 @@ class WorkLogListQueryCountTest extends ContainerTestSupport {
         assertEquals(4 + 10, all10.queries(), explain("전체 목록(10)", all10));
         assertEquals(4 + 20, all20.queries(), explain("전체 목록(20)", all20));
         assertEquals(4 + 20, other.queries(), explain("타인 목록(20)", other));
-        assertEquals(2 + 20, search.queries(), explain("키워드 검색(20)", search));
+        assertEquals(4 + 20, search.queries(), explain("키워드 검색(20)", search));
 
         // 행당 1이 어디서 나오는지까지 고정한다. 개수만 고정하면 다음 사람이 다시 세야 한다.
         assertEquals(all20.rows(), all20.collectionFetches(),
@@ -238,7 +240,7 @@ class WorkLogListQueryCountTest extends ContainerTestSupport {
         assertEquals(20, workLogsService.readOtherWorklog(otherViewer(), otherTarget(), sorted)
                 .getNumberOfElements(), "타인 목록에 정렬이 붙자 결과가 달라졌다");
         // JPQL @Query. 정렬 속성이 엔티티 필드명과 어긋나면 여기서 터진다.
-        assertEquals(20, workLogsService.searchByKeyword(KEYWORD, sorted).getNumberOfElements(),
+        assertEquals(20, workLogsService.searchByKeyword(user(0), KEYWORD, sorted).getNumberOfElements(),
                 "키워드 검색에 정렬이 붙자 결과가 달라졌다");
 
         // 시각이 같은 세 건. createdAt만으로는 순서가 정해지지 않는 구간이다.
@@ -352,6 +354,19 @@ class WorkLogListQueryCountTest extends ContainerTestSupport {
 
     private String user(int index) {
         return "%su%02d".formatted(PREFIX, index);
+    }
+
+    /**
+     * 검색이 목록보다 넓게 보이면 안 된다 (P2-18-10). 다른 구역의 사용자가 같은 키워드로
+     * 검색하면 0건이어야 한다 — 이전에는 전체 60건이 그대로 나왔다.
+     */
+    @Test
+    @DisplayName("키워드 검색은 같은 구역만 — 다른 구역 사용자에게는 0건")
+    void 검색_구역_범위() {
+        assertEquals(20, workLogsService.searchByKeyword(user(0), KEYWORD, PageRequest.of(0, 20))
+                .getNumberOfElements(), "같은 구역 사용자는 표본을 본다");
+        assertEquals(0, workLogsService.searchByKeyword(otherViewer(), KEYWORD, PageRequest.of(0, 20))
+                .getTotalElements(), "다른 구역 사용자에게 이 구역의 작업일지가 검색된다");
     }
 
     private String otherViewer() {
