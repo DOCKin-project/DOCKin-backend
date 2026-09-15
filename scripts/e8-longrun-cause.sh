@@ -57,6 +57,10 @@ TEI_CPUS=${TEI_CPUS:-2.0}
 COMPOSE_FILES=${COMPOSE_FILES:-"-f compose.yaml -f compose.gc.yaml"}
 VACUUM_OPTS=${VACUUM_OPTS:-"ANALYZE, INDEX_CLEANUP OFF"}   # 밤 3 참고: 전체 VACUUM은 40분을 넘긴다
 OUT_ROOT=${OUT_ROOT:-measure}
+# 끝나면 인스턴스를 정지한다(EBS는 남는다). night1-run.sh와 같은 스위치. 밤 4가 "유휴가 측정의
+# 10배"였다(AWS-MEASUREMENT-RESULTS 밤 4) — 무인으로 걸어 두고 잊으면 그 유휴가 이 실험 비용이 된다.
+# 로컬·연습 주행에서는 SHUTDOWN_WHEN_DONE=0. 인스턴스 밖(EC2 메타데이터가 없는 곳)에서는 스스로 끈다.
+SHUTDOWN_WHEN_DONE=${SHUTDOWN_WHEN_DONE:-1}
 
 SVC_APP=dockin-app
 SVC_DB=DOCKin-DB
@@ -127,6 +131,15 @@ finish() {
     fi
     say "완료. 사건 표=$MARKS  표본=$(ls -d ${OUT_ROOT}/e8-* 2>/dev/null | tail -1)/e8-samples.csv"
     [[ -f "$MARKS" ]] && column -s, -t "$MARKS"
+    if [[ "$SHUTDOWN_WHEN_DONE" == "1" ]]; then
+        if curl -sf --max-time 2 -X PUT -H 'X-aws-ec2-metadata-token-ttl-seconds: 60'                 http://169.254.169.254/latest/api/token >/dev/null 2>&1; then
+            say "60초 뒤 인스턴스를 정지한다 (EBS는 남는다). 산출물은 $OUT 에 있다 — 아침에 먼저 내려받을 것"
+            sleep 60
+            sudo shutdown -h now
+        else
+            say "EC2가 아니라 정지하지 않는다 (SHUTDOWN_WHEN_DONE=1이지만 메타데이터 서비스가 없다)"
+        fi
+    fi
 }
 trap finish EXIT
 

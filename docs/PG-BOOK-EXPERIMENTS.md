@@ -110,7 +110,12 @@
 - **설계**: 100만 벤치 시드 → 98만 DELETE → 30초 간격으로 `pg_stat_user_tables`(n_dead_tup, last_autovacuum, autovacuum_count)·`pg_stat_progress_vacuum`·`pg_relation_size` 스냅샷. 조건 둘: `autovacuum_vacuum_cost_delay` 2ms(기본) vs 0. 통제군: 같은 조건을 두 번(밤 3의 D=A 반복 방식).
 - **지표**: 회수 완료까지 시간, 패스 수(`index_vacuum_count`), 힙 크기가 실제로 줄었는가(truncate 여부).
 - **왜 이게 다음인가**: 이 저장소에서 가장 큰 "고친 결과가 다음 병목을 드러낸" 사례(`WORK-BACKLOG.md:1417`)가 팽창인데, 팽창을 잰 도구가 `pg_relation_size` 하나였다. 부록 "테이블 팽창 모니터링"이 이 실험의 교재다.
-- **결과**: ⬜ — 관측 도구(A1 `scripts/db/bloat-snapshot.sh`)와 절차(A3 `docs/db/after-bulk-delete.sql`)는 2026-09-15에 준비됐다. 실험 자체는 아직이다.
+- **결과 ✅ (2026-09-15, 로컬 279MB·4판)**: `cost_delay` 2ms → 0으로 VACUUM 자체가 **24.6/25.7s → 8.2/13.2s (2~3배)**. 네 판의 일이 동일해 차이는 전부 `cost_delay`고, buffer usage로 센 "일부러 자는 시간" 10.8s가 실측 차이와 맞는다. 힙은 네 판 모두 그대로(앞쪽 구멍). 깨어남은 34~52s(launcher 위상).
+  - **가설 (b)의 답**: 오는가는 문제가 아니고, 얼마나 걸리는가도 이 규모에선 **1분 안팎**이다. 사고의 5분·24분·40분은 autovacuum이 아니었다(FK 인덱스·HNSW).
+  - **A2 추천**: 기본값 유지 — 15초를 아끼려 I/O를 3배 쓰는 것. 결정은 사용자. `DB-IMPROVEMENT-PLAN.md` 4절.
+  - **부수 발견**: INSERT만으로 autovacuum이 온다(PG13+). 밤 2의 연속 색인 → `document_chunks` HNSW 청소가 E8 열화 후보에 메커니즘으로 붙었다(이슈 #42).
+  - 전문·rig 함정 6개: `measure/bloat/autovac-20260915T150118/README.md`. rig: `scripts/db/autovacuum-lab.sh`.
+- **회고**: 실험 하나에 rig를 여섯 번 띄웠다. 죽인 것은 전부 rig였고 실험 설계는 한 번도 안 바꿨다 — 임시 서버·`n_dead_tup` 덮어쓰기·로그 파싱·컨테이너 이름. ShadowFit의 "버림판" 교훈이 여기선 "연기 시험을 작게 두 번"이었다.
 
 ### ③ Ch.3 — 락을 실물로 본다 ⬜
 

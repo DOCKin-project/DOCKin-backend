@@ -1,0 +1,107 @@
+The files belonging to this database system will be owned by user "postgres".
+This user must also own the server process.
+
+The database cluster will be initialized with locale "en_US.utf8".
+The default database encoding has accordingly been set to "UTF8".
+The default text search configuration will be set to "english".
+
+Data page checksums are disabled.
+
+fixing permissions on existing directory /var/lib/postgresql/data ... ok
+creating subdirectories ... ok
+selecting dynamic shared memory implementation ... posix
+selecting default "max_connections" ... 100
+selecting default "shared_buffers" ... 128MB
+selecting default time zone ... Etc/UTC
+creating configuration files ... ok
+running bootstrap script ... ok
+performing post-bootstrap initialization ... ok
+initdb: warning: enabling "trust" authentication for local connections
+initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+syncing data to disk ... ok
+
+
+Success. You can now start the database server using:
+
+    pg_ctl -D /var/lib/postgresql/data -l logfile start
+
+waiting for server to start....2026-09-15 06:08:10.553 UTC [49] LOG:  starting PostgreSQL 17.11 (Debian 17.11-1.pgdg12+2) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit
+2026-09-15 06:08:10.586 UTC [49] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2026-09-15 06:08:10.749 UTC [52] LOG:  database system was shut down at 2026-09-15 06:08:04 UTC
+2026-09-15 06:08:10.859 UTC [49] LOG:  database system is ready to accept connections
+ done
+server started
+CREATE DATABASE
+
+
+/usr/local/bin/docker-entrypoint.sh: ignoring /docker-entrypoint-initdb.d/*
+
+waiting for server to shut down...2026-09-15 06:08:11.959 UTC [49] LOG:  received fast shutdown request
+.2026-09-15 06:08:12.001 UTC [49] LOG:  aborting any active transactions
+2026-09-15 06:08:12.007 UTC [49] LOG:  background worker "logical replication launcher" (PID 55) exited with exit code 1
+2026-09-15 06:08:12.015 UTC [50] LOG:  shutting down
+2026-09-15 06:08:12.042 UTC [50] LOG:  checkpoint starting: shutdown immediate
+..2026-09-15 06:08:14.530 UTC [50] LOG:  checkpoint complete: wrote 921 buffers (5.6%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.150 s, sync=2.187 s, total=2.515 s; sync files=301, longest=0.302 s, average=0.008 s; distance=4238 kB, estimate=4238 kB; lsn=0/190A9C0, redo lsn=0/190A9C0
+2026-09-15 06:08:14.565 UTC [49] LOG:  database system is shut down
+ done
+server stopped
+
+PostgreSQL init process complete; ready for start up.
+
+2026-09-15 06:08:14.761 UTC [1] LOG:  starting PostgreSQL 17.11 (Debian 17.11-1.pgdg12+2) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit
+2026-09-15 06:08:14.765 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+2026-09-15 06:08:14.765 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+2026-09-15 06:08:14.887 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2026-09-15 06:08:15.006 UTC [65] LOG:  database system was shut down at 2026-09-15 06:08:14 UTC
+2026-09-15 06:08:15.062 UTC [1] LOG:  database system is ready to accept connections
+2026-09-15 06:09:05.224 UTC [99] LOG:  automatic analyze of table "template1.pg_catalog.pg_type"
+	avg read rate: 13.494 MB/s, avg write rate: 2.131 MB/s
+	buffer usage: 1021 hits, 57 misses, 9 dirtied
+	system usage: CPU: user: 0.01 s, system: 0.01 s, elapsed: 0.03 s
+2026-09-15 06:09:05.337 UTC [99] LOG:  automatic analyze of table "template1.pg_catalog.pg_attribute"
+	avg read rate: 3.685 MB/s, avg write rate: 0.884 MB/s
+	buffer usage: 483 hits, 25 misses, 6 dirtied
+	system usage: CPU: user: 0.04 s, system: 0.00 s, elapsed: 0.05 s
+2026-09-15 06:09:05.386 UTC [99] LOG:  automatic analyze of table "template1.pg_catalog.pg_class"
+	avg read rate: 6.836 MB/s, avg write rate: 4.883 MB/s
+	buffer usage: 544 hits, 7 misses, 5 dirtied
+	system usage: CPU: user: 0.00 s, system: 0.00 s, elapsed: 0.00 s
+2026-09-15 06:09:05.420 UTC [99] LOG:  automatic analyze of table "template1.pg_catalog.pg_rewrite"
+	avg read rate: 70.312 MB/s, avg write rate: 19.531 MB/s
+	buffer usage: 118 hits, 18 misses, 5 dirtied
+	system usage: CPU: user: 0.00 s, system: 0.00 s, elapsed: 0.00 s
+2026-09-15 06:09:05.441 UTC [99] LOG:  automatic analyze of table "template1.pg_catalog.pg_depend"
+	avg read rate: 27.344 MB/s, avg write rate: 1.953 MB/s
+	buffer usage: 127 hits, 14 misses, 1 dirtied
+	system usage: CPU: user: 0.00 s, system: 0.00 s, elapsed: 0.00 s
+2026-09-15 06:09:05.458 UTC [99] LOG:  automatic analyze of table "template1.information_schema.sql_features"
+	avg read rate: 14.323 MB/s, avg write rate: 7.812 MB/s
+	buffer usage: 190 hits, 11 misses, 6 dirtied
+	system usage: CPU: user: 0.00 s, system: 0.00 s, elapsed: 0.00 s
+2026-09-15 06:09:56.350 UTC [101] LOG:  automatic vacuum of table "dockindb.public.work_logs": index scans: 0
+	pages: 0 removed, 35715 remain, 35715 scanned (100.00% of total)
+	tuples: 0 removed, 500000 remain, 0 are dead but not yet removable
+	removable cutoff: 751, which was 0 XIDs old when operation ended
+	new relfrozenxid: 741, which is 1 XIDs ahead of previous value
+	frozen: 0 pages from table (0.00% of total) had 0 tuples frozen
+	index scan not needed: 0 pages from table (0.00% of total) had 0 dead item identifiers removed
+	avg read rate: 14.164 MB/s, avg write rate: 20.091 MB/s
+	buffer usage: 51121 hits, 20382 misses, 28910 dirtied
+	WAL usage: 35716 records, 2 full page images, 2123767 bytes
+	system usage: CPU: user: 0.48 s, system: 0.58 s, elapsed: 11.24 s
+2026-09-15 06:11:10.800 UTC [166] LOG:  automatic vacuum of table "dockindb.public.work_logs": index scans: 1
+	pages: 0 removed, 35715 remain, 32144 scanned (90.00% of total)
+	tuples: 450000 removed, 49999 remain, 0 are dead but not yet removable
+	removable cutoff: 752, which was 0 XIDs old when operation ended
+	frozen: 0 pages from table (0.00% of total) had 0 tuples frozen
+	index scan needed: 32143 pages from table (90.00% of total) had 450000 dead item identifiers removed
+	index "work_logs_pkey": pages: 1374 in total, 1233 newly deleted, 1233 currently deleted, 0 reusable
+	index "idx_work_logs_user": pages: 450 in total, 0 newly deleted, 0 currently deleted, 0 reusable
+	avg read rate: 10.862 MB/s, avg write rate: 14.037 MB/s
+	buffer usage: 70035 hits, 35694 misses, 46126 dirtied
+	WAL usage: 100570 records, 0 full page images, 8341679 bytes
+	system usage: CPU: user: 0.85 s, system: 1.47 s, elapsed: 25.67 s
+2026-09-15 06:11:12.196 UTC [166] LOG:  automatic analyze of table "dockindb.public.work_logs"
+	avg read rate: 99.117 MB/s, avg write rate: 0.022 MB/s
+	buffer usage: 12657 hits, 17711 misses, 4 dirtied
+	system usage: CPU: user: 0.28 s, system: 0.20 s, elapsed: 1.39 s

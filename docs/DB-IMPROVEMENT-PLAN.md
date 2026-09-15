@@ -47,7 +47,7 @@
 | ID | 바꾸는 것 | 근거(이 저장소) | 검증 | 상태 |
 |---|---|---|---|---|
 | **A1** | **팽창 관측을 들인다.** `pgstattuple` 확장 + `scripts/db/bloat-snapshot.sql`(`pg_stat_user_tables`의 `n_live_tup`·`n_dead_tup`·`last_autovacuum`·`autovacuum_count` + `pg_relation_size` + `pgstattuple.dead_tuple_percent`). 벤치·측정 스크립트가 끝날 때 이 스냅샷을 산출물에 같이 남긴다 | 780MB 힙(20,362행), 0행 26MB — 둘 다 `pg_relation_size` 하나로 우연히 봤다. dead tuple 수를 읽은 적이 없다 | 스냅샷이 산출물 폴더에 있는가. 실험 카드 ②의 전제 | **완료** (2026-09-15, 6절) |
-| **A2** | **`work_logs`·`document_chunks`에 테이블 단위 autovacuum.** `ALTER TABLE ... SET (autovacuum_vacuum_scale_factor = _, autovacuum_vacuum_cost_delay = _)` — 값은 실험 ②가 낸다 | 두 테이블만 대량 삭제·삽입이 있다(코퍼스 보존 ADR-0007, 벤치 시드). 나머지는 행 수가 작아 기본값으로 충분 | 실험 ② 조건 A(기본) vs B(조정) — 98만 삭제 뒤 회수 완료까지 시간, 힙 크기 복귀 여부 | **조건부** (실험 ②) |
+| **A2** | **`work_logs`·`document_chunks`에 테이블 단위 autovacuum.** `ALTER TABLE ... SET (autovacuum_vacuum_scale_factor = _, autovacuum_vacuum_cost_delay = _)` — 값은 실험 ②가 낸다 | 두 테이블만 대량 삭제·삽입이 있다(코퍼스 보존 ADR-0007, 벤치 시드). 나머지는 행 수가 작아 기본값으로 충분 | 실험 ② 조건 A(기본) vs B(조정) — 98만 삭제 뒤 회수 완료까지 시간, 힙 크기 복귀 여부 | **측정 완료 → 기본값 유지 추천** (2026-09-15, 6절·4절). 결정은 사용자 |
 | **A3** | **대량 삭제 절차를 문서로.** ADR-0007 보존 삭제·벤치 뒷정리 뒤 `VACUUM (VERBOSE)`를 명시 실행하고, truncate가 잠금에 막히면 그 사실을 기록한다. `docs/db/`에 `rebuild-hnsw-index.sql`과 나란히 | truncate 거부(장애 #3)는 벤치 트랜잭션이 잠금을 쥔 채였다. 절차가 없어서 "언제 줄어드는지"를 아무도 몰랐다 | 절차대로 한 뒤 A1 스냅샷에서 힙이 줄었는가 | **완료** (2026-09-15, 6절) |
 | **A4** | **작업일지 목록 `Page<>` → `Slice`.** COUNT를 없앤다 | ② COUNT 4초(무인덱스) → 12.8ms(인덱스 후). MVCC라 COUNT는 전부 센다(막힘없이 Ch.2). 화면이 전체 페이지 수를 쓰는지 먼저 확인 | 목록 1페이지 쿼리 수 2 → 1. `pg_stat_statements`에서 COUNT 문장이 사라졌는가 | **완료** (2026-09-15, 6절) — 고정 비용 4 → 3 |
 
@@ -99,7 +99,7 @@ DBA 지원서에서 비어 보이는 자리 셋(백업·복제·무중단 DDL)�
 |---|---|---|---|
 | ~~1~~ | ~~**A1 + C1 + A3** — 관측 들이기~~ | **완료 2026-09-15** (6절) | 반나절 |
 | ~~2~~ | ~~**A4 + D2** — 목록 COUNT 제거·keyset~~ | **완료 2026-09-15** (6절). 100만 벤치 ③ 재측정만 남음 | 반나절 |
-| 3 | **실험 ② → A2** — autovacuum | PostgreSQL 축 고유 실험. A1이 있어야 한다 | 하루 + 로컬 |
+| ~~3~~ | ~~**실험 ② → A2** — autovacuum~~ | **측정 완료 2026-09-15** (6절). 2ms→0은 2~3배지만 절대 15초, 추천은 기본값 유지 | 하루 + 로컬 |
 | 4 | **B4 + D3 + C2** — 풀 명시·알림, 슬로우 쿼리 절차 | O2·O4를 같이 채운다 | 반나절 |
 | 5 | **E2 + E3** — 복제 로컬 실측·무중단 DDL 절차 | DBA 축 결손 둘. E2는 compose에 서비스 하나 | 하루 |
 | 6 | **B1** — E8 원인 | AWS 한 시간. 결과가 체크포인트 값을 정한다 | 1h + $1 안팎 |
@@ -116,6 +116,7 @@ DBA 지원서에서 비어 보이는 자리 셋(백업·복제·무중단 DDL)�
 | `shared_buffers` ↑ (RAM 25% 권고) | 8배 올려도 불변. **맞는 크기 계산이 원인의 증거가 아니었다** | 밤 3 |
 | 복합 인덱스 `(user_id, created_at, log_id)` | 플래너가 안 고른다(선택도 16%). 쓰기 비용만 낸다 | P2-15-8 |
 | `maintenance_work_mem` 전역 ↑ | autovacuum worker가 같이 먹는다. 512M 컨테이너 | B3 |
+| `autovacuum_vacuum_cost_delay` 0 (테이블 단위) | 2~3배 빠르지만 절대 15초(279MB), 780MB로 환산해도 1분 안팎. 아무도 기다리지 않는 시간을 위해 I/O를 3배 쓴다. **추천만, 결정은 사용자** | 실험 ② |
 | HikariCP 풀 ↑ | 풀 고갈의 원인은 앱이었다. PG 커넥션은 프로세스다 | M1 |
 | `auto_explain` 지금 켜기 | 임계값 근거가 없다. top-10 절차(D3)가 분포를 먼저 만든다 | 0절 3 |
 | 파티셔닝 | 시계열 대용량이 없다. ShadowFit 소재 | ADR-0002 3절 |
@@ -190,3 +191,25 @@ PostgreSQL은 타입 없는 파라미터를 받지 않는다. 채팅의 `:before
 후보 전체를 읽으므로(P2-15-8의 Parallel Seq Scan + top-N) **커서만으로는 ③이 ①과 같아지지 않을 수 있다** —
 OFFSET이 버리는 1만 행은 없어지지만 정렬 비용은 남는다. 그때는 `(created_at DESC, log_id DESC)` 인덱스가
 후보가 되는데, 그건 P2-15-8이 거절한 `(user_id, created_at, log_id)`와 다른 인덱스다. 측정 뒤 결정.
+
+### 2026-09-15 — 순서 3: 실험 ② → A2
+
+`scripts/db/autovacuum-lab.sh` (새 rig). 50만 행(279MB) 시드 → 앞쪽 45만 삭제 → autovacuum이 치울 때까지.
+`cost_delay` 2ms(기본)·0을 A→B→A→B로 네 판. 결과 전문과 rig 함정 6개: `measure/bloat/autovac-20260915T150118/README.md`.
+
+| `cost_delay` | VACUUM 자체(서버 로그 elapsed) | 읽기 속도 |
+|---|---|---|
+| 2ms | **24.58 / 25.67 s** (폭 4%) | 11 MB/s |
+| 0 | **8.23 / 13.18 s** (폭 60%) | 21~34 MB/s |
+
+네 판이 한 일은 동일하다(32,144 pages · 450,000 removed · WAL 8.3MB). 차이는 전부 `cost_delay`고,
+로그의 buffer usage로 cost를 세면 **일부러 자는 시간이 10.8s**로 실측 차이(11~17s)와 맞는다.
+힙은 네 판 모두 안 줄었다(`pages: 0 removed`) — 앞쪽 구멍이라 예상대로.
+
+**A2 판단(추천, 결정은 사용자)**: 기본값 유지. 780MB로 환산해도 1분 안팎이고 아무도 그 시간을 기다리지 않는다.
+사고의 5분·24분·40분은 각각 FK 인덱스 부재·FK 인덱스 부재·HNSW 인덱스 청소였지 힙 VACUUM이 아니었다.
+`document_chunks`(HNSW)는 별도 판 — 지배항이 `cost_delay`가 아니라 인덱스 청소다.
+
+**부수 발견 → 이슈 #42에 붙임**: 시드 50만 INSERT만으로 autovacuum이 온다(PG13+ INSERT 트리거, 20%마다).
+밤 2의 3시간 연속 색인은 `document_chunks`에 이것을 여러 번 불렀을 것이고, 거기선 한 번이 40분급이다.
+E8 열화 후보 "autovacuum 개입"에 처음으로 **메커니즘**이 붙었다. `[미검증]`.
