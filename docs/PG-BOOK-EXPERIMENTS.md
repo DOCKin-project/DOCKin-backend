@@ -91,7 +91,7 @@
 - **개념** (『막힘없이』Ch.4·부록, 『Internals』): 쿼리 다이제스트별 누적 시간, 테이블별 `n_live_tup`/`n_dead_tup`/`last_autovacuum`.
 - **현황**: `pg_stat_statements`는 `shared_preload_libraries`에 있고 `CREATE EXTENSION` 실패를 예외로 막아뒀다(`WORK-BACKLOG.md:1962`). 그런데 읽는 곳은 `HibernateBatchInsertVerificationTest` 하나 — 시퀀스 호출 횟수를 셀 때뿐이다.
 - **설계**: 벤치 한 판 뒤 `pg_stat_statements` `total_exec_time DESC LIMIT 10`과 `pg_stat_user_tables`를 같은 산출물 폴더에 스냅샷으로 남긴다. ShadowFit이 모든 카드의 증거를 `performance_schema`에서 댔듯 여기는 이 둘이 댄다.
-- **결과**: ⬜
+- **결과**: 🟡 (2026-09-15) — 스냅샷 도구 둘이 생겼다: `scripts/db/bloat-snapshot.sh`(팽창·autovacuum)와 `scripts/db/slow-query-report.sh`(`pg_stat_statements` 3축 + `wait_event`). 절차는 `OPERATIONS-SLOW-QUERY.md`. 실험 ②가 첫 사용자였다. 카드 ③(락 실물)의 도구도 이것이다.
 
 ### ① Ch.1 — E8 열화의 원인은 DB인가 앱인가 ⬜ (스크립트 있음)
 

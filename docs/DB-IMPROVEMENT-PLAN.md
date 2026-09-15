@@ -58,14 +58,14 @@
 | **B1** | **E8 열화 원인을 가른다** — `scripts/e8-longrun-cause.sh` 실행. 앱 재시작으로 돌아오면 앱, 안 돌아오면 DB. DB 쪽이면 `checkpoint_timeout`·`max_wal_size`·autovacuum 중 무엇인지 `pg_stat_bgwriter`(`checkpoints_timed`/`checkpoints_req`)와 A1 스냅샷으로 좁힌다 | 밤 2 1.8배 열화, 밤 3이 코퍼스 크기 반증. 후보 넷 미결(장애 #6) | 한 시간. 결과가 나오기 전엔 체크포인트 값을 **안 바꾼다** | **조건부** (AWS 1h) |
 | **B2** | **`shared_buffers`는 안 올린다.** 컨테이너 512M도 그대로 | 밤 3: 128MB → 1GB, 컨테이너 4배에도 처리량 불변 | — | 결정 (4절) |
 | **B3** | **`maintenance_work_mem`은 세션 단위로만.** 전역 인자로 안 올린다. 대신 `autovacuum_work_mem`을 따로 둘지는 실험 ②가 말한다 | HNSW 빌드는 `rebuild-hnsw-index.sql`이 `SET`으로 256MB를 준다. 전역으로 올리면 autovacuum worker 3개가 같은 값을 쓴다 — 512M 컨테이너에서 OOM(장애 #7의 `/dev/shm`과 같은 종류) | — | 결정 |
-| **B4** | **HikariCP `maximum-pool-size`를 명시하고 `hikaricp.connections.pending` 알림(O2)을 건다.** 값은 지금의 기본 10을 그대로 적는다 — 올리지 않는다 | M1: 풀 고갈은 `@Async` 스레드 631개라는 **앱 결함**이었고, 풀 100은 증상을 가렸을 뿐이다. PG는 커넥션 = 백엔드 프로세스라 풀을 올린 만큼 DB 메모리를 낸다(막힘없이 Ch.1) | 알림이 실제 pending에 울리는가. 값 변경은 ADR-0004 3-2 부하 실측 뒤 | **바로** (명시+알림) / 값은 보류 |
+| **B4** | **HikariCP `maximum-pool-size`를 명시하고 `hikaricp.connections.pending` 알림(O2)을 건다.** 값은 지금의 기본 10을 그대로 적는다 — 올리지 않는다 | M1: 풀 고갈은 `@Async` 스레드 631개라는 **앱 결함**이었고, 풀 100은 증상을 가렸을 뿐이다. PG는 커넥션 = 백엔드 프로세스라 풀을 올린 만큼 DB 메모리를 낸다(막힘없이 Ch.1) | 알림이 실제 pending에 울리는가. 값 변경은 ADR-0004 3-2 부하 실측 뒤 | **완료** (2026-09-15, 6절) — 명시 + `HikariPoolWatch` WARN. 값은 보류 |
 
 ### C. 락·대기 이벤트 — 막힘없이 Ch.3, Wait
 
 | ID | 바꾸는 것 | 근거 | 검증 | 상태 |
 |---|---|---|---|---|
 | **C1** | **`log_lock_waits=on`** 서버 인자 한 줄. `deadlock_timeout`(1s)보다 오래 기다린 락을 로그에 남긴다 | 13분 44초 `transactionid` 대기(장애 #4)는 `pg_stat_activity`를 사람이 열어서야 알았다. 로그에 한 줄도 없었다 | `LockTimeoutVerificationTest`에서 대기 로그가 찍히는가 | **완료** (2026-09-15, 6절) |
-| **C2** | **슬로우 쿼리 절차(O4)에 `wait_event` 열을 넣는다.** `pg_stat_activity`의 `wait_event_type`·`wait_event`·`pg_blocking_pids()` 스냅샷을 D3의 주간 절차에 포함 | ShadowFit은 `data_locks`로 GRANTED/WAITING을 실물로 봤고 DOCKin은 그 기록이 없다(2절 Ch.3). Wait 책의 주제 그 자체 | 실험 카드 ③의 산출물이 이 스냅샷으로 나오는가 | **바로** (절차) |
+| **C2** | **슬로우 쿼리 절차(O4)에 `wait_event` 열을 넣는다.** `pg_stat_activity`의 `wait_event_type`·`wait_event`·`pg_blocking_pids()` 스냅샷을 D3의 주간 절차에 포함 | ShadowFit은 `data_locks`로 GRANTED/WAITING을 실물로 봤고 DOCKin은 그 기록이 없다(2절 Ch.3). Wait 책의 주제 그 자체 | 실험 카드 ③의 산출물이 이 스냅샷으로 나오는가 | **완료** (2026-09-15, 6절) — `slow-query-report.sql` [4] |
 | **C3** | **교착 테스트 하나** — 두 트랜잭션이 반대 순서로 `FOR UPDATE`. `deadlock_timeout=1s`가 실제로 한쪽을 죽이는지 | 설정은 있는데 교착을 재현한 적이 없다 | 1초 안팎에 `deadlock detected`. 안 나오면 설정이 안 먹는 것 | **바로** |
 | **C4** | **연차 승인의 REPEATABLE READ 대안을 ADR-0001 4-1 표에 한 줄 추가** — `FOR UPDATE` 없이 두 번째 승인이 `could not serialize`로 실패하는지, 재시도 비용은 | 4-1이 낙관락을 "재시도 복잡도"로 거절했다. RR도 같은 이유로 거절되는지 실측으로 답한다 | 실험 카드 ⑤ | **조건부** (실험 ⑤) |
 
@@ -75,7 +75,7 @@
 |---|---|---|---|---|
 | **D1** | **`pg_trgm` GIN을 측정한다** — `work_logs(title, log_text)`·`chat_messages(content)`. 붙일지는 측정이 정한다. **쓰기 비용과 인덱스 크기를 같이 잰다** — 작업일지는 쓰기도 있다 | ⑤ `LIKE %kw%` 432ms(100만). B-tree 무효는 확인됐고 GIN은 안 해봤다. `WORK-BACKLOG.md:150`이 "ngram FULLTEXT → `pg_trgm`/tsvector"로 미뤄둔 것 | 같은 100만·같은 `pg_prewarm` 조건에서 전후. 통제군 ⑥ 방식 그대로 | **조건부** (측정) |
 | **D2** | **작업일지 목록 OFFSET → keyset** `(created_at, log_id)` 커서. 색인은 이미 했고(P1-13) 목록은 안 했다 | ③ 500페이지 150ms — OFFSET 10,000이 앞을 읽고 버린다. 정렬 없는 OFFSET은 행 중복·누락(P2-15-3) | ③이 1페이지(①)와 같은 자릿수가 되는가 | **구현 완료** (2026-09-15, 6절) — 100만 벤치 재측정은 남음 |
-| **D3** | **`pg_stat_statements` 주간 top-10 절차**(O4) — `total_exec_time DESC`·`mean_exec_time DESC`·`calls DESC` 셋. `auto_explain`은 `log_min_duration`의 임계가 실측 분포에서 나오기 전엔 **안 켠다** | 확장은 로드돼 있는데 보는 사람이 없다(O4 △). 임의 임계 금지(0절 3) | 첫 주 top-10이 `docs/`에 남는가 | **바로** (절차) / auto_explain 보류 |
+| **D3** | **`pg_stat_statements` 주간 top-10 절차**(O4) — `total_exec_time DESC`·`mean_exec_time DESC`·`calls DESC` 셋. `auto_explain`은 `log_min_duration`의 임계가 실측 분포에서 나오기 전엔 **안 켠다** | 확장은 로드돼 있는데 보는 사람이 없다(O4 △). 임의 임계 금지(0절 3) | 첫 주 top-10이 `docs/`에 남는가 | **완료** (2026-09-15, 6절) — `OPERATIONS-SLOW-QUERY.md`. auto_explain은 4주 뒤 |
 | **D4** | **복합 인덱스 `(user_id, created_at DESC, log_id DESC)`는 안 넣는다** | P2-15-8: 선택도 16%라 플래너가 안 고른다. 계획에 인덱스가 없는데 1.2배는 인덱스의 공이 아니다 | — | 결정 (4절) |
 
 ### E. 복제·백업·무중단 DDL — Admin 5·6장, 막힘없이 Ch.1(WAL)
@@ -100,7 +100,7 @@ DBA 지원서에서 비어 보이는 자리 셋(백업·복제·무중단 DDL)�
 | ~~1~~ | ~~**A1 + C1 + A3** — 관측 들이기~~ | **완료 2026-09-15** (6절) | 반나절 |
 | ~~2~~ | ~~**A4 + D2** — 목록 COUNT 제거·keyset~~ | **완료 2026-09-15** (6절). 100만 벤치 ③ 재측정만 남음 | 반나절 |
 | ~~3~~ | ~~**실험 ② → A2** — autovacuum~~ | **측정 완료 2026-09-15** (6절). 2ms→0은 2~3배지만 절대 15초, 추천은 기본값 유지 | 하루 + 로컬 |
-| 4 | **B4 + D3 + C2** — 풀 명시·알림, 슬로우 쿼리 절차 | O2·O4를 같이 채운다 | 반나절 |
+| ~~4~~ | ~~**B4 + D3 + C2** — 풀 명시·알림, 슬로우 쿼리 절차~~ | **완료 2026-09-15** (6절) | 반나절 |
 | 5 | **E2 + E3** — 복제 로컬 실측·무중단 DDL 절차 | DBA 축 결손 둘. E2는 compose에 서비스 하나 | 하루 |
 | 6 | **B1** — E8 원인 | AWS 한 시간. 결과가 체크포인트 값을 정한다 | 1h + $1 안팎 |
 | 7 | **D1** — `pg_trgm` 측정 | 측정 뒤 붙일지 결정 | 반나절 |
@@ -213,3 +213,13 @@ OFFSET이 버리는 1만 행은 없어지지만 정렬 비용은 남는다. 그�
 **부수 발견 → 이슈 #42에 붙임**: 시드 50만 INSERT만으로 autovacuum이 온다(PG13+ INSERT 트리거, 20%마다).
 밤 2의 3시간 연속 색인은 `document_chunks`에 이것을 여러 번 불렀을 것이고, 거기선 한 번이 40분급이다.
 E8 열화 후보 "autovacuum 개입"에 처음으로 **메커니즘**이 붙었다. `[미검증]`.
+
+### 2026-09-15 — 순서 4: B4 · D3 · C2
+
+| ID | 무엇을 만들었나 | 확인 |
+|---|---|---|
+| **B4** | `maximum-pool-size=10` 명시(값은 안 올림) + `HikariPoolWatch` — 10초마다 `pending`을 읽고 0이 아니면 WARN 한 줄(`pending/active/idle/total/max`) | `HikariPoolWatchTest`: 풀 2를 다 잡고 세 번째가 기다리는 1초 동안 WARN 4줄(200ms 주기), 여유 있는 구간은 0줄. 첫 줄 `pending=1 active=2 idle=0 total=2 max=2` |
+| **D3** | `scripts/db/slow-query-report.{sql,sh}` + `docs/OPERATIONS-SLOW-QUERY.md` — 누적·평균·호출 top 10, 통계 창(`stats_reset`), 1분 넘은 트랜잭션, 서버 로그 락 대기 수 | 일회용 컨테이너에서 여섯 표 전부 출력. 임계값 없음 — 4주 분포 뒤 |
+| **C2** | 같은 보고서의 [4] — `pg_stat_activity.wait_event_type/wait_event` + `pg_blocking_pids()` | `FOR UPDATE` 대기를 걸어 두고 뽑으니 `pid 95 · Lock · transactionid · blocked_by {87}`. 장애 #4가 이 줄로 보였어야 했다 |
+
+**알림 인프라가 없다는 것을 그대로 적었다.** O2는 ❌에서 △ — 풀 고갈 하나만 WARN으로, 나머지 셋은 그대로 ❌. 로그 집계(O3)가 붙으면 그 WARN 문자열이 알림 조건이 된다. 지금 Slack을 붙이는 것은 순서가 아니다.

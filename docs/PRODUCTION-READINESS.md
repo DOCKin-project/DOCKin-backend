@@ -63,9 +63,9 @@
 | # | 항목 | 상태 | 지금 | 해야 할 것 |
 |---|---|---|---|---|
 | O1 | 헬스·지표 | ✅ | Actuator health/metrics/info, `traceId` MDC(P2-11-2/3) | 유지 |
-| O2 | 알림 | ❌ | 지표는 있는데 **아무도 호출받지 않는다** | 4개만: 5xx 비율, health DOWN, 디스크, Hikari 풀 고갈. Slack/이메일 |
+| O2 | 알림 | △ 2026-09-15 | 지표는 있는데 **아무도 호출받지 않는다.** Hikari 풀 고갈만 `HikariPoolWatch`가 WARN으로 찍는다(`OPERATIONS-SLOW-QUERY.md` 4절) | 나머지 3개(5xx 비율, health DOWN, 디스크) + WARN을 실제 알림(Slack/이메일)으로. O3와 함께 |
 | O3 | 로그 집계 | ❌ | 컨테이너 로그가 호스트에만 | CloudWatch Logs나 Loki. `traceId`를 만든 이유가 여기서 살아남는다 |
-| O4 | 슬로우 쿼리 | △ | `pg_stat_statements` 로드됨(compose·테스트 컨테이너 둘 다). 보는 사람이 없다(로드맵 D2) | 주 1회 상위 10개를 보는 절차, 또는 `auto_explain` |
+| O4 | 슬로우 쿼리 | △ 2026-09-15 | 주 1회 절차 `OPERATIONS-SLOW-QUERY.md` — `scripts/db/slow-query-report.sh`가 누적·평균·호출 top 10 + `wait_event` + 락 대기 로그 수를 남긴다 | 4주 분포 뒤 `log_min_duration_statement`·`auto_explain`. cron 등록 |
 | O5 | 에러 트래킹 | ❌ | `GlobalExceptionHandler`가 500을 삼키고 로그만 남긴다 | Sentry 류. 지금은 사용자가 말해줘야 안다 |
 | O6 | 장애 대응 문서 | ❌ | 없음 | "DB가 안 뜬다 / 번역 서버가 죽었다 / 디스크가 찼다" 세 시나리오면 된다. E8의 "앱 재시작으로 안 돌아오면 DB도 재시작"이 이미 하나다 |
 
