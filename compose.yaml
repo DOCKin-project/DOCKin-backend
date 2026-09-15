@@ -128,7 +128,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 100M # 출근 분산락 전용, 소용량으로 제한
+          memory: 100M # 출근 분산락·색인 락·JWT 블랙리스트·AI 호출 한도. 합쳐도 수 MB (WORK-BACKLOG P2-19)
           cpus: '0.25' # 분산락 SETNX 수준. 메모리와 같은 이유로 소용량
 
   # MySQL 8.0에서 PostgreSQL로 이관했다(ADR-0006 3절). 이관 근거 요약:

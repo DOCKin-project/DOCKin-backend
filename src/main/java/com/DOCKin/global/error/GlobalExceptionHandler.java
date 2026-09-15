@@ -1,7 +1,10 @@
 package com.DOCKin.global.error;
 
+import com.DOCKin.ai.quota.AiQuotaExceededException;
+
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -53,6 +56,20 @@ import java.util.stream.Collectors;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    /**
+     * AI 호출 한도 초과. 본문은 다른 {@link BusinessException}과 같고 {@code Retry-After}만 얹는다 —
+     * 클라이언트가 "내일 다시"를 표시할 수 있게. 헤더는 계약 변경이 아니므로 응답 형태 원칙을 깨지 않는다.
+     */
+    @ExceptionHandler(AiQuotaExceededException.class)
+    public ResponseEntity<ErrorResponseDto> handleAiQuotaExceeded(AiQuotaExceededException e) {
+        ErrorCode errorCode = e.getErrorCode();
+        log.warn("AI 한도 초과: {} - kind={}, retryAfter={}s", errorCode.getCode(), e.getKind().key(), e.getRetryAfterSeconds());
+        ResponseEntity<ErrorResponseDto> base = toResponse(errorCode, errorCode.getMessage());
+        return ResponseEntity.status(base.getStatusCode())
+                .header(HttpHeaders.RETRY_AFTER, String.valueOf(e.getRetryAfterSeconds()))
+                .body(base.getBody());
+    }
 
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ErrorResponseDto> handleBusinessException(BusinessException e) {
