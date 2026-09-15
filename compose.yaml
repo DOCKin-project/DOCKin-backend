@@ -153,6 +153,11 @@ services:
       # 데드락 감지 주기. 기본 1초.
       - -c
       - deadlock_timeout=1s
+      # deadlock_timeout보다 오래 기다린 락을 로그에 남긴다(누가 쥐고 있는지까지).
+      # 13분 44초 transactionid 대기(PG-BOOK-EXPERIMENTS 장애 #4)는 pg_stat_activity를
+      # 사람이 열어서야 알았고 로그에는 한 줄도 없었다. 기본값 off. 대가는 1초 넘는 대기마다 로그 세 줄.
+      - -c
+      - log_lock_waits=on
       # 실행된 문장 수를 세기 위해 활성화한다. MySQL의 Com_insert에 해당하는 수단으로,
       # "배치 설정이 실제로 동작하는가"를 추정이 아니라 DB가 센 값으로 확인하는 데 쓴다.
       # (MySQL 시절 batch_size가 IDENTITY 때문에 조용히 무시되던 것을 이 방식으로 잡아냈다.)

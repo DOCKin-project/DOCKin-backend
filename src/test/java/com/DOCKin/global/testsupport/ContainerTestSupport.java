@@ -91,6 +91,9 @@ public abstract class ContainerTestSupport {
                         // P0-7이 CI에 DB를 주지 않기로 한 두 이유 중 하나였고, 여기서 해소된다.
                         "-c", "lock_timeout=5s",
                         "-c", "deadlock_timeout=1s",
+                        // compose와 같이 둔다. 1초 넘는 락 대기가 컨테이너 로그에 남으므로
+                        // LockTimeoutVerificationTest가 멈추면 누가 쥐고 있었는지 로그로 안다.
+                        "-c", "log_lock_waits=on",
                         "-c", "shared_preload_libraries=pg_stat_statements")
                 // 스키마는 Flyway가 만든다. 컨테이너에 초기화 스크립트를 주면
                 // 마이그레이션이 검증되지 않으므로 일부러 비워 둔다.
