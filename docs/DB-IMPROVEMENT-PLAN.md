@@ -49,7 +49,7 @@
 | **A1** | **팽창 관측을 들인다.** `pgstattuple` 확장 + `scripts/db/bloat-snapshot.sql`(`pg_stat_user_tables`의 `n_live_tup`·`n_dead_tup`·`last_autovacuum`·`autovacuum_count` + `pg_relation_size` + `pgstattuple.dead_tuple_percent`). 벤치·측정 스크립트가 끝날 때 이 스냅샷을 산출물에 같이 남긴다 | 780MB 힙(20,362행), 0행 26MB — 둘 다 `pg_relation_size` 하나로 우연히 봤다. dead tuple 수를 읽은 적이 없다 | 스냅샷이 산출물 폴더에 있는가. 실험 카드 ②의 전제 | **완료** (2026-09-15, 6절) |
 | **A2** | **`work_logs`·`document_chunks`에 테이블 단위 autovacuum.** `ALTER TABLE ... SET (autovacuum_vacuum_scale_factor = _, autovacuum_vacuum_cost_delay = _)` — 값은 실험 ②가 낸다 | 두 테이블만 대량 삭제·삽입이 있다(코퍼스 보존 ADR-0007, 벤치 시드). 나머지는 행 수가 작아 기본값으로 충분 | 실험 ② 조건 A(기본) vs B(조정) — 98만 삭제 뒤 회수 완료까지 시간, 힙 크기 복귀 여부 | **조건부** (실험 ②) |
 | **A3** | **대량 삭제 절차를 문서로.** ADR-0007 보존 삭제·벤치 뒷정리 뒤 `VACUUM (VERBOSE)`를 명시 실행하고, truncate가 잠금에 막히면 그 사실을 기록한다. `docs/db/`에 `rebuild-hnsw-index.sql`과 나란히 | truncate 거부(장애 #3)는 벤치 트랜잭션이 잠금을 쥔 채였다. 절차가 없어서 "언제 줄어드는지"를 아무도 몰랐다 | 절차대로 한 뒤 A1 스냅샷에서 힙이 줄었는가 | **완료** (2026-09-15, 6절) |
-| **A4** | **작업일지 목록 `Page<>` → `Slice`.** COUNT를 없앤다 | ② COUNT 4초(무인덱스) → 12.8ms(인덱스 후). MVCC라 COUNT는 전부 센다(막힘없이 Ch.2). 화면이 전체 페이지 수를 쓰는지 먼저 확인 | 목록 1페이지 쿼리 수 2 → 1. `pg_stat_statements`에서 COUNT 문장이 사라졌는가 | **바로** (화면 확인 뒤) |
+| **A4** | **작업일지 목록 `Page<>` → `Slice`.** COUNT를 없앤다 | ② COUNT 4초(무인덱스) → 12.8ms(인덱스 후). MVCC라 COUNT는 전부 센다(막힘없이 Ch.2). 화면이 전체 페이지 수를 쓰는지 먼저 확인 | 목록 1페이지 쿼리 수 2 → 1. `pg_stat_statements`에서 COUNT 문장이 사라졌는가 | **완료** (2026-09-15, 6절) — 고정 비용 4 → 3 |
 
 ### B. 메모리·WAL·커넥션 — 막힘없이 Ch.1, Internals 버퍼 캐시·WAL, Smith 체크포인트
 
@@ -74,7 +74,7 @@
 | ID | 바꾸는 것 | 근거 | 검증 | 상태 |
 |---|---|---|---|---|
 | **D1** | **`pg_trgm` GIN을 측정한다** — `work_logs(title, log_text)`·`chat_messages(content)`. 붙일지는 측정이 정한다. **쓰기 비용과 인덱스 크기를 같이 잰다** — 작업일지는 쓰기도 있다 | ⑤ `LIKE %kw%` 432ms(100만). B-tree 무효는 확인됐고 GIN은 안 해봤다. `WORK-BACKLOG.md:150`이 "ngram FULLTEXT → `pg_trgm`/tsvector"로 미뤄둔 것 | 같은 100만·같은 `pg_prewarm` 조건에서 전후. 통제군 ⑥ 방식 그대로 | **조건부** (측정) |
-| **D2** | **작업일지 목록 OFFSET → keyset** `(created_at, log_id)` 커서. 색인은 이미 했고(P1-13) 목록은 안 했다 | ③ 500페이지 150ms — OFFSET 10,000이 앞을 읽고 버린다. 정렬 없는 OFFSET은 행 중복·누락(P2-15-3) | ③이 1페이지(①)와 같은 자릿수가 되는가 | **바로** (A4와 같은 PR) |
+| **D2** | **작업일지 목록 OFFSET → keyset** `(created_at, log_id)` 커서. 색인은 이미 했고(P1-13) 목록은 안 했다 | ③ 500페이지 150ms — OFFSET 10,000이 앞을 읽고 버린다. 정렬 없는 OFFSET은 행 중복·누락(P2-15-3) | ③이 1페이지(①)와 같은 자릿수가 되는가 | **구현 완료** (2026-09-15, 6절) — 100만 벤치 재측정은 남음 |
 | **D3** | **`pg_stat_statements` 주간 top-10 절차**(O4) — `total_exec_time DESC`·`mean_exec_time DESC`·`calls DESC` 셋. `auto_explain`은 `log_min_duration`의 임계가 실측 분포에서 나오기 전엔 **안 켠다** | 확장은 로드돼 있는데 보는 사람이 없다(O4 △). 임의 임계 금지(0절 3) | 첫 주 top-10이 `docs/`에 남는가 | **바로** (절차) / auto_explain 보류 |
 | **D4** | **복합 인덱스 `(user_id, created_at DESC, log_id DESC)`는 안 넣는다** | P2-15-8: 선택도 16%라 플래너가 안 고른다. 계획에 인덱스가 없는데 1.2배는 인덱스의 공이 아니다 | — | 결정 (4절) |
 
@@ -98,7 +98,7 @@ DBA 지원서에서 비어 보이는 자리 셋(백업·복제·무중단 DDL)�
 | 순서 | 묶음 | 왜 이 자리인가 | 크기 |
 |---|---|---|---|
 | ~~1~~ | ~~**A1 + C1 + A3** — 관측 들이기~~ | **완료 2026-09-15** (6절) | 반나절 |
-| 2 | **A4 + D2** — 목록 COUNT 제거·keyset | 근거 확정(P2-15-5). 같은 리포지토리라 한 PR | 반나절 |
+| ~~2~~ | ~~**A4 + D2** — 목록 COUNT 제거·keyset~~ | **완료 2026-09-15** (6절). 100만 벤치 ③ 재측정만 남음 | 반나절 |
 | 3 | **실험 ② → A2** — autovacuum | PostgreSQL 축 고유 실험. A1이 있어야 한다 | 하루 + 로컬 |
 | 4 | **B4 + D3 + C2** — 풀 명시·알림, 슬로우 쿼리 절차 | O2·O4를 같이 채운다 | 반나절 |
 | 5 | **E2 + E3** — 복제 로컬 실측·무중단 DDL 절차 | DBA 축 결손 둘. E2는 compose에 서비스 하나 | 하루 |
@@ -162,3 +162,31 @@ VACUUM은 행을 치우지 힙을 돌려주지 않는다. 돌려주는 것은 �
 
 부수 사고 하나: `psql -c "DELETE ...; VACUUM ...;"`처럼 한 `-c`에 두 문장을 넣으면 하나의
 암묵 트랜잭션이 되어 VACUUM이 거부된다. 절차 파일은 그래서 `-f`로 한 줄씩 보내고 `BEGIN`을 넣지 않는다.
+
+### 2026-09-15 — 순서 2: A4 · D2
+
+작업일지 목록 셋(전체·타인·검색)을 `Page` → `Slice`, OFFSET → 커서 `(beforeCreatedAt, beforeLogId)`로.
+채팅 `getChatHistory`의 `beforeSeq`와 같은 구조인데 정렬 키가 둘이라 커서도 둘이다.
+
+| 무엇 | 어디 | 확인 |
+|---|---|---|
+| COUNT 제거 | `WorkLogRepository` 세 쿼리가 `Slice` | `WorkLogListQueryCountTest`: 페이지당 고정 비용 **4 → 3** (사라진 하나가 COUNT) |
+| 커서 | 같은 쿼리에 `(:c IS NULL OR createdAt < :c OR (createdAt = :c AND logId < :id))`, `ORDER BY`는 쿼리에 고정 | 새 테스트 `커서_페이징`: 크기 7로 60행을 걸으면 OFFSET 걷기와 **같은 행·같은 순서**, 중복 0, 페이지 9=ceil(60/7). 같은 `createdAt` 3건을 크기 1로 넘기면 `logId` 내림차순으로 한 건씩 |
+| 요청 sort 무시 | `WorkLogsService.sizeOnly` — 커서가 있으면 page 번호도 무시 | 커서 호출에 page=99를 줘도 결과 동일 |
+| API | `Slice<WorkLogDto>` + `beforeCreatedAt`(ISO) · `beforeLogId`. 하나만 오면 400. `@PageableDefault(sort=...)`는 계약 표기로 유지(`PageableSortDefaultTest`) | Swagger description에 사용법 |
+
+**응답 계약이 바뀐다** — `totalElements`·`totalPages`가 사라지고 다음 페이지 유무는 `last`다. 클라이언트가
+전체 페이지 수를 쓰고 있었다면 거기가 깨진다. 채팅 목록이 이미 `Slice`라 클라이언트가 그 형태를 안다는 것이
+근거이고, 확인은 못 했다(프론트가 이 저장소에 없다).
+
+**JPA가 DB를 가려 주지 못한 자리 하나.** 커서가 null인 첫 페이지에서 PostgreSQL이
+`could not determine data type of parameter`로 거부했다. Hibernate가 `? IS NULL`의 `?`를 타입 없이 보내고,
+PostgreSQL은 타입 없는 파라미터를 받지 않는다. 채팅의 `:beforeSeq`(Long)는 같은 꼴로 통과했는데
+`LocalDateTime`은 안 됐다. `CAST(:beforeCreatedAt AS Timestamp)`로 못 박아 해결. MySQL은 타입 없는 null을
+받아 주므로 MySQL 시절이었으면 안 드러났을 종류다 — `@Lob`(장애 #11)과 같은 계열.
+
+**안 잰 것**: ③ 500페이지 150ms가 커서로 얼마가 되는지. 100만 벤치 rig(`WorkLogListBenchmarkTest`)에
+커서 케이스를 넣어 다시 돌려야 한다. 설계상 인덱스 없이는 `(created_at, log_id)` 정렬을 위해 어차피
+후보 전체를 읽으므로(P2-15-8의 Parallel Seq Scan + top-N) **커서만으로는 ③이 ①과 같아지지 않을 수 있다** —
+OFFSET이 버리는 1만 행은 없어지지만 정렬 비용은 남는다. 그때는 `(created_at DESC, log_id DESC)` 인덱스가
+후보가 되는데, 그건 P2-15-8이 거절한 `(user_id, created_at, log_id)`와 다른 인덱스다. 측정 뒤 결정.

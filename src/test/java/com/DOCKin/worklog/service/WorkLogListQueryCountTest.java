@@ -1,6 +1,7 @@
 package com.DOCKin.worklog.service;
 
 import com.DOCKin.global.testsupport.ContainerTestSupport;
+import com.DOCKin.worklog.dto.WorkLogCursor;
 import com.DOCKin.worklog.dto.WorkLogDto;
 import jakarta.persistence.EntityManagerFactory;
 import org.hibernate.SessionFactory;
@@ -10,7 +11,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -145,9 +146,9 @@ class WorkLogListQueryCountTest extends ContainerTestSupport {
      *
      * <p>고정 비용이 엔드포인트마다 다른 것이 그 자체로 정보다.
      * <ul>
-     *   <li>전체 목록 4개 — 내 정보 / <b>구역 사용자 전체</b> / 본문 / COUNT</li>
-     *   <li>타인 목록 4개 — 내 정보 / 대상자 정보 / 본문 / COUNT</li>
-     *   <li>키워드 검색 4개 — 내 정보 / 구역 사용자 전체 / 본문 / COUNT. 원래 2개였다 —
+     *   <li>전체 목록 3개 — 내 정보 / <b>구역 사용자 전체</b> / 본문</li>
+     *   <li>타인 목록 3개 — 내 정보 / 대상자 정보 / 본문</li>
+     *   <li>키워드 검색 3개 — 내 정보 / 구역 사용자 전체 / 본문. 원래 1개였다 —
      *       검색만 구역 필터가 없어 전체를 뒤졌기 때문이고(P2-18-10), 전체 목록과 같은 범위로
      *       맞추면서 같은 고정 비용이 됐다</li>
      * </ul>
@@ -159,13 +160,13 @@ class WorkLogListQueryCountTest extends ContainerTestSupport {
     @DisplayName("목록 API 쿼리 수 = 고정 비용 + 행당 1 (이미지 컬렉션)")
     void 목록_쿼리_수() {
         Measurement all10 = measure("전체 목록", 10,
-                () -> workLogsService.readWorklog(user(0), PageRequest.of(0, 10)));
+                () -> workLogsService.readWorklog(user(0), null, PageRequest.of(0, 10)));
         Measurement all20 = measure("전체 목록", 20,
-                () -> workLogsService.readWorklog(user(0), PageRequest.of(0, 20)));
+                () -> workLogsService.readWorklog(user(0), null, PageRequest.of(0, 20)));
         Measurement other = measure("타인 목록", 20,
-                () -> workLogsService.readOtherWorklog(otherViewer(), otherTarget(), PageRequest.of(0, 20)));
+                () -> workLogsService.readOtherWorklog(otherViewer(), otherTarget(), null, PageRequest.of(0, 20)));
         Measurement search = measure("키워드 검색", 20,
-                () -> workLogsService.searchByKeyword(user(0), KEYWORD, PageRequest.of(0, 20)));
+                () -> workLogsService.searchByKeyword(user(0), KEYWORD, null, PageRequest.of(0, 20)));
 
         print(all10, all20, other, search);
 
@@ -173,10 +174,12 @@ class WorkLogListQueryCountTest extends ContainerTestSupport {
         assertEquals(20, other.rows(), "타인 목록 표본이 한 페이지를 채우지 못했다");
         assertEquals(20, search.rows(), "키워드 검색 표본이 한 페이지를 채우지 못했다");
 
-        assertEquals(4 + 10, all10.queries(), explain("전체 목록(10)", all10));
-        assertEquals(4 + 20, all20.queries(), explain("전체 목록(20)", all20));
-        assertEquals(4 + 20, other.queries(), explain("타인 목록(20)", other));
-        assertEquals(4 + 20, search.queries(), explain("키워드 검색(20)", search));
+        // 고정 비용 3 = 요청자 조회 + (구역원 목록 | 대상 조회) + 본문. 2026-09-15까지는 4였다 --
+        // Page<>가 COUNT를 하나 더 던졌고, Slice로 바꾸며 사라졌다(DB-IMPROVEMENT-PLAN A4).
+        assertEquals(3 + 10, all10.queries(), explain("전체 목록(10)", all10));
+        assertEquals(3 + 20, all20.queries(), explain("전체 목록(20)", all20));
+        assertEquals(3 + 20, other.queries(), explain("타인 목록(20)", other));
+        assertEquals(3 + 20, search.queries(), explain("키워드 검색(20)", search));
 
         // 행당 1이 어디서 나오는지까지 고정한다. 개수만 고정하면 다음 사람이 다시 세야 한다.
         assertEquals(all20.rows(), all20.collectionFetches(),
@@ -231,20 +234,21 @@ class WorkLogListQueryCountTest extends ContainerTestSupport {
     @Test
     @DisplayName("선언한 정렬이 세 목록 쿼리에 모두 먹고 동점은 logId로 갈린다")
     void 정렬이_실제로_먹는다() {
-        // 컨트롤러가 선언한 것과 같은 정렬. 여기서 예외가 나면 속성 이름이 쿼리로 번역되지 않는 것이다.
+        // 2026-09-15부터 정렬은 리포지토리 쿼리에 박혀 있고 서비스가 Pageable의 sort를 뗀다.
+        // 그래서 이 sort는 이제 "붙여도 무시된다"의 증거다 -- 아래 동점 순서는 쿼리의 ORDER BY가 만든다.
         PageRequest sorted = PageRequest.of(0, 20,
                 Sort.by(Sort.Direction.DESC, "createdAt", "logId"));
 
-        assertEquals(20, workLogsService.readWorklog(user(0), sorted).getNumberOfElements(),
+        assertEquals(20, workLogsService.readWorklog(user(0), null, sorted).getNumberOfElements(),
                 "전체 목록에 정렬이 붙자 결과가 달라졌다");
-        assertEquals(20, workLogsService.readOtherWorklog(otherViewer(), otherTarget(), sorted)
+        assertEquals(20, workLogsService.readOtherWorklog(otherViewer(), otherTarget(), null, sorted)
                 .getNumberOfElements(), "타인 목록에 정렬이 붙자 결과가 달라졌다");
         // JPQL @Query. 정렬 속성이 엔티티 필드명과 어긋나면 여기서 터진다.
-        assertEquals(20, workLogsService.searchByKeyword(user(0), KEYWORD, sorted).getNumberOfElements(),
+        assertEquals(20, workLogsService.searchByKeyword(user(0), KEYWORD, null, sorted).getNumberOfElements(),
                 "키워드 검색에 정렬이 붙자 결과가 달라졌다");
 
         // 시각이 같은 세 건. createdAt만으로는 순서가 정해지지 않는 구간이다.
-        List<Long> tieIds = workLogsService.readWorklog(tieUser(), sorted)
+        List<Long> tieIds = workLogsService.readWorklog(tieUser(), null, sorted)
                 .getContent().stream().map(WorkLogDto::getLogId).toList();
 
         assertEquals(TIE_LOGS, tieIds.size(), "동점 표본이 세 건이 아니다");
@@ -254,6 +258,68 @@ class WorkLogListQueryCountTest extends ContainerTestSupport {
         System.out.println();
         System.out.println("=== 같은 createdAt 세 건의 반환 순서 ===");
         System.out.println("  logId : " + tieIds);
+        System.out.println();
+    }
+
+    /**
+     * 커서 페이징이 OFFSET 페이징과 <b>같은 행을 같은 순서로</b> 준다 (DB-IMPROVEMENT-PLAN D2).
+     *
+     * <p>페이지 크기를 7로 두는 이유: 60이 7의 배수가 아니라 마지막 페이지가 반쪽이고
+     * ({@code last}가 거기서만 true여야 한다), 경계가 20의 배수와 어긋나 다른 자리에 떨어진다.
+     * 동점 구역은 크기 1로 걷는다 — 같은 {@code createdAt} 세 건을 한 건씩 넘기려면
+     * {@code (createdAt = :c AND logId < :id)} 가지가 실제로 타야 한다. 그 가지가 없으면
+     * 첫 건 뒤에 나머지 둘이 사라진다.
+     */
+    @Test
+    @DisplayName("커서로 걸으면 OFFSET과 같은 행·같은 순서, 중복·누락 없이, 동점도 한 건씩 넘어간다")
+    void 커서_페이징() {
+        int size = 7;
+
+        List<Long> byOffset = new java.util.ArrayList<>();
+        for (int page = 0; ; page++) {
+            Slice<WorkLogDto> s = workLogsService.readWorklog(user(0), null, PageRequest.of(page, size));
+            s.getContent().forEach(d -> byOffset.add(d.getLogId()));
+            if (!s.hasNext()) break;
+        }
+
+        List<Long> byCursor = new java.util.ArrayList<>();
+        WorkLogCursor cursor = null;
+        int pages = 0;
+        for (;;) {
+            // 커서가 있는 호출에는 page 번호를 일부러 엉뚱하게 준다 -- 무시돼야 한다.
+            int page = cursor == null ? 0 : 99;
+            Slice<WorkLogDto> s = workLogsService.readWorklog(user(0), cursor, PageRequest.of(page, size));
+            pages++;
+            s.getContent().forEach(d -> byCursor.add(d.getLogId()));
+            if (!s.hasNext()) break;
+            WorkLogDto lastRow = s.getContent().get(s.getNumberOfElements() - 1);
+            cursor = WorkLogCursor.of(lastRow.getCreatedAt(), lastRow.getLogId());
+        }
+
+        assertEquals(LOGS, byOffset.size(), "OFFSET 걷기가 표본 전체를 못 봤다");
+        assertEquals(byOffset, byCursor, "커서 걷기가 OFFSET 걷기와 다른 행 또는 다른 순서를 줬다");
+        assertEquals(LOGS, new java.util.HashSet<>(byCursor).size(), "커서 걷기에 중복이 있다");
+        assertEquals((LOGS + size - 1) / size, pages, "커서 페이지 수가 ceil(60/7)이 아니다");
+
+        // 동점 세 건을 한 건씩
+        List<Long> tie = new java.util.ArrayList<>();
+        cursor = null;
+        for (;;) {
+            Slice<WorkLogDto> s = workLogsService.readWorklog(tieUser(), cursor, PageRequest.of(0, 1));
+            assertEquals(1, s.getNumberOfElements(), "동점 구역에서 한 건씩 받지 못했다");
+            WorkLogDto row = s.getContent().get(0);
+            tie.add(row.getLogId());
+            if (!s.hasNext()) break;
+            cursor = WorkLogCursor.of(row.getCreatedAt(), row.getLogId());
+        }
+        assertEquals(TIE_LOGS, tie.size(), "같은 createdAt 세 건 중 일부가 커서 경계에서 사라졌다");
+        assertEquals(tie.stream().sorted(java.util.Comparator.reverseOrder()).toList(), tie,
+                "동점 구간이 logId 내림차순으로 넘어가지 않았다");
+
+        System.out.println();
+        System.out.println("=== 커서 페이징 (size " + size + ") ===");
+        System.out.println("  페이지 수 : " + pages + " (OFFSET과 같은 " + byOffset.size() + "행)");
+        System.out.println("  동점 3건  : " + tie);
         System.out.println();
     }
 
@@ -280,7 +346,7 @@ class WorkLogListQueryCountTest extends ContainerTestSupport {
     @Test
     @DisplayName("장비 없는 일지가 섞여도 목록이 나오고 equipmentId만 null이다")
     void 장비가_없어도_목록이_나온다() {
-        Page<WorkLogDto> page = workLogsService.readWorklog(nullEquipmentUser(), PageRequest.of(0, 20));
+        Slice<WorkLogDto> page = workLogsService.readWorklog(nullEquipmentUser(), null, PageRequest.of(0, 20));
 
         assertEquals(1, page.getNumberOfElements(),
                 "장비 없는 행이 응답에서 빠졌다 - 예외를 안 내는 것과 행을 싣는 것은 다르다");
@@ -314,9 +380,9 @@ class WorkLogListQueryCountTest extends ContainerTestSupport {
      * 앞선 호출의 수가 섞이면 배수가 실제보다 크게 나온다.
      */
     private Measurement measure(String name, int pageSize,
-                                java.util.function.Supplier<Page<WorkLogDto>> call) {
+                                java.util.function.Supplier<Slice<WorkLogDto>> call) {
         statistics.clear();
-        Page<WorkLogDto> page = call.get();
+        Slice<WorkLogDto> page = call.get();
         return new Measurement(name, pageSize, page.getNumberOfElements(),
                 statistics.getPrepareStatementCount(),
                 statistics.getEntityLoadCount(),
@@ -363,10 +429,10 @@ class WorkLogListQueryCountTest extends ContainerTestSupport {
     @Test
     @DisplayName("키워드 검색은 같은 구역만 — 다른 구역 사용자에게는 0건")
     void 검색_구역_범위() {
-        assertEquals(20, workLogsService.searchByKeyword(user(0), KEYWORD, PageRequest.of(0, 20))
+        assertEquals(20, workLogsService.searchByKeyword(user(0), KEYWORD, null, PageRequest.of(0, 20))
                 .getNumberOfElements(), "같은 구역 사용자는 표본을 본다");
-        assertEquals(0, workLogsService.searchByKeyword(otherViewer(), KEYWORD, PageRequest.of(0, 20))
-                .getTotalElements(), "다른 구역 사용자에게 이 구역의 작업일지가 검색된다");
+        assertEquals(0, workLogsService.searchByKeyword(otherViewer(), KEYWORD, null, PageRequest.of(0, 20))
+                .getNumberOfElements(), "다른 구역 사용자에게 이 구역의 작업일지가 검색된다");
     }
 
     private String otherViewer() {
