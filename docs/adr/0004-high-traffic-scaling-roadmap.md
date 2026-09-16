@@ -30,6 +30,8 @@ ADR-0001의 k6 시나리오에 두 번째 케이스를 추가한다: N명의 서
 
 `getMyAttendanceRecords`, `WorkLogsService.readWorklog` 등 조회 API는 읽기 전용이다. `application.properties`에 이미 주석 처리된 AWS RDS 엔드포인트가 있어 RDS 사용을 염두에 뒀던 흔적이 있는데, 여기에 Read Replica를 붙여 조회 트래픽을 쓰기(clockin/clockout)와 분리하면 출근 버스트 중에도 조회 성능이 영향을 덜 받는다.
 
+> **2026-09-15 실측 뒤 덧붙임** (`measure/replication/repl-20260915T164004/README.md`, DB-IMPROVEMENT-PLAN E2). 로컬 standby의 반영 지연은 유휴 p50 81ms·p95 341ms, 쓰기 부하 중 p50 382ms·max 856ms였다 — 같은 호스트 값이라 운영은 더 크다. 이 지연은 채팅 재접속 따라잡기(ADR-0008 `after?seq=`)와 `clockin` 직후 조회 같은 read-after-write 경로를 깨뜨린다. 그리고 "출근 버스트 중 조회 보호"가 목적인데 버스트는 곧 쓰기 부하고 그때 지연이 가장 나쁘다. 읽기 분리는 "어느 API를"이 아니라 **"어느 API가 stale을 견디나"** 로 물어야 하고, 지금 트래픽에서 그 답은 "거의 없다"다. 복제를 붙인다면 첫 용도는 읽기 분리가 아니라 HA(promote)·백업 오프로드다. 우선순위 3번은 그대로 두되 전제가 이렇게 바뀌었다.
+
 ### 3-4. 수평 확장 (스케일 아웃)
 
 - `dockin-app` 인스턴스를 여러 개로 늘리고, 앞단의 `dockin-nginx`가 실제로 로드밸런싱하도록 구성한다.

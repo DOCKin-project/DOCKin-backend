@@ -1,0 +1,12 @@
+16:40:34  primary 기동. 시드 300000행
+16:41:01  시드 23s, DB 183 MB
+16:41:01  pg_basebackup 으로 standby 생성
+16:41:49  standby streaming. basebackup 40s
+16:41:51  반영 지연(유휴) 20회
+16:43:54  부하 60s — primary에 배치 INSERT, 2초마다 pg_stat_replication, 5초마다 프로브
+16:45:24  부하 끝: 506000행 삽입
+16:46:11  따라잡기 47s
+16:46:30  standby 읽기: u1 600행 / 쓰기: ERROR:  cannot execute INSERT in a read-only transaction
+16:46:30  standby promote
+16:46:49  promote 10826ms (docker exec 왕복 포함). 갈라짐: 옛 primary에만 k=1000001 / 새 primary에만 k=1000000 — 둘 다 자기가 primary라고 믿는다
+16:46:52  산출물: measure/replication/repl-20260915T164004
