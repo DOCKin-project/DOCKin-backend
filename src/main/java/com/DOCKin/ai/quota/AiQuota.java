@@ -44,10 +44,13 @@ import java.util.Map;
  * {@link Clock} 빈을 쓴다 — 출근의 "오늘"({@code AttendanceService})과 같은 시계다.
  * 키에 날짜가 들어가고 TTL은 자정까지라, 자정이 지나면 새 키가 0에서 시작한다.
  *
- * <h3>상한값은 가정이다</h3>
- * {@code ai.quota.daily.*}의 기본값은 측정에서 나온 것이 아니다. 가정 문서의
- * 챗봇 1인 주 1회·번역 메시지의 10~30%에서 "정상 사용은 하루 수십 건"이라는 자릿수만 가져왔다.
- * 실측이 생기면 그 분포에서 다시 정한다.
+ * <h3>상한값은 사용 분포가 아니라 예산에서 유도했다</h3>
+ * 사용 분포를 재려면 사용자가 있어야 하는데 없다(H1 파일럿 전). 그래서 {@code ai.quota.daily.*}는
+ * 두 축으로 정했다 — <b>정상 최대 사용의 1.5배 이상</b>이어야 하고(정상 사용이 429를 보면 한도가 아니라 버그다),
+ * <b>소진 시 FastAPI 서버 시간</b>이 얼마인지 적을 수 있어야 한다(그게 이 한도가 막는 것이다).
+ * 값과 유도는 {@code application.properties}의 주석과 백로그 P2-19에 있다. 처음 값(100·100·2000)은
+ * 자릿수만 가져온 것이라 rt-translate는 하루 종일 통역하는 정상 사용에 걸렸고(3시간이면 소진),
+ * chatbot은 가정의 500배라 상한 노릇을 못 했다. 파일럿에서 분포가 나오면 그 p99의 몇 배로 갈아 끼운다.
  */
 @Slf4j
 @Component
@@ -61,9 +64,9 @@ public class AiQuota {
 
     public AiQuota(RedissonClient redissonClient,
                    Clock clock,
-                   @Value("${ai.quota.daily.chatbot:100}") long chatbot,
-                   @Value("${ai.quota.daily.worklog-translate:100}") long worklogTranslate,
-                   @Value("${ai.quota.daily.rt-translate:2000}") long rtTranslate) {
+                   @Value("${ai.quota.daily.chatbot:20}") long chatbot,
+                   @Value("${ai.quota.daily.worklog-translate:50}") long worklogTranslate,
+                   @Value("${ai.quota.daily.rt-translate:8000}") long rtTranslate) {
         this.redissonClient = redissonClient;
         this.clock = clock;
         limits.put(AiQuotaKind.CHATBOT, chatbot);
