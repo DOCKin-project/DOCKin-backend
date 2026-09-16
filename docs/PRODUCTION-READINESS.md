@@ -90,7 +90,7 @@
 | 무엇 | 왜 깨지나 | 대응 |
 |---|---|---|
 | `JwtBlacklist` | — | **Redis로 옮겼다**(P2-5, 2026-09-14) |
-| `StompHandler.onlineUsers` | static Map. 접속 상태가 인스턴스별 | Redis |
+| ~~`StompHandler.onlineUsers`~~ | ~~static Map. 접속 상태가 인스턴스별~~ | **Redis로 옮겼다**(`Presence`, 2026-09-16). `presence:{userId}` SET, TTL 30초·10초 갱신, `SessionDisconnectEvent`로 해제 |
 | SimpleBroker | 인스턴스 간 전파 없음 — A에 붙은 사람이 B에서 보낸 메시지를 못 받는다 | Redis pub/sub 또는 외부 STOMP 브로커 |
 | Flyway 기동 | 동시에 돈다 | D4 |
 | 색인 배치·스케줄러 | — | **이미 Redisson 락으로 막았다**(`IndexingService`, 밤 1 사고의 결과) |

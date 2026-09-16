@@ -1,5 +1,6 @@
 package com.DOCKin.global.config;
 
+import com.DOCKin.chat.presence.Presence;
 import com.DOCKin.chat.repository.ChatMembersRepository;
 import com.DOCKin.global.error.BusinessException;
 import com.DOCKin.global.error.ErrorCode;
@@ -14,10 +15,8 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.stereotype.Component;
 
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Component
@@ -25,6 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class StompHandler implements ChannelInterceptor {
     private final JwtUtil jwtUtil;
     private final ChatMembersRepository chatMembersRepository;
+    private final Presence presence;
 
     /**
      * 구독을 허용하는 목적지 둘. {@code ChatController}가 보내는 곳과 정확히 같다.
@@ -37,9 +37,6 @@ public class StompHandler implements ChannelInterceptor {
     private static final Pattern ROOM_DESTINATION = Pattern.compile("^/sub/chat/room/(\\d+)$");
     /** 방 목록 갱신({@code rooms})과 발신 실패 통지({@code errors}, ADR-0008 D1). 둘 다 본인만 구독한다. */
     private static final Pattern USER_ROOMS_DESTINATION = Pattern.compile("^/sub/user/([^/]+)/(rooms|errors)$");
-
-    // 접속 중인 세션 관리 (sessionId -> userId)
-    private static final Map<String, String> onlineUsers = new ConcurrentHashMap<>();
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
@@ -77,8 +74,9 @@ public class StompHandler implements ChannelInterceptor {
                     accessor.getSessionAttributes().put("userId", userId);
                 }
 
-                // 온라인 유저 맵에 등록
-                onlineUsers.put(accessor.getSessionId(), userId);
+                // 접속 상태는 Redis에(Presence). 해제는 여기가 아니라 SessionDisconnectEvent가 잡는다 --
+                // DISCONNECT 프레임은 곱게 끊을 때만 오고, 네트워크가 끊기면 안 온다.
+                presence.connected(userId, accessor.getSessionId());
                 log.info("WebSocket 인증 성공: userId={}", userId);
 
             } catch (Exception e) {
@@ -98,13 +96,6 @@ public class StompHandler implements ChannelInterceptor {
             }
             authorizeSubscription(userId, accessor.getDestination());
             log.info("구독 요청 - 유저: {}, 경로: {}", userId, accessor.getDestination());
-        }
-
-        // 3. 연결 해제 시 (DISCONNECT)
-        else if (StompCommand.DISCONNECT == accessor.getCommand()) {
-            String sessionId = accessor.getSessionId();
-            String removedUser = onlineUsers.remove(sessionId);
-            log.info("WebSocket 연결 종료 - userId: {}", removedUser);
         }
 
         return message;
