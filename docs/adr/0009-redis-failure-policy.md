@@ -82,7 +82,7 @@ Redisson 기본값은 `retryAttempts` 3 · `retryInterval` 1.5초 · `timeout` 3
 
 | 항목 | 상태 |
 |---|---|
-| `/actuator/health`에 `redis` 항목이 실제로 있는가 | **확인된 바 없다.** `ActuatorEndpointTest` 주석은 "db·redis·diskSpace"라 하지만 Spring Boot의 `RedisHealthIndicator`는 spring-data-redis가 있어야 붙고 이 저장소는 `redisson` 단독이다. 없다면 닫힘 용도(블랙리스트)의 장애를 **401 급증으로만** 알게 된다 — `RedissonClient.getNodesGroup().pingAll()`로 `HealthIndicator` 하나 |
+| `/actuator/health`에 `redis` 항목이 실제로 있는가 | **없었다 → 넣었다 (2026-09-16).** 실제 응답은 `db`·`diskSpace`·`ping`뿐이었다 — Spring Boot의 Redis 헬스는 spring-data-redis의 `RedisConnectionFactory`에 붙는데 이 저장소는 `redisson` 단독이라 그 빈이 없다. `RedisHealthIndicator`(`getRedisNodes(SINGLE).pingAll()`)를 넣었고 Redis가 죽으면 **앱 전체가 DOWN**이다 — 블랙리스트가 닫히면 인증이 전부 401이라 UP이라 할 수 없다. `ActuatorEndpointTest`가 항목 존재를, `RedisHealthIndicatorTest`가 DOWN 경로를 본다 |
 | 열림 경로의 대기 시간 실측(4절) | [측정 필요] |
 | 색인 락·블랙리스트의 장애 경로 테스트 | `AiQuotaRedisTest`의 "전용 Redis를 죽인다" 방식을 그대로 쓰면 된다 |
 | Resilience4j 서킷(P2-11-4) | 4절 측정 뒤 |
