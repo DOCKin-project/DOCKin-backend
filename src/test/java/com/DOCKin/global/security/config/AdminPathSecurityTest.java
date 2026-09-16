@@ -30,6 +30,8 @@ class AdminPathSecurityTest extends ContainerTestSupport {
             "/api/safety/admin/courses",
             "/api/safety/admin/courses/search?keyword=x",
             "/api/checklist/admin/checklists/1",
+            // P2-17-1에서 새로 생긴 경로. 서비스에 검사가 있지만 경로 규칙에도 걸리는지 같이 본다.
+            "/api/work-logs/admin?status=PENDING",
     };
 
     @Autowired

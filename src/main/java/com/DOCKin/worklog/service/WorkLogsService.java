@@ -221,6 +221,10 @@ public class WorkLogsService {
             logs.setEquipment(equipment);
         }
 
+        // 내용이 바뀌었으면 검토는 무효다 -- 반려된 글을 고쳐 다시 올리는 흐름이고,
+        // 승인된 글을 몰래 바꾸는 것도 막는다 (P2-17-1, 2026-09-16 결정).
+        logs.resetReview();
+
         return WorkLogDto.from(logs);
     }
 

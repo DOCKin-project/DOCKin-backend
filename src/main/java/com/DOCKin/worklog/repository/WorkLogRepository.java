@@ -2,6 +2,7 @@ package com.DOCKin.worklog.repository;
 
 import com.DOCKin.member.model.Member;
 import com.DOCKin.worklog.model.WorkLog;
+import com.DOCKin.worklog.model.WorkLogStatus;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -46,6 +47,22 @@ public interface WorkLogRepository extends JpaRepository<WorkLog, Long> {
                                   @Param("beforeCreatedAt") LocalDateTime beforeCreatedAt,
                                   @Param("beforeLogId") Long beforeLogId,
                                   Pageable pageable);
+
+    /** 관리자 검토 목록 — 같은 구역, 상태 하나. 커서 규칙은 {@link #findByMemberIn}과 같다 (P2-17-1). */
+    @Query("""
+            SELECT w FROM WorkLog w
+            WHERE w.member IN :members
+              AND w.status = :status
+              AND (CAST(:beforeCreatedAt AS Timestamp) IS NULL
+                   OR w.createdAt < :beforeCreatedAt
+                   OR (w.createdAt = :beforeCreatedAt AND w.logId < :beforeLogId))
+            ORDER BY w.createdAt DESC, w.logId DESC
+            """)
+    Slice<WorkLog> findByMemberInAndStatus(@Param("members") List<Member> members,
+                                           @Param("status") WorkLogStatus status,
+                                           @Param("beforeCreatedAt") LocalDateTime beforeCreatedAt,
+                                           @Param("beforeLogId") Long beforeLogId,
+                                           Pageable pageable);
 
     @Query("""
             SELECT w FROM WorkLog w

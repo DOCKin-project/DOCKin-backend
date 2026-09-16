@@ -1773,7 +1773,7 @@ Redis에 해당하는 것이 없었다. `application.properties`의 기본값이
 
 | # | 항목 | PPT 근거 | 없는 것 | 서버 규모 | 순위 |
 |---|---|---|---|---|---|
-| P2-17-1 | **작업일지 승인·반려 루프** | 15P 화면에 `승인됨`/`반려됨` 배지, "승인·반려 실시간 반영" | `WorkLog`에 상태 컬럼이 없다. 관리자 코멘트(`worklog/comments`)만 있다 | 컬럼 1개(V6) + `PATCH .../approve`·`reject` 2개. `AbsenceAdminController`의 승인·거절 패턴을 그대로 옮긴다 | ★ |
+| ~~P2-17-1~~ | ~~**작업일지 승인·반려 루프**~~ **완료**(2026-09-16) — V8(`status`·`reviewed_by`·`reviewed_at`·`review_comment`, 기존 행은 PENDING), `WorkLogAdminController`(`GET /api/work-logs/admin?status=`·`PATCH {id}/approve`·`reject`), `WorkLogReviewService`. 결정: 같은 구역 ADMIN만(P2-18-10과 같은 범위), PENDING만 결정(409), 반려 사유 필수, 수정하면 다시 PENDING(승인된 글을 몰래 못 바꾼다), "실시간 반영"은 `WorkLogReviewed` 이벤트만 발행하고 소비자는 FCM(D10) 때. 인덱스는 측정 전이라 안 넣음 | 15P 화면에 `승인됨`/`반려됨` 배지, "승인·반려 실시간 반영" | `WorkLog`에 상태 컬럼이 없다. 관리자 코멘트(`worklog/comments`)만 있다 | 컬럼 1개(V6) + `PATCH .../approve`·`reject` 2개. `AbsenceAdminController`의 승인·거절 패턴을 그대로 옮긴다 | ★ |
 | P2-17-2 | **공지 발송 (일반·긴급)** | 17P "공지발송(FCM) — 일반공지: FCM 전송 / 긴급공지: 강제 팝업" | `notice`·`announce` 코드 0건. 조선소·근무조 단위 대상 지정도 없다 | 테이블 1개 + 관리자 발송 API + 근무자 조회 API. **긴급 공지는 P2-12-6(FCM) 없이는 반쪽**이라 그쪽과 묶는다 | ★ |
 | P2-17-3 | **FCM** | 17P 긴급 팝업, 12P "감시/알림 FCM" | 의존성·코드 모두 없음 | **P2-12-6이 이미 다뤘다.** 채팅과 공지 둘 다 여기에 걸리므로 P2-17-2보다 먼저 결정해야 한다 | ★ |
 | P2-17-4 | **관리자 대시보드 집계** | 17P "출근 124명 / 퇴근 52명 / 휴가 8명 / 병결 2명" | `GET /api/attendance`는 **본인 기록만** 돌려준다. 관리자용 일별 인원 집계가 없다 | 조선소·날짜 기준 COUNT 4개짜리 조회 1개. P3의 "월말 집계"와 다르다 — 이건 오늘 하루의 숫자다 | ★ |

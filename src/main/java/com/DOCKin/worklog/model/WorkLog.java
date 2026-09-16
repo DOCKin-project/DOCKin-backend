@@ -91,6 +91,28 @@ public class WorkLog {
     @JoinColumn(name = "equipment_id")
     private Equipment equipment;
 
+    /**
+     * 검토 상태 (P2-17-1, {@code V8__work_logs_review_status.sql}).
+     *
+     * <p>{@code AbsenceRequest}의 status/processedBy/processedAt/decisionComment와 같은 모양이다.
+     * 전이는 {@link #approve}·{@link #reject}·{@link #resetReview}로만 한다 — setter로 상태만 바꾸면
+     * 검토자·시각이 남거나 빠진 채로 갈린다.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", length = 20, nullable = false)
+    @Builder.Default
+    private WorkLogStatus status = WorkLogStatus.PENDING;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reviewed_by")
+    private Member reviewedBy;
+
+    @Column(name = "reviewed_at")
+    private LocalDateTime reviewedAt;
+
+    @Column(name = "review_comment", length = 500)
+    private String reviewComment;
+
     @Builder.Default
     @OneToMany(mappedBy = "logId",cascade=CascadeType.ALL,orphanRemoval = true)
     private List<Comment> comments =new ArrayList<>();
@@ -104,4 +126,34 @@ public class WorkLog {
         image.setWorkLog(this);
     }
 
+    public boolean isPending() {
+        return status == WorkLogStatus.PENDING;
+    }
+
+    public void approve(Member admin, String comment, LocalDateTime at) {
+        review(WorkLogStatus.APPROVED, admin, comment, at);
+    }
+
+    public void reject(Member admin, String comment, LocalDateTime at) {
+        review(WorkLogStatus.REJECTED, admin, comment, at);
+    }
+
+    /**
+     * 작성자가 내용을 고치면 검토는 무효다 — 반려된 글을 고쳐 다시 올리는 흐름이고,
+     * 승인된 글을 몰래 바꾸는 것도 막는다(2026-09-16 결정). 이미 PENDING이면 아무것도 안 한다.
+     */
+    public void resetReview() {
+        if (status == WorkLogStatus.PENDING) return;
+        this.status = WorkLogStatus.PENDING;
+        this.reviewedBy = null;
+        this.reviewedAt = null;
+        this.reviewComment = null;
+    }
+
+    private void review(WorkLogStatus decision, Member admin, String comment, LocalDateTime at) {
+        this.status = decision;
+        this.reviewedBy = admin;
+        this.reviewedAt = at;
+        this.reviewComment = comment;
+    }
 }

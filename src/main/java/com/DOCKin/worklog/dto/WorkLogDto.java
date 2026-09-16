@@ -2,6 +2,7 @@ package com.DOCKin.worklog.dto;
 
 import com.DOCKin.worklog.model.WorkLogImage;
 import com.DOCKin.worklog.model.WorkLog;
+import com.DOCKin.worklog.model.WorkLogStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -43,6 +44,15 @@ public class WorkLogDto {
     private LocalDateTime updatedAt;
 
     private String audioFileUrl;
+
+    @Schema(description = "검토 상태. 새 글과 수정한 글은 PENDING", requiredMode = Schema.RequiredMode.REQUIRED)
+    private WorkLogStatus status;
+    @Schema(description = "검토한 관리자 사원번호. PENDING이면 null")
+    private String reviewedBy;
+    @Schema(description = "검토 일시. PENDING이면 null")
+    private LocalDateTime reviewedAt;
+    @Schema(description = "승인·반려 코멘트. 반려는 항상 있다")
+    private String reviewComment;
 
     /**
      * 엔티티를 응답 DTO로 옮긴다.
@@ -104,6 +114,11 @@ public class WorkLogDto {
                 .audioFileUrl(entity.getAudioFileUrl())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
+                .status(entity.getStatus())
+                // reviewedBy는 LAZY지만 userId가 PK라 프록시에서 쿼리 없이 읽힌다(목록 쿼리 수 측정과 같은 이유).
+                .reviewedBy(entity.getReviewedBy() == null ? null : entity.getReviewedBy().getUserId())
+                .reviewedAt(entity.getReviewedAt())
+                .reviewComment(entity.getReviewComment())
                 .build();
     }
 }
