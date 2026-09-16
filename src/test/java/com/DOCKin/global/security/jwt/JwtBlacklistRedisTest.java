@@ -8,7 +8,10 @@ import org.junit.jupiter.api.Test;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.utility.DockerImageName;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -86,5 +89,40 @@ class JwtBlacklistRedisTest extends ContainerTestSupport {
         boolean rawKeyExists = redisson.getKeys().getKeysStream()
                 .anyMatch(k -> k.contains(token));
         assertFalse(rawKeyExists, "토큰 원문이 키에 들어 있다");
+    }
+
+    @Test
+    @DisplayName("Redis가 죽으면 '없다'가 아니라 예외다 - 열면 로그아웃한 토큰이 통한다 (ADR-0009 닫힘)")
+    void 레디스_장애_시_닫힘() {
+        // AiQuotaRedisTest와 같은 방식. 공유 컨테이너를 끌 수는 없으니 이 테스트만의 Redis를 죽인다.
+        // 재시도 없이 500ms 안에 예외가 나게 둔다 — 여기서 재는 것은 "막히는가"지 "얼마나 기다리는가"가 아니다.
+        try (GenericContainer<?> dying = new GenericContainer<>(DockerImageName.parse("redis:7-alpine"))
+                .withExposedPorts(6379)) {
+            dying.start();
+            Config config = new Config();
+            config.useSingleServer()
+                    .setAddress("redis://" + dying.getHost() + ":" + dying.getMappedPort(6379))
+                    .setConnectionMinimumIdleSize(1)
+                    .setConnectionPoolSize(2)
+                    .setRetryAttempts(0)
+                    .setTimeout(500)
+                    .setConnectTimeout(3000);
+            RedissonClient client = Redisson.create(config);
+            try {
+                JwtBlacklist blacklist = new JwtBlacklist(client);
+                String token = "logged-out-" + System.nanoTime();
+                blacklist.add(token, System.currentTimeMillis() + 60_000);
+                assertTrue(blacklist.isBlacklisted(token));
+
+                dying.stop();
+
+                // false를 돌려주면 JwtAuthFilter가 이 토큰으로 인증을 세운다. 예외여야 필터가 세우지 않는다
+                // (JwtAuthFilterTest). 로그아웃한 토큰뿐 아니라 모든 토큰이 막히는 것이 이 정책의 값이다.
+                assertThatThrownBy(() -> blacklist.isBlacklisted(token)).isInstanceOf(RuntimeException.class);
+                assertThatThrownBy(() -> blacklist.isBlacklisted("never-seen")).isInstanceOf(RuntimeException.class);
+            } finally {
+                client.shutdown();
+            }
+        }
     }
 }
