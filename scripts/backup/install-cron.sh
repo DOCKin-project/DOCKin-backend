@@ -20,6 +20,10 @@ REPO_DIR=$(cd "$(dirname "$0")/../.." && pwd)
 S3_BACKUP_URI=${S3_BACKUP_URI:-}
 MARK="# dockin-db-backup"
 
+# 리다이렉션(>> backups/db/cron.log)은 cron의 셸이 db-backup.sh를 실행하기 *전에* 연다.
+# 스크립트 안의 mkdir은 그때 이미 늦다 -- 새 체크아웃이면 매일 02:00에 조용히 죽는다.
+mkdir -p "$REPO_DIR/backups/db"
+
 LINE="0 2 * * * cd $REPO_DIR && S3_BACKUP_URI=$S3_BACKUP_URI ./scripts/backup/db-backup.sh >> backups/db/cron.log 2>&1 $MARK"
 
 ( crontab -l 2>/dev/null | grep -v "$MARK" || true; echo "$LINE" ) | crontab -

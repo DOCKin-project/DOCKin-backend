@@ -48,12 +48,16 @@ public class ChatJdbcRepository {
      * 발신자 본인도 이 메서드로 처리한다: 자기가 보낸 것은 읽은 것이므로 {@code saveMessage}가 방금 발급한
      * 번호로 부른다. 시각 컬럼 {@code last_read_time}은 V7이 내렸다 — 시각으로 상태를 판단하지 않는다.
      *
+     * <p>{@code LEAST(:seq, last_message_seq)}로 방의 현재 번호에서 자른다 — 클라이언트가 아직 없는 번호(99)를
+     * 보내면 그 뒤 5~99번이 도착하자마자 읽은 것이 되어 안읽음이 영원히 0이다.
+     *
      * @return 갱신된 행 수. 0이면 멤버가 아니다
      */
     public int markRead(Integer roomId, String userId, long upToSeq) {
-        return jdbcClient.sql("UPDATE chat_members "
-                        + "SET last_read_seq = GREATEST(last_read_seq, :seq) "
-                        + "WHERE room_id = :roomId AND user_id = :userId")
+        return jdbcClient.sql("UPDATE chat_members m "
+                        + "SET last_read_seq = GREATEST(m.last_read_seq, LEAST(:seq, r.last_message_seq)) "
+                        + "FROM chat_rooms r "
+                        + "WHERE r.room_id = m.room_id AND m.room_id = :roomId AND m.user_id = :userId")
                 .param("seq", upToSeq)
                 .param("roomId", roomId)
                 .param("userId", userId)

@@ -134,6 +134,11 @@ class ChatReadCatchUpTest extends ContainerTestSupport {
 
         chatService.markRead(room, B, 99);
         assertEquals(0L, unread(B, room), "방의 번호를 넘겨도 음수가 되지 않는다");
+
+        // 99를 그대로 저장했다면 5번째 메시지는 도착하자마자 읽은 것이 된다. LEAST(:seq, last_message_seq)로
+        // 4에서 잘랐으므로 안읽음 1이 나와야 한다.
+        chatService.saveMessage(dto(room, A, "m5"));
+        assertEquals(1L, unread(B, room), "미래 번호는 방의 현재 번호(4)에서 잘린다 - 5번은 아직 안 읽은 것이다");
     }
 
     @Test

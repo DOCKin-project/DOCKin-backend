@@ -51,9 +51,12 @@ public interface ChatMessagesRepository extends JpaRepository<ChatMessages, Long
             @Param("afterSeq") long afterSeq,
             Pageable pageable);
 
-    /** 옛 커서({@code lastMessageId})를 새 축으로 옮길 때 한 번 쓴다. */
-    @Query("SELECT m.roomSeq FROM ChatMessages m WHERE m.messageId = :messageId")
-    Optional<Long> findRoomSeqByMessageId(@Param("messageId") Long messageId);
+    /**
+     * 옛 커서({@code lastMessageId})를 새 축으로 옮길 때 한 번 쓴다.
+     * 방을 같이 본다 — 다른 방의 messageId가 오면 그 방의 roomSeq가 이 방의 커서가 되어 엉뚱한 자리부터 준다.
+     */
+    @Query("SELECT m.roomSeq FROM ChatMessages m WHERE m.chatRooms.roomId = :roomId AND m.messageId = :messageId")
+    Optional<Long> findRoomSeqByMessageId(@Param("roomId") Integer roomId, @Param("messageId") Long messageId);
 
     // 2. 키워드 검색
     @Query("SELECT m FROM ChatMessages m " +
