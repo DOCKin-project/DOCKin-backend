@@ -1,0 +1,24 @@
+torch threads: 2
+Loading weights:   0%|          | 0/258 [00:00<?, ?it/s]Loading weights: 100%|██████████| 258/258 [00:00<00:00, 3586.76it/s]
+제목 '-' 만 (beam 4)                        n=8   p50=   980  max=  1339  mean=  1033 ms
+본문 beam 4 (현재 설정)                        n=24  p50=  1412  max=  3498  mean=  1446 ms
+[transformers] The following generation flags are not valid and may be ignored: ['early_stopping']. Set `TRANSFORMERS_VERBOSITY=info` for more details.
+본문 beam 1 greedy                         n=24  p50=   795  max=  1651  mean=   849 ms
+본문 beam 2                                n=24  p50=  1629  max=  6016  mean=  1957 ms
+
+== 8문장 배치 한 번에 (beam 4) — 언어별 1회 호출을 배치로 묶을 때
+배치 8건: 13025 ms 총, 건당 1628 ms
+
+== greedy 품질 표본
+  안전모 착용하세요
+    beam4 : Wear your safety helmet.
+    greedy: Wear your safety helmet.
+  오늘 3번 도크 용접 작업 오전 10시에 시작합니다
+    beam4 : Today's third dock welding starts at 10:00 a.m.
+    greedy: Welding today's third door, starting at 10:00 a.m.
+  크레인 작업 중이니 아래로 지나가지 마세요
+    beam4 : I'm working on the crane. Don't go down there.
+    greedy: I'm working on the crane. Don't go down there.
+  점심 후에 블록 조립 이어서 하겠습니다
+    beam4 : We'll do the block assembly after lunch.
+    greedy: We'll do it as a block assembly after lunch.
