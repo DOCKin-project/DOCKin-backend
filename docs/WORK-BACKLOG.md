@@ -1844,12 +1844,18 @@ Redis에 해당하는 것이 없었다. `application.properties`의 기본값이
 저장을 `TranslateLogWriter.upsert`(별도 빈, 짧은 트랜잭션)로 빼고 진입 메서드는 `NOT_SUPPORTED`로 클래스의 readOnly를 껐다.
 `TranslateTransactionBoundaryTest`가 FastAPI 스텁이 응답을 잡고 있는 동안 HikariCP 활성 커넥션이 **0**임을 본다 — 쪼개기 전엔 1이다.
 
-> **Redis 메모리 — 지금은 문제 없고, 정책이 없다는 것만 적어둔다.**
-> 컨테이너 100M 제한(`compose.yaml:131`)은 "출근 분산락 전용"일 때 값이다. 지금은 넷이 쓴다.
-> 크기: 카운터는 사용자 5,000 × 3종 × ~60B ≈ **1MB/일**이고 자정에 사라진다. 블랙리스트는 로그아웃당 ~100B, 토큰 만료까지. 100M에 한참 못 미친다.
-> 다만 `maxmemory`가 미설정이라 **차면 Redis가 쓰기를 거부하는 게 아니라 컨테이너가 OOM-kill**된다.
-> 그때 죽는 것은 카운터가 아니라 블랙리스트(닫힘 → 전원 401)와 출근 락이다.
-> `redis-server --maxmemory 80mb --maxmemory-policy noeviction`으로 "가득 참"을 명시적 오류로 바꾸는 것이 남은 일 — 실측 없이 compose를 건드리지 않으려고 여기 둔다 ☆.
+> **Redis 영속성·메모리 정책 — 둘 다 넣고 실물로 확인했다 (2026-09-16).**
+> 컨테이너 100M 제한(`compose.yaml`)은 "출근 분산락 전용"일 때 값이고 지금은 넷이 쓴다. 문제는 크기가 아니라 둘이었다.
+>
+> | 문제 | 있었던 상태 | 바꾼 것 | 확인 |
+> |---|---|---|---|
+> | **볼륨이 없었다** | RDB 스냅샷이 컨테이너 안에만. 재시작엔 남지만 **재생성(이미지 갱신·`down`)에 전부 사라진다** → 로그아웃한 토큰이 되살아나고(P2-5가 고치려던 것) 한도가 0으로 | `--appendonly yes` + `dockin_redis_data:/data` | 키 둘 넣고 `rm -sf` → `up`: 값·TTL 그대로 (`1`, `7`, TTL 3522) |
+> | **`maxmemory` 미설정** | Redis 자체 한도가 없어 차면 쓰기 거부가 아니라 **cgroup OOM-kill**. 죽는 것은 블랙리스트(닫힘 → 전원 401)와 출근 락 | `--maxmemory 80mb --maxmemory-policy noeviction` | 1MB 값을 밀어 넣어 **77번째에서 `OOM command not allowed`**, 컨테이너는 살아 있고(`oomkilled=false`) 블랙리스트 읽기·쓰기 정상. 78M 상태에서 `BGREWRITEAOF`도 통과(RSS 80M, 컨테이너 76.7MiB/100MiB) |
+>
+> `allkeys-lru` 같은 축출은 안 된다 — 블랙리스트가 밀려나면 로그아웃이 무효가 된다. `noeviction`이라 "가득 참"이 로그에 남는 오류가 된다.
+> 실제 크기는 사용자 5,000 기준 카운터 ~1MB/일(자정에 사라짐) + 블랙리스트 로그아웃당 ~100B라 80M에 한참 못 미친다.
+> 앱의 `depends_on`도 `service_started` → `service_healthy`(`redis-cli ping`)로 — `RedissonConfig`가 기동 시 실제로 붙으므로.
+> 검증은 호스트 6379가 다른 프로젝트에 잡혀 있어 포트 매핑만 뺀 override로 `-p aiq-verify`에 띄워서 했고, 끝나고 `down -v`로 지웠다.
 
 ---
 

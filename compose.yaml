@@ -104,7 +104,8 @@ services:
       DOCKin-DB:
         condition: service_healthy
       dockin-redis:
-        condition: service_started
+        # RedissonConfig가 빈 생성 시점에 실제로 접속한다 — 못 붙으면 앱이 안 뜬다. ping이 되는 것을 보고 띄운다.
+        condition: service_healthy
     networks:
       - dockin-network
     deploy:
@@ -119,12 +120,30 @@ services:
   dockin-redis:
     image: redis:7-alpine
     container_name: dockin-redis
+    # 셋 다 "재배포·가득 참에 조용히 무너지지 않게"다 (WORK-BACKLOG P2-19).
+    #  - appendonly yes: 볼륨이 없고 RDB 스냅샷뿐이면 컨테이너를 재생성(compose up으로 이미지 갱신,
+    #    down)할 때 키가 전부 사라진다. 그러면 로그아웃한 토큰이 되살아나고(P2-5가 고치려던 것)
+    #    AI 호출 한도가 0으로 돌아간다. AOF + 아래 볼륨이 있어야 "재배포에 살아남는다"가 참이다.
+    #    락은 짧게 살고 죽으니 상관없다. 쓰기는 초당 몇 건이라 fsync everysec(기본)이면 충분하다.
+    #  - maxmemory 80mb + noeviction: 이게 없으면 Redis 자체 한도가 없어 차는 순간 컨테이너 cgroup
+    #    100M에 OOM-kill된다 — 죽는 것은 카운터가 아니라 블랙리스트(닫힘 → 전원 401)와 출근 락이다.
+    #    80mb에서 쓰기를 거부(OOM command not allowed)하게 두면 "가득 참"이 로그에 남는 오류가 된다.
+    #    allkeys-lru 같은 축출은 안 된다 — 블랙리스트가 밀려나면 로그아웃이 무효가 된다.
+    #    현재 쓰임(사용자 5,000 기준 카운터 ~1MB/일 + 블랙리스트 로그아웃당 ~100B)은 한참 아래다.
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "80mb", "--maxmemory-policy", "noeviction"]
     environment:
       - TZ=Asia/Seoul
     ports:
       - "6379:6379"
+    volumes:
+      - dockin_redis_data:/data
     networks:
       - dockin-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
     deploy:
       resources:
         limits:
@@ -250,4 +269,5 @@ networks:
 
 volumes:
   dockin_db_data:
+  dockin_redis_data:
   embedding_cache:
