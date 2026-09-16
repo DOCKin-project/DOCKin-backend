@@ -21,6 +21,7 @@
 | 3 | 2026-08-13~14 | E8 후속(shared_buffers) | **가설 반증 — 그리고 열화의 원인이 코퍼스 크기가 아니었다** | `measure-aws-night3/` |
 | 4 | 2026-08-13~14 | E1(19만 자리) · E8 후속 2 | **E1은 닫혔다 / E8 후속 2는 두 번 다 못 쟀다 — 대신 E1이 미결을 하나 더 냈다** | `measure-aws-night4/` |
 | 5 | 2026-09-16 | M7 — 팀원 FastAPI 번역 지연·처리량 (ADR-0008) | **로컬 i3의 7배, 그리고 엔진(CTranslate2)을 바꾸면 다시 5배 — 병목은 코어가 아니라 엔진** | `measure/fastapi-translate/m7-20260916-aws/` |
+| 6 | 2026-09-16 | T2 — pylab CT2 서버 HTTP + NLLB-600M (ADR-0008 D3의 모델 결정) | **HTTP를 거쳐도 30 req/s. NLLB는 건당 290ms·4.2 req/s — 30 req/s면 7대** | pylab `translate/bench/t2-m7i-20260916/` |
 
 ---
 
@@ -607,3 +608,20 @@ ERROR: canceling statement due to lock timeout
 - **호스트가 결론을 바꿨다.** i3에서 "이 서버로는 못 붙인다"였던 것이 여기서 "자릿수는 맞다, 2~6대"가 됐다. 로컬 절대값으로 결론 내리지 말라는 이 문서 서문의 규칙이 이번엔 반대 방향으로도 맞았다 — 로컬은 너무 비관적이었다.
 - **그리고 엔진이 결론을 또 바꿨다.** 같은 모델·같은 문장·같은 머신에서 CTranslate2 int8이 5배. 팀원 서버는 `faster-whisper`로 이미 CTranslate2를 갖고 있어 의존성 추가가 없다. **한 대가 ADR-0008 4-2의 피크 30 req/s를 받는다.**
 - 못 잰 것: GPU(`g4dn`) — CPU에서 답이 나와 띄우지 않았다. 다른 언어쌍(en→vi, en→zh)의 CT2 — ko-en 하나로 엔진 차이를 봤고 모델 크기가 같아 비슷할 것이나 잰 값은 아니다. 피벗 오역("용접 작업"→"비행기")은 인스턴스와 무관하게 같았다.
+
+---
+
+## 밤 6 (2026-09-16 약 22분, 낮) — T2: CTranslate2 서버를 HTTP로, 그리고 NLLB
+
+밤 5의 "CTranslate2 int8이면 31 req/s"는 모델 직접 호출이었다. 그 엔진으로 만든 서버(`Khyojae/pylab` `translate/`, 팀원과 같은 `/api/translate` 계약)를 같은 `m7i.2xlarge`에 띄워 HTTP로 쳤고, 오역을 줄이는 후보 NLLB-200-distilled-600M을 같은 하네스로 나란히 쟀다. 숫자·조건·읽는 법은 **pylab `docs/MEASUREMENTS.md` T2**와 ADR-0001 8절에 있다. 여기엔 D3에 닿는 것만.
+
+| | 건당 p50 | 처리량 (m7i.2xlarge 한 대) |
+|---|---|---|
+| opus-mt ko→en, HTTP (`inter_threads=2`) | 73 ms | **30.3 req/s** — 직접 호출 31.3과 같다. HTTP는 처리량을 안 깎는다 |
+| opus-mt ko→vi 피벗, HTTP | 144 ms | 12.5~17 req/s (직접 호출) |
+| **NLLB-600M ko→vi 직접** | **291 ms** | **4.2 req/s** — inter_threads를 올려도 3.4→4.3 |
+
+- **7-3-1의 "한 대로 피크 30 req/s"는 HTTP 경로에서 확인됐다** — ko→en 한 홉일 때. 피벗 ko→vi는 2대, NLLB ko→vi는 **7대**다.
+- NLLB의 i3 대비 격차(T3 3.6배)는 여기서 2.4배로 줄었지만, 4코어를 요청 하나가 다 써 동시 8에서 p50 2.3초 — 채팅 자동 번역이 기다릴 시간으로는 길다. D3의 직접 모델(7-3-1 ③)을 NLLB로 고른다면 4-2의 피크 가정(30 req/s)이 실제로 몇인지가 대수를 정한다.
+- 같은 int8 모델이 i3와 m7i에서 **다른 문장**을 냈다("xử lý cổng 3" vs "sấy ghép cổng 3"). 번역 캐시(P2-19-1)를 만들면 호스트가 바뀔 때 캐시 값이 달라질 수 있다는 뜻.
+- 비용 22분 ≈ $0.2. 모델 변환(HF→CT2, opus 3쌍 50초·NLLB 30초)을 인스턴스에서 했고 로컬 업로드는 없었다.
