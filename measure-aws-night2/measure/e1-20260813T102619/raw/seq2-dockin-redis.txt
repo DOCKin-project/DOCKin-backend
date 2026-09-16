@@ -1,0 +1,2 @@
+periods 16200 -> 18198
+throttled 0 -> 0

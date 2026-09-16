@@ -1,0 +1,2 @@
+periods 6 -> 6
+throttled 0 -> 0

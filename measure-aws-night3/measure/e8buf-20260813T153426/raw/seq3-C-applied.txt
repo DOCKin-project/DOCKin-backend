@@ -1,0 +1,2 @@
+open  shared_buffers=128MB memory.max=2147483648
+close shared_buffers=128MB memory.max=2147483648
