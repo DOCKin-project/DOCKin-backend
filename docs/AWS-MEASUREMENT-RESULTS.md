@@ -19,6 +19,7 @@
 | 1 | 2026-08-12~13 | E1 · E8 | **E1 결론 확보 / E8 미완(13%)** | `measure-aws/` |
 | 2 | 2026-08-13 | E1(아래쪽) · E8 완주 | **둘 다 결론 확보 — E8 열화를 잡았다** | `measure-aws-night2/` |
 | 3 | 2026-08-13~14 | E8 후속(shared_buffers) | **가설 반증 — 그리고 열화의 원인이 코퍼스 크기가 아니었다** | `measure-aws-night3/` |
+| 4 | 2026-09-16 | M7 — 팀원 FastAPI 번역 지연·처리량 (ADR-0008) | **로컬 i3의 7배, 그리고 엔진(CTranslate2)을 바꾸면 다시 5배 — 병목은 코어가 아니라 엔진** | `measure/fastapi-translate/m7-20260916-aws/` |
 
 ---
 
@@ -405,3 +406,50 @@ cgroup이 없다"를 치명적 오류로 바꿨는데, `e8-shared-buffers.sh`는
 | **남음** | `e1-tei-cpu-sweep.sh` | 정지한 앱을 치명적으로 본다. 스크립트가 스스로 올리는 서비스는 예외여야 한다 |
 | **남음** | E8 열화의 진짜 원인 | 장시간 연속 실행 축. 앱만 재시작해 보는 한 시간짜리 실험이 가른다 |
 | **남음** | E1 | 19만 청크 자리에서의 무릎 확인 (위 결함 때문에 못 함) |
+
+---
+
+## 밤 4 (2026-09-16 약 35분, 낮) — M7: 팀원 FastAPI 번역은 이 인스턴스에서 얼마인가
+
+채팅 자동 번역(ADR-0008 D3)을 설계하기 전에 그 번역 서버(`DOCKin-project/DOCKin-aiserver`, CPU MarianMT)를 처음 재봤다. 로컬 i3에서 건당 2초·0.7 req/s가 나와 "코어를 주면 얼마나 오르나"를 여기서 확인했다. DB·색인과 무관한 측정이라 compose는 띄우지 않았다.
+
+### 환경
+
+| | |
+|---|---|
+| 인스턴스 | `m7i.2xlarge` (8 vCPU / 4물리코어 / 30GB), Xeon Platinum 8488C(Sapphire Rapids, AVX-512·AMX), `ap-northeast-2c` |
+| 서버 | 팀원 저장소 `eaf9a28` 그대로. uvicorn 단일 프로세스, Python 3.12(uv), torch 2.14 CPU(스레드 4), transformers 5.17 |
+| 클라이언트 | 같은 인스턴스의 `httpx` — 네트워크 왕복 0 |
+| 비용 | 약 35분 ≈ **$0.3** |
+| 절차 | `measure/fastapi-translate/remote_setup.sh` → `bench_translate.py` → `bench_inprocess.py` → `bench_ct2.py` |
+
+### 결과
+
+| `/api/translate` 팀원 코드 그대로 | p50 | p99 | 처리량 |
+|---|---|---|---|
+| ko→en 순차 40건 (채팅 길이 9~28자) | **279 ms** | 323 | 3.7 req/s |
+| ko→en→vi 피벗 순차 20건 | **513 ms** | 577 | |
+| 동시 2 / 4 / 8 | 467 / 862 / 1,794 ms | | 4.35 / **4.63** / 4.37 req/s |
+
+처리량은 동시 4(=물리 코어)에서 포화한다. 로컬 i3(0.70 req/s, p50 1,868ms)의 **6.6~7.6배** — 코어 2배 이상이 나온 것은 세대 차이다.
+
+| 모델 직접 호출 (opus-mt ko-en) | p50 |
+|---|---|
+| 제목 `"-"` 하나 (API가 강제하는 낭비) | 91 ms — API 지연의 약 3분의 1 |
+| transformers beam 4 (지금) | 178 ms |
+| transformers greedy | 96 ms — "도크"→"door" |
+| **CTranslate2 int8 beam 4** | **34 ms** — 표본 4문장 출력 동일 |
+| CTranslate2 int8 greedy | 23 ms |
+| 8문장 배치 (transformers) | 건당 63 ms |
+
+| CTranslate2 int8, 24건 | 처리량 |
+|---|---|
+| `inter_threads=1` | 18.0 req/s |
+| **`inter_threads=2`** | **31.3 req/s** |
+| `inter_threads=4` | 27.3 req/s |
+
+### 읽는 법
+
+- **호스트가 결론을 바꿨다.** i3에서 "이 서버로는 못 붙인다"였던 것이 여기서 "자릿수는 맞다, 2~6대"가 됐다. 로컬 절대값으로 결론 내리지 말라는 이 문서 서문의 규칙이 이번엔 반대 방향으로도 맞았다 — 로컬은 너무 비관적이었다.
+- **그리고 엔진이 결론을 또 바꿨다.** 같은 모델·같은 문장·같은 머신에서 CTranslate2 int8이 5배. 팀원 서버는 `faster-whisper`로 이미 CTranslate2를 갖고 있어 의존성 추가가 없다. **한 대가 ADR-0008 4-2의 피크 30 req/s를 받는다.**
+- 못 잰 것: GPU(`g4dn`) — CPU에서 답이 나와 띄우지 않았다. 다른 언어쌍(en→vi, en→zh)의 CT2 — ko-en 하나로 엔진 차이를 봤고 모델 크기가 같아 비슷할 것이나 잰 값은 아니다. 피벗 오역("용접 작업"→"비행기")은 인스턴스와 무관하게 같았다.
