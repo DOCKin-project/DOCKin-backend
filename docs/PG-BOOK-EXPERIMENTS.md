@@ -54,7 +54,7 @@
 | **튜닝** (RealMySQL 2권 자리) | **SQL TUNER for PostgreSQL 기본원리편** (디비안, 2026-03) | 『튜닝 기술(상)』보다 최신이고, 실행계획·인덱스에 **VACUUM·모니터링 장이 붙어 있어** 2절 Ch.2·Ch.4를 한 권이 덮는다. P2-15-5의 "플래너가 복합 인덱스를 안 고른" 자리를 이 책의 언어로 다시 설명할 수 있어야 한다. 『튜닝 기술(상)』은 대체재 |
 | **원리** | **PostgreSQL 14 Internals 한국어판** (무료) | 밤 3의 `shared_buffers` 반증을 설명하려면 버퍼 캐시 장이 필요하다. 한국어판이 있으니 영문을 읽을 이유가 없다 |
 | **대기 이벤트** | PostgreSQL Wait Interface (엑셈, 2026-03) | 3절 ③(락 실물)과 5절 #4(13분 44초 `transactionid` 대기)·#8(풀 고갈)의 교재. ShadowFit이 `performance_schema`로 한 일을 PG에서는 `wait_event`로 한다 |
-| **DBA 축** | PostgreSQL DBA를 위한 Admin 이야기 (디비안, 2025-07) | 복제·백업과 복구·모니터링. 이 저장소는 백업(D1, `OPERATIONS-BACKUP.md`)까지 했고 **복제는 0건**이다. DBA 지원서에서 비어 보이는 자리(백업·복제·무중단 DDL)가 이 책의 5·6장이다 |
+| **DBA 축** | PostgreSQL DBA를 위한 Admin 이야기 (디비안, 2025-07) | 복제·백업과 복구·모니터링. 이 저장소는 백업(D1, `OPERATIONS-BACKUP.md`)에 이어 복제(E2, `measure/replication/`, 2026-09-15)·무중단 DDL(E3, `docs/db/online-ddl.md`, 2026-09-16)을 로컬에서 한 번씩 했다. DBA 지원서에서 비어 보이던 자리 셋이 이 책의 5·6장이다 |
 | 부분만 | Core Architecture 1·2 (엑셈) | ShadowFit·DOCKin을 한 책에서 대조하는 면접용 |
 | 부분만 | PostgreSQL 성능 최적화 (Gregory Smith 역) | pgbench·체크포인트 장만 — 3절 ①(E8 열화)의 후보에 체크포인트·WAL이 있다 |
 | 부분만 | 9.6 성능 이야기 1·2장 PDF, 친절한 SQL 튜닝 원리 장 | — |

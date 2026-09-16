@@ -85,8 +85,8 @@ DBA 지원서에서 비어 보이는 자리 셋(백업·복제·무중단 DDL)�
 | ID | 바꾸는 것 | 근거 | 검증 | 상태 |
 |---|---|---|---|---|
 | **E1** | **WAL 아카이브 + `pg_basebackup`(PITR).** `archive_mode=on`, `archive_command`로 볼륨/S3, 주 1회 베이스 백업. RPO 24h → 분 단위 | `OPERATIONS-BACKUP.md` 5절이 이미 설계했다. 트리거는 파일럿 H1의 "하루 유실이 얼마인가" | `recovery_target_time`으로 임의 시점 복구 리허설, 유실 행 수 | **보류** (H1 트리거) |
-| **E2** | **스트리밍 복제 standby 하나 — 로컬 compose에서.** `pg_stat_replication`·복제 지연을 실측하고, ADR-0004 3-3(읽기 분리)의 전제를 만든다. 운영 투입은 아니다 | 복제 0건. ADR-0004 3-3이 Read Replica를 적었는데 붙여본 적이 없다. Admin 5장 | standby에서 `getMyAttendanceRecords` 조회, primary 쓰기 → standby 반영까지 ms. 지연이 채팅 따라잡기(ADR-0008)와 충돌하는지 | **바로** (로컬) |
-| **E3** | **무중단 DDL 절차(D5).** ① `CREATE INDEX CONCURRENTLY`는 Flyway 트랜잭션 밖(`V__.sql.conf`의 `executeInTransaction=false`) ② 컬럼 추가는 nullable 먼저, NOT NULL은 채운 뒤 ③ DDL 앞에 `SET LOCAL lock_timeout`을 짧게 + 재시도 | V3 주석이 "CONCURRENTLY는 트랜잭션 안에서 못 한다"를 이미 안다. V6(ADR-0008)가 첫 실전이었는데 절차 없이 했다 | 다음 마이그레이션이 이 절차로 나가는가. 앱이 떠 있는 채로 인덱스를 만들며 `lock_timeout` 예외 0건 | **바로** (절차) |
+| **E2** | **스트리밍 복제 standby 하나 — 로컬 compose에서.** `pg_stat_replication`·복제 지연을 실측하고, ADR-0004 3-3(읽기 분리)의 전제를 만든다. 운영 투입은 아니다 | 복제 0건. ADR-0004 3-3이 Read Replica를 적었는데 붙여본 적이 없다. Admin 5장 | standby에서 `getMyAttendanceRecords` 조회, primary 쓰기 → standby 반영까지 ms. 지연이 채팅 따라잡기(ADR-0008)와 충돌하는지 | **측정 완료 2026-09-15** (6절). 유휴 p50 81ms, 부하 중 p50 382·max 856ms. 따라잡기 `after?seq=`는 standby 불가 |
+| **E3** | **무중단 DDL 절차(D5).** ① `CREATE INDEX CONCURRENTLY`는 파일 하나에 단독 + `spring.flyway.postgresql.transactional-lock=false`(`.sql.conf`는 필요 없었다) ② 컬럼 추가는 nullable 먼저, NOT NULL은 채운 뒤 ③ DDL 앞에 `SET LOCAL lock_timeout`을 짧게 + 재시도 | V3 주석이 "CONCURRENTLY는 트랜잭션 안에서 못 한다"를 이미 안다. V6(ADR-0008)가 첫 실전이었는데 절차 없이 했다 | 다음 마이그레이션이 이 절차로 나가는가. 앱이 떠 있는 채로 인덱스를 만들며 `lock_timeout` 예외 0건 | **절차 완료 2026-09-16** (6절, `docs/db/online-ddl.md`). ①은 테스트로 검증, 운영 규모 실전은 D1 때 |
 | **E4** | **장애 대응 문서(O6)** — `PG-BOOK-EXPERIMENTS.md` 5절 장애 기록에서 시나리오 셋을 승격: "DB가 안 뜬다", "삭제가 안 끝난다"(#1·#2), "느려졌는데 재시작으로 안 돌아온다"(#6) | O6 ❌. E8의 "앱 재시작으로 안 돌아오면 DB도"가 이미 하나 | 시나리오마다 "무엇을 먼저 보나"(A1 스냅샷·C2 wait_event·`pg_stat_bgwriter`)가 적혀 있는가 | **바로** |
 
 ---
@@ -101,7 +101,7 @@ DBA 지원서에서 비어 보이는 자리 셋(백업·복제·무중단 DDL)�
 | ~~2~~ | ~~**A4 + D2** — 목록 COUNT 제거·keyset~~ | **완료 2026-09-15** (6절). 100만 벤치 ③ 재측정만 남음 | 반나절 |
 | ~~3~~ | ~~**실험 ② → A2** — autovacuum~~ | **측정 완료 2026-09-15** (6절). 2ms→0은 2~3배지만 절대 15초, 추천은 기본값 유지 | 하루 + 로컬 |
 | ~~4~~ | ~~**B4 + D3 + C2** — 풀 명시·알림, 슬로우 쿼리 절차~~ | **완료 2026-09-15** (6절) | 반나절 |
-| 5 | **E2 + E3** — 복제 로컬 실측·무중단 DDL 절차 | DBA 축 결손 둘. E2는 compose에 서비스 하나 | 하루 |
+| ~~5~~ | ~~**E2 + E3** — 복제 로컬 실측·무중단 DDL 절차~~ | **완료 2026-09-15~16** (6절). E2는 compose가 아니라 일회용 rig로 | 하루 |
 | 6 | **B1** — E8 원인 | AWS 한 시간. 결과가 체크포인트 값을 정한다 | 1h + $1 안팎 |
 | 7 | **D1** — `pg_trgm` 측정 | 측정 뒤 붙일지 결정 | 반나절 |
 | 8 | **C3 + C4 + E4** | 테스트 둘, 문서 하나 | 반나절 |
@@ -223,3 +223,32 @@ E8 열화 후보 "autovacuum 개입"에 처음으로 **메커니즘**이 붙었�
 | **C2** | 같은 보고서의 [4] — `pg_stat_activity.wait_event_type/wait_event` + `pg_blocking_pids()` | `FOR UPDATE` 대기를 걸어 두고 뽑으니 `pid 95 · Lock · transactionid · blocked_by {87}`. 장애 #4가 이 줄로 보였어야 했다 |
 
 **알림 인프라가 없다는 것을 그대로 적었다.** O2는 ❌에서 △ — 풀 고갈 하나만 WARN으로, 나머지 셋은 그대로 ❌. 로그 집계(O3)가 붙으면 그 WARN 문자열이 알림 조건이 된다. 지금 Slack을 붙이는 것은 순서가 아니다.
+
+### 2026-09-15~16 — 순서 5: E2 · E3
+
+**E2** `scripts/db/replication-lab.sh` (새 rig). primary 시드 30만 행(183MB) → `pg_basebackup`으로 standby → 유휴 프로브 20회 → 60초 부하 중 프로브 → 읽기 분리 → promote.
+결과 전문·rig 함정 8개: `measure/replication/repl-20260915T164004/README.md`.
+
+| 항목 | 값 (같은 호스트, 네트워크 없음 — 자릿수만 볼 것) |
+|---|---|
+| 반영 지연(유휴, n=20) | **p50 81 · p95 341 ms** |
+| 반영 지연(부하 중, n=8) | **p50 382 · max 856 ms**, 밀린 WAL 최대 9MB |
+| 부하 뒤 따라잡기 | 47s — 내역은 못 갈랐다(standby 로그 유실, rig 고침) |
+| promote → 쓰기 가능 | 10.8s(docker exec 왕복 포함), 직후 split brain |
+
+**ADR-0004 3-3에 대입하면 읽기 분리는 지금 답이 "없다"에 가깝다.** 채팅 `after?seq=`는 재접속 순간 primary에만 있는 메시지(340ms면 15건)를
+따라잡기·실시간 양쪽에서 놓치고, `clockin` 직후 조회도 같은 read-after-write 꼴이다. 버스트 중 조회를 보호하려던 건데 버스트가 곧 쓰기 부하고 그때 지연이 가장 나쁘다.
+복제의 첫 용도는 HA·백업 오프로드다. → ADR-0004 3-3에 한 줄.
+
+**E3** `docs/db/online-ddl.md` + `OnlineDdlMigrationTest`. 첫 가설이 둘 다 틀렸다:
+
+| 가설 | 실제 |
+|---|---|
+| `.sql.conf`의 `executeInTransaction=false`가 있어야 CONCURRENTLY가 돈다 | Flyway 11 PostgreSQL 파서가 알아서 트랜잭션 밖에서 돌린다 — 필요 없다 |
+| 없으면 `cannot run inside a transaction block` | **`55P03 lock timeout`** — Flyway가 히스토리 advisory lock을 트랜잭션 수준으로 잡아 `idle in transaction`이고, CONCURRENTLY가 그 스냅샷이 끝나길 기다린다. **자기 자신을 기다린다.** `lock_timeout` 기본값(0) 서버였으면 기동이 멈춘다 |
+
+해법 `spring.flyway.postgresql.transactional-lock=false`(`application.properties`). 테스트는 없으면 55P03 + invalid 인덱스, 있으면 유효한 인덱스를 둘 다 본다.
+덤: 실패한 CONCURRENTLY는 invalid 인덱스를 남기고 재시도의 `IF NOT EXISTS`가 **그것을 보고 건너뛴다** — 히스토리엔 아무것도 안 남아(PostgreSQL에선 성공 뒤에만 쓴다, 확인) 기동은 성공하고 인덱스는 없다. 재시도 전 `DROP INDEX CONCURRENTLY`.
+② 컬럼 추가(nullable → 배치 채움 → `CHECK NOT VALID` → `VALIDATE` → `SET NOT NULL`)와 ③ `SET LOCAL lock_timeout='2s'`는 절차로만 있다 — **운영 규모 실전은 D1 때**(5절 기준으론 그때 "했다").
+V3는 안 고친다(체크섬, 그리고 인덱스는 이미 있다).
+

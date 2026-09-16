@@ -39,7 +39,7 @@
 | D2 | S3 보존 | ❌ | 버킷 하나, 버전관리·수명주기 없음 | 버전관리 켜기(명령은 `OPERATIONS-BACKUP.md` 5절). 휴가 증빙서류는 개인정보라 보존기간을 정한다(7절) |
 | D3 | 스키마 마이그레이션 | ✅ | Flyway + `ddl-auto=validate` + `SchemaValidationTest`·`LocalMigrationDriftTest` | 유지 |
 | D4 | 다중 인스턴스 기동 시 마이그레이션 | ❌ | 기동 시 Flyway가 돈다. 인스턴스 둘이면 동시에 돈다(로드맵 7-5) | 배포 파이프라인에서 `flyway migrate`를 **먼저 한 번** 돌리고 앱을 띄운다 |
-| D5 | 무중단 스키마 변경 | ❌ | 로드맵 D7 계획만 | `CREATE INDEX CONCURRENTLY`, 컬럼 추가는 nullable 먼저. **ADR-0008 V6가 첫 실전**이다 |
+| D5 | 무중단 스키마 변경 | △ 2026-09-16 | 절차 `docs/db/online-ddl.md` + `OnlineDdlMigrationTest`(CONCURRENTLY가 Flyway로 나가는지 — Flyway 자신의 락을 기다리는 함정을 재현·해결, `transactional-lock=false`). V6는 절차 없이 갔고 작아서 넘어갔다 | 운영 규모에서 한 번 실제로: D1(`pg_trgm`) 또는 A4 인덱스를 100만 행 벤치에 부하 건 채로. 컬럼 추가·NOT NULL 절차는 아직 종이 위 |
 | D6 | 탈퇴 시 삭제 범위 | △ | `deleteAccount`는 `users`·`refresh_token`만 지운다. FK 8개(P2-15-7)가 걸린 행은 어떻게 되는지 정한 적 없다 | 삭제·익명화·보존 중 무엇인지 도메인별로 정한다(7절) |
 
 ---
