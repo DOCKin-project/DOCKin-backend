@@ -74,7 +74,7 @@
 | **Ch.1** | 아키텍처 — 프로세스 모델·`shared_buffers`·WAL·체크포인트·`work_mem` | 밤 3 E8 후속, HNSW 빌드, P2-15-5 캐시 통제 | 🟢 `shared_buffers` 8배 ↑ 해도 처리량 불변(밤 3, **가설 반증**) · 🟢 `pg_prewarm('read')`로 두 패스의 캐시 대칭 · 🟢 `maintenance_work_mem` 64MB → HNSW 디스크 빌드 전환 | ⬜ **E8 열화 1.8배의 원인** — 체크포인트·WAL·autovacuum·JVM 넷 중 무엇인가. `scripts/e8-longrun-cause.sh`가 **이미 있고 미실행**이다 | ① |
 | **Ch.2** | 트랜잭션·MVCC·**Vacuum**·팽창 | `work_logs` 대량 삭제, `document_chunks` 대량 삽입, `Page<>`의 COUNT | 🟡 20,362행에 힙 780MB · 🟡 0행에 26MB · 🟡 VACUUM truncate 거부 · 🟡 VACUUM 40분 · 🟢 COUNT 4초(MVCC라 전부 세야 한다) | ⬜ **autovacuum 관측 0건** — `n_dead_tup`·`pgstattuple`·`pg_stat_progress_vacuum`을 이 저장소가 읽은 적이 없다(`grep` 결과). 관찰은 다섯인데 실험은 없다 | **②** |
 | **Ch.3** | 락 — 행 락·`lock_timeout`·교착 | ADR-0001(출근), 4-1(연차), ADR-0008 5-3(`nextRoomSeq`) | 🟢 `FOR UPDATE` 없으면 3일치 증발(lost update 재현) · 🟢 방 행 락 직렬 23ms/건 → 단일 방 43 msg/s · 🟢 `lock_timeout=0`이면 13분 44초 hang | ⬜ `pg_locks`·`pg_stat_activity.wait_event`를 **실물로 본 기록이 없다**(ShadowFit은 `data_locks`로 GRANTED/WAITING을 봤다) · ⬜ `deadlock_timeout=1s`가 설정돼 있는데 교착을 재현한 적이 없다 | ③ |
-| **Ch.4** | SQL Execution — 실행계획·인덱스·조인·페이징 | 작업일지 목록·검색 6쿼리(P2-15-5), FK 인덱스(V3·V4), 채팅 N+1, 색인 커서 | 🟢 FK 인덱스 893배·22배·110.7배 · 🟢 복합 인덱스를 플래너가 **안 고른다**(선택도 16% → Parallel Seq Scan) · 🟢 N+1 41개 → 3개(P2-12-1) · 🟢 OFFSET → keyset(P1-13) · 🟢 권한 `OR` 분리 14%(P1-12) | ⬜ **`pg_trgm`** — "B-tree로 안 변한다"까지만 확인, GIN을 붙여 본 적 없음 · ⬜ 목록 COUNT → `Slice` · ⬜ 목록 OFFSET 500페이지 → keyset · ⬜ `pg_stat_statements` top-N — 확장은 로드돼 있는데(`compose.yaml:160`) **배치 검증에만 쓴다** | ④ |
+| **Ch.4** | SQL Execution — 실행계획·인덱스·조인·페이징 | 작업일지 목록·검색 6쿼리(P2-15-5), FK 인덱스(V3·V4), 채팅 N+1, 색인 커서 | 🟢 FK 인덱스 893배·22배·110.7배 · 🟢 복합 인덱스를 플래너가 **안 고른다**(선택도 16% → Parallel Seq Scan) · 🟢 N+1 41개 → 3개(P2-12-1) · 🟢 OFFSET → keyset(P1-13) · 🟢 권한 `OR` 분리 14%(P1-12) | 🟢 **`pg_trgm`** (2026-09-16) — 희귀 3자+에서만 160배, 흔한 건 계획이 흔들리고 2자는 무효. 크기 39%·쓰기 4.5배. **느린 자리는 LIKE가 아니라 구역 필터+정렬** · 🟢 목록 COUNT → `Slice`(A4) · 🟢 OFFSET → keyset(D2) · 🟢 `pg_stat_statements` top-N 절차(D3) | ④ |
 | **부록** | 격리 수준 | 연차 lost update | 🟢 READ COMMITTED + `FOR UPDATE`만 | ⬜ 같은 시나리오를 REPEATABLE READ로 — PG의 RR은 first-updater-wins라 **락 없이도 두 번째가 실패한다**. 그게 답이 되는지, 재시도 비용이 얼마인지 | ⑤ |
 | **부록** | 테이블 팽창 모니터링 | Ch.2와 같다 | — | Ch.2 ②에 흡수 | — |
 | **부록** | SQL 모니터링 | `pg_stat_statements` | 🟡 시퀀스 호출 횟수 세기만 | Ch.4 ④에 흡수 | — |
@@ -124,12 +124,16 @@
 - **설계**: 기존 두 테스트에 관측 스레드 하나를 붙여 대기 중 `pg_locks`/`pg_stat_activity`를 찍어 산출물로 남긴다. 추가로 `deadlock_timeout=1s`가 실제로 동작하는지 — 두 트랜잭션이 서로 반대 순서로 `FOR UPDATE`를 잡는 테스트 하나.
 - **결과**: ⬜
 
-### ④ Ch.4 — 남은 세 개: `pg_trgm`, `Slice`, keyset ⬜
+### ④ Ch.4 — 남은 세 개: `pg_trgm`, `Slice`, keyset 🟢
 
-- **`pg_trgm`**: P2-15-5 ⑤는 "B-tree로 안 변한다"의 증거이지 GIN이 얼마나 돕는지의 증거가 아니다. 같은 100만 조건에서 `gin_trgm_ops` 인덱스 전후. 인덱스 크기와 쓰기 비용도 같이 — 작업일지는 쓰기도 있다.
+- ~~**`pg_trgm`**: P2-15-5 ⑤는 "B-tree로 안 변한다"의 증거이지 GIN이 얼마나 돕는지의 증거가 아니다. 같은 100만 조건에서 `gin_trgm_ops` 인덱스 전후. 인덱스 크기와 쓰기 비용도 같이 — 작업일지는 쓰기도 있다.~~ **측정 완료** (2026-09-16, `DB-IMPROVEMENT-PLAN.md` 6절 순서 7, rig `scripts/db/trgm-lab.sh`).
 - ~~**`Slice`**: ② COUNT 12.8ms(인덱스 후)를 0으로.~~ **완료** (2026-09-15, `DB-IMPROVEMENT-PLAN.md` 6절) — 고정 비용 4 → 3.
 - ~~**keyset**: ③ 500페이지 150ms → `(created_at, log_id)` 커서.~~ **구현 완료**, 100만 벤치 재측정 남음. 커서만으로 ③이 ①과 같아지지 않을 수 있다 — 정렬 비용이 남는다.
-- **결과**: ⬜
+- **결과** (2026-09-16, `pg_trgm`): 🟢 100만 행 A B A B, `measure/trgm/trgm-20260916T135051/README.md`.
+  - GIN이 계획을 바꾸는 건 **희귀 + 3자 이상**뿐 — 실제 검색 SQL에서 241/300ms → 1.7/1.7ms(160배). 흔한 3자는 통계 표본에 따라 GIN을 쓰기도 안 쓰기도(122↔261ms). **2자는 트라이그램이 없어 무효** — 한국어 검색어의 흔한 길이다.
+  - 대가: `title` 24MB + `log_text` 157MB(힙의 39%), 벌크 쓰기 4.5배, CONCURRENTLY 빌드 180s(일반의 2배), 512MB에서 캐시 경합.
+  - **책의 언어로**: `LIKE '%kw%'`가 B-tree를 못 타는 건 맞지만, 이 쿼리의 비용은 그 자리가 아니었다. Bitmap Heap Scan이 구역 84명의 행이 흩어진 3만 페이지를 읽고 `ORDER BY`가 `LIMIT`의 조기 종료를 막는다 — 실행계획을 읽기 전엔 "키워드 인덱스"가 답으로 보였다. **D1 추천: 지금은 안 붙인다.**
+  - 부수 발견: `ANALYZE`가 행 수와 무관하게 50초 — en_US.utf8 `strcoll`이 한국어 표본 3만 행을 정렬하는 값(`COLLATE "C"`면 0.4s). 운영 auto-analyze도 같은 값을 문다 `[미검증]`.
 
 ### ⑤ 부록 — 격리 수준 ⬜
 

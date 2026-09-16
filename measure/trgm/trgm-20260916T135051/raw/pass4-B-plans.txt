@@ -1,0 +1,148 @@
+-- Q1
+                                                                                                                                                                                                                                                                                                                                                                         QUERY PLAN                                                                                                                                                                                                                                                                                                                                                                          
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=1115.72..1115.77 rows=20 width=452) (actual time=1.284..1.291 rows=20 loops=1)
+   Buffers: shared hit=67 read=45
+   ->  Sort  (cost=1115.72..1115.80 rows=33 width=452) (actual time=1.282..1.286 rows=20 loops=1)
+         Sort Key: created_at DESC, log_id DESC
+         Sort Method: top-N heapsort  Memory: 49kB
+         Buffers: shared hit=67 read=45
+         ->  Bitmap Heap Scan on work_logs w  (cost=353.03..1114.89 rows=33 width=452) (actual time=0.107..1.148 rows=100 loops=1)
+               Recheck Cond: (((title)::text ~~ '%크랭크축%'::text) OR (log_text ~~ '%크랭크축%'::text))
+               Filter: ((user_id)::text = ANY ('{bch0000,bch0006,bch0012,bch0018,bch0024,bch0030,bch0036,bch0042,bch0048,bch0054,bch0060,bch0066,bch0072,bch0078,bch0084,bch0090,bch0096,bch0102,bch0108,bch0114,bch0120,bch0126,bch0132,bch0138,bch0144,bch0150,bch0156,bch0162,bch0168,bch0174,bch0180,bch0186,bch0192,bch0198,bch0204,bch0210,bch0216,bch0222,bch0228,bch0234,bch0240,bch0246,bch0252,bch0258,bch0264,bch0270,bch0276,bch0282,bch0288,bch0294,bch0300,bch0306,bch0312,bch0318,bch0324,bch0330,bch0336,bch0342,bch0348,bch0354,bch0360,bch0366,bch0372,bch0378,bch0384,bch0390,bch0396,bch0402,bch0408,bch0414,bch0420,bch0426,bch0432,bch0438,bch0444,bch0450,bch0456,bch0462,bch0468,bch0474,bch0480,bch0486,bch0492,bch0498}'::text[]))
+               Heap Blocks: exact=98
+               Buffers: shared hit=61 read=45
+               ->  BitmapOr  (cost=352.82..352.82 rows=198 width=0) (actual time=0.061..0.062 rows=0 loops=1)
+                     Buffers: shared hit=8
+                     ->  Bitmap Index Scan on idx_trgm_work_logs_title  (cost=0.00..166.08 rows=98 width=0) (actual time=0.014..0.015 rows=0 loops=1)
+                           Index Cond: ((title)::text ~~ '%크랭크축%'::text)
+                           Buffers: shared hit=3
+                     ->  Bitmap Index Scan on idx_trgm_work_logs_log_text  (cost=0.00..186.73 rows=100 width=0) (actual time=0.046..0.046 rows=100 loops=1)
+                           Index Cond: (log_text ~~ '%크랭크축%'::text)
+                           Buffers: shared hit=5
+ Planning:
+   Buffers: shared hit=208 read=39
+ Planning Time: 5.516 ms
+ Execution Time: 1.877 ms
+(23 rows)
+
+
+-- Q2
+                                                                                                                                                                                                                                                                                                                                                                                                                   QUERY PLAN                                                                                                                                                                                                                                                                                                                                                                                                                    
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=65115.89..65115.94 rows=20 width=452) (actual time=223.994..224.001 rows=20 loops=1)
+   Buffers: shared hit=1450 read=8985
+   ->  Sort  (cost=65115.89..65228.27 rows=44951 width=452) (actual time=223.992..223.997 rows=20 loops=1)
+         Sort Key: created_at DESC, log_id DESC
+         Sort Method: top-N heapsort  Memory: 42kB
+         Buffers: shared hit=1450 read=8985
+         ->  Bitmap Heap Scan on work_logs w  (cost=3791.06..63919.76 rows=44951 width=452) (actual time=74.428..208.541 rows=56011 loops=1)
+               Recheck Cond: ((((title)::text ~~ '%베어링%'::text) OR (log_text ~~ '%베어링%'::text)) AND ((user_id)::text = ANY ('{bch0000,bch0006,bch0012,bch0018,bch0024,bch0030,bch0036,bch0042,bch0048,bch0054,bch0060,bch0066,bch0072,bch0078,bch0084,bch0090,bch0096,bch0102,bch0108,bch0114,bch0120,bch0126,bch0132,bch0138,bch0144,bch0150,bch0156,bch0162,bch0168,bch0174,bch0180,bch0186,bch0192,bch0198,bch0204,bch0210,bch0216,bch0222,bch0228,bch0234,bch0240,bch0246,bch0252,bch0258,bch0264,bch0270,bch0276,bch0282,bch0288,bch0294,bch0300,bch0306,bch0312,bch0318,bch0324,bch0330,bch0336,bch0342,bch0348,bch0354,bch0360,bch0366,bch0372,bch0378,bch0384,bch0390,bch0396,bch0402,bch0408,bch0414,bch0420,bch0426,bch0432,bch0438,bch0444,bch0450,bch0456,bch0462,bch0468,bch0474,bch0480,bch0486,bch0492,bch0498}'::text[])))
+               Heap Blocks: exact=9979
+               Buffers: shared hit=1444 read=8985
+               ->  BitmapAnd  (cost=3790.85..3790.85 rows=47162 width=0) (actual time=71.939..71.941 rows=0 loops=1)
+                     Buffers: shared hit=172 read=278
+                     ->  BitmapOr  (cost=1863.67..1863.67 rows=280669 width=0) (actual time=47.122..47.123 rows=0 loops=1)
+                           Buffers: shared hit=4 read=54
+                           ->  Bitmap Index Scan on idx_trgm_work_logs_title  (cost=0.00..392.54 rows=59475 width=0) (actual time=16.066..16.067 rows=100000 loops=1)
+                                 Index Cond: ((title)::text ~~ '%베어링%'::text)
+                                 Buffers: shared hit=2 read=15
+                           ->  Bitmap Index Scan on idx_trgm_work_logs_log_text  (cost=0.00..1448.65 rows=221194 width=0) (actual time=31.054..31.054 rows=266666 loops=1)
+                                 Index Cond: (log_text ~~ '%베어링%'::text)
+                                 Buffers: shared hit=2 read=39
+                     ->  Bitmap Index Scan on idx_work_logs_user  (cost=0.00..1915.70 rows=167995 width=0) (actual time=23.507..23.508 rows=168000 loops=1)
+                           Index Cond: ((user_id)::text = ANY ('{bch0000,bch0006,bch0012,bch0018,bch0024,bch0030,bch0036,bch0042,bch0048,bch0054,bch0060,bch0066,bch0072,bch0078,bch0084,bch0090,bch0096,bch0102,bch0108,bch0114,bch0120,bch0126,bch0132,bch0138,bch0144,bch0150,bch0156,bch0162,bch0168,bch0174,bch0180,bch0186,bch0192,bch0198,bch0204,bch0210,bch0216,bch0222,bch0228,bch0234,bch0240,bch0246,bch0252,bch0258,bch0264,bch0270,bch0276,bch0282,bch0288,bch0294,bch0300,bch0306,bch0312,bch0318,bch0324,bch0330,bch0336,bch0342,bch0348,bch0354,bch0360,bch0366,bch0372,bch0378,bch0384,bch0390,bch0396,bch0402,bch0408,bch0414,bch0420,bch0426,bch0432,bch0438,bch0444,bch0450,bch0456,bch0462,bch0468,bch0474,bch0480,bch0486,bch0492,bch0498}'::text[]))
+                           Buffers: shared hit=168 read=224
+ Planning:
+   Buffers: shared hit=247
+ Planning Time: 1.779 ms
+ Execution Time: 224.253 ms
+(27 rows)
+
+
+-- Q3
+                                                                                                                                                                                                                                                                                                                                                                                 QUERY PLAN                                                                                                                                                                                                                                                                                                                                                                                  
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=64393.17..64395.50 rows=20 width=452) (actual time=594.906..604.320 rows=20 loops=1)
+   Buffers: shared hit=2358 read=27759
+   ->  Gather Merge  (cost=64393.17..64396.43 rows=28 width=452) (actual time=594.905..604.315 rows=20 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=2358 read=27759
+         ->  Sort  (cost=63393.14..63393.18 rows=14 width=452) (actual time=566.678..566.681 rows=16 loops=3)
+               Sort Key: created_at DESC, log_id DESC
+               Sort Method: quicksort  Memory: 57kB
+               Buffers: shared hit=2358 read=27759
+               Worker 0:  Sort Method: quicksort  Memory: 40kB
+               Worker 1:  Sort Method: top-N heapsort  Memory: 50kB
+               ->  Parallel Bitmap Heap Scan on work_logs w  (cost=1915.92..63392.88 rows=14 width=452) (actual time=79.268..562.480 rows=33 loops=3)
+                     Recheck Cond: ((user_id)::text = ANY ('{bch0000,bch0006,bch0012,bch0018,bch0024,bch0030,bch0036,bch0042,bch0048,bch0054,bch0060,bch0066,bch0072,bch0078,bch0084,bch0090,bch0096,bch0102,bch0108,bch0114,bch0120,bch0126,bch0132,bch0138,bch0144,bch0150,bch0156,bch0162,bch0168,bch0174,bch0180,bch0186,bch0192,bch0198,bch0204,bch0210,bch0216,bch0222,bch0228,bch0234,bch0240,bch0246,bch0252,bch0258,bch0264,bch0270,bch0276,bch0282,bch0288,bch0294,bch0300,bch0306,bch0312,bch0318,bch0324,bch0330,bch0336,bch0342,bch0348,bch0354,bch0360,bch0366,bch0372,bch0378,bch0384,bch0390,bch0396,bch0402,bch0408,bch0414,bch0420,bch0426,bch0432,bch0438,bch0444,bch0450,bch0456,bch0462,bch0468,bch0474,bch0480,bch0486,bch0492,bch0498}'::text[]))
+                     Filter: (((title)::text ~~ '%균열%'::text) OR (log_text ~~ '%균열%'::text))
+                     Rows Removed by Filter: 55967
+                     Heap Blocks: exact=10417
+                     Buffers: shared hit=2330 read=27759
+                     ->  Bitmap Index Scan on idx_work_logs_user  (cost=0.00..1915.70 rows=167995 width=0) (actual time=83.456..83.457 rows=168000 loops=1)
+                           Index Cond: ((user_id)::text = ANY ('{bch0000,bch0006,bch0012,bch0018,bch0024,bch0030,bch0036,bch0042,bch0048,bch0054,bch0060,bch0066,bch0072,bch0078,bch0084,bch0090,bch0096,bch0102,bch0108,bch0114,bch0120,bch0126,bch0132,bch0138,bch0144,bch0150,bch0156,bch0162,bch0168,bch0174,bch0180,bch0186,bch0192,bch0198,bch0204,bch0210,bch0216,bch0222,bch0228,bch0234,bch0240,bch0246,bch0252,bch0258,bch0264,bch0270,bch0276,bch0282,bch0288,bch0294,bch0300,bch0306,bch0312,bch0318,bch0324,bch0330,bch0336,bch0342,bch0348,bch0354,bch0360,bch0366,bch0372,bch0378,bch0384,bch0390,bch0396,bch0402,bch0408,bch0414,bch0420,bch0426,bch0432,bch0438,bch0444,bch0450,bch0456,bch0462,bch0468,bch0474,bch0480,bch0486,bch0492,bch0498}'::text[]))
+                           Buffers: shared hit=392
+ Planning:
+   Buffers: shared hit=247
+ Planning Time: 4.695 ms
+ Execution Time: 604.483 ms
+(25 rows)
+
+
+-- Q4
+                                                                                                                                                                                                                                                                                                                                                                                 QUERY PLAN                                                                                                                                                                                                                                                                                                                                                                                  
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=64507.99..64510.32 rows=20 width=452) (actual time=417.897..434.222 rows=20 loops=1)
+   Buffers: shared hit=215 read=29902
+   ->  Gather Merge  (cost=64507.99..65495.06 rows=8460 width=452) (actual time=417.895..434.215 rows=20 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=215 read=29902
+         ->  Sort  (cost=63507.97..63518.54 rows=4230 width=452) (actual time=410.445..410.449 rows=17 loops=3)
+               Sort Key: created_at DESC, log_id DESC
+               Sort Method: top-N heapsort  Memory: 41kB
+               Buffers: shared hit=215 read=29902
+               Worker 0:  Sort Method: top-N heapsort  Memory: 43kB
+               Worker 1:  Sort Method: top-N heapsort  Memory: 42kB
+               ->  Parallel Bitmap Heap Scan on work_logs w  (cost=1918.45..63395.41 rows=4230 width=452) (actual time=56.925..402.179 rows=11333 loops=3)
+                     Recheck Cond: ((user_id)::text = ANY ('{bch0000,bch0006,bch0012,bch0018,bch0024,bch0030,bch0036,bch0042,bch0048,bch0054,bch0060,bch0066,bch0072,bch0078,bch0084,bch0090,bch0096,bch0102,bch0108,bch0114,bch0120,bch0126,bch0132,bch0138,bch0144,bch0150,bch0156,bch0162,bch0168,bch0174,bch0180,bch0186,bch0192,bch0198,bch0204,bch0210,bch0216,bch0222,bch0228,bch0234,bch0240,bch0246,bch0252,bch0258,bch0264,bch0270,bch0276,bch0282,bch0288,bch0294,bch0300,bch0306,bch0312,bch0318,bch0324,bch0330,bch0336,bch0342,bch0348,bch0354,bch0360,bch0366,bch0372,bch0378,bch0384,bch0390,bch0396,bch0402,bch0408,bch0414,bch0420,bch0426,bch0432,bch0438,bch0444,bch0450,bch0456,bch0462,bch0468,bch0474,bch0480,bch0486,bch0492,bch0498}'::text[]))
+                     Filter: (((title)::text ~~ '%마모%'::text) OR (log_text ~~ '%마모%'::text))
+                     Rows Removed by Filter: 44667
+                     Heap Blocks: exact=9783
+                     Buffers: shared hit=187 read=29902
+                     ->  Bitmap Index Scan on idx_work_logs_user  (cost=0.00..1915.70 rows=167995 width=0) (actual time=24.470..24.470 rows=168000 loops=1)
+                           Index Cond: ((user_id)::text = ANY ('{bch0000,bch0006,bch0012,bch0018,bch0024,bch0030,bch0036,bch0042,bch0048,bch0054,bch0060,bch0066,bch0072,bch0078,bch0084,bch0090,bch0096,bch0102,bch0108,bch0114,bch0120,bch0126,bch0132,bch0138,bch0144,bch0150,bch0156,bch0162,bch0168,bch0174,bch0180,bch0186,bch0192,bch0198,bch0204,bch0210,bch0216,bch0222,bch0228,bch0234,bch0240,bch0246,bch0252,bch0258,bch0264,bch0270,bch0276,bch0282,bch0288,bch0294,bch0300,bch0306,bch0312,bch0318,bch0324,bch0330,bch0336,bch0342,bch0348,bch0354,bch0360,bch0366,bch0372,bch0378,bch0384,bch0390,bch0396,bch0402,bch0408,bch0414,bch0420,bch0426,bch0432,bch0438,bch0444,bch0450,bch0456,bch0462,bch0468,bch0474,bch0480,bch0486,bch0492,bch0498}'::text[]))
+                           Buffers: shared hit=168 read=224
+ Planning:
+   Buffers: shared hit=234 read=13
+ Planning Time: 3.605 ms
+ Execution Time: 434.318 ms
+(25 rows)
+
+
+-- Q5
+                                                                      QUERY PLAN                                                                      
+------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=352.90..429.76 rows=20 width=452) (actual time=0.157..0.427 rows=20 loops=1)
+   Buffers: shared hit=5 read=22
+   ->  Bitmap Heap Scan on work_logs  (cost=352.90..1113.77 rows=198 width=452) (actual time=0.156..0.421 rows=20 loops=1)
+         Recheck Cond: (((title)::text ~~ '%크랭크축%'::text) OR (log_text ~~ '%크랭크축%'::text))
+         Heap Blocks: exact=19
+         Buffers: shared hit=5 read=22
+         ->  BitmapOr  (cost=352.90..352.90 rows=198 width=0) (actual time=0.114..0.115 rows=0 loops=1)
+               Buffers: shared hit=5 read=3
+               ->  Bitmap Index Scan on idx_trgm_work_logs_title  (cost=0.00..166.08 rows=98 width=0) (actual time=0.040..0.040 rows=0 loops=1)
+                     Index Cond: ((title)::text ~~ '%크랭크축%'::text)
+                     Buffers: shared hit=2 read=1
+               ->  Bitmap Index Scan on idx_trgm_work_logs_log_text  (cost=0.00..186.73 rows=100 width=0) (actual time=0.073..0.073 rows=100 loops=1)
+                     Index Cond: (log_text ~~ '%크랭크축%'::text)
+                     Buffers: shared hit=3 read=2
+ Planning:
+   Buffers: shared hit=142 read=18
+ Planning Time: 9.585 ms
+ Execution Time: 0.868 ms
+(18 rows)
+
+

@@ -73,7 +73,7 @@
 
 | ID | 바꾸는 것 | 근거 | 검증 | 상태 |
 |---|---|---|---|---|
-| **D1** | **`pg_trgm` GIN을 측정한다** — `work_logs(title, log_text)`·`chat_messages(content)`. 붙일지는 측정이 정한다. **쓰기 비용과 인덱스 크기를 같이 잰다** — 작업일지는 쓰기도 있다 | ⑤ `LIKE %kw%` 432ms(100만). B-tree 무효는 확인됐고 GIN은 안 해봤다. `WORK-BACKLOG.md:150`이 "ngram FULLTEXT → `pg_trgm`/tsvector"로 미뤄둔 것 | 같은 100만·같은 `pg_prewarm` 조건에서 전후. 통제군 ⑥ 방식 그대로 | **조건부** (측정) |
+| **D1** | **`pg_trgm` GIN을 측정한다** — `work_logs(title, log_text)`·`chat_messages(content)`. 붙일지는 측정이 정한다. **쓰기 비용과 인덱스 크기를 같이 잰다** — 작업일지는 쓰기도 있다 | ⑤ `LIKE %kw%` 432ms(100만). B-tree 무효는 확인됐고 GIN은 안 해봤다. `WORK-BACKLOG.md:150`이 "ngram FULLTEXT → `pg_trgm`/tsvector"로 미뤄둔 것 | 같은 100만·같은 `pg_prewarm` 조건에서 전후. 통제군 ⑥ 방식 그대로 | **측정 완료 → 지금은 안 붙인다 추천** (2026-09-16, 6절·4절). 희귀 3자+에서만 160배, 흔한 건 변동, 2자는 무효. 크기 39%·쓰기 4.5배. 결정은 사용자 |
 | **D2** | **작업일지 목록 OFFSET → keyset** `(created_at, log_id)` 커서. 색인은 이미 했고(P1-13) 목록은 안 했다 | ③ 500페이지 150ms — OFFSET 10,000이 앞을 읽고 버린다. 정렬 없는 OFFSET은 행 중복·누락(P2-15-3) | ③이 1페이지(①)와 같은 자릿수가 되는가 | **구현 완료** (2026-09-15, 6절) — 100만 벤치 재측정은 남음 |
 | **D3** | **`pg_stat_statements` 주간 top-10 절차**(O4) — `total_exec_time DESC`·`mean_exec_time DESC`·`calls DESC` 셋. `auto_explain`은 `log_min_duration`의 임계가 실측 분포에서 나오기 전엔 **안 켠다** | 확장은 로드돼 있는데 보는 사람이 없다(O4 △). 임의 임계 금지(0절 3) | 첫 주 top-10이 `docs/`에 남는가 | **완료** (2026-09-15, 6절) — `OPERATIONS-SLOW-QUERY.md`. auto_explain은 4주 뒤 |
 | **D4** | **복합 인덱스 `(user_id, created_at DESC, log_id DESC)`는 안 넣는다** | P2-15-8: 선택도 16%라 플래너가 안 고른다. 계획에 인덱스가 없는데 1.2배는 인덱스의 공이 아니다 | — | 결정 (4절) |
@@ -86,7 +86,7 @@ DBA 지원서에서 비어 보이는 자리 셋(백업·복제·무중단 DDL)�
 |---|---|---|---|---|
 | **E1** | **WAL 아카이브 + `pg_basebackup`(PITR).** `archive_mode=on`, `archive_command`로 볼륨/S3, 주 1회 베이스 백업. RPO 24h → 분 단위 | `OPERATIONS-BACKUP.md` 5절이 이미 설계했다. 트리거는 파일럿 H1의 "하루 유실이 얼마인가" | `recovery_target_time`으로 임의 시점 복구 리허설, 유실 행 수 | **보류** (H1 트리거) |
 | **E2** | **스트리밍 복제 standby 하나 — 로컬 compose에서.** `pg_stat_replication`·복제 지연을 실측하고, ADR-0004 3-3(읽기 분리)의 전제를 만든다. 운영 투입은 아니다 | 복제 0건. ADR-0004 3-3이 Read Replica를 적었는데 붙여본 적이 없다. Admin 5장 | standby에서 `getMyAttendanceRecords` 조회, primary 쓰기 → standby 반영까지 ms. 지연이 채팅 따라잡기(ADR-0008)와 충돌하는지 | **측정 완료 2026-09-15** (6절). 유휴 p50 81ms, 부하 중 p50 382·max 856ms. 따라잡기 `after?seq=`는 standby 불가 |
-| **E3** | **무중단 DDL 절차(D5).** ① `CREATE INDEX CONCURRENTLY`는 파일 하나에 단독 + `spring.flyway.postgresql.transactional-lock=false`(`.sql.conf`는 필요 없었다) ② 컬럼 추가는 nullable 먼저, NOT NULL은 채운 뒤 ③ DDL 앞에 `SET LOCAL lock_timeout`을 짧게 + 재시도 | V3 주석이 "CONCURRENTLY는 트랜잭션 안에서 못 한다"를 이미 안다. V6(ADR-0008)가 첫 실전이었는데 절차 없이 했다 | 다음 마이그레이션이 이 절차로 나가는가. 앱이 떠 있는 채로 인덱스를 만들며 `lock_timeout` 예외 0건 | **절차 완료 2026-09-16** (6절, `docs/db/online-ddl.md`). ①은 테스트로 검증, 운영 규모 실전은 D1 때 |
+| **E3** | **무중단 DDL 절차(D5).** ① `CREATE INDEX CONCURRENTLY`는 파일 하나에 단독 + `spring.flyway.postgresql.transactional-lock=false`(`.sql.conf`는 필요 없었다) ② 컬럼 추가는 nullable 먼저, NOT NULL은 채운 뒤 ③ DDL 앞에 `SET LOCAL lock_timeout`을 짧게 + 재시도 | V3 주석이 "CONCURRENTLY는 트랜잭션 안에서 못 한다"를 이미 안다. V6(ADR-0008)가 첫 실전이었는데 절차 없이 했다 | 다음 마이그레이션이 이 절차로 나가는가. 앱이 떠 있는 채로 인덱스를 만들며 `lock_timeout` 예외 0건 | **절차 완료 2026-09-16** (6절, `docs/db/online-ddl.md`). ①은 테스트로 검증, 운영 규모 실전은 D1에서 — 100만 행 GIN을 CONCURRENTLY로 180s(일반 90s의 2배), invalid 0건 |
 | **E4** | **장애 대응 문서(O6)** — `PG-BOOK-EXPERIMENTS.md` 5절 장애 기록에서 시나리오 셋을 승격: "DB가 안 뜬다", "삭제가 안 끝난다"(#1·#2), "느려졌는데 재시작으로 안 돌아온다"(#6) | O6 ❌. E8의 "앱 재시작으로 안 돌아오면 DB도"가 이미 하나 | 시나리오마다 "무엇을 먼저 보나"(A1 스냅샷·C2 wait_event·`pg_stat_bgwriter`)가 적혀 있는가 | **바로** |
 
 ---
@@ -103,7 +103,7 @@ DBA 지원서에서 비어 보이는 자리 셋(백업·복제·무중단 DDL)�
 | ~~4~~ | ~~**B4 + D3 + C2** — 풀 명시·알림, 슬로우 쿼리 절차~~ | **완료 2026-09-15** (6절) | 반나절 |
 | ~~5~~ | ~~**E2 + E3** — 복제 로컬 실측·무중단 DDL 절차~~ | **완료 2026-09-15~16** (6절). E2는 compose가 아니라 일회용 rig로 | 하루 |
 | 6 | **B1** — E8 원인 | AWS 한 시간. 결과가 체크포인트 값을 정한다 | 1h + $1 안팎 |
-| 7 | **D1** — `pg_trgm` 측정 | 측정 뒤 붙일지 결정 | 반나절 |
+| ~~7~~ | ~~**D1** — `pg_trgm` 측정~~ | **측정 완료 2026-09-16** (6절). 추천은 안 붙인다 — 느린 자리가 LIKE가 아니었다 | 반나절 |
 | 8 | **C3 + C4 + E4** | 테스트 둘, 문서 하나 | 반나절 |
 | — | E1 | H1 파일럿 트리거 | — |
 
@@ -117,6 +117,7 @@ DBA 지원서에서 비어 보이는 자리 셋(백업·복제·무중단 DDL)�
 | 복합 인덱스 `(user_id, created_at, log_id)` | 플래너가 안 고른다(선택도 16%). 쓰기 비용만 낸다 | P2-15-8 |
 | `maintenance_work_mem` 전역 ↑ | autovacuum worker가 같이 먹는다. 512M 컨테이너 | B3 |
 | `autovacuum_vacuum_cost_delay` 0 (테이블 단위) | 2~3배 빠르지만 절대 15초(279MB), 780MB로 환산해도 1분 안팎. 아무도 기다리지 않는 시간을 위해 I/O를 3배 쓴다. **추천만, 결정은 사용자** | 실험 ② |
+| `pg_trgm` GIN을 `work_logs`에 지금 | 계획이 바뀌는 건 **희귀 + 3자 이상** 키워드뿐(160배). 흔한 키워드는 통계 표본 따라 120↔260ms 변동, 2자 키워드는 트라이그램이 없어 무효. 대가는 힙의 39%·벌크 쓰기 4.5배·512MB 캐시 경합. 실제 검색의 240ms는 LIKE가 아니라 구역 필터+정렬이다. **추천만, 결정은 사용자** | D1 |
 | HikariCP 풀 ↑ | 풀 고갈의 원인은 앱이었다. PG 커넥션은 프로세스다 | M1 |
 | `auto_explain` 지금 켜기 | 임계값 근거가 없다. top-10 절차(D3)가 분포를 먼저 만든다 | 0절 3 |
 | 파티셔닝 | 시계열 대용량이 없다. ShadowFit 소재 | ADR-0002 3절 |
@@ -251,4 +252,35 @@ E8 열화 후보 "autovacuum 개입"에 처음으로 **메커니즘**이 붙었�
 덤: 실패한 CONCURRENTLY는 invalid 인덱스를 남기고 재시도의 `IF NOT EXISTS`가 **그것을 보고 건너뛴다** — 히스토리엔 아무것도 안 남아(PostgreSQL에선 성공 뒤에만 쓴다, 확인) 기동은 성공하고 인덱스는 없다. 재시도 전 `DROP INDEX CONCURRENTLY`.
 ② 컬럼 추가(nullable → 배치 채움 → `CHECK NOT VALID` → `VALIDATE` → `SET NOT NULL`)와 ③ `SET LOCAL lock_timeout='2s'`는 절차로만 있다 — **운영 규모 실전은 D1 때**(5절 기준으론 그때 "했다").
 V3는 안 고친다(체크섬, 그리고 인덱스는 이미 있다).
+
+### 2026-09-16 — 순서 7: D1
+
+`scripts/db/trgm-lab.sh` (새 rig). `work_logs` 꼴 100만 행(469MB, 코퍼스 생성기 어휘) → `gin_trgm_ops` 전후 A B A B.
+검색 다섯(실제 `searchWorkLogs` SQL로 희귀/흔함 × 4자/3자/2자 + 벤치 ⑤ 원문), 빌드 시간(CONCURRENTLY·일반), 크기, 쓰기 3회.
+결과 전문·rig 함정 7개: `measure/trgm/trgm-20260916T135051/README.md`.
+
+| 검색 (실제 SQL, ms 중앙값) | A | B | A→B | B의 계획 |
+|---|---|---|---|---|
+| 희귀 4자 `'크랭크축'` | 241 / 300 | **1.7 / 1.7** | **160배** | GIN BitmapOr, 힙 98블록 |
+| 흔함 3자 `'베어링'` | 278 / 231 | 261 / 122 | 1.3배 | 한 패스는 GIN 안 씀, 한 패스는 BitmapAnd — 통계 표본 따라 흔들린다 |
+| 2자 `'균열'`·`'마모'` | 246 / 227 · 238 / 230 | 243 / 413 · 246 / 334 | 0.7~0.8배 | GIN **못 씀** — 2자 패턴엔 트라이그램이 없다 |
+
+| 대가 | |
+|---|---|
+| 크기 | `title` 24MB + `log_text` 157MB = 힙의 **39%** |
+| 빌드 | CONCURRENTLY 24s + **180s**, 일반 12s + 90s — 온라인이 2배 (E3 절차의 첫 운영 규모 실전, invalid 0건) |
+| 쓰기 50,000행 × 3 중앙값 | 3.3 / 2.7s → 13.4 / 13.7s = **4.5배** |
+| 캐시 | prewarm 498MB → 681MB, 512MB 컨테이너를 넘는다 |
+
+**느린 자리는 LIKE가 아니었다.** A의 네 검색이 키워드와 무관하게 전부 240ms고 계획이 같다 — `user_id` 인덱스로 구역 84명의 16만 8천 행을
+찾는데 그 행들이 힙 6만 페이지 전체에 흩어져 있어 3만 페이지를 읽고, `ORDER BY`가 있어 `LIMIT 20`이 일찍 못 끝난다. 키워드는 읽은 뒤 거른다.
+P2-15-5 ⑤가 "B-tree로 안 변한다"고 한 그 비용은 키워드 필터가 아니라 **구역 필터 + 정렬**이고, GIN은 그 자리의 답이 아니다.
+
+**D1 판단(추천, 결정은 사용자)**: 지금은 안 붙인다 → 4절. 이득은 희귀·3자 이상 키워드에만 있고 한국어 검색어는 2자가 흔하다(설비·부위·증상).
+바뀌는 조건: 행이 수십만을 넘고 D3의 `pg_stat_statements`에 3자 이상 희귀어 검색이 상위로 보일 때. 그때는 `title`만(24MB, 11s) 붙이는 선택지가 먼저다.
+2자를 하려면 `pg_bigm`인데 이 이미지엔 없다.
+
+**부수 발견 — `ANALYZE`가 행 수와 무관하게 50초.** 표본 30,000행을 en_US.utf8 `strcoll`로 정렬하는 값이다(`log_text` 42s·`title` 11s,
+`COLLATE "C"`면 0.4s). 운영 `dockin-db`도 같은 로케일이라 **autovacuum의 auto-analyze가 `work_logs`에 올 때마다 CPU 50초**를 쓸 것이다
+— 잠금은 읽기·쓰기를 안 막는다. `[미검증: 운영 실측 없음]`. 후보 처방은 `ALTER COLUMN log_text SET STATISTICS 10` — 본문 히스토그램은 아무 쿼리도 안 쓴다.
 
