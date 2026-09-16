@@ -48,6 +48,10 @@ public class MemberServiceTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    // 시도 제한은 목이라 아무것도 막지 않는다. 순서(bcrypt 앞·틀리면 셈·맞으면 지움)는 MemberServiceLoginTest.
+    @Mock
+    private com.DOCKin.member.login.LoginAttempts loginAttempts;
+
     @InjectMocks
     private MemberService memberService; // 위 가짜 객체들을 주입받은 서비스
 
