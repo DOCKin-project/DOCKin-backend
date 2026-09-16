@@ -1,5 +1,6 @@
 package com.DOCKin.global.config;
 
+import com.DOCKin.chat.presence.Presence;
 import com.DOCKin.chat.repository.ChatMembersRepository;
 import com.DOCKin.global.error.BusinessException;
 import com.DOCKin.global.error.ErrorCode;
@@ -48,6 +49,8 @@ class StompHandlerSubscribeAuthorizationTest {
     private JwtUtil jwtUtil;
     @Mock
     private ChatMembersRepository chatMembersRepository;
+    @Mock
+    private Presence presence;
     @Mock
     private MessageChannel channel;
 

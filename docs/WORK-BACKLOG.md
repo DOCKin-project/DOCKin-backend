@@ -657,7 +657,7 @@ P0-9에서 **"값을 에코하면 비밀번호 같은 입력이 응답과 로그
 | 다뤄야 할 것 | 내용 |
 |---|---|
 | **트랜잭션 경계** | 메시지 저장 트랜잭션 안에서 FCM을 호출하면 **롤백돼도 알림은 이미 나간다.** `@TransactionalEventListener(AFTER_COMMIT)`이 답이다 |
-| 중복 알림 | WebSocket으로 이미 받았는데 FCM도 오면 두 번. `StompHandler`가 `CONNECT`/`DISCONNECT`를 잡고 있어 연결 상태를 둘 자리가 이미 있다 |
+| 중복 알림 | WebSocket으로 이미 받았는데 FCM도 오면 두 번. 접속 상태는 **`Presence`**(Redis, 2026-09-16)가 든다 — `offlineAmong(방 멤버)`가 푸시 대상이다. 전 `StompHandler` static Map은 DISCONNECT 프레임만 잡아 네트워크가 끊긴 세션이 영원히 "접속 중"이었고, 인스턴스별이라 다중 인스턴스에서 틀렸다. 지금은 `SessionDisconnectEvent`(전송 끊김에도 옴) + TTL 30초 |
 | 토큰 생명주기 | 기기별 토큰, 만료·갱신, 로그아웃 시 삭제, 다기기 |
 | 도메인 연결 | `WorkShift` → 야간 근무자에게 새벽 알림을 보낼 것인가. `language_code` → 알림 본문 다국어 |
 

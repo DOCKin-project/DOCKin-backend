@@ -355,7 +355,7 @@ i3 결과를 보고 "코어를 4배 주면 4배인가"를 확인하러 이전 �
 
 ## 8. FCM은 같은 이벤트의 다른 소비자다 (D10)
 
-3절의 AFTER_COMMIT 리스너에 소비자를 하나 더 둔다. `StompHandler`의 `onlineUsers`(sessionId → userId)가 이미 접속 상태를 들고 있으므로 **접속 중이 아닌 멤버에게만** 푸시한다. 접속 중인 사람은 WebSocket으로 받았다.
+3절의 AFTER_COMMIT 리스너에 소비자를 하나 더 둔다. 접속 상태는 `Presence`(Redis `presence:{userId}`, 2026-09-16 — 전에는 `StompHandler`의 static Map이었고 아무도 읽지 않았다)가 들고 있으므로 `presence.offlineAmong(방 멤버)`로 **접속 중이 아닌 멤버에게만** 푸시한다. 접속 중인 사람은 WebSocket으로 받았다. Redis가 죽어 있으면 전원이 오프라인으로 나와 전원에게 푸시된다 — 중복이지 유실은 아니다(ADR-0009 2절).
 
 P2-12-6이 적은 기준이 여기서 코드가 된다:
 
