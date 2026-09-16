@@ -1,9 +1,9 @@
 # ADR-0009: Redis — 용도 넷, 장애 시 정책은 셋, 고르는 질문은 하나
 
 - 상태: **결정.** 2026-09-16. 새 결정은 없고 이미 코드에 흩어져 있던 셋을 한 표로 모았다. 6절(다음 용도)만 미리 정한 것이다
-- 대상 코드: `global/config/RedissonConfig`, `attendance/service/AttendanceService`, `rag/service/IndexingService`, `global/security/jwt/JwtBlacklist`, `ai/quota/AiQuota`, `compose.yaml`(`dockin-redis`)
+- 대상 코드: `global/config/RedissonConfig`(측정: `RedisOpenPathLatencyMeasurementTest`), `attendance/service/AttendanceService`, `rag/service/IndexingService`, `global/security/jwt/JwtBlacklist`, `ai/quota/AiQuota`, `compose.yaml`(`dockin-redis`)
 - 관련 문서: `docs/adr/0001`(분산락 폴백), `docs/WORK-BACKLOG.md` P2-5(블랙리스트 이관)·P2-19(AI 한도, Redis 영속성), `docs/adr/0004` 3절(다중 인스턴스 시 Redis Pub/Sub), `docs/PRODUCTION-READINESS.md` F2(폴백)
-- 작성 목적: Redis가 죽었을 때 무엇이 어떻게 되는지가 **클래스 넷의 주석에 하나씩** 있고, 서로 반대 결정(열림/닫힘)을 했다. 이유는 다 있지만 나란히 놓인 적이 없어서, 다섯 번째 용도가 붙을 때 처음부터 다시 따지게 된다. 표 하나와 고르는 질문 하나를 남긴다. 숫자는 P2-19에서 실측한 것만 적고 아닌 것은 [측정 필요]다.
+- 작성 목적: Redis가 죽었을 때 무엇이 어떻게 되는지가 **클래스 넷의 주석에 하나씩** 있고, 서로 반대 결정(열림/닫힘)을 했다. 이유는 다 있지만 나란히 놓인 적이 없어서, 다섯 번째 용도가 붙을 때 처음부터 다시 따지게 된다. 표 하나와 고르는 질문 하나를 남긴다. 숫자는 P2-19와 4절에서 실측한 것만 적는다.
 
 ---
 
@@ -48,14 +48,27 @@ ADR-0001 시점엔 "출근 분산락 전용"이었다. 지금은 넷이다.
 
 닫을 때의 규칙 하나: **닫는다는 것은 그 기능이 Redis와 같이 죽는다는 뜻이다.** 블랙리스트가 닫히면 인증 전체가 401이다 — 로그아웃한 토큰만 막히는 게 아니라 **모든** 요청이 막힌다. 그래서 5절의 "죽지 않게 하기"가 닫힘 정책의 짝이다.
 
-## 4. "연다"는 몇 초 뒤인가 — 아직 모른다
+## 4. "연다"는 몇 초 뒤인가 — 정지 4.8초, 멈춤 3.1초 (실측 2026-09-16)
 
-Redisson 기본값은 `retryAttempts` 3 · `retryInterval` 1.5초 · `timeout` 3초다. Redis가 응답하지 않으면(죽은 게 아니라 멎은 경우) 예외가 나기까지 **최대 수 초**를 그 요청이 기다린다. 열림 정책은 "결국 통과한다"이지 "바로 통과한다"가 아니다.
+Redisson 기본값은 `retryAttempts` 3 · `retryInterval` 1.5초 · `timeout` 3초다. 열림 정책은 "결국 통과한다"이지 "바로 통과한다"가 아니라, 예외가 나기까지 그 요청이 얼마나 붙잡히는지를 운영 설정 그대로 재었다 — `RedisOpenPathLatencyMeasurementTest`, 클라이언트는 `RedissonConfig.redissonClient()`를 그대로 호출해서 만들고 Redis는 전용 컨테이너를 두 방식으로 죽였다. 두 번 돌려 같은 자릿수가 나왔다.
 
-- 출근은 07:00~07:30에 몰린다(`SERVICE-SCALE-ASSUMPTIONS.md`). Redis가 그 시간에 멎으면 요청마다 수 초 대기 → Tomcat 스레드가 잠긴다.
-- `RedissonConfig`의 풀은 8이다. 풀이 마르면 대기가 또 얹힌다.
+| 조건 | `AiQuota.consume` (INCR+EXPIRE) | `RLock.tryLock(3s, 3s)` (출근 락) | 동시 16 (`consume`) | 나온 예외 |
+|---|---|---|---|---|
+| A. 살아 있을 때 | p50 15~56 ms | p50 40~56 ms | — | — |
+| **B. 정지** — 컨테이너 제거, 포트 닫힘 | **4.73~4.82 s** | **4.77~4.93 s** | 각 요청 4.7~6.1 s, 전체 4.9~6.4 s | `WriteRedisConnectionException: Unable to write command into connection!` |
+| **C. 멈춤** — `docker pause`, 연결은 살아 있고 응답만 없음 | **3.05~3.10 s** | **3.07~3.11 s** | 각 요청 p50 3.05~3.10 s, max 4.65~4.70 s, 전체 4.7~5.4 s | `RedisResponseTimeoutException: response timeout (3000 ms) occured after 0 retry attempts, is non-idempotent command: true` |
+| D. 멈춤 해제 직후 | 첫 호출 15~39 ms, 이미 세어짐(닫힘) | — | — | — |
 
-실측이 없다. `AiQuotaRedisTest`는 `retryAttempts 0 · timeout 500ms`로 **줄여서** 시험한 것이라 운영 값에서 얼마나 기다리는지는 [측정 필요]다. 값을 줄이는 결정은 그 측정 뒤다 — P2-11-4가 서킷 브레이커보다 타임아웃이 먼저라고 한 것과 같은 순서.
+A의 수십 ms는 Docker Desktop(Windows) 포트 포워딩 값이라 Redis 자체의 지연(<1 ms)이 아니다. 기준선으로만 둔다.
+
+읽는 법 넷:
+
+1. **정지가 멈춤보다 느리다.** 직관과 반대다 — "포트가 닫혔으니 즉시 거부"가 아니다. Redisson은 쓸 연결이 없으면 `retryAttempts`만큼 `retryInterval`을 기다리며 다시 잡으려 하므로 3 × 1.5 = 4.5초 + 마지막 시도가 4.8초다. 멈춤은 명령이 나가긴 했으므로 `timeout` 3초 한 번이다.
+2. **멈춤에서 재시도가 없는 이유는 명령이 비멱등이기 때문이다.** 예외 메시지의 `after 0 retry attempts, is non-idempotent command: true`가 그것이다 — INCR과 락의 Lua는 두 번 가면 두 번 세어지므로 Redisson 3.37은 응답 타임아웃 뒤 다시 보내지 않는다. 우리 용도(카운터·락)는 전부 이쪽이다. 멱등 명령(GET 계열)이었다면 3초 × (1 + 3)까지 갈 수 있었다.
+3. **동시 16이 순차와 같다 — 풀(8)이 대기를 얹지 않는다.** 정지 상태엔 연결이 없어 풀이 의미가 없고, 멈춤 상태엔 Redisson이 한 연결에 명령을 다중화하므로 16개가 8개 연결을 기다리지 않는다. max 4.7초는 새 연결을 만드는 요청 몫이다. 즉 대기는 **요청당 3~5초로 고정**이고 동시성에 비례해 늘지 않는다. 대신 그 3~5초 동안 Tomcat 스레드가 하나씩 잠기므로, 출근 피크 07:00~07:30(가정표 3-1: 1,500명/1,800초 ≈ 2~3 TPS)에 Redis가 죽으면 동시에 묶이는 스레드는 TPS × 5초 ≈ 10~15개다. Tomcat 200을 말리려면 40 TPS가 필요하니 가정 안에서는 스레드 고갈이 아니라 **출근 응답이 전부 5초짜리가 되는 것**이 실제 증상이다. 번역 피크 10~30 req/s(3-3)는 40에 가깝다 — 그쪽이 먼저 위험하다.
+4. **돌아오면 바로 닫힌다.** pause 해제 후 첫 호출(80 ms 뒤)이 이미 Redis에 닿아 세어졌다. 서킷 브레이커 같은 "반열림 → 닫힘" 지연이 없다는 뜻이고, 그만큼 장애 중엔 요청마다 3~5초를 온전히 낸다는 뜻이기도 하다.
+
+**결정 — 값을 줄인다.** 위 숫자면 열림은 "3~5초 뒤에 열림"이다. 락 폴백과 한도 통과는 어차피 그 뒤에 DB나 FastAPI로 가므로, Redis 대기가 응답 시간의 대부분이 된다. `retryAttempts`를 0~1로, `timeout`을 1초 안쪽으로 내리면 정지는 1.5초 이하, 멈춤은 1초로 줄고, 대신 **살아 있을 때** 느린 응답이 실패로 잡히는 오탐이 생긴다 — A의 p99가 Docker Desktop에서 0.3~2.4초까지 튄 것을 보면 로컬 값으로 정할 수 없고, **운영(AWS, 같은 호스트의 컨테이너 간)에서 A를 다시 재서 그 p99의 몇 배로 정한다.** 그때까지 기본값을 유지한다. 서킷 브레이커(P2-11-4)는 그 뒤다 — 4번처럼 복구가 즉각이라 브레이커의 이득은 "장애 중 3~5초를 0으로"뿐이고, 타임아웃을 줄이면 그 이득의 대부분을 먼저 가져간다.
 
 ## 5. 죽지 않게, 비우지 않게 — 실측한 것 (P2-19)
 
@@ -83,6 +96,7 @@ Redisson 기본값은 `retryAttempts` 3 · `retryInterval` 1.5초 · `timeout` 3
 | 항목 | 상태 |
 |---|---|
 | `/actuator/health`에 `redis` 항목이 실제로 있는가 | **없었다 → 넣었다 (2026-09-16).** 실제 응답은 `db`·`diskSpace`·`ping`뿐이었다 — Spring Boot의 Redis 헬스는 spring-data-redis의 `RedisConnectionFactory`에 붙는데 이 저장소는 `redisson` 단독이라 그 빈이 없다. `RedisHealthIndicator`(`getRedisNodes(SINGLE).pingAll()`)를 넣었고 Redis가 죽으면 **앱 전체가 DOWN**이다 — 블랙리스트가 닫히면 인증이 전부 401이라 UP이라 할 수 없다. `ActuatorEndpointTest`가 항목 존재를, `RedisHealthIndicatorTest`가 DOWN 경로를 본다 |
-| 열림 경로의 대기 시간 실측(4절) | [측정 필요] |
+| 열림 경로의 대기 시간 실측(4절) | **했다 (2026-09-16).** 정지 4.8초·멈춤 3.1초·동시성에 비례하지 않음·복구 즉각. 값 줄이기는 운영에서 기준선(A)을 다시 잰 뒤 |
 | 색인 락·블랙리스트의 장애 경로 테스트 | `AiQuotaRedisTest`의 "전용 Redis를 죽인다" 방식을 그대로 쓰면 된다 |
-| Resilience4j 서킷(P2-11-4) | 4절 측정 뒤 |
+| Redisson `timeout`·`retryAttempts` 줄이기 | 운영에서 살아 있을 때의 p99를 잰 뒤(4절 결정) |
+| Resilience4j 서킷(P2-11-4) | 타임아웃을 줄인 뒤. 복구가 즉각이라 이득이 작다(4절 4번) |
