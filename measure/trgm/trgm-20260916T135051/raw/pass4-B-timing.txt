@@ -1,0 +1,70 @@
+== Q1 run 1
+Time: 29.005 ms
+== Q1 run 2
+Time: 1.766 ms
+== Q1 run 3
+Time: 1.650 ms
+== Q1 run 4
+Time: 1.690 ms
+== Q1 run 5
+Time: 1.678 ms
+== Q1 run 6
+Time: 1.563 ms
+== Q1 run 7
+Time: 1.723 ms
+== Q2 run 1
+Time: 2377.339 ms (00:02.377)
+== Q2 run 2
+Time: 133.012 ms
+== Q2 run 3
+Time: 112.788 ms
+== Q2 run 4
+Time: 127.790 ms
+== Q2 run 5
+Time: 129.648 ms
+== Q2 run 6
+Time: 122.017 ms
+== Q2 run 7
+Time: 98.605 ms
+== Q3 run 1
+Time: 1685.725 ms (00:01.686)
+== Q3 run 2
+Time: 556.991 ms
+== Q3 run 3
+Time: 326.439 ms
+== Q3 run 4
+Time: 372.254 ms
+== Q3 run 5
+Time: 465.376 ms
+== Q3 run 6
+Time: 412.938 ms
+== Q3 run 7
+Time: 509.807 ms
+== Q4 run 1
+Time: 422.293 ms
+== Q4 run 2
+Time: 465.876 ms
+== Q4 run 3
+Time: 329.207 ms
+== Q4 run 4
+Time: 334.027 ms
+== Q4 run 5
+Time: 318.906 ms
+== Q4 run 6
+Time: 363.246 ms
+== Q4 run 7
+Time: 414.670 ms
+== Q5 run 1
+Time: 3.264 ms
+== Q5 run 2
+Time: 2.236 ms
+== Q5 run 3
+Time: 2.016 ms
+== Q5 run 4
+Time: 2.121 ms
+== Q5 run 5
+Time: 1.022 ms
+== Q5 run 6
+Time: 0.999 ms
+== Q5 run 7
+Time: 0.906 ms

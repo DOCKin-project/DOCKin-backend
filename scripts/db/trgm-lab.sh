@@ -59,12 +59,14 @@ ms_now() { date +%s%3N; }
   echo "# trgm lab  $(date +%FT%T%z)"
   echo "image=$IMAGE mem=$MEM rows=$ROWS rare_every=$RARE_EVERY users=$USERS areas=$AREAS write_rows=$WRITE_ROWS passes=\"$PASSES\""
   echo "host: $(uname -srm)"; docker version --format 'docker {{.Server.Version}}'
+  echo "source: $(git rev-parse --short HEAD 2>/dev/null || echo '?')$([[ -n $(git status --porcelain -- scripts/db/trgm-lab.sh 2>/dev/null) ]] && echo ' (dirty: trgm-lab.sh 미커밋 수정 있음)')"
 } > "$OUT_DIR/env.md"
 
 # ── 컨테이너 ────────────────────────────────────────────────────────────────
 docker run -d --name "$C" --memory="$MEM" \
     -e POSTGRES_USER=root -e POSTGRES_PASSWORD=x -e POSTGRES_DB=dockindb "$IMAGE" \
-    -c lock_timeout=5s -c log_lock_waits=on -c shared_preload_libraries=pg_stat_statements >/dev/null
+    -c lock_timeout=5s -c log_lock_waits=on -c shared_preload_libraries=pg_stat_statements \
+    -c synchronize_seqscans=off >/dev/null   # 켜 두면 순차 스캔이 직전 스캔이 멈춘 자리에서 시작해 LIMIT 20의 조기 종료가 12ms↔720ms로 흔들린다(첫 판)
 for _ in $(seq 1 90); do docker logs "$C" 2>&1 | grep -q "PostgreSQL init process complete" && break; sleep 1; done
 for _ in $(seq 1 60); do docker exec "$C" psql -U root -d dockindb -X -q -t -A -c "SELECT 1" 2>/dev/null | grep -q '^1$' && break; sleep 1; done
 say "컨테이너 기동. 시드 ${ROWS}행"
@@ -84,6 +86,7 @@ CREATE TABLE work_logs (
 -- WorkLogListBenchmarkTest처럼 한 문장을 8번 반복하면 트라이그램 종류가 수십 개뿐이라 GIN 크기·빌드 시간이
 -- 실제보다 한참 작게 나온다 — 이 실험이 재려는 게 바로 그 대가라 어휘 다양성을 실제 코퍼스와 맞춘다.
 -- 행 길이는 그래도 259자 근처(로컬 코퍼스 평균)로 맞아, 순차 스캔이 읽는 페이지 수는 벤치와 같은 자릿수다.
+-- 곱수는 표 크기와 서로소여야 한다 — 첫 판(2026-09-16)은 원인이 (i*5)%10이라 열 개 중 둘만 나왔고 '마모'가 코퍼스에 없었다.
 CREATE TABLE lex_equipment AS SELECT * FROM unnest(ARRAY['CO2 용접기','겐트리 크레인','무인 도장설비','플라즈마 절단기','고소작업대','유압 프레스','블라스팅 장비','이송 컨베이어','공기압축기','집진 설비','지게차','발전기']) WITH ORDINALITY AS t(w, n);
 CREATE TABLE lex_part AS SELECT * FROM unnest(ARRAY['송급 롤러','유압 실린더','제어 패널','베어링부','감속기','배관 플랜지','전동기 축','냉각 팬','안전 스위치','케이블 그랜드']) WITH ORDINALITY AS t(w, n);
 CREATE TABLE lex_symptom AS SELECT * FROM unnest(ARRAY['이상 진동이 발생했다','간헐적으로 정지했다','온도가 규정치를 넘었다','누유가 확인되었다','소음이 평소보다 커졌다','출력이 불안정했다','경보가 반복 발생했다','동작이 지연되었다','압력이 유지되지 않았다','표시값이 튀는 현상이 있었다','기동에 실패했다','과전류로 차단되었다']) WITH ORDINALITY AS t(w, n);
@@ -109,7 +112,7 @@ SELECT '$1' || e.w || ' ' || (1 + i % 7) || '호기 ' || p.w,
   JOIN lex_equipment e ON e.n = 1 + (i * 7) % 12
   JOIN lex_part p      ON p.n = 1 + (i * 3) % 10
   JOIN lex_symptom s   ON s.n = 1 + (i * 11) % 12
-  JOIN lex_cause c     ON c.n = 1 + (i * 5) % 10
+  JOIN lex_cause c     ON c.n = 1 + (i * 7) % 10
   JOIN lex_action a    ON a.n = 1 + (i * 17) % 12
   JOIN lex_follow f    ON f.n = 1 + (i * 19) % 10
 SQL
@@ -146,7 +149,7 @@ QORDER="Q1 Q2 Q3 Q4 Q5"
 
 echo "pass,state,query,run,ms" > "$OUT_DIR/timings.csv"
 echo "pass,state,index,build_kind,build_ms,size" > "$OUT_DIR/indexes.csv"
-echo "pass,state,write_rows,insert_ms" > "$OUT_DIR/writes.csv"
+echo "pass,state,round,write_rows,insert_ms" > "$OUT_DIR/writes.csv"
 
 prewarm() {
     scalar "SELECT coalesce(sum(pg_prewarm(c.oid, 'read')), 0) FROM pg_class c WHERE c.oid = 'work_logs'::regclass OR c.oid IN (SELECT indexrelid FROM pg_index WHERE indrelid = 'work_logs'::regclass)"
@@ -162,7 +165,7 @@ measure_pass() {   # $1=pass번호 $2=state(A|B)
       for q in $QORDER; do
         for r in 1 2 3 4 5 6 7; do echo "\\echo == $q run $r"; echo "${Q[$q]};"; done
       done
-    } | psqli > "$f" 2>&1 || true
+    } | psqli > "$f" 2>&1   # ON_ERROR_STOP이라 SQL 오류면 여기서 죽는다 — 삼키면 timings.csv에 구멍이 난 채 요약이 나온다
     # 출력에는 "== Q1 run 1" 뒤에 "Time: 12.345 ms" 가 온다
     awk -v pass="$pass" -v state="$state" '
         /^== /   { q=$2; r=$4 }
@@ -172,18 +175,21 @@ measure_pass() {   # $1=pass번호 $2=state(A|B)
     done
 }
 
-write_cost() {   # $1=pass $2=state. 50,000행 INSERT 한 문장 — 실제 쓰기는 한 행씩이지만 인덱스 유지 비용의 배수는 같은 방향이다
-    local pass=$1 state=$2 T ms
-    T=$(ms_now)
-    psqli >/dev/null <<EOF
+write_cost() {   # $1=pass $2=state. 50,000행 INSERT 한 문장 × 3회 — 실제 쓰기는 한 행씩이지만 인덱스 유지 비용의 배수는 같은 방향이다.
+    local pass=$1 state=$2 T ms out=""   # 한 번만 재면 같은 A끼리 4.4s↔11.5s였다(첫 판). 세 번 재고 요약은 중앙값.
+    for round in 1 2 3; do
+        T=$(ms_now)
+        psqli >/dev/null <<EOF
 INSERT INTO work_logs (title, log_text, created_at, updated_at, user_id, equipment_id)
 $(gen_rows '[쓰기] ' "1, $WRITE_ROWS" "+ $ROWS" "");
 EOF
-    ms=$(( $(ms_now) - T ))
-    echo "$pass,$state,$WRITE_ROWS,$ms" >> "$OUT_DIR/writes.csv"
-    psqlc -c "DELETE FROM work_logs WHERE title LIKE '[쓰기] %'" >/dev/null
-    psqlc -c "VACUUM work_logs" >/dev/null
-    echo "$ms"
+        ms=$(( $(ms_now) - T ))
+        echo "$pass,$state,$round,$WRITE_ROWS,$ms" >> "$OUT_DIR/writes.csv"
+        psqlc -c "DELETE FROM work_logs WHERE title LIKE '[쓰기] %'" >/dev/null
+        psqlc -c "VACUUM work_logs" >/dev/null
+        out="$out $ms"
+    done
+    echo "$out"
 }
 
 build_index() {   # $1=pass $2=kind(concurrently|plain) $3=name $4=column
@@ -215,7 +221,7 @@ for state in $PASSES; do
     warmed=$(prewarm)
     say "패스 $pass [$state] ANALYZE $((ANALYZE_MS/1000))s, prewarm ${warmed}블록, 검색 5개 × 7회"
     measure_pass "$pass" "$state"
-    say "패스 $pass [$state] 쓰기 ${WRITE_ROWS}행: $(write_cost "$pass" "$state")ms"
+    say "패스 $pass [$state] 쓰기 ${WRITE_ROWS}행 × 3:$(write_cost "$pass" "$state") ms"
 done
 psqlc -c "SELECT pg_size_pretty(pg_relation_size('work_logs')) heap, pg_size_pretty(pg_indexes_size('work_logs')) indexes, pg_size_pretty(pg_total_relation_size('work_logs')) total" > "$OUT_DIR/raw/sizes-final.txt"
 docker logs "$C" > "$OUT_DIR/raw/postgres.log" 2>&1 || true
@@ -231,6 +237,8 @@ for r in csv.DictReader(open(f"{out}/timings.csv")):
     if int(r["run"]) > 2:   # 1·2회는 워밍업
         t[(int(r["pass"]), r["state"], r["query"])].append(float(r["ms"]))
 passes = sorted({k[0] for k in t}); queries = ["Q1","Q2","Q3","Q4","Q5"]
+bad = {k: len(v) for k, v in t.items() if len(v) != 5} | {(p, s, q): 0 for p in passes for s in {k[1] for k in t if k[0]==p} for q in queries if (p, s, q) not in t}
+assert not bad, f"timings.csv 표본이 5개가 아닌 자리: {bad}"   # awk가 Time: 줄을 못 잡았거나 실행이 중간에 끊긴 것
 names = {"Q1":"실제 SQL · 희귀 4자 '크랭크축'","Q2":"실제 SQL · 흔함 3자 '베어링'","Q3":"실제 SQL · 희귀 2자 '균열'","Q4":"실제 SQL · 흔함 2자 '마모'","Q5":"벤치 ⑤ 원문 · '크랭크축'"}
 state_of = {p: next(k[1] for k in t if k[0]==p) for p in passes}
 hdr = "| 검색 | " + " | ".join(f"패스{p} {state_of[p]}" for p in passes) + " | A→B |"
@@ -243,9 +251,14 @@ for q in queries:
 lines += ["", "(ms, 5회 중앙값. 1·2회 워밍업 제외)", "", "| 패스 | 인덱스 | 빌드 | 시간 | 크기 |", "|---|---|---|---|---|"]
 for r in csv.DictReader(open(f"{out}/indexes.csv")):
     lines.append(f"| {r['pass']} | {r['index']} | {r['build_kind']} | {int(r['build_ms'])/1000:.1f}s | {r['size']} |")
-lines += ["", "| 패스 | 상태 | INSERT 행 | 시간 |", "|---|---|---|---|"]
+w = defaultdict(list); wrows = 0
 for r in csv.DictReader(open(f"{out}/writes.csv")):
-    lines.append(f"| {r['pass']} | {r['state']} | {int(r['write_rows']):,} | {int(r['insert_ms'])/1000:.2f}s |")
+    w[(int(r["pass"]), r["state"])].append(int(r["insert_ms"])/1000); wrows = int(r["write_rows"])
+lines += ["", f"| 패스 | 상태 | INSERT {wrows:,}행 × 3 | 중앙값 |", "|---|---|---|---|"]
+for (p, s), v in sorted(w.items()):
+    lines.append(f"| {p} | {s} | {' / '.join(f'{x:.1f}' for x in v)} | {st.median(v):.1f}s |")
+wa = [st.median(v) for (p, s), v in w.items() if s == 'A']; wb = [st.median(v) for (p, s), v in w.items() if s == 'B']
+if wa and wb: lines.append(f"\n쓰기 A→B: {st.mean(wb)/st.mean(wa):.1f}배 (중앙값들의 평균끼리)")
 open(f"{out}/summary.md","w",encoding="utf-8").write("\n".join(lines)+"\n"); print("\n".join(lines))
 PY
 say "산출물: $OUT_DIR"
