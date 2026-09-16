@@ -140,17 +140,22 @@ public class IndexingService {
         // 일어난다. leaseTime 없이 잡으면 Redisson 워치독이 보유 스레드가 살아 있는 동안
         // 갱신하고, JVM이 죽으면 워치독 타임아웃(기본 30초) 뒤 자동으로 풀린다.
         RLock lock = redissonClient.getLock(INDEXING_LOCK_KEY);
-        boolean locked;
+        // "잡았다"와 "Redis가 없어 그냥 간다"를 구분해 둔다. 아래 finally가 이 값으로 unlock 여부를
+        // 정한다 -- lock.isHeldByCurrentThread()로 물어보면 그것도 Redis에 가는 명령(HEXISTS)이라
+        // Redis가 죽어 있으면 finally에서 예외가 나고, 몇 시간 훑은 색인의 결과가 거기서 통째로
+        // 사라진다. IndexingLockRedisTest "Redis가 죽으면 상호배제 없이 진행하고 결과를 돌려준다"가
+        // 그 경로를 잡았다(2026-09-16).
+        boolean acquired;
         try {
-            locked = lock.tryLock(0, TimeUnit.SECONDS);
+            acquired = lock.tryLock(0, TimeUnit.SECONDS);
         } catch (Exception e) {
             // Redis를 못 쓰는 상황. 여기서 멈추면 Redis가 흔들릴 때마다 색인이 통째로
             // 서 버린다. 동시 실행은 "둘이 겹칠 때만" 일어나는 사고이고 평시에는 단일
             // 실행이므로, 경고를 남기고 진행한다(ADR-0001이 근태에서 택한 것과 같은 판단).
             log.warn("[RAG] 색인 분산락을 사용할 수 없어 상호배제 없이 진행합니다. cause={}", e.toString());
-            locked = true;
+            return runIndexing(start);
         }
-        if (!locked) {
+        if (!acquired) {
             long total = documentChunkRepository.countByEmbeddingModel(embeddingClient.getModelName());
             log.info("[RAG] 다른 색인이 이미 진행 중이라 이번 실행을 건너뜁니다.");
             return IndexRun.skipped(total, System.currentTimeMillis() - start);
@@ -159,9 +164,12 @@ public class IndexingService {
         try {
             return runIndexing(start);
         } finally {
-            // 락을 못 잡았거나(폴백) 다른 스레드가 가진 경우까지 unlock을 부르면 예외가 난다.
-            if (lock.isHeldByCurrentThread()) {
+            // 잡은 락만 놓는다. 놓다가 실패해도(색인 중에 Redis가 죽었다) 결과는 돌려줘야 한다 --
+            // 워치독 갱신이 같이 끊겼으므로 키는 30초 뒤 스스로 사라진다. 로그만 남긴다.
+            try {
                 lock.unlock();
+            } catch (Exception e) {
+                log.warn("[RAG] 색인 분산락을 놓지 못했습니다. 워치독 만료(30초)로 풀립니다. cause={}", e.toString());
             }
         }
     }
