@@ -1,6 +1,7 @@
 package com.DOCKin.global.error;
 
 import com.DOCKin.ai.quota.AiQuotaExceededException;
+import com.DOCKin.member.login.LoginAttemptsExceededException;
 
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
@@ -65,6 +66,17 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponseDto> handleAiQuotaExceeded(AiQuotaExceededException e) {
         ErrorCode errorCode = e.getErrorCode();
         log.warn("AI 한도 초과: {} - kind={}, retryAfter={}s", errorCode.getCode(), e.getKind().key(), e.getRetryAfterSeconds());
+        ResponseEntity<ErrorResponseDto> base = toResponse(errorCode, errorCode.getMessage());
+        return ResponseEntity.status(base.getStatusCode())
+                .header(HttpHeaders.RETRY_AFTER, String.valueOf(e.getRetryAfterSeconds()))
+                .body(base.getBody());
+    }
+
+    /** 로그인 시도 제한. 위와 같은 꼴 — {@code Retry-After}는 창이 끝날 때까지의 초다. */
+    @ExceptionHandler(LoginAttemptsExceededException.class)
+    public ResponseEntity<ErrorResponseDto> handleLoginAttemptsExceeded(LoginAttemptsExceededException e) {
+        ErrorCode errorCode = e.getErrorCode();
+        log.warn("로그인 시도 제한: {} - retryAfter={}s", errorCode.getCode(), e.getRetryAfterSeconds());
         ResponseEntity<ErrorResponseDto> base = toResponse(errorCode, errorCode.getMessage());
         return ResponseEntity.status(base.getStatusCode())
                 .header(HttpHeaders.RETRY_AFTER, String.valueOf(e.getRetryAfterSeconds()))
