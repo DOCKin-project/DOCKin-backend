@@ -491,7 +491,7 @@ CDC의 장점은 "애플리케이션을 우회한 변경도 잡는다"인데, **
 | **`.withSockJS()` 폴백** | 붙이지 않았다. 클라이언트가 SockJS 라이브러리를 써야 하는 **계약 변경**이라 프록시 정합성 수정과 섞을 문제가 아니다. 다만 nginx의 `Connection` 헤더를 `map`으로 처리해 **나중에 붙여도 깨지지 않게** 해뒀다(업그레이드가 아닌 요청에는 `close`가 간다) |
 | **8080 포트 노출 제거** | 유지했다. 팀 프론트엔드가 그 주소를 쓰고 있어 닫는 것은 별개 결정이다. 대신 `chat_test.html`을 80으로 옮겨 **고친 프록시 경로가 실제로 한 번은 돌게** 했다 — 아무도 안 쓰는 경로는 고쳐도 깨져 있는지 알 수 없다 |
 | **동기 컨트롤러 타임아웃** | `spring.mvc.async.request-timeout`은 비동기 경로에만 적용된다. 동기 경로에는 Spring 쪽 한도가 없어 **여전히 nginx가 유일한 천장**이고, 그 값이 60초에서 125초로 늘어났다. 별도 항목(N6와 같은 자리) |
-| **STOMP heartbeat** | `/ws`의 `proxy_read_timeout`을 3600초로 둔 것은 임시방편이다. heartbeat(N5)가 붙으면 훨씬 작게 줄일 수 있다. 지금은 "조용한 연결"과 "죽은 연결"이 구분되지 않는다 |
+| **STOMP heartbeat** | ~~`/ws`의 `proxy_read_timeout`을 3600초로 둔 것은 임시방편이다~~ **완료 (2026-09-14)** — heartbeat 10초/10초(`WebSocketConfig`)가 붙어 60초로 내렸다. ADR-0008 7-2 |
 
 #### nginx의 413에는 한계가 남는다
 
@@ -618,7 +618,7 @@ P0-9에서 **"값을 에코하면 비밀번호 같은 입력이 응답과 로그
 | P2-12-2 | **시계가 둘이다** | **완료 (V6·V7)** — `sent_at DEFAULT now()` + `@Generated`(V6). 시각 기준이던 `last_read_time`은 V7이 내렸다. ADR-0008 D6·D7 | ★ |
 | P2-12-3 | **읽음 기준이 시각이다** | **완료 (2026-09-14)** — `PATCH /room/{id}/read {upToSeq}`, `GREATEST`로 멱등. 방 상세 조회의 읽음 부수효과 제거. `last_read_time`은 V7(2026-09-14)이 내렸다 | ★ |
 | P2-12-4 | **`last_message_content` 경합** | **완료 (V6, 2026-09-13)** — 갱신이 `room_seq` 발급과 같은 행 락 안에 있어 마지막에 쓴 것이 곧 마지막 메시지다. `ChatJdbcRepository.nextRoomSeq` | ☆ |
-| P2-12-5 | 재연결 시 유실 | **서버 몫 완료 (2026-09-14)** — `GET /room/{id}/messages/after?seq=`. 전파 페이로드의 `roomSeq`가 커서다. 남은 것은 STOMP heartbeat(클라이언트와 함께)와 FCM(P2-12-6) | ☆ |
+| P2-12-5 | 재연결 시 유실 | **완료 (2026-09-14)** — 서버 `GET /room/{id}/messages/after?seq=`, 클라이언트 `chat_test.html`(lastSeq·따라잡기·중복 제거·재전송·읽음 보고), heartbeat 10초(N5, nginx `/ws` 3600s → 60s). M6: 끊긴 사이 40건, 따라잡기 없으면 40 유실 / 있으면 0. ADR-0008 7-2. FCM(P2-12-6)만 남음 | ☆ |
 | P2-12-8 | **방 목록에 정렬이 없다** | **완료 (2026-09-14)** — `last_message_at DESC, room_id DESC`. P2-12-4가 V6로 사라지자 그 컬럼을 정렬 키로 쓸 수 있게 됐다. `PageableSortDefaultTest`의 `KNOWN_UNSORTED`가 비었다 | ★ |
 
 > **P2-12-2·3은 "시각으로 상태를 판단하면 안 된다"는 한 문제다.** 근태 배치에 `Clock`을

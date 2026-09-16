@@ -1,6 +1,6 @@
 # ADR-0008: 채팅 — 저장이 먼저고, 번역은 그 밖에 있다
 
-- 상태: **일부 구현.** M3(5-4)는 2026-09-13에 실측해 D7·D8을 확정했고, 같은 날 **V6 + 저장 경로(D6·D7·D8)** 를 넣었다(10절). 2026-09-14에 **D1·D2·D9**(저장 → 커밋 → 전파, 실패는 발신자에게만, 재전송은 같은 행)와 **읽음/따라잡기 API**(11-1)를 넣었다. 같은 날 **V7**이 `last_read_time`을 내렸다 — 읽는 곳이 0이 된 뒤. D3·D10이 남았다. **M1은 2026-09-14 실측했다(7-1절)** — D1의 대가는 p99 +70~90ms, 대신 이전 코드에서 1절의 진단이 틀렸음을 발견했다. **M7(2026-09-16)이 FastAPI 번역을 처음 잰 것이다 — 로컬 i3 2초, AWS 8 vCPU 0.28초, CTranslate2 int8 34ms(7-3). D3는 팀원 서버의 엔진 교체가 선결이고 그때까지는 수동 번역**
+- 상태: **일부 구현.** M3(5-4)는 2026-09-13에 실측해 D7·D8을 확정했고, 같은 날 **V6 + 저장 경로(D6·D7·D8)** 를 넣었다(10절). 2026-09-14에 **D1·D2·D9**(저장 → 커밋 → 전파, 실패는 발신자에게만, 재전송은 같은 행)와 **읽음/따라잡기 API**(11-1)를 넣었다. 같은 날 **V7**이 `last_read_time`을 내렸다 — 읽는 곳이 0이 된 뒤. D3·D10이 남았다. **M1·M6은 2026-09-14 실측했다(7-1·7-2절)** — D1의 대가는 p99 +70~90ms(대신 이전 코드에서 1절의 진단이 틀렸음을 발견했다), 따라잡기 프로토콜은 유실 0. `chat_test.html`이 클라이언트 몫을 하고 heartbeat 10초가 붙었다. **M7(2026-09-16)이 FastAPI 번역을 처음 잰 것이다 — 로컬 i3 2초, AWS 8 vCPU 0.28초, CTranslate2 int8 34ms(7-3). D3는 팀원 서버의 엔진 교체가 선결이고 그때까지는 수동 번역**
 - 대상 코드: `chat/controller/ChatController`, `chat/service/ChatService`, `chat/model/ChatMessages`, `chat/repository/*`(요약 컬럼 UPDATE는 `ChatJdbcRepository`가 JdbcClient로 친다 — 엔티티를 거치지 않는 SQL은 JPA 리포지토리에 두지 않는다), `global/config/{AsyncConfig, WebSocketConfig, StompHandler}`, `ai/service/FastApiService`, `db/migration/V6*`(예정)
 - 관련 문서: `docs/WORK-BACKLOG.md` P2-12(정합성 진단)·P2-8-5(언어 컬럼)·P2-17-5(채팅 번역), `docs/SERVICE-SCALE-ASSUMPTIONS.md` 3-3(채팅 규모 가정), `docs/adr/0001`(근태 멱등성), `docs/adr/0004`(기준값 먼저 재는 관례)
 - 작성 목적: 채팅은 이 서비스에서 사용자가 하루 종일 열어두는 유일한 화면인데(발표 자료 9P의 인터뷰 두 건이 전부 이걸 가리킨다), 정합성 진단만 있고(P2-12) 결정이 없다. 번역을 붙이기 전에 **저장·전파·번역의 순서**를 정해두지 않으면, 번역이 붙는 순간 지금의 결함 위에 지연이 하나 더 얹힌다. ADR-0001과 같이 **숫자를 지어내지 않는다** — 가정은 가정으로, 측정 전인 것은 [측정 필요]로 적는다.
@@ -221,7 +221,7 @@ ADR-0004의 관례대로 **바꾸기 전의 값을 먼저 잰다.** 지금 코�
 | M3 | 동시 전송 N건에서 커밋 순서 ↔ `message_id` 역전 빈도 | 5-4의 구멍이 실재하는가 | **완료 (2026-09-13)** — 실재한다. 5-4의 표. D7·D8 확정 |
 | M4 | 동시 전송 후 `last_message_seq`가 실제 건수와 일치하는가 | P2-12-4가 재현되는가 | M3의 방 시퀀스 변형이 사실상 이것이다 — 3,000건에서 유실 0이면 seq도 빠짐없다. 별도 측정은 하지 않는다 |
 | M5 | 세션 1,000개 · 10명 방에서 팬아웃 지연 | 300 push/s의 무릎이 어디인가 | 2차 전파 방식 |
-| M6 | 연결을 끊고 재접속했을 때 유실 건수 — 커서 전/후 | P2-12-5 | D8·FCM 근거. M3의 "순진한 커서 유실"이 서버 쪽 절반을 이미 답했다 |
+| M6 | 연결을 끊고 재접속했을 때 유실 건수 — 커서 전/후 | P2-12-5 | **완료 (2026-09-14)** — 7-2절. 끊긴 사이 40건: 따라잡기 없는 수신자 **40건 유실**, `after?seq=` + `messageId` 중복 제거 **0건**. 겹침 창의 중복 11건이 실제로 생겨 걸러졌다 |
 | M7 | FastAPI 번역 **건당 지연과 동시 처리량** — D3를 붙이기 전에 그 서버가 무엇인지 | 4-2의 10~30 req/s를 받을 수 있는 서버인가 | **완료 (2026-09-16)** — 7-3절. i3 2코어 **1.9초·0.7 req/s** → `m7i.2xlarge` **0.28초·4.6 req/s** → 같은 모델을 CTranslate2 int8로 **34ms·31 req/s**(7-3-1). 병목은 코어가 아니라 엔진. 팀원 서버가 엔진을 바꾸면 한 대로 피크를 받는다 |
 
 **M3 조건** (재현용): 로컬 Windows 10, Docker Desktop, Testcontainers `pgvector/pgvector:pg17`(PostgreSQL 17.11),
@@ -259,6 +259,25 @@ ADR-0004의 관례대로 **바꾸기 전의 값을 먼저 잰다.** 지금 코�
    원인은 두 줄이다: `@Async`에 실행기 이름이 없고, `messageExecutor` 빈의 선언 타입이 `Executor`라 Spring이 `TaskExecutor` 후보로 잡지 못했다. 1절이 걱정한 "큐 10,000이 차면 유실"은 **일어날 수 없는 결함**이었다 — 그 큐에 아무것도 들어간 적이 없다. D1이 `@Async`를 뗀 것이 이 결함도 함께 없앴고, 그래서 출하 상태 대비 100배는 D1의 공이 아니다. D3(번역)에서 `@Async("messageExecutor")`처럼 **이름으로** 묶어야 같은 일이 반복되지 않는다.
 
 **조건** (재현용): 로컬 Windows 10, i3-6100(4스레드), JDK 21(toolchain), Docker Desktop, Testcontainers `pgvector/pgvector:pg17` + Redis. 클라이언트와 서버가 같은 JVM·같은 머신이라 네트워크 왕복은 0에 가깝다 — **절대값이 아니라 전/후의 차이**를 보는 측정이다. `@SpringBootTest(RANDOM_PORT)`, 내장 simple broker. 구독 완료는 RECEIPT 대신 프로브 메시지 도착으로 확인한다(simple broker는 RECEIPT를 만들지 않는다).
+
+### 7-2. M6 결과 — 따라잡기 프로토콜은 유실 0, 그리고 클라이언트를 실제로 만들었다 (2026-09-14)
+
+`ChatReconnectCatchUpMeasurementTest`. D8이 서버에 `after?seq=`를 줬다는 것과, 클라이언트 프로토콜이 유실 0을 **만든다**는 것은 다른 말이라 후자를 잰다. 시나리오: 수신자가 구독한 채 5건 → 수신자 끊김 → 그 사이 40건(DB에 40건 커밋될 때까지 기다린다) → 재접속·구독 → **구독 직후** 10건을 더 보내 따라잡기 응답과 실시간 전파가 겹치는 창을 만든다 → `after?seq=커서`를 `limit=15`로 끝까지 이어 부른다.
+
+| 수신자 | 받은 것 / 보낸 것 | 유실 |
+|---|---|---|
+| 따라잡기 없음 (실시간 전파만) | 15 / 55 | **40 — 끊긴 사이 전부** |
+| 커서 따라잡기 + `messageId` 중복 제거 | 55 / 55 | **0**, `roomSeq` 1..57 구멍 없음 |
+
+따라잡기 응답 4페이지(`hasNext` 이어 부르기가 실제로 돌았다), 새로 40건 + 이미 있던 것 11건 — 그 11건이 겹침 창에서 실시간으로 먼저 도착한 것이다. **중복이 0이면 겹침 창을 못 만든 것이지 프로토콜이 좋은 것이 아니다.** 겹치게 만들고 걸러지는 것을 봐야 한다.
+
+**따라오는 것 셋.**
+
+1. **`Slice`의 JSON에 `hasNext`가 없다.** Jackson은 `is*`/`get*`만 내보내서 `last`(= `!hasNext`)가 온다. 11-1 표는 "`hasNext`로 이어 부른다"고 적었고 컨트롤러 설명도 그렇다 — 클라이언트가 그 이름을 보면 이어 부르기가 **영원히 안 돈다.** 계약은 `last === false`다. `chat_test.html`은 둘 다 본다.
+2. **첫 판은 6건이 어긋났다.** 끊긴 사이 40건을 보내고 300ms 잔 뒤 재접속했더니 순진한 수신자의 유실이 34였다 — 마지막 6건은 재접속 뒤 전파됐다. 7-1이 잰 대로 한 방의 저장은 약 23ms/건으로 직렬화되니 40건이면 900ms다. 시간을 추측하는 대신 DB에 40건이 보일 때까지 폴링하게 고쳤다. M1의 숫자가 M6의 조건을 정했다.
+3. **`chat_test.html`이 프로토콜의 첫 클라이언트다.** 방별 `lastSeq`(localStorage, 새로고침에도 이어진다), 재접속 시 `after?seq=` 끝까지, `messageId`로 중복 제거, `clientMsgId` 낙관적 전송 + `/sub/user/{id}/errors` 실패 표시 + 재접속 뒤 같은 키로 재전송, 화면에 보인 최대 seq를 2초 디바운스·방 이탈·창 닫기에 `PATCH .../read`. 재접속은 첫 접속과 **같은 함수**다 — 재접속이 특별한 경로가 되면 그 경로만 안 테스트된다. "끊김" 버튼은 소켓만 닫아 Wi-Fi가 죽은 것과 같은 조건을 만든다.
+
+**heartbeat (N5, P2-12-5의 남은 몫).** 없었다 — `enableSimpleBroker`만 부르면 `0,0`으로 협상되어 어느 쪽도 보내지 않는다. 그러면 Wi-Fi가 조용히 죽었을 때 TCP는 살아 있는 것처럼 보이고 클라이언트는 `onclose`를 받지 못한다. **끊긴 줄을 모르면 따라잡기가 시작될 일이 없다** — `after?seq=`는 부를 계기가 있어야 한다. 서버 10초/10초(`messageBrokerTaskScheduler`), stomp.js 기본값과 같아 `10,10`으로 협상된다. 3주기(30초) 안에 양쪽이 알아채고 닫는다. nginx `/ws`의 `proxy_read_timeout`은 그 덕에 3600초 → 60초.
 
 ### 7-3. M7 결과 — 로컬 i3에선 건당 2초·0.7 req/s, AWS 8 vCPU에선 0.28초·4.6 req/s, CTranslate2면 34ms·31 req/s (2026-09-16)
 
@@ -397,11 +416,11 @@ P2-12-6이 적은 기준이 여기서 코드가 된다:
 | STOMP 2차 전파 (번역) | 없음 | `{messageId, languageCode, translated}` — 수신자 언어별 1회 |
 | `/sub/user/{id}/errors` (발신 실패) | 로그만 | 보낸 사람에게만 `{clientMsgId, code, message}`. `ERROR` 프레임이 아닌 이유는 3절 |
 | `GET /room/{id}/messages` (위로 스크롤) | `lastMessageId` 커서, `messageId DESC` | `beforeSeq` 커서, `roomSeq DESC`. `lastMessageId`는 옛 커서로 받아 `roomSeq`로 옮겨 쓴다(deprecated) |
-| `GET /room/{id}/messages/after?seq=&limit=` (따라잡기) | 없음 — P2-12-5의 뿌리 | `roomSeq > seq ASC`, `Slice`의 `hasNext`로 이어 부른다. limit 1~500, 기본 100 |
+| `GET /room/{id}/messages/after?seq=&limit=` (따라잡기) | 없음 — P2-12-5의 뿌리 | `roomSeq > seq ASC`, `Slice`의 **`last === false`** 이면 이어 부른다(JSON에 `hasNext`는 없다 — 7-2절). limit 1~500, 기본 100 |
 | 읽음 처리 | `GET /room/{id}`의 **부수효과**로 `last_read_time = now()`, 저장 시 발신자 `NOW()` | `PATCH /room/{id}/read {upToSeq}` → `last_read_seq = GREATEST(last_read_seq, :upToSeq)`, 204. 발신자는 저장이 방금 발급한 seq로 같은 메서드를 부른다. 상세 조회는 아무것도 바꾸지 않는다 |
 | 방 목록 | 정렬 없음 (P2-12-8), 방마다 멤버 조회 + COUNT (P2-12-1) | 조인 한 번: 안읽음 = `last_message_seq − last_read_seq`. 정렬은 **`last_message_at DESC`** — seq는 방 *안*의 번호라 방끼리 비교할 수 없다. 그 시각은 seq 발급과 같은 UPDATE·같은 락에서 찍히므로 P2-12-4의 경합이 없다. 참가자는 `IN` 한 번. 쿼리 3개 고정 |
 
-클라이언트가 지킬 것은 셋이다 — 재접속 시 `after?seq=마지막으로 받은 roomSeq`로 따라잡기(`hasNext`면 이어서), `clientMsgId`로 재전송 중복 제거, 화면에 보인 최대 `roomSeq`로 읽음 보고(메시지마다가 아니라 방을 벗어날 때나 몇 초 디바운스).
+클라이언트가 지킬 것은 셋이다 — 재접속 시 `after?seq=마지막으로 받은 roomSeq`로 따라잡기(`last === false`면 이어서), `clientMsgId`로 재전송 중복 제거, 화면에 보인 최대 `roomSeq`로 읽음 보고(메시지마다가 아니라 방을 벗어날 때나 몇 초 디바운스). **`chat_test.html`이 셋을 전부 한다(2026-09-14, 7-2절)** — 프론트가 참고할 첫 구현이다.
 
 **11-1의 첫 판과 달라진 것 하나.** 방 목록 정렬을 `last_message_seq DESC`로 적었는데 틀렸다. seq는 방마다 1부터 시작하는 번호라 메시지가 많은 방이 항상 위로 온다. 방 사이의 "최근"은 시각이어야 하고, 그 시각이 믿을 만해진 이유가 D8이다 — 같은 락 안에서만 바뀐다. 검증: `ChatReadCatchUpTest`.
 
