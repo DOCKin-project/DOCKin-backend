@@ -3,6 +3,8 @@ package com.DOCKin.ai.controller;
 import com.DOCKin.ai.dto.ChatDomain;
 import com.DOCKin.ai.dto.TranslateDomain;
 import com.DOCKin.ai.dto.OnlineTranslateDomain;
+import com.DOCKin.ai.quota.AiQuota;
+import com.DOCKin.ai.quota.AiQuotaKind;
 import com.DOCKin.global.error.BusinessException;
 import com.DOCKin.global.error.ErrorCode;
 import com.DOCKin.global.logging.TraceId;
@@ -31,10 +33,13 @@ import reactor.core.publisher.Mono;
 public class AiController {
     private final FastApiService fastApiService;
     private final RagChatService ragChatService;
+    // 세 경로 전부 FastAPI로 나가는 비용 호출이라 호출 전에 사용자별 하루 한도를 센다.
+    private final AiQuota aiQuota;
 
     @Operation(summary= "stt 실시간 번역",description = "실시간 번역을 해준다")
     @PostMapping(value = "/rt-translate", consumes= MediaType.MULTIPART_FORM_DATA_VALUE)
     public Mono<ResponseEntity<OnlineTranslateDomain.RtTranslateResponse>> rtTranslate(
+            @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestPart("file")MultipartFile file,
             @RequestPart("source") String source,
             @RequestPart("target") String target,
@@ -48,7 +53,11 @@ public class AiController {
         // 스레드에서 이어지고 MDC는 ThreadLocal이라 따라가지 않는다. TraceIdFilter 주석 참고.
         TraceId.override(traceId);
 
-return fastApiService.realtimeTranslate(file, source, target, traceId, token)
+        if (customUserDetails == null) throw new BusinessException(ErrorCode.UNAUTHORIZED);
+        // Mono를 만들기 전에 동기로 센다. 체인 안에 넣으면 구독 시점에 세어져 검사가 늦다.
+        aiQuota.consume(AiQuotaKind.RT_TRANSLATE, customUserDetails.getMember().getUserId());
+
+        return fastApiService.realtimeTranslate(file, source, target, traceId, token)
         .map(response->ResponseEntity.ok(response));
     }
 
@@ -68,6 +77,8 @@ return fastApiService.realtimeTranslate(file, source, target, traceId, token)
         String userId = customUserDetails.getMember().getUserId();
         boolean admin = customUserDetails.getMember().getRole() == UserRole.ADMIN;
 
+        aiQuota.consume(AiQuotaKind.CHATBOT, userId);
+
         // 근거 검색 → 프롬프트 조립 → FastAPI 호출 → 출처 기록까지 RagChatService가 담당한다.
         return ragChatService.chat(request, userId, admin);
     }
@@ -84,6 +95,8 @@ return fastApiService.realtimeTranslate(file, source, target, traceId, token)
         TraceId.override(request.traceId());
 
         String userId = customUserDetails.getMember().getUserId();
+
+        aiQuota.consume(AiQuotaKind.WORKLOG_TRANSLATE, userId);
 
         TranslateDomain.Response response = fastApiService.saveTranslateLog(logId,request,userId);
 

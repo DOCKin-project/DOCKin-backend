@@ -65,6 +65,7 @@ public enum ErrorCode {
     // FastApi
     CHATBOT_NOT_WORK(404, "F001", "챗봇이 에러가 발생했습니다."),
     STT_CONVERSION_ERROR(404, "F002", "STT에서 에러가 발생했습니다."),
+    AI_QUOTA_EXCEEDED(429, "F003", "오늘 사용 가능한 AI 호출 횟수를 모두 사용했습니다."),
 
     // RAG
     EMBEDDING_SERVER_ERROR(503, "R001", "임베딩 서버 호출에 실패했습니다."),
