@@ -1,0 +1,2 @@
+periods 12555 -> 13795
+throttled 84 -> 100
