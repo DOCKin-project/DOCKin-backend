@@ -59,6 +59,7 @@ ms_now() { date +%s%3N; }
   echo "# trgm lab  $(date +%FT%T%z)"
   echo "image=$IMAGE mem=$MEM rows=$ROWS rare_every=$RARE_EVERY users=$USERS areas=$AREAS write_rows=$WRITE_ROWS passes=\"$PASSES\""
   echo "host: $(uname -srm)"; docker version --format 'docker {{.Server.Version}}'
+  echo "source: $(git rev-parse --short HEAD 2>/dev/null || echo '?')$([[ -n $(git status --porcelain -- scripts/db/trgm-lab.sh 2>/dev/null) ]] && echo ' (dirty: trgm-lab.sh 미커밋 수정 있음)')"
 } > "$OUT_DIR/env.md"
 
 # ── 컨테이너 ────────────────────────────────────────────────────────────────
@@ -164,7 +165,7 @@ measure_pass() {   # $1=pass번호 $2=state(A|B)
       for q in $QORDER; do
         for r in 1 2 3 4 5 6 7; do echo "\\echo == $q run $r"; echo "${Q[$q]};"; done
       done
-    } | psqli > "$f" 2>&1 || true
+    } | psqli > "$f" 2>&1   # ON_ERROR_STOP이라 SQL 오류면 여기서 죽는다 — 삼키면 timings.csv에 구멍이 난 채 요약이 나온다
     # 출력에는 "== Q1 run 1" 뒤에 "Time: 12.345 ms" 가 온다
     awk -v pass="$pass" -v state="$state" '
         /^== /   { q=$2; r=$4 }
@@ -236,6 +237,8 @@ for r in csv.DictReader(open(f"{out}/timings.csv")):
     if int(r["run"]) > 2:   # 1·2회는 워밍업
         t[(int(r["pass"]), r["state"], r["query"])].append(float(r["ms"]))
 passes = sorted({k[0] for k in t}); queries = ["Q1","Q2","Q3","Q4","Q5"]
+bad = {k: len(v) for k, v in t.items() if len(v) != 5} | {(p, s, q): 0 for p in passes for s in {k[1] for k in t if k[0]==p} for q in queries if (p, s, q) not in t}
+assert not bad, f"timings.csv 표본이 5개가 아닌 자리: {bad}"   # awk가 Time: 줄을 못 잡았거나 실행이 중간에 끊긴 것
 names = {"Q1":"실제 SQL · 희귀 4자 '크랭크축'","Q2":"실제 SQL · 흔함 3자 '베어링'","Q3":"실제 SQL · 희귀 2자 '균열'","Q4":"실제 SQL · 흔함 2자 '마모'","Q5":"벤치 ⑤ 원문 · '크랭크축'"}
 state_of = {p: next(k[1] for k in t if k[0]==p) for p in passes}
 hdr = "| 검색 | " + " | ".join(f"패스{p} {state_of[p]}" for p in passes) + " | A→B |"
