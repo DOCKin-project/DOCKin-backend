@@ -104,7 +104,7 @@ public class ChatRoomController {
     @GetMapping("/room/{roomId}/messages")
     public ResponseEntity<Slice<ChatMessageResponseDto>> getChatMessages(@PathVariable Integer roomId,
                                                                          @AuthenticationPrincipal CustomUserDetails customUserDetails,
-                                                                         @RequestParam(required = false) Long beforeSeq,
+                                                                         @RequestParam(required = false) @PositiveOrZero Long beforeSeq,
                                                                          @Deprecated @RequestParam(required = false) Long lastMessageId,
                                                                          @PageableDefault(size = 20, sort = "roomSeq", direction = Sort.Direction.DESC) Pageable pageable){
        String userId = customUserDetails.getMember().getUserId();

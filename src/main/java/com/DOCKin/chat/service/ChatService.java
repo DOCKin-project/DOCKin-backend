@@ -137,12 +137,13 @@ public class ChatService {
 
         Long cursor = beforeSeq;
         if (cursor == null && lastMessageId != null) {
-            cursor = chatMessagesRepository.findRoomSeqByMessageId(lastMessageId).orElse(null);
+            cursor = chatMessagesRepository.findRoomSeqByMessageId(roomId, lastMessageId).orElse(null);
         }
 
         // 정렬은 쿼리가 정한다(roomSeq DESC). 클라이언트의 sort 파라미터는 받지 않는다 — 커서와 정렬이
-        // 어긋나면 페이지 경계에서 행이 겹치거나 빠진다.
-        Pageable sizeOnly = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
+        // 어긋나면 페이지 경계에서 행이 겹치거나 빠진다. 페이지 번호도 받지 않는다 — 커서가 이미 경계를
+        // 정했는데 page=1이 오면 OFFSET이 겹쳐 그만큼 건너뛴다.
+        Pageable sizeOnly = PageRequest.of(0, pageable.getPageSize());
         return chatMessagesRepository.findChatHistory(roomId, memberInfo.getJoinedAt(), cursor, sizeOnly)
                 .map(ChatMessageResponseDto::from);
     }

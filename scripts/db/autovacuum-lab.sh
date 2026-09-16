@@ -44,6 +44,10 @@ DELETE_UPTO=${DELETE_UPTO:-180000}
 ORDER=${ORDER:-"2 0 2 0"}          # autovacuum_vacuum_cost_delay(ms) 판 순서
 INTERVAL=${INTERVAL:-5}
 TIMEOUT=${TIMEOUT:-1800}
+# 완료 판정이 "removed >= DELETE_UPTO의 90%"라 DELETE_UPTO > ROWS면 절대 못 채우고 TIMEOUT까지 기다린다.
+if (( DELETE_UPTO <= 0 || DELETE_UPTO > ROWS )); then
+    echo "DELETE_UPTO=$DELETE_UPTO 는 0 < DELETE_UPTO <= ROWS($ROWS) 여야 한다" >&2; exit 2
+fi
 OUT_DIR=${OUT_DIR:-measure/bloat/autovac-$(date +%Y%m%dT%H%M%S)}
 
 mkdir -p "$OUT_DIR/raw"
