@@ -1,0 +1,39 @@
+17:19:22  == 묵은 백엔드 정리
+t
+time="2026-08-13T17:19:22Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T17:19:22Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+17:19:23  시작 코퍼스 120975 청크 / TEI 상한 2.0 고정
+awk: cmd. line:1: /^Mem:/{print $2\"GB\"}
+awk: cmd. line:1:                 ^ backslash not last character on line
+awk: cmd. line:1: /^Mem:/{print $2\"GB\"}
+awk: cmd. line:1:                 ^ syntax error
+17:19:23  구멍 파기 — 가장 오래된 0 원본의 청크를 지운다 (몇 분 걸린다)
+time="2026-08-13T17:19:23Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T17:19:23Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T17:20:35Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+17:20:35  ◆ 구멍 완료
+time="2026-08-13T17:20:36Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+17:20:36  구멍: 120975 → 120975 청크
+17:20:36  샘플러 시작 (pid 38104)
+time="2026-08-13T17:20:36Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+17:20:36  ◆ 앱 기동(1회차) — 연속 색인 시작
+time="2026-08-13T17:20:36Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T17:21:37Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T17:22:37Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T17:23:37Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T17:24:38Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T17:25:38Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T17:26:38Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T17:27:39Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T17:28:39Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T17:28:39Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+17:28:39  ◆ 구멍이 메워졌다(정체 8분)
+time="2026-08-13T17:28:39Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+17:28:40  최종 코퍼스 120975 청크 (시작 120975)
+17:28:40  샘플러 정지(TERM) — 요약을 찍게 둔다
+17:28:47  완료. 사건 표=measure/e8cause-20260813T171922/marks.csv  표본=measure/e8-20260813T172036/e8-samples.csv
+t_epoch     t_iso                 event                            chunks
+1786641635  2026-08-13T17:20:35Z  구멍 완료                        120975
+1786641636  2026-08-13T17:20:36Z  앱 기동(1회차) — 연속 색인 시작  120975
+1786642119  2026-08-13T17:28:39Z  구멍이 메워졌다(정체 8분)        120975
+17:28:47  == ALL DONE

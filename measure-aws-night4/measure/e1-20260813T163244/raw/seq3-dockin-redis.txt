@@ -1,0 +1,2 @@
+periods 8072 -> 10071
+throttled 0 -> 0

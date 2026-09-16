@@ -1,0 +1,4 @@
+16:02:07  E1 스윕 시작 — run=20260813T160207
+
+[중단] 'dockin-app' 컨테이너가 정지 상태다 — 멈춘 컨테이너에는 cgroup이 없어 통제군을 못 읽는다.
+       ALLOW_NO_CGROUP이 아니라 기동이 답이다: docker compose -f compose.yaml -f compose.gc.yaml up -d dockin-app
