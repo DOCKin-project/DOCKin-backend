@@ -101,7 +101,7 @@ SPRING_PROFILES_ACTIVE=seed ./gradlew bootRun --args='--rag.indexing.on-startup=
 DOCKin-spring/
 ├── .github/workflows/          # CI — 테스트 자동 실행
 ├── docs/                       # 설계 결정 기록 (아래 "문서" 참고)
-│   ├── adr/                    # ADR 0001~0007
+│   ├── adr/                    # ADR 0001~0009
 │   └── db/                     # 스키마 스냅샷, HNSW 재생성 SQL
 ├── nginx/conf.d/               # 리버스 프록시 설정
 ├── src/main/java/com/DOCKin/
@@ -248,7 +248,7 @@ AI 경로는 본문의 `traceId`가 우선한다 — `chat_history.trace_id`와 
 
 | 문서 | 내용 |
 |---|---|
-| [`docs/adr/`](docs/adr) | 결정 기록 — 동시성, 성능 백로그, 검색 도메인, 스케일링, pgvector, 코퍼스 보존 |
+| [`docs/adr/`](docs/adr) | 결정 기록 — 동시성, 성능 백로그, 검색 도메인, 스케일링, pgvector, 코퍼스 보존, 채팅 정합성, Redis 장애 정책 |
 | [`docs/SERVICE-SCALE-ASSUMPTIONS.md`](docs/SERVICE-SCALE-ASSUMPTIONS.md) | 규모 가정과 **실측값**. 가정이 틀렸을 때 그 기록도 남긴다 |
 | [`docs/WORK-BACKLOG.md`](docs/WORK-BACKLOG.md) | 발견된 결함과 우선순위 |
 | [`docs/PROJECT-SCOPE.md`](docs/PROJECT-SCOPE.md) | 범위와 경계 |

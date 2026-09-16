@@ -1856,6 +1856,8 @@ Redis에 해당하는 것이 없었다. `application.properties`의 기본값이
 > 실제 크기는 사용자 5,000 기준 카운터 ~1MB/일(자정에 사라짐) + 블랙리스트 로그아웃당 ~100B라 80M에 한참 못 미친다.
 > 앱의 `depends_on`도 `service_started` → `service_healthy`(`redis-cli ping`)로 — `RedissonConfig`가 기동 시 실제로 붙으므로.
 > 검증은 호스트 6379가 다른 프로젝트에 잡혀 있어 포트 매핑만 뺀 override로 `-p aiq-verify`에 띄워서 했고, 끝나고 `down -v`로 지웠다.
+>
+> 장애 정책 셋(락 열림·블랙리스트 닫힘·한도 열림)과 고르는 질문은 **ADR-0009**에 모았다.
 
 ---
 
