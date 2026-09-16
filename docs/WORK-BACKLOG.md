@@ -1838,6 +1838,12 @@ Redis에 해당하는 것이 없었다. `application.properties`의 기본값이
 
 `AiQuotaRedisTest`가 상한·프로세스 밖·종류별·사용자별·자정·**Redis를 실제로 죽였을 때 열리는가**를 본다.
 
+**덤으로 잡힌 것 — 작업일지 번역이 FastAPI를 기다리는 동안 커넥션을 물고 있었다.** "한도 검사의 트랜잭션 경계가 어디냐"를
+따지다 나왔다. `FastApiService.saveTranslateLog`가 조회 → FastAPI `block()`(타임아웃 60초) → 저장을 `@Transactional` 하나로
+감싸고 있었다. `ChunkIndexWriter` 주석이 "온라인 경로면 쪼개야 한다"고 적어둔 그 모양이고, 풀은 10이다.
+저장을 `TranslateLogWriter.upsert`(별도 빈, 짧은 트랜잭션)로 빼고 진입 메서드는 `NOT_SUPPORTED`로 클래스의 readOnly를 껐다.
+`TranslateTransactionBoundaryTest`가 FastAPI 스텁이 응답을 잡고 있는 동안 HikariCP 활성 커넥션이 **0**임을 본다 — 쪼개기 전엔 1이다.
+
 > **Redis 메모리 — 지금은 문제 없고, 정책이 없다는 것만 적어둔다.**
 > 컨테이너 100M 제한(`compose.yaml:131`)은 "출근 분산락 전용"일 때 값이다. 지금은 넷이 쓴다.
 > 크기: 카운터는 사용자 5,000 × 3종 × ~60B ≈ **1MB/일**이고 자정에 사라진다. 블랙리스트는 로그아웃당 ~100B, 토큰 만료까지. 100M에 한참 못 미친다.
