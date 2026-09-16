@@ -36,6 +36,16 @@ reviews:
     - "!**/.gradle/**"
     - "!gradle/wrapper/**"
     - "!**/*.jar"
+    # 측정 산출물(밤별 로그·CSV·env.md·컨테이너 stats 덤프)은 리뷰 대상이 아니다.
+    # 무료 플랜의 상한은 PR당 100파일이고 path_filters로 뺀 파일은 세지 않는다 --
+    # PR #47이 309파일(그중 233이 산출물)로 리뷰가 통째로 건너뛰어졌다.
+    # 측정 *스크립트*(measure/**/*.py, *.sh, scripts/**)는 그대로 리뷰한다.
+    - "!measure-aws*/**"
+    - "!measure/**/*.txt"
+    - "!measure/**/*.csv"
+    - "!measure/**/*.log"
+    - "!measure/**/*.md"
+    - "!measure/**/*.tgz"
 
   path_instructions:
     - path: "**/*.java"
