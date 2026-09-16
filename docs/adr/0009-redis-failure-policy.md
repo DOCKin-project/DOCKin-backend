@@ -1,7 +1,7 @@
 # ADR-0009: Redis — 용도 다섯, 장애 시 정책은 셋, 고르는 질문은 하나
 
 - 상태: **결정.** 2026-09-16. 새 결정은 없고 이미 코드에 흩어져 있던 셋을 한 표로 모았다. 6절(다음 용도)만 미리 정한 것이었고, 그중 presence는 같은 날 코드가 됐다(1·2절에 다섯째 행)
-- 대상 코드: `global/config/RedissonConfig`(측정: `RedisOpenPathLatencyMeasurementTest`), `attendance/service/AttendanceService`, `rag/service/IndexingService`, `global/security/jwt/JwtBlacklist`, `ai/quota/AiQuota`, `chat/presence/Presence`, `compose.yaml`(`dockin-redis`)
+- 대상 코드: `global/config/RedissonConfig`(측정: `RedisOpenPathLatencyMeasurementTest`), `attendance/service/AttendanceService`, `rag/service/IndexingService`, `global/security/jwt/JwtBlacklist`, `ai/quota/AiQuota`, `chat/presence/Presence`, `compose.yaml`(`dockin-redis` — AOF·maxmemory·`restart`)
 - 관련 문서: `docs/adr/0001`(분산락 폴백), `docs/WORK-BACKLOG.md` P2-5(블랙리스트 이관)·P2-19(AI 한도, Redis 영속성), `docs/adr/0004` 3절(다중 인스턴스 시 Redis Pub/Sub), `docs/PRODUCTION-READINESS.md` F2(폴백)
 - 작성 목적: Redis가 죽었을 때 무엇이 어떻게 되는지가 **클래스 넷의 주석에 하나씩** 있고, 서로 반대 결정(열림/닫힘)을 했다. 이유는 다 있지만 나란히 놓인 적이 없어서, 다섯 번째 용도가 붙을 때 처음부터 다시 따지게 된다. 표 하나와 고르는 질문 하나를 남긴다. 숫자는 P2-19와 4절에서 실측한 것만 적는다.
 
@@ -80,6 +80,30 @@ A의 수십 ms는 Docker Desktop(Windows) 포트 포워딩 값이라 Redis 자�
 |---|---|---|---|
 | 볼륨 없음 | RDB가 컨테이너 안에만. **재생성**(이미지 갱신·`down`)에 전부 사라진다 → 로그아웃한 토큰이 되살아남 | `--appendonly yes` + `dockin_redis_data:/data` | 키 둘 넣고 `rm -sf → up`: 값·TTL 그대로 |
 | `maxmemory` 없음 | 차면 쓰기 거부가 아니라 cgroup 100M에 **OOM-kill** → 블랙리스트가 죽어 전원 401 | `--maxmemory 80mb --maxmemory-policy noeviction` | 1MB 값 77번째에서 `OOM command not allowed`, 컨테이너 생존, 78M에서 `BGREWRITEAOF` 통과(RSS 80M, 컨테이너 76.7MiB/100MiB) |
+| `restart` 없음 (2026-09-16) | 죽으면 **아무도 안 살린다.** 앱만 `on-failure`였고 Redis·DB·nginx·TEI는 정책이 없었다 | 넷 다 `restart: unless-stopped` | 아래. 크래시 뒤 1.0초, `SHUTDOWN`(exit 0) 뒤 2.4초에 돌아왔고 키·TTL 그대로. `compose stop`은 그대로 서 있다 |
+
+**`restart`가 없으면 어떻게 끝나는지는 이 머신에서 봤다.** Docker Desktop이 재시작되자(호스트 재부팅과 같은 경로 — 데몬이 컨테이너를 SIGTERM으로 내렸다가 자기 정책대로 되살린다) `dockin-app-1`만 `on-failure`로 되살아났고, DB·Redis는 정책이 없어 그대로 누워 있었다. 앱은 `UnknownHostException: DOCKin-DB`로 기동 실패(exit 1) → `on-failure`가 다시 띄움 → 또 실패를 **여섯 번** 반복하고 있었다. `depends_on`은 `compose up`이 올릴 때만 보는 것이고 데몬 재시작은 모른다. 즉 앱의 재시도가 언젠가 성공하려면 **인프라 쪽에 정책이 있어야** 한다 — 앱 쪽 정책만으로는 무한 루프다.
+
+값이 `unless-stopped`인 이유는 exit 코드다:
+
+| 정책 | 크래시(137·1) | 정상 종료(exit 0) — SIGTERM, 즉 **호스트 재부팅** | 손으로 세움(`compose stop`) 뒤 데몬 재시작 |
+|---|---|---|---|
+| `on-failure` | 살린다 | **안 살린다.** Redis도 postgres도 SIGTERM에 0으로 끝난다 | 안 살린다 |
+| `always` | 살린다 | 살린다 | **살린다** — AOF 손상 뒤 `redis-check-aof --fix` 같은 손작업 중에 데몬이 재시작되면 되살아나 버린다 |
+| **`unless-stopped`** | 살린다 | 살린다 | 안 살린다 |
+
+앱이 `on-failure`인 채로 되는 이유는 JVM이 SIGTERM에 143으로 끝나서다 — 재부팅에 "실패"로 보여 살아난다. 위 사고에서 앱만 되살아난 것이 그 증거다.
+
+검증 (`docker compose up -d dockin-redis` 뒤, Docker Desktop 29.1.2):
+
+| 한 것 | 결과 |
+|---|---|
+| 호스트 pid 네임스페이스에서 `kill -9`(`docker run --pid=host --privileged alpine kill -9 <pid>`) | exit 137 → **0.97~1.04초** 뒤 running, `RestartCount` 1. 넣어 둔 `jwt:blacklist:test`의 TTL이 그대로(AOF+볼륨) |
+| `redis-cli SHUTDOWN` — exit 0 | **2.3~2.4초** 뒤 running, `RestartCount` 2. `on-failure`였다면 여기서 안 살아난다 |
+| `docker compose stop dockin-redis` | exited(0)인 채로 서 있다. 손으로 세운 건 안 건드린다 |
+| (실수) `docker kill -s KILL dockin-redis` | **60초 넘게 안 살아났다.** `docker kill`·`docker stop`은 데몬이 "손으로 세움"으로 기록해 정책을 무시한다 — 크래시를 흉내 내려면 호스트 쪽에서 프로세스를 죽여야 한다. 장애 경로 테스트를 쓸 때 같은 함정 |
+
+이 정책이 **못 하는 것** — "떠 있지만 응답이 없는" 상태(4절의 멈춤, healthcheck unhealthy)는 Docker가 재시작하지 않는다. 그건 죽은 게 아니라서 여기 대상이 아니고, 4절의 타임아웃 줄이기와 P2-11-4가 그쪽 답이다.
 
 **축출 정책은 `noeviction`이어야 한다.** `allkeys-lru`면 가득 찼을 때 오래된 키부터 지우는데, 블랙리스트 항목이 밀려나면 그 토큰이 되살아난다 — 3절의 "보안이 깨진다"에 해당한다. 가득 참은 오류로 보여야지 조용히 잊혀선 안 된다. 실제 크기(카운터 ~1MB/일 + 블랙리스트 로그아웃당 ~100B)는 80M에 한참 못 미치므로 이 정책이 발동하는 날은 버그가 있는 날이다.
 
@@ -102,3 +126,4 @@ A의 수십 ms는 Docker Desktop(Windows) 포트 포워딩 값이라 Redis 자�
 | 색인 락·블랙리스트의 장애 경로 테스트 | `AiQuotaRedisTest`의 "전용 Redis를 죽인다" 방식을 그대로 쓰면 된다 |
 | Redisson `timeout`·`retryAttempts` 줄이기 | 운영에서 살아 있을 때의 p99를 잰 뒤(4절 결정) |
 | Resilience4j 서킷(P2-11-4) | 타임아웃을 줄인 뒤. 복구가 즉각이라 이득이 작다(4절 4번) |
+| `compose.yaml`의 Redis에 `restart` 정책이 없다 | **넣었다 (2026-09-16, 5절).** `unless-stopped`, DB·nginx·TEI도 같이. 재부팅에 앱만 되살아나 무한 실패하던 것 |
