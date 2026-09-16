@@ -24,6 +24,8 @@ public enum ErrorCode {
     USERID_DUPLICATION(400, "U002", "이미 가입된 사원번호입니다."),
     LOGIN_INPUT_INVALID(400, "U003", "사원번호 또는 비밀번호가 일치하지 않습니다."),
     EQUIPMENT_NOT_FOUND(400, "U004", "존재하지 않는 장비 번호입니다."),
+    LOGIN_ATTEMPTS_EXCEEDED(429, "U005", "로그인 시도가 너무 많습니다. 잠시 후 다시 시도해 주세요."),
+    LOGIN_UNAVAILABLE(503, "U006", "지금은 로그인을 처리할 수 없습니다. 잠시 후 다시 시도해 주세요."),
 
    // Chat
     CHATROOM_NOT_FOUND(400, "CT001", "존재하지 않는 채팅입니다."),
