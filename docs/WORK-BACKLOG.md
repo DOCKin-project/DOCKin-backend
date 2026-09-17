@@ -1881,6 +1881,41 @@ chatbot 100은 가정(주 1회)의 500배라 상한 노릇을 못 했다.
 
 ---
 
+## P2-20 — API 점검에서 나온 것 (2026-09-17)
+
+컨트롤러 14개를 훑었다. P2-15·P2-18에서 이미 잡은 것(정렬 없는 페이징, IDOR, 가시성)은 빼고, **클라이언트 입력이 서버 오류로
+기록되거나 응답 계약이 서로 어긋나는 자리**만 골랐다.
+
+| # | 문제 | 어디 | 처리 | 우선 |
+|---|---|---|---|---|
+| ~~P2-20-1~~ | ~~**`?sort=없는컬럼`이 500**~~ **완료**(2026-09-17) — 아래 별도 | `SafetyAdminController:43`, `AbsenceAdminController:33`, `AbsenceRequestController:44`가 클라이언트 `Pageable`을 리포지토리에 그대로. 작업일지·채팅만 `sizeOnly`로 떼고 있었다 | `PageableConfig` — 요청 `sort`를 읽지 않는 리졸버를 스프링 데이터 것 앞에 | ★ |
+| ~~P2-20-2~~ | ~~**페이지 크기 상한 없음**~~ **완료**(2026-09-17) — `?size=2000`(스프링 데이터 기본 상한)까지 받고 `Page`는 그 크기의 COUNT까지 같이 돌았다 | 전체 | `spring.data.web.pageable.max-page-size=100`. 넘치면 400이 아니라 깎인다 | ★ |
+| P2-20-3 | `keyword`가 검증 없이 들어온다 — 없으면 null, 안전교육은 `CONCAT('%', null, '%')`가 NULL이라 **조용히 빈 목록**, 빈 문자열이면 전체 매칭 | `SafetyAdminController:80`, `SafetyUserController:69`, `WorkLogsController:131` — 셋 다 `String keyword`에 애노테이션 없음 | `@RequestParam @NotBlank` + 클래스 `@Validated` → 400 | ★ |
+| P2-20-4 | 응답 계약 불일치 — `POST /member/signup`만 201이 아니라 200, 본문이 JSON이 아니라 `text/plain` 문자열. `/member/**`만 `/api` 프리픽스 없음 | `MemberController:51` | 프론트 계약이 바뀌므로 앱 쪽과 같이 | ☆ |
+| P2-20-5 | 안전교육 읽기 3개가 admin/user에 똑같이 두 벌 (`courses`, `courses/user/{userId}`, `courses/search`) | `SafetyAdminController`, `SafetyUserController` | 관리자도 user 경로를 쓰면 되니 admin 쪽 3개 삭제 | ☆ |
+| P2-20-6 | `GET /api/attendance`가 페이징 없이 전부 — 1인 1일 1행이라 연 365, 앱은 월 단위로 볼 것 | `AttendanceService:152` | `from/to` 파라미터. P2-17-4(관리자 집계)와 묶어서 | ☆ |
+| P2-20-7 | STT가 사용자 `Authorization`을 FastAPI에 그대로 전달 — 서비스 간 인증을 사용자 토큰으로 | `WorkLogsController:59` → `SttService:44` | FastAPI가 그 토큰을 검증하는지부터. 안 하면 헤더 삭제, 하면 내부 서비스 키로 | ☆ |
+
+하지 않은 것: `/api/v1` 버저닝, 에러 응답 `code` 필드. 둘 다 프론트 계약이고 후자는 `GlobalExceptionHandler`가 "넣지 않는다"를 이미 결정했다.
+
+### P2-20-1·2 — 예외를 400으로 돌리지 않고, `sort`를 읽지 않기로 했다
+
+`?sort=foo`의 실패 지점이 둘이다. 파생 쿼리(`findAll(pageable)`, `findByCreatedBy`)는 `PropertyReferenceException`,
+`@Query`(안전교육 검색)는 하이버네이트 `SemanticException`이 `InvalidDataAccessApiUsageException`으로 감싸져 온다.
+전자만 400으로 매핑하면 절반이고, 후자까지 400으로 돌리면 **잘못 쓴 JPQL(진짜 버그)이 클라이언트 탓으로 숨는다.**
+
+대신 입력을 없앴다. 이 저장소의 목록은 전부 순서가 제품 결정이라(최신순·커서, P2-15-3·P2-12-8) 클라이언트가 고를 정렬이 없고,
+`PageableSortDefaultTest`가 모든 `Pageable`에 `@PageableDefault(sort=…)`를 강제한다. `PageableConfig`가 요청의 `sort` 자리에
+항상 `unsorted`를 넣으면 스프링 데이터가 그 애노테이션의 sort로 채운다 — **애노테이션이 계약을 적어 두는 것에서 동작을 만드는 것으로** 바뀌었다.
+작업일지·채팅의 `sizeOnly`는 그대로 둔다(커서가 있으면 page 번호를 버리는 일은 여전히 거기 몫).
+
+스프링 데이터 리졸버는 `pageableResolver`라는 이름의 빈으로 고정 생성되어 갈아끼우려면 빈 오버라이딩을 켜야 한다. 대신
+`WebMvcConfigurer` + `Ordered.HIGHEST_PRECEDENCE`로 **앞에 하나 더 세웠다.** 순서에 기대는 구조라 `PageableConfigTest`가
+동작(`sort` 무시·`size` 상한)과 함께 **리졸버 목록에 둘 다 있고 우리 것이 먼저**인지를 단언한다. `@WebMvcTest` 슬라이스라 DB 없이 2초.
+설정을 끄고 돌리면 `sort` 테스트와 순서 테스트가 떨어지고 `size` 테스트만 남는다 — 상한은 부트가 기본 리졸버에도 넣기 때문이며, 그래서 키를 부트 것으로 썼다.
+
+---
+
 ## P3 — 이후 (하지 않아도 무방)
 
 우선순위가 낮다. P0~P2를 끝낸 뒤에만 손댄다.

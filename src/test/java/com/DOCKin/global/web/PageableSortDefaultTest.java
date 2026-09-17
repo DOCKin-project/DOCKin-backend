@@ -40,6 +40,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * 나오지 않게</b> 컨트롤러 전체를 훑는다. 새 페이징 API를 추가하면서 {@code sort}를
  * 빠뜨리면 이 테스트가 그 자리에서 실패한다.
  *
+ * <h3>2026-09-17부터 이 선언은 동작이기도 하다</h3>
+ * {@code PageableConfig}가 요청의 {@code sort}를 읽지 않으므로, 컨트롤러가 받는 {@code Pageable}의
+ * 정렬은 <b>오직 여기서 검사하는 {@code @PageableDefault(sort = …)}에서 온다.</b> 이 테스트가 놓치면
+ * 그 엔드포인트는 unsorted가 되고 클라이언트가 고칠 방법도 없다 — 이 테스트의 값어치가 그만큼 올랐다.
+ *
  * <h3>애플리케이션 컨텍스트를 띄우지 않는다</h3>
  * {@code ClassPathScanningCandidateComponentProvider}로 바이트코드만 훑으므로 DB도 컨테이너도
  * 필요 없다. 검증 대상이 <b>런타임 동작이 아니라 선언</b>이라 그것으로 충분하고, 대신 이
