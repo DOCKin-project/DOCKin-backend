@@ -106,7 +106,8 @@ app_index_end() {
 
 # ── 사건 표 + 스냅샷 ─────────────────────────────────────────────────────────
 db_snapshot() {   # $1 = 꼬리표. 체크포인트·WAL·pg_stat_statements 상위·autovacuum 진행을 한 파일에
-    local tag=$1 f="$RAW/$(date +%H%M%S)-$tag-dbstats.txt"
+    local tag=$1
+    local f="$RAW/$(date +%H%M%S)-$tag-dbstats.txt"
     {
         echo "# $tag  $(date -u +%FT%TZ)"
         dc exec -T "$SVC_DB" psql -U "$DB_USER" -d "$DB_NAME" -X -q <<'SQL'
