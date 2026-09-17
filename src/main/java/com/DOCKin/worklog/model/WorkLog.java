@@ -95,6 +95,55 @@ public class WorkLog {
     @OneToMany(mappedBy = "logId",cascade=CascadeType.ALL,orphanRemoval = true)
     private List<Comment> comments =new ArrayList<>();
 
+    /**
+     * 검토 상태 (P2-17-1, {@code V8__work_logs_review_status.sql}). 기본 {@code PENDING}.
+     *
+     * <p>{@code AbsenceRequest}의 status/processedBy/processedAt/decisionComment를 옮겨 왔다.
+     * 아래 셋은 {@code PENDING}이면 전부 null이고, 결정이 나면 함께 채워지며, 작성자가 수정하면
+     * 함께 비워진다({@link #resetReview()}). 넷이 한 단위라 아래 메서드로만 바꾼다.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", length = 20, nullable = false)
+    @Builder.Default
+    private WorkLogStatus status = WorkLogStatus.PENDING;
+
+    /** 검토한 관리자. {@code equipment}처럼 FK가 NULL이면 프록시가 아니라 null이 들어온다. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reviewed_by")
+    private Member reviewedBy;
+
+    @Column(name = "reviewed_at")
+    private LocalDateTime reviewedAt;
+
+    @Column(name = "review_comment")
+    private String reviewComment;
+
+    public void approve(Member reviewer, String comment) {
+        decide(WorkLogStatus.APPROVED, reviewer, comment);
+    }
+
+    public void reject(Member reviewer, String comment) {
+        decide(WorkLogStatus.REJECTED, reviewer, comment);
+    }
+
+    private void decide(WorkLogStatus decision, Member reviewer, String comment) {
+        this.status = decision;
+        this.reviewedBy = reviewer;
+        this.reviewedAt = LocalDateTime.now();
+        this.reviewComment = comment;
+    }
+
+    /**
+     * 작성자가 수정했다 — 검토를 처음부터. 승인·반려 뒤에 본문이 바뀌면 그 결정은 다른 내용에
+     * 대한 것이라 유지할 수 없다. 이미 {@code PENDING}이면 아무것도 바뀌지 않는다.
+     */
+    public void resetReview() {
+        this.status = WorkLogStatus.PENDING;
+        this.reviewedBy = null;
+        this.reviewedAt = null;
+        this.reviewComment = null;
+    }
+
     @Builder.Default
     @OneToMany(mappedBy = "workLog", cascade = CascadeType.ALL,orphanRemoval = true)
     private List<WorkLogImage> images = new ArrayList<>();

@@ -172,13 +172,15 @@ DOCKin-spring/
 
 | Method | Endpoint | 설명 |
 |:---|:---|:---|
-| `GET` | `/api/work-logs` | 목록 조회 (페이징) |
+| `GET` | `/api/work-logs` | 목록 조회 (페이징). `?status=PENDING` 등 검토 상태 필터 |
 | `POST` | `/api/work-logs` | 작성 (이미지 첨부) |
 | `POST` | `/api/work-logs/stt` | **음성 파일 기반 작성 (STT)** |
 | `GET` | `/api/work-logs/search` | 키워드 검색 |
 | `GET` | `/api/work-logs/others/{targetUserId}` | 다른 사용자의 일지 조회 |
 | `PUT` | `/api/work-logs/{logId}` | 수정 |
 | `DELETE` | `/api/work-logs/{logId}` | 삭제 |
+| `PATCH` | `/api/work-logs/admin/{logId}/approve` | 승인 (관리자). 작성자가 수정하면 다시 PENDING |
+| `PATCH` | `/api/work-logs/admin/{logId}/reject` | 반려 (관리자) |
 | `GET` | `/api/work-logs/{logId}/comments` | 댓글 목록 |
 | `POST` | `/api/work-logs/{logId}/comments` | 관리자 피드백 작성 |
 | `PUT` | `/api/work-logs/{logId}/comments/{commentId}` | 댓글 수정 |

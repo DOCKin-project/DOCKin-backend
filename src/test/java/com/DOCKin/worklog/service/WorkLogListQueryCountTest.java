@@ -160,9 +160,9 @@ class WorkLogListQueryCountTest extends ContainerTestSupport {
     @DisplayName("목록 API 쿼리 수 = 고정 비용 + 행당 1 (이미지 컬렉션)")
     void 목록_쿼리_수() {
         Measurement all10 = measure("전체 목록", 10,
-                () -> workLogsService.readWorklog(user(0), null, PageRequest.of(0, 10)));
+                () -> workLogsService.readWorklog(user(0), null, null, PageRequest.of(0, 10)));
         Measurement all20 = measure("전체 목록", 20,
-                () -> workLogsService.readWorklog(user(0), null, PageRequest.of(0, 20)));
+                () -> workLogsService.readWorklog(user(0), null, null, PageRequest.of(0, 20)));
         Measurement other = measure("타인 목록", 20,
                 () -> workLogsService.readOtherWorklog(otherViewer(), otherTarget(), null, PageRequest.of(0, 20)));
         Measurement search = measure("키워드 검색", 20,
@@ -239,7 +239,7 @@ class WorkLogListQueryCountTest extends ContainerTestSupport {
         PageRequest sorted = PageRequest.of(0, 20,
                 Sort.by(Sort.Direction.DESC, "createdAt", "logId"));
 
-        assertEquals(20, workLogsService.readWorklog(user(0), null, sorted).getNumberOfElements(),
+        assertEquals(20, workLogsService.readWorklog(user(0), null, null, sorted).getNumberOfElements(),
                 "전체 목록에 정렬이 붙자 결과가 달라졌다");
         assertEquals(20, workLogsService.readOtherWorklog(otherViewer(), otherTarget(), null, sorted)
                 .getNumberOfElements(), "타인 목록에 정렬이 붙자 결과가 달라졌다");
@@ -248,7 +248,7 @@ class WorkLogListQueryCountTest extends ContainerTestSupport {
                 "키워드 검색에 정렬이 붙자 결과가 달라졌다");
 
         // 시각이 같은 세 건. createdAt만으로는 순서가 정해지지 않는 구간이다.
-        List<Long> tieIds = workLogsService.readWorklog(tieUser(), null, sorted)
+        List<Long> tieIds = workLogsService.readWorklog(tieUser(), null, null, sorted)
                 .getContent().stream().map(WorkLogDto::getLogId).toList();
 
         assertEquals(TIE_LOGS, tieIds.size(), "동점 표본이 세 건이 아니다");
@@ -277,7 +277,7 @@ class WorkLogListQueryCountTest extends ContainerTestSupport {
 
         List<Long> byOffset = new java.util.ArrayList<>();
         for (int page = 0; ; page++) {
-            Slice<WorkLogDto> s = workLogsService.readWorklog(user(0), null, PageRequest.of(page, size));
+            Slice<WorkLogDto> s = workLogsService.readWorklog(user(0), null, null, PageRequest.of(page, size));
             s.getContent().forEach(d -> byOffset.add(d.getLogId()));
             if (!s.hasNext()) break;
         }
@@ -288,7 +288,7 @@ class WorkLogListQueryCountTest extends ContainerTestSupport {
         for (;;) {
             // 커서가 있는 호출에는 page 번호를 일부러 엉뚱하게 준다 -- 무시돼야 한다.
             int page = cursor == null ? 0 : 99;
-            Slice<WorkLogDto> s = workLogsService.readWorklog(user(0), cursor, PageRequest.of(page, size));
+            Slice<WorkLogDto> s = workLogsService.readWorklog(user(0), null, cursor, PageRequest.of(page, size));
             pages++;
             s.getContent().forEach(d -> byCursor.add(d.getLogId()));
             if (!s.hasNext()) break;
@@ -305,7 +305,7 @@ class WorkLogListQueryCountTest extends ContainerTestSupport {
         List<Long> tie = new java.util.ArrayList<>();
         cursor = null;
         for (;;) {
-            Slice<WorkLogDto> s = workLogsService.readWorklog(tieUser(), cursor, PageRequest.of(0, 1));
+            Slice<WorkLogDto> s = workLogsService.readWorklog(tieUser(), null, cursor, PageRequest.of(0, 1));
             assertEquals(1, s.getNumberOfElements(), "동점 구역에서 한 건씩 받지 못했다");
             WorkLogDto row = s.getContent().get(0);
             tie.add(row.getLogId());
@@ -346,7 +346,7 @@ class WorkLogListQueryCountTest extends ContainerTestSupport {
     @Test
     @DisplayName("장비 없는 일지가 섞여도 목록이 나오고 equipmentId만 null이다")
     void 장비가_없어도_목록이_나온다() {
-        Slice<WorkLogDto> page = workLogsService.readWorklog(nullEquipmentUser(), null, PageRequest.of(0, 20));
+        Slice<WorkLogDto> page = workLogsService.readWorklog(nullEquipmentUser(), null, null, PageRequest.of(0, 20));
 
         assertEquals(1, page.getNumberOfElements(),
                 "장비 없는 행이 응답에서 빠졌다 - 예외를 안 내는 것과 행을 싣는 것은 다르다");
