@@ -8,20 +8,24 @@ import com.DOCKin.safetyCourse.service.SafetyCourseService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 
-@Tag(name="관리자용 안전교육 관리", description="안전교육을 관리할 수 있는 api")
+/**
+ * 쓰기만 있다 — 등록·수정·삭제. 읽기(목록·작성자별·검색)는 {@code SafetyUserController}의
+ * {@code /api/safety/user/courses…} 하나뿐이고 관리자도 그걸 쓴다.
+ *
+ * <p>2026-09-17까지는 같은 읽기 셋이 여기에도 똑같이 있었다(P2-20-5). 서비스 메서드까지 같은 것을
+ * 부르는 완전한 복제라 경로만 여섯이었고, 둘 중 하나만 고치는 실수가 나는 자리였다 —
+ * P2-18-6이 잡은 "관리자 읽기 셋이 일반 사용자에게 열려 있었다"가 정확히 그 자리다.
+ * {@code /api/*}{@code /admin/**}는 ADMIN만 통과하므로 관리자가 user 경로를 쓰는 데는 아무 제약이 없다.
+ */
+@Tag(name="관리자용 안전교육 관리", description="안전교육 등록·수정·삭제. 조회는 /api/safety/user/courses")
 @Slf4j
 @RestController
 @RequestMapping("/api/safety/admin")
@@ -37,24 +41,6 @@ public class SafetyAdminController {
         String creatorId = customUserDetails.getMember().getUserId();
         SafetyCourseResponseDto safetyCourse = safetyCourseService.createSafetyCourseResponse(dto,creatorId);
         return ResponseEntity.status(HttpStatus.CREATED).body(safetyCourse);
-    }
-
-    @Operation(summary="전체 교육 자료 조회",description = "전체 교육 자료를 조회할 수 있음")
-    @GetMapping("/courses")
-    public ResponseEntity<Page<SafetyCourseResponseDto>> getAllCourses(@PageableDefault(size = 20,
-            sort = "courseId",direction = Sort.Direction.DESC) Pageable pageable) {
-        return ResponseEntity.ok(safetyCourseService.readSafetyCourse(pageable));
-    }
-
-
-    @Operation(summary="특정 작성자가 쓴 교육 상세 조회",description = "특정 작성자가 쓴 교육 자료를 조회할 수 있음")
-    @GetMapping("/courses/user/{userId}")
-    public ResponseEntity<Page<SafetyCourseResponseDto>> getCourseDetail(
-                                                                   @PathVariable String userId,
-                                                                   @PageableDefault(size = 20,
-                                                                           sort = "courseId",
-                                                                           direction = Sort.Direction.DESC) Pageable pageable) {
-        return ResponseEntity.ok(safetyCourseService.searchOtherSafetyCourse(userId,pageable));
     }
 
     @Operation(summary="교육 자료 수정",description = "특정 교육 자료를 수정할 수 있음")
@@ -76,14 +62,5 @@ public class SafetyAdminController {
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "키워드로 검색하기",description = "키워드로 제목이나 내용을 검색할 수 있음")
-    @GetMapping("/courses/search")
-    public ResponseEntity<Page<SafetyCourseResponseDto>> searchByKeyword(@RequestParam @NotBlank String keyword,
-                                                                         @PageableDefault(size= 20,
-                                                                         sort="courseId",
-                                                                         direction=Sort.Direction.DESC)Pageable pageable){
-        return ResponseEntity.ok(safetyCourseService.searchSafetyCourse(keyword,pageable));
-
-    }
 
 }

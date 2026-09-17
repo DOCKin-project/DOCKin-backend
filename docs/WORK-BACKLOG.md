@@ -1892,7 +1892,7 @@ chatbot 100은 가정(주 1회)의 500배라 상한 노릇을 못 했다.
 | ~~P2-20-2~~ | ~~**페이지 크기 상한 없음**~~ **완료**(2026-09-17) — `?size=2000`(스프링 데이터 기본 상한)까지 받고 `Page`는 그 크기의 COUNT까지 같이 돌았다 | 전체 | `spring.data.web.pageable.max-page-size=100`. 넘치면 400이 아니라 깎인다 | ★ |
 | ~~P2-20-3~~ | ~~`keyword`가 검증 없이 들어온다~~ **완료**(2026-09-17) — 없으면 null, 안전교육은 `CONCAT('%', null, '%')`가 NULL이라 **조용히 빈 목록**, 빈 문자열이면 전체 매칭이었다 | `SafetyAdminController:80`, `SafetyUserController:69`, `WorkLogsController:131` — 셋 다 `String keyword`에 애노테이션 없음 | `@RequestParam @NotBlank`. 아래 별도 — `@Validated`는 안 붙였다 | ★ |
 | ~~P2-20-4~~ | ~~응답 계약 불일치~~ **완료**(2026-09-17) — `POST /member/signup`만 201이 아니라 200, 본문이 JSON이 아니라 `text/plain` 문자열이었다. `/member/**`만 `/api` 프리픽스 없음 | `MemberController:51` | signup 201 + `{userId}`. `/api/member` 정식, `/member`는 앱이 옮길 때까지 별칭. 아래 별도 | ☆ |
-| P2-20-5 | 안전교육 읽기 3개가 admin/user에 똑같이 두 벌 (`courses`, `courses/user/{userId}`, `courses/search`) | `SafetyAdminController`, `SafetyUserController` | 관리자도 user 경로를 쓰면 되니 admin 쪽 3개 삭제 | ☆ |
+| ~~P2-20-5~~ | ~~안전교육 읽기 3개가 admin/user에 똑같이 두 벌~~ **완료**(2026-09-17) — (`courses`, `courses/user/{userId}`, `courses/search`) 서비스 메서드까지 같은 완전한 복제였다 | `SafetyAdminController`, `SafetyUserController` | admin 쪽 3개 삭제. `AdminPathSecurityTest`가 그 경로로 P2-18-6을 검사하고 있어 체크리스트 상세로 옮겼다(403이 아니면 통과). README는 이미 user 경로만 적고 있었다 | ☆ |
 | P2-20-6 | `GET /api/attendance`가 페이징 없이 전부 — 1인 1일 1행이라 연 365, 앱은 월 단위로 볼 것 | `AttendanceService:152` | `from/to` 파라미터. P2-17-4(관리자 집계)와 묶어서 | ☆ |
 | P2-20-7 | STT가 사용자 `Authorization`을 FastAPI에 그대로 전달 — 서비스 간 인증을 사용자 토큰으로 | `WorkLogsController:59` → `SttService:44` | FastAPI가 그 토큰을 검증하는지부터. 안 하면 헤더 삭제, 하면 내부 서비스 키로 | ☆ |
 
