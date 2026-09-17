@@ -9,6 +9,7 @@
 -- 실행:  docker exec -i dockin-db psql -U dockin -d dockin -v days=30 < measure/chat-translate-demand/demand.sql
 -- 결과 셋: ① 분 단위 상위 20(지속 피크 — 서버 대수를 정하는 값) ② 초 단위 상위 20(순간 피크 — 큐 깊이를 정하는 값) ③ 전체 요약.
 -- 파일럿(PRODUCTION-READINESS H1) 데이터로 처음 돌린다. 그 전엔 시드 데이터라 숫자에 뜻이 없다.
+-- 질의 자체는 fixture.sql 로 검증했다(2026-09-17): 언어 집합 셈·NULL 원문 언어의 발신자 대체·IMAGE 제외·-v days 유무.
 
 \if :{?days}
 \else
