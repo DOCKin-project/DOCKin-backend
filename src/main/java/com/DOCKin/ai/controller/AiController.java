@@ -17,7 +17,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -43,8 +42,7 @@ public class AiController {
             @RequestPart("file")MultipartFile file,
             @RequestPart("source") String source,
             @RequestPart("target") String target,
-            @RequestPart("traceId") String traceId,
-            @RequestHeader(HttpHeaders.AUTHORIZATION) String token
+            @RequestPart("traceId") String traceId
             ){
         // translate_logs.trace_id에 저장되고 FastAPI로도 넘어가는 값이다. 로그도 같은 값을 써야
         // DB와 로그를 이을 수 있다(P2-11-3).
@@ -57,7 +55,7 @@ public class AiController {
         // Mono를 만들기 전에 동기로 센다. 체인 안에 넣으면 구독 시점에 세어져 검사가 늦다.
         aiQuota.consume(AiQuotaKind.RT_TRANSLATE, customUserDetails.getMember().getUserId());
 
-        return fastApiService.realtimeTranslate(file, source, target, traceId, token)
+        return fastApiService.realtimeTranslate(file, source, target, traceId)
         .map(response->ResponseEntity.ok(response));
     }
 

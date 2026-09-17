@@ -43,9 +43,9 @@ public class FastApiService {
 
     //1. 실시간 번역 (stt -> 번역)
     public Mono<OnlineTranslateDomain.RtTranslateResponse> realtimeTranslate(
-            MultipartFile file, String source, String target, String traceId, String token){
+            MultipartFile file, String source, String target, String traceId){
 
-        return sttService.processStt(file,traceId,token,source)
+        return sttService.processStt(file,traceId,source)
                 .flatMap(sttResponse->{
                     String recognizedText = sttResponse.text();
 
