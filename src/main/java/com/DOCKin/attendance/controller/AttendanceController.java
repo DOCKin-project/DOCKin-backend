@@ -10,10 +10,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Tag(name="근태관리",description = "근무자의 근태를 확인할 수 있음")
@@ -42,11 +44,16 @@ public class AttendanceController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary="개인 근태 기록 조회",description ="근무자의 근태기록을 확인할 수 있음")
+    @Operation(summary="개인 근태 기록 조회",
+            description ="from~to(yyyy-MM-dd, 둘 다 포함)의 근태를 최신순으로. to 생략은 오늘, from 생략은 to의 31일 전. "
+                    + "둘 다 생략하면 오늘까지 최근 한 달. from>to는 400, 366일 초과는 400")
     @GetMapping
-    public ResponseEntity<List<AttendanceDto>>GetMyAttendanceRecords(@AuthenticationPrincipal CustomUserDetails userDetails){
+    public ResponseEntity<List<AttendanceDto>>GetMyAttendanceRecords(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to){
         String userId = userDetails.getMember().getUserId();
-        List<AttendanceDto> responses = attendanceService.getMyAttendanceRecords(userId);
+        List<AttendanceDto> responses = attendanceService.getMyAttendanceRecords(userId, from, to);
         return ResponseEntity.ok(responses);
     }
 }

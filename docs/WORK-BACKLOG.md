@@ -1893,10 +1893,22 @@ chatbot 100은 가정(주 1회)의 500배라 상한 노릇을 못 했다.
 | ~~P2-20-3~~ | ~~`keyword`가 검증 없이 들어온다~~ **완료**(2026-09-17) — 없으면 null, 안전교육은 `CONCAT('%', null, '%')`가 NULL이라 **조용히 빈 목록**, 빈 문자열이면 전체 매칭이었다 | `SafetyAdminController:80`, `SafetyUserController:69`, `WorkLogsController:131` — 셋 다 `String keyword`에 애노테이션 없음 | `@RequestParam @NotBlank`. 아래 별도 — `@Validated`는 안 붙였다 | ★ |
 | ~~P2-20-4~~ | ~~응답 계약 불일치~~ **완료**(2026-09-17) — `POST /member/signup`만 201이 아니라 200, 본문이 JSON이 아니라 `text/plain` 문자열이었다. `/member/**`만 `/api` 프리픽스 없음 | `MemberController:51` | signup 201 + `{userId}`. `/api/member` 정식, `/member`는 앱이 옮길 때까지 별칭. 아래 별도 | ☆ |
 | ~~P2-20-5~~ | ~~안전교육 읽기 3개가 admin/user에 똑같이 두 벌~~ **완료**(2026-09-17) — (`courses`, `courses/user/{userId}`, `courses/search`) 서비스 메서드까지 같은 완전한 복제였다 | `SafetyAdminController`, `SafetyUserController` | admin 쪽 3개 삭제. `AdminPathSecurityTest`가 그 경로로 P2-18-6을 검사하고 있어 체크리스트 상세로 옮겼다(403이 아니면 통과). README는 이미 user 경로만 적고 있었다 | ☆ |
-| P2-20-6 | `GET /api/attendance`가 페이징 없이 전부 — 1인 1일 1행이라 연 365, 앱은 월 단위로 볼 것 | `AttendanceService:152` | `from/to` 파라미터. P2-17-4(관리자 집계)와 묶어서 | ☆ |
+| ~~P2-20-6~~ | ~~`GET /api/attendance`가 페이징 없이 전부~~ **완료**(2026-09-17) — 1인 1일 1행이라 연 365, 앱은 월 단위로 볼 것 | `AttendanceService:152` | `from`·`to`(ISO 날짜, 포함). 기본 오늘까지 31일, 최대 366일, 넘거나 역순이면 400. 아래 별도 | ☆ |
 | P2-20-7 | STT가 사용자 `Authorization`을 FastAPI에 그대로 전달 — 서비스 간 인증을 사용자 토큰으로 | `WorkLogsController:59` → `SttService:44` | FastAPI가 그 토큰을 검증하는지부터. 안 하면 헤더 삭제, 하면 내부 서비스 키로 | ☆ |
 
 하지 않은 것: `/api/v1` 버저닝, 에러 응답 `code` 필드. 둘 다 프론트 계약이고 후자는 `GlobalExceptionHandler`가 "넣지 않는다"를 이미 결정했다.
+
+### P2-20-6 — 페이지가 아니라 기간으로, 잘라 주지 않고 거부한다
+
+근태는 달력 화면이라 커서·페이지보다 `from`·`to`가 자연스럽다. `to` 없으면 오늘(`Clock` — 출퇴근 판정과 같은 시계), `from` 없으면 `to`의 31일 전,
+둘 다 없으면 "오늘까지 최근 한 달". **상한 366일**은 있어야 한다 — 없으면 `from=2000-01-01`로 예전의 "전부"가 다시 열린다.
+넘치면 조용히 자르지 않고 `ATTENDANCE_RANGE_TOO_LONG`(400)으로 거부한다. 페이지 크기(P2-20-2)는 깎아도 응답의 `size`로 알 수 있지만,
+기간은 잘렸는지 클라이언트가 알 길이 없다. `from > to`는 휴가와 같은 `INVALID_DATE_RANGE`. 회원 조회보다 먼저 거부한다.
+
+**앱 계약이 바뀐다** — 예전엔 파라미터 없이 전부 왔고 지금은 최근 31일이다. 그 이전을 보려면 `from`을 줘야 한다.
+
+검증은 둘로: 기간 규칙(기본값·상한 경계 366/367·역순)은 `AttendanceServiceTest`(Mockito, 고정 시계 2026-07-10),
+파라미터 해석(ISO 파싱·없으면 null·`2026-13-01`은 400)은 `AttendanceRangeParamTest`(`@WebMvcTest`).
 
 ### P2-20-4 — 경로를 끊지 않고 둘 다 받는다
 
