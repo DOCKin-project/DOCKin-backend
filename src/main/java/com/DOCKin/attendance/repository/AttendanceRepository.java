@@ -2,6 +2,7 @@ package com.DOCKin.attendance.repository;
 
 import com.DOCKin.attendance.model.Attendance;
 import com.DOCKin.member.model.Member;
+import com.DOCKin.member.model.WorkShift;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -32,4 +33,38 @@ public interface AttendanceRepository extends JpaRepository<Attendance,Long> {
      */
     @Query("SELECT a.member.userId FROM Attendance a WHERE a.workDate = :workDate")
     List<String> findUserIdsByWorkDate(@Param("workDate") LocalDate workDate);
+
+    /**
+     * 관리자 대시보드의 하루 인원 집계 (P2-17-4). 쿼리 하나다.
+     *
+     * <p>{@code Member}에서 출발해 그날의 {@code Attendance}를 <b>왼쪽 조인</b>한다 — 근태 행이 없는 사람도
+     * {@code headcount}에 들어가야 "150명 중 124명 출근"이 되기 때문이다. {@code Attendance}에서 출발하면
+     * 안 찍은 사람이 사라지고, 인원을 따로 세면 쿼리가 둘이 된다.
+     * 조인 조건의 {@code (user_id, work_date)}는 {@code uk_attendance_user_workdate}가 그대로 받는다.
+     *
+     * <p>{@code workShift}는 선택 필터. null 바인딩은 {@code WorkLogRepository}의 {@code status}와 같은 이유로
+     * {@code CAST(... AS String)}.
+     *
+     * <p>결과는 한 행 — {@code [headcount, clockedIn, clockedOut, late, vacation, sick, absent]}. 반환형이 {@code List<Object[]>}인
+     * 이유: {@code Object[]}로 선언하면 Spring Data가 그 행을 다시 배열로 감싸 {@code Object[]{Object[]}}가 온다(실측,
+     * ClassCastException). 집계는 GROUP BY가 없어 항상 정확히 한 행이다.
+     * {@code SUM(CASE ...)}은 조인 상대가 없으면 NULL이 아니라 0이 되도록 ELSE 0을 뒀고, 구역에 사람이 없으면
+     * {@code COUNT}가 0이고 {@code SUM}들은 NULL이다 — 서비스가 0으로 받는다.
+     */
+    @Query("""
+            SELECT COUNT(m),
+                   SUM(CASE WHEN a.clockInTime IS NOT NULL THEN 1 ELSE 0 END),
+                   SUM(CASE WHEN a.clockOutTime IS NOT NULL THEN 1 ELSE 0 END),
+                   SUM(CASE WHEN a.status = com.DOCKin.attendance.model.AttendanceStatus.LATE THEN 1 ELSE 0 END),
+                   SUM(CASE WHEN a.status = com.DOCKin.attendance.model.AttendanceStatus.VACATION THEN 1 ELSE 0 END),
+                   SUM(CASE WHEN a.status = com.DOCKin.attendance.model.AttendanceStatus.SICK THEN 1 ELSE 0 END),
+                   SUM(CASE WHEN a.status = com.DOCKin.attendance.model.AttendanceStatus.ABSENT THEN 1 ELSE 0 END)
+            FROM Member m
+            LEFT JOIN Attendance a ON a.member = m AND a.workDate = :workDate
+            WHERE m.shipYardArea = :shipYardArea
+              AND (CAST(:workShift AS String) IS NULL OR m.workShift = :workShift)
+            """)
+    List<Object[]> summarizeByAreaAndDate(@Param("shipYardArea") String shipYardArea,
+                                          @Param("workShift") WorkShift workShift,
+                                          @Param("workDate") LocalDate workDate);
 }

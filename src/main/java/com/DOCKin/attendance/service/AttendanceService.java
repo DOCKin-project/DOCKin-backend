@@ -1,5 +1,6 @@
 package com.DOCKin.attendance.service;
 
+import com.DOCKin.attendance.dto.AttendanceDailySummaryDto;
 import com.DOCKin.attendance.dto.AttendanceDto;
 import com.DOCKin.attendance.dto.ClockInRequestDto;
 import com.DOCKin.attendance.dto.ClockOutRequestDto;
@@ -8,6 +9,7 @@ import com.DOCKin.global.error.ErrorCode;
 import com.DOCKin.attendance.model.Attendance;
 import com.DOCKin.attendance.model.AttendanceStatus;
 import com.DOCKin.member.model.Member;
+import com.DOCKin.member.model.UserRole;
 import com.DOCKin.member.model.WorkShift;
 import com.DOCKin.attendance.repository.AttendanceRepository;
 import com.DOCKin.member.repository.MemberRepository;
@@ -180,5 +182,34 @@ public class AttendanceService {
         return records.stream()
                 .map(AttendanceDto::fromEntity)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * 관리자 대시보드의 하루 인원 집계 (P2-17-4). {@code date} 생략은 오늘, {@code shipYardArea} 생략은 관리자 자신의 구역,
+     * {@code workShift} 생략은 전 근무조.
+     *
+     * <p>다른 구역을 볼 수 있다 — 휴가 승인이 관리자의 구역을 보지 않는 것과 같다. 미래 날짜도 막지 않는다:
+     * 휴가 승인이 그 기간의 {@code VACATION} 행을 미리 만들므로(P2-1) 내일의 휴가 인원은 이미 의미가 있다.
+     * ADMIN 검사는 {@code /api/*}{@code /admin/**} 경로 규칙과 여기, 두 겹(P2-18-6).
+     */
+    @Transactional(readOnly = true)
+    public AttendanceDailySummaryDto getDailySummary(String adminUserId, LocalDate date, String shipYardArea,
+                                                     WorkShift workShift) {
+        Member admin = memberRepository.findByUserId(adminUserId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        if (admin.getRole() != UserRole.ADMIN) {
+            throw new BusinessException(ErrorCode.ACCESS_DENIED);
+        }
+        LocalDate day = date != null ? date : LocalDate.now(clock);
+        String area = shipYardArea != null ? shipYardArea : admin.getShipYardArea();
+
+        Object[] row = attendanceRepository.summarizeByAreaAndDate(area, workShift, day).get(0);
+        return new AttendanceDailySummaryDto(day, area, workShift,
+                count(row[0]), count(row[1]), count(row[2]), count(row[3]), count(row[4]), count(row[5]), count(row[6]));
+    }
+
+    /** 집계 컬럼은 {@code Long}이고, 구역에 사람이 없으면 SUM이 NULL이다. */
+    private static long count(Object v) {
+        return v == null ? 0L : ((Number) v).longValue();
     }
 }
