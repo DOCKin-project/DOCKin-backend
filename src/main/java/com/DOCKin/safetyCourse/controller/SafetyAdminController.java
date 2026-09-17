@@ -8,6 +8,7 @@ import com.DOCKin.safetyCourse.service.SafetyCourseService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -77,7 +78,7 @@ public class SafetyAdminController {
 
     @Operation(summary = "키워드로 검색하기",description = "키워드로 제목이나 내용을 검색할 수 있음")
     @GetMapping("/courses/search")
-    public ResponseEntity<Page<SafetyCourseResponseDto>> searchByKeyword(String keyword,
+    public ResponseEntity<Page<SafetyCourseResponseDto>> searchByKeyword(@RequestParam @NotBlank String keyword,
                                                                          @PageableDefault(size= 20,
                                                                          sort="courseId",
                                                                          direction=Sort.Direction.DESC)Pageable pageable){

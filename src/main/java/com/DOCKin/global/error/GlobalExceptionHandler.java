@@ -15,6 +15,7 @@ import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -48,6 +49,8 @@ import java.util.stream.Collectors;
  *   <li>{@link NoResourceFoundException} -- 매핑 없는 경로가 <b>404가 아니라 500</b>으로 나갔다(이슈 #31).
  *       {@code GET /}가 500이었고, 로드밸런서가 그것을 헬스체크로 때리면 멀쩡한 서버가 죽은 것으로 판정된다</li>
  *   <li>{@link MaxUploadSizeExceededException} -- 용량 초과 업로드가 <b>413이 아니라 500</b>이었다(P2-9-4)</li>
+ *   <li>{@link HandlerMethodValidationException} -- {@code @RequestParam}에 {@code @NotBlank}를 붙이자
+ *       <b>400이 아니라 500</b>이 됐다(P2-20-3). {@code @Validated} 경로의 {@code ConstraintViolationException}만 잡고 있었다</li>
  * </ul>
  *
  * <p><b>그래서 클라이언트 오류는 하나씩 명시적으로 잡는다.</b> 아래 핸들러들이 그 목록이고,
@@ -102,6 +105,25 @@ public class GlobalExceptionHandler {
                 .map(this::describe)
                 .collect(Collectors.joining(", "));
         log.warn("검증 실패: {}", detail);
+        return toResponse(ErrorCode.INVALID_INPUT_VALUE, message(ErrorCode.INVALID_INPUT_VALUE, detail));
+    }
+
+    /**
+     * {@code @RequestParam}/{@code @PathVariable}에 직접 붙인 제약 위반 — 스프링 6.1+의 내장 메서드 검증 경로.
+     *
+     * <p>{@code @NotBlank String keyword}처럼 파라미터에 제약을 붙이면 컨트롤러에 {@code @Validated}가
+     * <b>없을 때</b> {@code RequestMappingHandlerAdapter}가 직접 검증하고 이 예외를 던진다. 아래
+     * {@link ConstraintViolationException} 핸들러는 {@code @Validated} 프록시 경로용이라 이걸 못 받는다 —
+     * 이 핸들러가 없으면 파라미터 하나 검증하려다 500이 된다(P2-20-3에서 실제로 그랬다).
+     * 본문은 {@link MethodArgumentNotValidException}과 같은 꼴: 파라미터 이름과 사유만, 입력값은 없다.
+     */
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    public ResponseEntity<ErrorResponseDto> handleMethodValidation(HandlerMethodValidationException e) {
+        String detail = e.getParameterValidationResults().stream()
+                .flatMap(r -> r.getResolvableErrors().stream()
+                        .map(err -> r.getMethodParameter().getParameterName() + ": " + err.getDefaultMessage()))
+                .collect(Collectors.joining(", "));
+        log.warn("파라미터 검증 실패: {}", detail);
         return toResponse(ErrorCode.INVALID_INPUT_VALUE, message(ErrorCode.INVALID_INPUT_VALUE, detail));
     }
 
