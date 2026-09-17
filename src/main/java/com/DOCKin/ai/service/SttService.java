@@ -7,7 +7,6 @@ import com.DOCKin.global.util.AudioConverter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.FileSystemResource;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.stereotype.Service;
@@ -25,7 +24,12 @@ public class SttService {
     private final AudioConverter audioConverter;
     private final WebClient fastApiWebClient;
 
-    public Mono<SttDomain.Response> processStt(MultipartFile file,String traceId, String token,String lang){
+    /**
+     * 사용자의 {@code Authorization} 헤더를 더는 받지 않는다(P2-20-7). FastAPI는 그 헤더를 읽지 않고
+     * {@code X-Service-Token}만 본다({@code DOCKin-aiserver app/core/security.py}) — 사용자 JWT를 다른 서비스로
+     * 흘려보내기만 하던 인자였다. 서비스 토큰은 {@code fastApiWebClient}가 기본 헤더로 싣는다.
+     */
+    public Mono<SttDomain.Response> processStt(MultipartFile file,String traceId,String lang){
         try{
             File wavFile = audioConverter.convertToWav(file);
 
@@ -41,7 +45,6 @@ public class SttService {
 
             return fastApiWebClient.post()
                     .uri("/api/worklogs/stt")
-                    .header(HttpHeaders.AUTHORIZATION,token)
                     .contentType(MediaType.MULTIPART_FORM_DATA)
                     .body(BodyInserters.fromMultipartData(builder.build()))
                     .retrieve()

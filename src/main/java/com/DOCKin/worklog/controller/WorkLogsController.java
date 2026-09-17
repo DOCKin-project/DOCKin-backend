@@ -19,7 +19,6 @@ import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -57,11 +56,10 @@ public class WorkLogsController {
     public ResponseEntity<WorkLogDto> createWorkLog( @AuthenticationPrincipal CustomUserDetails customUserDetails,
         @RequestPart(value="request") @Valid WorkLogsCreateRequestDto requestDto,
                                                        @RequestPart(value="file",required = false) MultipartFile file,
-                                                       @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
                                                        @RequestPart(value="images",required = false) List<MultipartFile> images
     ){
         String userId = customUserDetails.getMember().getUserId();
-      WorkLogDto response =  workLogsService.createSttWorklog(userId,requestDto,file,token,images);
+      WorkLogDto response =  workLogsService.createSttWorklog(userId,requestDto,file,images);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

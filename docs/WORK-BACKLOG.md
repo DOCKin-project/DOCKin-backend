@@ -1894,9 +1894,26 @@ chatbot 100은 가정(주 1회)의 500배라 상한 노릇을 못 했다.
 | ~~P2-20-4~~ | ~~응답 계약 불일치~~ **완료**(2026-09-17) — `POST /member/signup`만 201이 아니라 200, 본문이 JSON이 아니라 `text/plain` 문자열이었다. `/member/**`만 `/api` 프리픽스 없음 | `MemberController:51` | signup 201 + `{userId}`. `/api/member` 정식, `/member`는 앱이 옮길 때까지 별칭. 아래 별도 | ☆ |
 | ~~P2-20-5~~ | ~~안전교육 읽기 3개가 admin/user에 똑같이 두 벌~~ **완료**(2026-09-17) — (`courses`, `courses/user/{userId}`, `courses/search`) 서비스 메서드까지 같은 완전한 복제였다 | `SafetyAdminController`, `SafetyUserController` | admin 쪽 3개 삭제. `AdminPathSecurityTest`가 그 경로로 P2-18-6을 검사하고 있어 체크리스트 상세로 옮겼다(403이 아니면 통과). README는 이미 user 경로만 적고 있었다 | ☆ |
 | ~~P2-20-6~~ | ~~`GET /api/attendance`가 페이징 없이 전부~~ **완료**(2026-09-17) — 1인 1일 1행이라 연 365, 앱은 월 단위로 볼 것 | `AttendanceService:152` | `from`·`to`(ISO 날짜, 포함). 기본 오늘까지 31일, 최대 366일, 넘거나 역순이면 400. 아래 별도 | ☆ |
-| P2-20-7 | STT가 사용자 `Authorization`을 FastAPI에 그대로 전달 — 서비스 간 인증을 사용자 토큰으로 | `WorkLogsController:59` → `SttService:44` | FastAPI가 그 토큰을 검증하는지부터. 안 하면 헤더 삭제, 하면 내부 서비스 키로 | ☆ |
+| ~~P2-20-7~~ | ~~STT가 사용자 `Authorization`을 FastAPI에 그대로 전달~~ **완료**(2026-09-17) — `DOCKin-aiserver`를 읽어보니 그 헤더를 **읽지 않는다.** 읽는 건 `X-Service-Token`뿐 | `WorkLogsController:59`·`AiController:47` → `SttService:44` | 사용자 토큰 전달 삭제. `fastApiWebClient`가 `X-Service-Token`을 기본 헤더로(`AI_SERVER_SERVICE_TOKEN`, 비면 안 싣음). 아래 별도 | ☆ |
 
 하지 않은 것: `/api/v1` 버저닝, 에러 응답 `code` 필드. 둘 다 프론트 계약이고 후자는 `GlobalExceptionHandler`가 "넣지 않는다"를 이미 결정했다.
+
+### P2-20-7 — FastAPI는 그 헤더를 읽지도 않았다
+
+"FastAPI가 검증하는지부터"가 선결이었는데 팀원에게 묻는 대신 `DOCKin-aiserver` 저장소를 읽었다. `app/core/security.py`의
+`verify_service_token`이 유일한 인증이고, 읽는 헤더는 **`X-Service-Token`**, `SERVICE_TOKEN` 환경변수가 있을 때만 비교한다(없으면 통과).
+STT·번역·챗봇 라우트 전부 이 의존성을 건다. 즉 스프링이 넘기던 사용자 `Authorization`은 **아무도 읽지 않았고**, 사용자 JWT가 다른
+서비스의 요청 로그에 남을 수 있는 자리였을 뿐이다. 그리고 스프링이 `X-Service-Token`을 보낸 적이 없으므로 운영 FastAPI는
+`SERVICE_TOKEN` 없이, 즉 **닿을 수 있는 누구에게나 열린 채**로 돌고 있었을 것이다.
+
+바꾼 것: STT 두 경로(`/api/work-logs/stt`, `/api/ai/rt-translate`)의 `@RequestHeader(AUTHORIZATION)`과 그 인자 전달을 지웠다.
+`fastApiWebClient`가 `external-api.fastapi.service-token`(`AI_SERVER_SERVICE_TOKEN`)을 `X-Service-Token` 기본 헤더로 싣는다 —
+호출 다섯 곳이 아니라 클라이언트 한 곳. 비어 있으면 헤더를 아예 안 싣는다(빈 값을 실으면 FastAPI가 "있는데 틀림"으로 401).
+한쪽만 설정하면 401 → `INTERNAL_SERVER_ERROR`/`STT_CONVERSION_ERROR`로 올라온다. 조용히 열리는 쪽이 아니라 시끄럽게 닫히는 쪽으로 틀리게 뒀다.
+
+**운영에서 할 일**: 비밀 하나를 만들어 스프링 `.env`의 `AI_SERVER_SERVICE_TOKEN`과 FastAPI의 `SERVICE_TOKEN`에 같이 준다. 그 전까지는 지금과 같다(둘 다 비어 검사 없음).
+
+검증은 `WebClientConfigTest` — `exchangeFunction`으로 요청을 가로채 헤더만 본다. 있으면 실리고, `null`·`""`·공백이면 헤더가 없고, `Authorization`은 어떤 경우에도 없다.
 
 ### P2-20-6 — 페이지가 아니라 기간으로, 잘라 주지 않고 거부한다
 
