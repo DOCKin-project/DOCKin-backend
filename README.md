@@ -156,7 +156,7 @@ DOCKin-spring/
 |:---|:---|:---|
 | `POST` | `/api/attendance/in` | 출근 — 분산락 + 비관적 락 |
 | `POST` | `/api/attendance/out` | 퇴근 |
-| `GET` | `/api/attendance` | 개인 근태 기록 조회 |
+| `GET` | `/api/attendance?from=&to=` | 개인 근태 기록 조회 (기간, 기본 최근 31일, 최대 366일) |
 | `POST` | `/api/absence/requests` | 휴가 신청 (증빙 파일 첨부) |
 | `GET` | `/api/absence/requests` | 내 휴가 신청 목록 |
 | `GET` | `/api/absence/admin/requests` | 전체 신청 목록 (관리자) |
