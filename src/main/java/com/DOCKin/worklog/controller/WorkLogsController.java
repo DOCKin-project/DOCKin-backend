@@ -69,7 +69,9 @@ public class WorkLogsController {
      *
      * <p><b>순서는 서버가 정한다</b> — {@code createdAt DESC, logId DESC}, 리포지토리 쿼리에 박혀 있고
      * 서비스가 요청의 {@code sort}를 뗀다. 아래 {@code @PageableDefault(sort = ...)}는 그 계약을 적어 둔
-     * 것이지 동작을 만드는 것이 아니다(채팅 목록과 같은 구조, {@code PageableSortDefaultTest}가 선언을 검사한다).
+     * 것이다(채팅 목록과 같은 구조, {@code PageableSortDefaultTest}가 선언을 검사한다). 2026-09-17부터는
+     * {@code PageableConfig}가 요청의 {@code sort}를 아예 읽지 않으므로 이 애노테이션이 곧 컨트롤러가 받는
+     * 정렬이기도 하다 — 다만 이 셋은 어차피 서비스가 sort를 떼고 커서를 쓰니 여기서는 문서의 역할이 크다.
      * 처음엔 {@code @PageableDefault(direction = DESC)}만 있어 정렬 <b>속성이 없는</b> unsorted Pageable이었고,
      * 정렬 없는 OFFSET 페이징은 페이지 경계에서 행이 겹치거나 빠졌다(P2-15-3). 그 뒤 {@code sort}를 넣었는데,
      * 클라이언트가 다른 sort를 넘기면 아래 커서와 어긋나므로 정렬을 쿼리로 옮기고 요청 값은 무시한다.
