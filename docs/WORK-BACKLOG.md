@@ -286,6 +286,30 @@ private float[] embedding;
 **HTTP 엔드포인트가 없어 현재는 SQL로만 넣을 수 있다.** 관리자 컨트롤러가 필요하고,
 공공데이터 API(한국천문연구원 특일 정보) 연동으로 법정공휴일을 연 1회 자동 적재하면 손이 덜 간다.
 
+#### P2-6-1 — 등록 API 설계 (2026-09-18 설계 완료, 구현은 다음 — 브랜치 `feat/work-calendar-api`)
+
+P2-17-1·P2-17-4를 닫고 이어서 잡았다. 결정은 물어서 정했다.
+
+| 경로 | 누가 | 동작 |
+|---|---|---|
+| `GET /api/attendance/calendar?year=` | **로그인한 전원** | 등록된 날만 날짜순. `year` 생략은 올해. 근로자 앱도 공휴일을 보여주고 민감한 것이 없다 |
+| `PUT /api/attendance/admin/calendar/{date}` `{dayType, description}` | ADMIN | upsert — 날짜가 PK라 등록과 갱신이 같은 요청. 두 번 보내도 같다. 주말에 `WORKDAY`면 특근일 |
+| `PUT /api/attendance/admin/calendar` `{entries:[{date, dayType, description}]}` | ADMIN | 연초 공휴일 목록 일괄 upsert. 순서대로라 같은 날짜가 두 번이면 뒤가 이긴다. 최대 366 |
+| `DELETE /api/attendance/admin/calendar/{date}` | ADMIN | **넣는다.** 그 날은 기본 규칙으로 돌아간다. 없으면 404(`AT005`). 서비스에 삭제가 없어 새로 만든다 |
+
+| 결정 | 골랐다 | 버린 것 |
+|---|---|---|
+| 조회 범위 | 로그인한 전원 (`/api/attendance/calendar`) | 관리자만 |
+| 삭제 | 넣는다 — `WEEKEND`/`WORKDAY`로 덮어쓴 날은 여전히 "등록된 날"이라 기본 규칙이 바뀌어도(주 4일제 등) 따라가지 않는다. 잘못 등록한 날을 되돌리는 길은 삭제뿐 | 덮어쓰기로 충분 |
+| 공공데이터 API 연동 | **다음 PR.** data.go.kr 인증키가 필요하고 외부 호출·장애 경로가 별개 | 이번에 같이 |
+| 응답 | `WorkCalendarDto {date, dayType, description, workingDay}` — `workingDay`는 `WORKDAY`만 true | — |
+| 검증 | `dayType @NotNull`, `description @Size(100)`(컬럼 길이 — DB 500 전에 400), 일괄은 `@NotEmpty @Size(366) @Valid` | — |
+
+구현 메모: `registerAll`은 `int` 대신 저장된 `List<WorkCalendar>`를 돌려주도록 바꾼다(응답에 쓰려고). `year` 기본값은 컨트롤러에서
+`Year.now(clock)` — 서비스에 `Clock`을 넣으면 `WorkCalendarServiceTest`의 `@InjectMocks`가 null을 넣는다. 컨트롤러는
+`WorkCalendarController`(조회)·`WorkCalendarAdminController`(등록·삭제) 둘로 — #78의 `AttendanceAdminController`와 충돌을 피한다.
+테스트는 단위(삭제 404·삭제 후 `isWorkingDay`가 기본 규칙) + 컨테이너(USER가 GET 200·PUT 403, 일괄 upsert가 행에 반영, 삭제 뒤 기본 규칙 복귀).
+
 **2·3단계는 P3(근무 정책 엔진)** — 교대조별 휴무 패턴, 개인별 예외.
 이 캘린더는 **전사 공통 휴무일만** 다룬다.
 
