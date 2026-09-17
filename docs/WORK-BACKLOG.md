@@ -1890,13 +1890,26 @@ chatbot 100은 가정(주 1회)의 500배라 상한 노릇을 못 했다.
 |---|---|---|---|---|
 | ~~P2-20-1~~ | ~~**`?sort=없는컬럼`이 500**~~ **완료**(2026-09-17) — 아래 별도 | `SafetyAdminController:43`, `AbsenceAdminController:33`, `AbsenceRequestController:44`가 클라이언트 `Pageable`을 리포지토리에 그대로. 작업일지·채팅만 `sizeOnly`로 떼고 있었다 | `PageableConfig` — 요청 `sort`를 읽지 않는 리졸버를 스프링 데이터 것 앞에 | ★ |
 | ~~P2-20-2~~ | ~~**페이지 크기 상한 없음**~~ **완료**(2026-09-17) — `?size=2000`(스프링 데이터 기본 상한)까지 받고 `Page`는 그 크기의 COUNT까지 같이 돌았다 | 전체 | `spring.data.web.pageable.max-page-size=100`. 넘치면 400이 아니라 깎인다 | ★ |
-| P2-20-3 | `keyword`가 검증 없이 들어온다 — 없으면 null, 안전교육은 `CONCAT('%', null, '%')`가 NULL이라 **조용히 빈 목록**, 빈 문자열이면 전체 매칭 | `SafetyAdminController:80`, `SafetyUserController:69`, `WorkLogsController:131` — 셋 다 `String keyword`에 애노테이션 없음 | `@RequestParam @NotBlank` + 클래스 `@Validated` → 400 | ★ |
+| ~~P2-20-3~~ | ~~`keyword`가 검증 없이 들어온다~~ **완료**(2026-09-17) — 없으면 null, 안전교육은 `CONCAT('%', null, '%')`가 NULL이라 **조용히 빈 목록**, 빈 문자열이면 전체 매칭이었다 | `SafetyAdminController:80`, `SafetyUserController:69`, `WorkLogsController:131` — 셋 다 `String keyword`에 애노테이션 없음 | `@RequestParam @NotBlank`. 아래 별도 — `@Validated`는 안 붙였다 | ★ |
 | P2-20-4 | 응답 계약 불일치 — `POST /member/signup`만 201이 아니라 200, 본문이 JSON이 아니라 `text/plain` 문자열. `/member/**`만 `/api` 프리픽스 없음 | `MemberController:51` | 프론트 계약이 바뀌므로 앱 쪽과 같이 | ☆ |
 | P2-20-5 | 안전교육 읽기 3개가 admin/user에 똑같이 두 벌 (`courses`, `courses/user/{userId}`, `courses/search`) | `SafetyAdminController`, `SafetyUserController` | 관리자도 user 경로를 쓰면 되니 admin 쪽 3개 삭제 | ☆ |
 | P2-20-6 | `GET /api/attendance`가 페이징 없이 전부 — 1인 1일 1행이라 연 365, 앱은 월 단위로 볼 것 | `AttendanceService:152` | `from/to` 파라미터. P2-17-4(관리자 집계)와 묶어서 | ☆ |
 | P2-20-7 | STT가 사용자 `Authorization`을 FastAPI에 그대로 전달 — 서비스 간 인증을 사용자 토큰으로 | `WorkLogsController:59` → `SttService:44` | FastAPI가 그 토큰을 검증하는지부터. 안 하면 헤더 삭제, 하면 내부 서비스 키로 | ☆ |
 
 하지 않은 것: `/api/v1` 버저닝, 에러 응답 `code` 필드. 둘 다 프론트 계약이고 후자는 `GlobalExceptionHandler`가 "넣지 않는다"를 이미 결정했다.
+
+### P2-20-3 — `@NotBlank`를 붙이자 500이 됐다
+
+`@RequestParam @NotBlank String keyword`로 바꾸고 공백을 넣어보니 400이 아니라 **500**이었다. 스프링 6.1부터 컨트롤러에
+`@Validated`가 없으면 `RequestMappingHandlerAdapter`가 파라미터 제약을 직접 검증하고 `HandlerMethodValidationException`을 던지는데,
+`GlobalExceptionHandler`는 `@Validated` 프록시 경로의 `ConstraintViolationException`만 잡고 있었다 — 그 핸들러는 지금까지 쓰는 곳이 없던
+죽은 코드였다. 캐치올이 새 예외를 500으로 승격시킨 세 번째 사례(403·404·413 다음).
+
+처음 계획은 클래스에 `@Validated`를 붙여 그 죽은 핸들러를 살리는 것이었는데, 그러면 컨트롤러가 CGLIB 프록시로 감싸이고 두 검증 경로가
+컨트롤러마다 갈린다. 대신 `HandlerMethodValidationException` 핸들러를 달았다 — 내장 경로 하나로 통일되고, 다음에 누가 파라미터에 제약을
+붙여도 500이 안 난다. 없는 경우는 `@RequestParam`(필수)의 `MissingServletRequestParameterException`이 이미 400이다.
+
+`KeywordValidationTest`(`@WebMvcTest`)가 없음·공백·있음 셋을 본다. 핸들러를 빼고 돌리면 공백만 500으로 떨어진다.
 
 ### P2-20-1·2 — 예외를 400으로 돌리지 않고, `sort`를 읽지 않기로 했다
 

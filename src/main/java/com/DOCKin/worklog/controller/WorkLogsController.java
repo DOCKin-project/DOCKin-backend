@@ -11,6 +11,7 @@ import com.DOCKin.worklog.service.WorkLogsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
@@ -130,7 +131,7 @@ public class WorkLogsController {
                                                               @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime beforeCreatedAt,
                                                               @RequestParam(required = false) Long beforeLogId,
                                                               @PageableDefault(size = 20, sort = {"createdAt", "logId"}, direction = Sort.Direction.DESC) Pageable pageable,
-                                                              String keyword){
+                                                              @RequestParam @NotBlank String keyword){
         String userId = customUserDetails.getMember().getUserId();
         Slice<WorkLogDto> workLogsDtos = workLogsService.searchByKeyword(userId, keyword,
                 WorkLogCursor.of(beforeCreatedAt, beforeLogId), pageable);
