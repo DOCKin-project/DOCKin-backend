@@ -139,10 +139,13 @@ DOCKin-spring/
 
 | Method | Endpoint | 설명 |
 |:---|:---|:---|
-| `POST` | `/member/signup` | 회원가입 |
-| `POST` | `/member/login` | 로그인 · JWT 발급 |
-| `POST` | `/member/logout` | 로그아웃 (토큰 무효화) |
-| `DELETE` | `/member/{userId}` | 회원 탈퇴 |
+| `POST` | `/api/member/signup` | 회원가입 (201, `{userId}`) |
+| `POST` | `/api/member/login` | 로그인 · JWT 발급 |
+| `POST` | `/api/member/refresh` | 토큰 갱신 (리프레시 토큰 회전) |
+| `POST` | `/api/member/logout` | 로그아웃 (토큰 무효화) |
+| `DELETE` | `/api/member/{userId}` | 회원 탈퇴 (본인만) |
+
+`/member/*`도 앱이 옮겨 갈 때까지 같은 곳으로 간다.
 
 </details>
 
