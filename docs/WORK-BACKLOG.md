@@ -1881,7 +1881,7 @@ chatbot 100은 가정(주 1회)의 500배라 상한 노릇을 못 했다.
 
 ---
 
-## P2-20 — API 점검에서 나온 것 (2026-09-17)
+## P2-20 — API 점검에서 나온 것 (2026-09-17, 코드는 완료 — 후속 이슈 #79·#80·#81)
 
 컨트롤러 14개를 훑었다. P2-15·P2-18에서 이미 잡은 것(정렬 없는 페이징, IDOR, 가시성)은 빼고, **클라이언트 입력이 서버 오류로
 기록되거나 응답 계약이 서로 어긋나는 자리**만 골랐다.
@@ -1897,6 +1897,28 @@ chatbot 100은 가정(주 1회)의 500배라 상한 노릇을 못 했다.
 | ~~P2-20-7~~ | ~~STT가 사용자 `Authorization`을 FastAPI에 그대로 전달~~ **완료**(2026-09-17) — `DOCKin-aiserver`를 읽어보니 그 헤더를 **읽지 않는다.** 읽는 건 `X-Service-Token`뿐 | `WorkLogsController:59`·`AiController:47` → `SttService:44` | 사용자 토큰 전달 삭제. `fastApiWebClient`가 `X-Service-Token`을 기본 헤더로(`AI_SERVER_SERVICE_TOKEN`, 비면 안 싣음). 아래 별도 | ☆ |
 
 하지 않은 것: `/api/v1` 버저닝, 에러 응답 `code` 필드. 둘 다 프론트 계약이고 후자는 `GlobalExceptionHandler`가 "넣지 않는다"를 이미 결정했다.
+
+### 머지·후속 (2026-09-18)
+
+일곱 개가 PR 여섯으로 전부 `dev`에 들어갔다 — #59(1·2) → #60(3) → #61(4) → #62(5) → #65(6) → #66(7). 각각 CI(컨테이너 테스트 포함) 통과 뒤 순서대로.
+로컬엔 Docker가 없어 `MemberPathWhitelistTest`·`AdminPathSecurityTest`는 CI에서만 돌았다 — 둘 다 통과.
+
+**스택 PR 절차에서 배운 것.** 백로그 표를 같이 고치려고 PR을 앞 PR 브랜치 위에 쌓았는데, 앞이 머지돼도 GitHub이 base를 `dev`로
+안 옮긴다 — 이 저장소가 브랜치를 안 지우는 관례라서(지워야 자동 재지정). `gh pr edit --base dev`로 옮기고, base 변경은 CI를 안
+태우므로(`pull_request` 기본 이벤트에 `edited`가 없다) close/reopen으로 재트리거했다. 다음엔 표 충돌을 감수하고 `dev`에서 따로 따는 게 단순하다.
+
+**관통한 기준 셋.** ① 클라이언트 입력이 500으로 기록되면 안 된다(1·3·6의 깨진 날짜). ② 검증보다 선택지를 없애는 게 낫다 — `sort`는 400을 내는 대신 안 읽는다.
+③ 상한은 있어야 하고 잘리는 걸 클라이언트가 알 수 있어야 한다 — 페이지 크기는 응답 `size`로 보이니 깎고, 기간은 알 길이 없으니 거부. 7은 성격이 달랐다: "인증하는 척"을 진짜 인증으로.
+
+**코드 밖에 남은 것** — 셋 다 이슈로:
+
+| 이슈 | 무엇 | 닫는 조건 |
+|---|---|---|
+| #81 | 앱 팀 확인 — 안전교육 관리자 GET(404)·근태 기본 31일·signup 201+JSON. [앱 팀 안내 문서](https://claude.ai/code/artifact/9c69cf39-3a74-4313-86df-51eaca762ce5) | 앱 팀이 셋 다 확인 |
+| #80 | 운영 FastAPI가 인증 없이 열려 있다 [추측] — `AI_SERVER_SERVICE_TOKEN`(스프링)·`SERVICE_TOKEN`(FastAPI) 같은 값 | 양쪽 설정 뒤 챗봇 호출 확인, `PRODUCTION-READINESS` G7 ✅ |
+| #79 | `/member` 별칭 삭제(네 자리) | 앱이 `/api/member`로 옮긴 뒤 |
+
+같은 날 다른 세션이 #75(rt-translate STT 응답 필드 불일치 — `text` vs `logText`)를 열었다. 7과 같은 파일(`SttService`)이라 함께 볼 것.
 
 ### P2-20-7 — FastAPI는 그 헤더를 읽지도 않았다
 
