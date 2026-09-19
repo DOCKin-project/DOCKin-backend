@@ -19,6 +19,16 @@ public interface AttendanceRepository extends JpaRepository<Attendance,Long> {
     Optional<Attendance> findByMemberAndWorkDate(Member member, LocalDate workDate);
 
     /**
+     * 퇴근 대상 — 이 사람의 <b>열린 기록</b>(출근은 있고 퇴근은 없는) 중 가장 최근 것.
+     *
+     * <p>날짜로 찾지 않는다. 야간조는 출근한 날과 퇴근하는 날이 다르고, 근무일({@code WorkDay})로 다시 계산해 찾아도
+     * 되지만 "무엇을 닫는가"는 결국 열린 기록 하나이므로 그걸 직접 묻는 편이 규칙에 덜 묶인다.
+     * {@code clockInTime IS NOT NULL}은 휴가·결근 행(둘 다 null)을 빼기 위해서다. V13의 부분 인덱스
+     * {@code idx_attendance_open}이 이 조건 그대로라 사용자당 0~1행만 본다.
+     */
+    Optional<Attendance> findFirstByMemberAndClockInTimeIsNotNullAndClockOutTimeIsNullOrderByClockInTimeDesc(Member member);
+
+    /**
      * 휴가 승인 시 해당 기간에 이미 존재하는 근태 기록을 한 번에 조회한다.
      * 날짜마다 개별 조회하면 기간이 길수록 쿼리가 그만큼 늘어난다.
      */

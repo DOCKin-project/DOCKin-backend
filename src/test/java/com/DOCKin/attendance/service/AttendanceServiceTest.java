@@ -31,6 +31,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -53,7 +54,10 @@ class AttendanceServiceTest {
     private static final ZoneId ZONE = ZoneId.systemDefault();
 
     private Clock fixedClockAt(int hour, int minute) {
-        LocalDateTime dateTime = LocalDateTime.of(2026, 7, 10, hour, minute);
+        return fixedClockAt(LocalDateTime.of(2026, 7, 10, hour, minute));
+    }
+
+    private Clock fixedClockAt(LocalDateTime dateTime) {
         return Clock.fixed(dateTime.atZone(ZONE).toInstant(), ZONE);
     }
 
@@ -71,6 +75,16 @@ class AttendanceServiceTest {
 
     private Member member() {
         return Member.builder().userId(USER_ID).workShift(WorkShift.MORNING).build(); // MORNING 시작 06:00
+    }
+
+    private Member nightMember() {
+        return Member.builder().userId(USER_ID).workShift(WorkShift.NIGHT).build(); // NIGHT 22:00~06:00, 근무일 경계 정오
+    }
+
+    private void stubOpenRecord(Member member, Optional<Attendance> open) {
+        when(attendanceRepository
+                .findFirstByMemberAndClockInTimeIsNotNullAndClockOutTimeIsNullOrderByClockInTimeDesc(member))
+                .thenReturn(open);
     }
 
     private void stubLockAcquired() {
@@ -185,19 +199,21 @@ class AttendanceServiceTest {
                 .status(AttendanceStatus.NORMAL)
                 .build();
         when(memberRepository.findByUserId(USER_ID)).thenReturn(Optional.of(member));
-        when(attendanceRepository.findByMemberAndWorkDate(eq(member), eq(LocalDate.of(2026, 7, 10))))
-                .thenReturn(Optional.of(attendance));
+        stubOpenRecord(member, Optional.of(attendance));
 
         AttendanceDto response = service.clockout(USER_ID, ClockOutRequestDto.builder().outLocation("정문").build());
 
         assertEquals("09:30:00", response.getTotalWorkTime());
+        assertEquals(9 * 3600 + 30 * 60, response.getWorkSeconds());
     }
 
     @Test
     @DisplayName("출근 기록이 없는 상태로 퇴근하려 하면 ATTENDANCE_NOT_CHECKED_IN 예외가 발생한다")
     void clockout_noClockInRecord_throwsException() {
         AttendanceService service = serviceWithClock(fixedClockAt(15, 30));
-        when(memberRepository.findByUserId(USER_ID)).thenReturn(Optional.of(member()));
+        Member member = member();
+        when(memberRepository.findByUserId(USER_ID)).thenReturn(Optional.of(member));
+        stubOpenRecord(member, Optional.empty());
         when(attendanceRepository.findByMemberAndWorkDate(any(), any())).thenReturn(Optional.empty());
 
         BusinessException ex = assertThrows(BusinessException.class,
@@ -210,17 +226,83 @@ class AttendanceServiceTest {
     @DisplayName("이미 퇴근 처리된 기록에 다시 퇴근하려 하면 ATTENDANCE_ALREADY_CHECKED_OUT 예외가 발생한다")
     void clockout_alreadyCheckedOut_throwsException() {
         AttendanceService service = serviceWithClock(fixedClockAt(18, 0));
+        Member member = member();
         Attendance attendance = Attendance.builder()
                 .clockInTime(LocalDateTime.of(2026, 7, 10, 6, 0))
                 .clockOutTime(LocalDateTime.of(2026, 7, 10, 15, 0))
                 .build();
-        when(memberRepository.findByUserId(USER_ID)).thenReturn(Optional.of(member()));
-        when(attendanceRepository.findByMemberAndWorkDate(any(), any())).thenReturn(Optional.of(attendance));
+        when(memberRepository.findByUserId(USER_ID)).thenReturn(Optional.of(member));
+        // 열린 기록은 없고(이미 닫혔다), 오늘 근무일의 행은 퇴근 시각이 있다 — 그래서 "없음"이 아니라 "이미 퇴근"이다
+        stubOpenRecord(member, Optional.empty());
+        when(attendanceRepository.findByMemberAndWorkDate(eq(member), eq(LocalDate.of(2026, 7, 10))))
+                .thenReturn(Optional.of(attendance));
 
         BusinessException ex = assertThrows(BusinessException.class,
                 () -> service.clockout(USER_ID, ClockOutRequestDto.builder().build()));
 
         assertEquals(ErrorCode.ATTENDANCE_ALREADY_CHECKED_OUT, ex.getErrorCode());
+    }
+
+    // ── 야간조 — 근무일은 교대 기준일 (ADR-0010, #98) ────────────────────────────
+    // 시계는 7월 10일 22:00에 출근해 7월 11일 새벽에 퇴근하는 야간 근무 하나를 따라간다.
+    // 예전 규칙(work_date = 오늘)에서는 아래가 각각 "정상 출근"·"출근 기록 없음"이었다.
+
+    @Test
+    @DisplayName("야간조가 자정 넘어 00:30에 출근하면 근무일은 전날이고 LATE다 — 시각만 비교하면 22:00보다 이르다고 NORMAL이 됐다")
+    void clockin_nightShiftAfterMidnight_isPreviousWorkDayAndLate() {
+        AttendanceService service = serviceWithClock(fixedClockAt(LocalDateTime.of(2026, 7, 11, 0, 30)));
+        stubLockAcquired();
+        when(memberRepository.findByUserId(USER_ID)).thenReturn(Optional.of(nightMember()));
+        when(attendanceRepository.findByMemberAndWorkDate(any(), eq(LocalDate.of(2026, 7, 10)))).thenReturn(Optional.empty());
+        when(attendanceRepository.save(any(Attendance.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        AttendanceDto response = service.clockin(USER_ID, ClockInRequestDto.builder().inLocation("3도크").build());
+
+        assertEquals(LocalDate.of(2026, 7, 10), response.getWorkDate());
+        assertEquals(AttendanceStatus.LATE.name(), response.getStatus());
+        assertEquals("NIGHT", response.getWorkShift());
+    }
+
+    @Test
+    @DisplayName("야간조가 다음날 06:10에 퇴근하면 전날 22:00의 열린 기록이 닫힌다 — 오늘 날짜로 찾으면 없었다")
+    void clockout_nightShiftNextMorning_closesOpenRecord() {
+        AttendanceService service = serviceWithClock(fixedClockAt(LocalDateTime.of(2026, 7, 11, 6, 10)));
+        Member member = nightMember();
+        Attendance open = Attendance.builder()
+                .member(member).workShift(WorkShift.NIGHT)
+                .workDate(LocalDate.of(2026, 7, 10))
+                .clockInTime(LocalDateTime.of(2026, 7, 10, 22, 0))
+                .status(AttendanceStatus.NORMAL)
+                .build();
+        when(memberRepository.findByUserId(USER_ID)).thenReturn(Optional.of(member));
+        stubOpenRecord(member, Optional.of(open));
+
+        AttendanceDto response = service.clockout(USER_ID, ClockOutRequestDto.builder().outLocation("3도크").build());
+
+        assertEquals(LocalDate.of(2026, 7, 10), response.getWorkDate());
+        assertEquals("08:10:00", response.getTotalWorkTime());
+        verify(attendanceRepository, never()).findByMemberAndWorkDate(any(), any());
+    }
+
+    @Test
+    @DisplayName("출근 뒤 16시간이 지난 열린 기록에 퇴근하면 닫지 않고 ATTENDANCE_CLOCK_IN_STALE(409) — 30시간 근무 행을 만들지 않는다")
+    void clockout_staleOpenRecord_rejected() {
+        AttendanceService service = serviceWithClock(fixedClockAt(LocalDateTime.of(2026, 7, 11, 15, 0)));
+        Member member = member();
+        Attendance forgotten = Attendance.builder()
+                .member(member).workShift(WorkShift.MORNING)
+                .workDate(LocalDate.of(2026, 7, 10))
+                .clockInTime(LocalDateTime.of(2026, 7, 10, 6, 0)) // 33시간 전
+                .status(AttendanceStatus.NORMAL)
+                .build();
+        when(memberRepository.findByUserId(USER_ID)).thenReturn(Optional.of(member));
+        stubOpenRecord(member, Optional.of(forgotten));
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> service.clockout(USER_ID, ClockOutRequestDto.builder().build()));
+
+        assertEquals(ErrorCode.ATTENDANCE_CLOCK_IN_STALE, ex.getErrorCode());
+        assertNull(forgotten.getClockOutTime());
     }
 
     // ── 개인 근태 조회 — 기간 (P2-20-6) ─────────────────────────────────────────

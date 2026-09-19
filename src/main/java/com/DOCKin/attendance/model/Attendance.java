@@ -1,8 +1,10 @@
 package com.DOCKin.attendance.model;
 
 import com.DOCKin.member.model.Member;
+import com.DOCKin.member.model.WorkShift;
 import jakarta.persistence.*;
 import lombok.*;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -47,8 +49,21 @@ public class Attendance {
     @Column(name="clock_out_time")
     private LocalDateTime clockOutTime;
 
+    /**
+     * 근무일. <b>벽시계 날짜가 아니라 교대 기준일이다</b>({@link WorkDay}, ADR-0010). 야간조의 D일 22:00 출근과
+     * D+1일 06:00 퇴근은 둘 다 근무일 D다. 예전에는 {@code LocalDate.now()}였고 그래서 야간조가 퇴근을 못 찍었다(#98).
+     */
     @Column(name="work_date",nullable = false)
     private LocalDate workDate;
+
+    /**
+     * 이 행을 판정한 교대(V13). {@code users.work_shift}는 바뀔 수 있으므로 여기 스냅샷으로 남긴다 —
+     * 석 달 전 지각 기록이 "어느 교대 기준으로 지각인가"에 답하려면 그때의 교대가 필요하다.
+     * 관리자 집계(P2-17-4)가 교대별로 나눌 때도 사용자의 현재 교대가 아니라 이 컬럼을 봐야 한다.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "work_shift", length = 20, nullable = false)
+    private WorkShift workShift;
 
     @Enumerated(EnumType.STRING) //NORMAL, LATE, ABSENT, VACATION, SICK
     @Column(name="status",length=20,nullable=false)
@@ -60,8 +75,12 @@ public class Attendance {
     @Column(name="out_location")
     private String outLocation;
 
-    @Column(name="total_work_time")
-    private String totalWorkTime;
+    /**
+     * 근무 시간(초). 퇴근 전에는 null. 예전 {@code total_work_time}은 {@code "HH:mm:ss"} 문자열이라 합계도 평균도
+     * 낼 수 없었다(V13이 초로 바꿨다). 응답의 {@code totalWorkTime} 문자열은 {@code AttendanceDto}가 여기서 만든다.
+     */
+    @Column(name = "work_seconds")
+    private Integer workSeconds;
 
     /**
      * 승인된 휴가/병가로 인한 근태 기록을 만든다.
@@ -72,6 +91,7 @@ public class Attendance {
     public static Attendance ofApprovedAbsence(Member member, LocalDate workDate, AttendanceStatus status) {
         return Attendance.builder()
                 .member(member)
+                .workShift(member.workShiftOrDefault())
                 .workDate(workDate)
                 .status(status)
                 .build();
@@ -81,9 +101,38 @@ public class Attendance {
     public static Attendance ofAbsent(Member member, LocalDate workDate) {
         return Attendance.builder()
                 .member(member)
+                .workShift(member.workShiftOrDefault())
                 .workDate(workDate)
                 .status(AttendanceStatus.ABSENT)
                 .build();
+    }
+
+    /**
+     * 출근 기록. 근무일과 지각 여부는 {@link WorkDay}가 교대 기준으로 정한다 — 호출자가 날짜를 넘기지 않는다.
+     * 넘기게 두면 {@code LocalDate.now()}를 넣는 호출자가 다시 생긴다.
+     */
+    public static Attendance clockIn(Member member, LocalDateTime now, String inLocation) {
+        WorkShift shift = member.workShiftOrDefault();
+        return Attendance.builder()
+                .member(member)
+                .workShift(shift)
+                .workDate(WorkDay.of(shift, now))
+                .clockInTime(now)
+                .status(WorkDay.isLate(shift, now) ? AttendanceStatus.LATE : AttendanceStatus.NORMAL)
+                .inLocation(inLocation)
+                .build();
+    }
+
+    /** 퇴근. 근무 시간은 출퇴근 시각의 차를 초로 — 문자열로 만들어 저장하지 않는다. */
+    public void clockOut(LocalDateTime now, String outLocation) {
+        this.clockOutTime = now;
+        this.outLocation = outLocation;
+        this.workSeconds = (int) Duration.between(this.clockInTime, now).getSeconds();
+    }
+
+    /** 출근은 했고 퇴근은 아직인 기록인가. 휴가·결근 행은 출근 시각이 없어 여기 해당하지 않는다. */
+    public boolean isOpen() {
+        return clockInTime != null && clockOutTime == null;
     }
 
     /** 출근하지 않은 상태(휴가/병가/결근)인지. 근무시간 집계에서 제외할 때 쓴다. */

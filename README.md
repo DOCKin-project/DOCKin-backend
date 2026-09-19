@@ -174,8 +174,8 @@ DOCKin-spring/
 
 | Method | Endpoint | 설명 |
 |:---|:---|:---|
-| `POST` | `/api/attendance/in` | 출근 — 분산락 + 비관적 락 |
-| `POST` | `/api/attendance/out` | 퇴근 |
+| `POST` | `/api/attendance/in` | 출근 — 분산락 + 비관적 락. 근무일·지각은 교대 기준(야간조는 정오 이전이 전날 근무일, ADR-0010) |
+| `POST` | `/api/attendance/out` | 퇴근 — 날짜가 아니라 열린 출근 기록을 닫는다. 출근 뒤 16시간이 지난 기록은 409 |
 | `GET` | `/api/attendance?from=&to=` | 개인 근태 기록 조회 (기간, 기본 최근 31일, 최대 366일) |
 | `GET` | `/api/attendance/admin/daily-summary?date=&shipYardArea=&workShift=` | 구역·날짜 인원 집계 (관리자) — 인원/출근/퇴근/지각/휴가/병결/결근 |
 | `POST` | `/api/absence/requests` | 휴가 신청 (증빙 파일 첨부) |
