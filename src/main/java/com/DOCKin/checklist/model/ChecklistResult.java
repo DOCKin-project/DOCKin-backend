@@ -22,7 +22,7 @@ public class ChecklistResult {
     @Column(name = "result_id")
     private Integer resultId;
 
-    /** 이 결과가 속한 회차(V11). 결과는 사건에 속한다 — 템플릿에 속하지 않는다. */
+    /** 이 결과가 속한 회차(V14). 결과는 사건에 속한다 — 템플릿에 속하지 않는다. */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "run_id", nullable = false)
     private ChecklistRun run;
