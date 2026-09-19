@@ -1,0 +1,71 @@
+# before-db-restart  2026-09-17T17:08:29Z
+time="2026-09-17T17:08:29Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+-- pg_stat_checkpointer
+ num_timed | num_requested | restartpoints_timed | restartpoints_req | restartpoints_done | write_time | sync_time | buffers_written |          stats_reset          
+-----------+---------------+---------------------+-------------------+--------------------+------------+-----------+-----------------+-------------------------------
+        39 |             0 |                   0 |                 0 |                  0 |    8013973 |      2360 |          130141 | 2026-09-17 22:51:39.532895+09
+(1 row)
+
+-- pg_stat_wal
+ wal_records | wal_fpi | wal_bytes  | wal_buffers_full | wal_write | wal_sync | wal_write_time | wal_sync_time |          stats_reset          
+-------------+---------+------------+------------------+-----------+----------+----------------+---------------+-------------------------------
+     7063498 |  942090 | 7823430963 |            35735 |     49937 |    13274 |              0 |             0 | 2026-09-17 22:51:39.532911+09
+(1 row)
+
+-- pg_stat_bgwriter
+ buffers_clean | maxwritten_clean | buffers_alloc |          stats_reset          
+---------------+------------------+---------------+-------------------------------
+        732509 |             6198 |      47617812 | 2026-09-17 22:51:39.532916+09
+(1 row)
+
+-- document_chunks
+ n_live_tup | n_dead_tup | n_tup_ins | n_mod_since_analyze | n_ins_since_vacuum | autovacuum_count |        last_autovacuum        | autoanalyze_count |       last_autoanalyze        |  heap  |  hnsw  
+------------+------------+-----------+---------------------+--------------------+------------------+-------------------------------+-------------------+-------------------------------+--------+--------
+     214793 |          0 |    220504 |                 486 |              11335 |               18 | 2026-09-18 01:51:40.343721+09 |                38 | 2026-09-18 02:07:48.302309+09 | 165 MB | 362 MB
+(1 row)
+
+-- pg_stat_progress_vacuum
+ pid | datid | datname | relid | phase | heap_blks_total | heap_blks_scanned | heap_blks_vacuumed | index_vacuum_count | max_dead_tuple_bytes | dead_tuple_bytes | num_dead_item_ids | indexes_total | indexes_processed 
+-----+-------+---------+-------+-------+-----------------+-------------------+--------------------+--------------------+----------------------+------------------+-------------------+---------------+-------------------
+(0 rows)
+
+-- pg_stat_statements top 8 by total_exec_time
+ calls  | total_ms | mean_ms |  rows  | shared_blks_hit | shared_blks_read | shared_blks_dirtied | shared_blks_written |                                             q                                              
+--------+----------+---------+--------+-----------------+------------------+---------------------+---------------------+--------------------------------------------------------------------------------------------
+ 215324 |  1077994 |   5.006 | 215324 |       353173222 |         46692496 |             3223019 |             2496430 | insert into document_chunks (chunk_index,content,content_hash,created_at,embedding,embeddi
+    187 |    26100 | 139.573 |    187 |          324305 |           287816 |                6330 |                7249 | SELECT (SELECT count(*) FROM document_chunks), (SELECT count(DISTINCT (source_type, source
+    196 |    25637 | 130.800 |    196 |          107169 |           276917 |                6532 |                6047 | SELECT count(*), count(DISTINCT (source_type, source_id)) FROM document_chunks
+ 352899 |     4194 |   0.012 | 208188 |         1977306 |            65073 |                   0 |                 115 | select dc1_0.chunk_id,dc1_0.chunk_index,dc1_0.content,dc1_0.content_hash,dc1_0.created_at,
+   3529 |     2504 |   0.710 | 352900 |          970384 |            53691 |                   8 |                2428 | select wl1_0.log_id,wl1_0.audio_file_url,wl1_0.created_at,wl1_0.equipment_id,wl1_0.log_tex
+   4320 |       73 |   0.017 |   4320 |            3477 |             1272 |                1188 |                   0 | select nextval($1)
+      9 |       72 |   7.946 |      9 |            2375 |             2386 |                   7 |                  26 | SELECT count(*) FROM document_chunks
+      1 |       47 |  46.762 |      1 |            2833 |              515 |                   0 |                   0 | SELECT count(*) FROM work_logs
+(8 rows)
+
+-- pg_stat_activity
+  pid  | state  | wait_event_type |     wait_event      |         backend_type         |                              q                               
+-------+--------+-----------------+---------------------+------------------------------+--------------------------------------------------------------
+ 22189 | active |                 |                     | client backend               | SELECT pid, state, wait_event_type, wait_event, backend_type
+ 20901 | active | IO              | DataFileRead        | client backend               | insert into document_chunks (chunk_index,content,content_has
+    30 |        | Activity        | AutovacuumMain      | autovacuum launcher          | 
+    31 |        | Activity        | LogicalLauncherMain | logical replication launcher | 
+    26 |        | Activity        | CheckpointerMain    | checkpointer                 | 
+    27 |        | Activity        | BgwriterMain        | background writer            | 
+    29 |        | Activity        | WalWriterMain       | walwriter                    | 
+(7 rows)
+
+-- settings
+                 name                  | setting | unit 
+---------------------------------------+---------+------
+ autovacuum_naptime                    | 60      | s
+ autovacuum_vacuum_cost_delay          | 2       | ms
+ autovacuum_vacuum_insert_scale_factor | 0.2     | 
+ autovacuum_vacuum_insert_threshold    | 1000    | 
+ autovacuum_work_mem                   | -1      | kB
+ checkpoint_completion_target          | 0.9     | 
+ checkpoint_timeout                    | 300     | s
+ maintenance_work_mem                  | 65536   | kB
+ max_wal_size                          | 1024    | MB
+ shared_buffers                        | 16384   | 8kB
+(10 rows)
+
