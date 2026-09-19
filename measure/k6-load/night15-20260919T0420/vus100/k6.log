@@ -1,0 +1,312 @@
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+     execution: local
+        script: journey.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 100 max VUs, 2m30s max duration (incl. graceful stop):
+              * vus: Up to 100 looping VUs for 2m20s over 3 stages (gracefulRampDown: 10s, gracefulStop: 30s)
+
+
+vus    [   1% ] 003/100 VUs  0m01.0s/2m20.0s
+
+vus    [   1% ] 006/100 VUs  0m02.0s/2m20.0s
+
+vus    [   2% ] 009/100 VUs  0m03.0s/2m20.0s
+
+vus    [   3% ] 013/100 VUs  0m04.0s/2m20.0s
+
+vus    [   4% ] 016/100 VUs  0m05.0s/2m20.0s
+
+vus    [   4% ] 019/100 VUs  0m06.0s/2m20.0s
+
+vus    [   5% ] 023/100 VUs  0m07.0s/2m20.0s
+
+vus    [   6% ] 026/100 VUs  0m08.0s/2m20.0s
+
+vus    [   6% ] 029/100 VUs  0m09.0s/2m20.0s
+
+vus    [   7% ] 033/100 VUs  0m10.0s/2m20.0s
+
+vus    [   8% ] 036/100 VUs  0m11.0s/2m20.0s
+
+vus    [   9% ] 039/100 VUs  0m12.0s/2m20.0s
+
+vus    [   9% ] 043/100 VUs  0m13.0s/2m20.0s
+
+vus    [  10% ] 046/100 VUs  0m14.0s/2m20.0s
+
+vus    [  11% ] 049/100 VUs  0m15.0s/2m20.0s
+
+vus    [  11% ] 053/100 VUs  0m16.0s/2m20.0s
+
+vus    [  12% ] 056/100 VUs  0m17.0s/2m20.0s
+
+vus    [  13% ] 059/100 VUs  0m18.0s/2m20.0s
+
+vus    [  14% ] 063/100 VUs  0m19.0s/2m20.0s
+
+vus    [  14% ] 066/100 VUs  0m20.0s/2m20.0s
+
+vus    [  15% ] 069/100 VUs  0m21.0s/2m20.0s
+
+vus    [  16% ] 073/100 VUs  0m22.0s/2m20.0s
+
+vus    [  16% ] 076/100 VUs  0m23.0s/2m20.0s
+
+vus    [  17% ] 079/100 VUs  0m24.0s/2m20.0s
+
+vus    [  18% ] 083/100 VUs  0m25.0s/2m20.0s
+
+vus    [  19% ] 086/100 VUs  0m26.0s/2m20.0s
+
+vus    [  19% ] 089/100 VUs  0m27.0s/2m20.0s
+
+vus    [  20% ] 093/100 VUs  0m28.0s/2m20.0s
+
+vus    [  21% ] 096/100 VUs  0m29.0s/2m20.0s
+
+vus    [  21% ] 099/100 VUs  0m30.0s/2m20.0s
+
+vus    [  22% ] 100/100 VUs  0m31.0s/2m20.0s
+
+vus    [  23% ] 100/100 VUs  0m32.0s/2m20.0s
+
+vus    [  24% ] 100/100 VUs  0m33.0s/2m20.0s
+
+vus    [  24% ] 100/100 VUs  0m34.0s/2m20.0s
+
+vus    [  25% ] 100/100 VUs  0m35.0s/2m20.0s
+
+vus    [  26% ] 100/100 VUs  0m36.0s/2m20.0s
+
+vus    [  26% ] 100/100 VUs  0m37.0s/2m20.0s
+
+vus    [  27% ] 100/100 VUs  0m38.0s/2m20.0s
+
+vus    [  28% ] 100/100 VUs  0m39.0s/2m20.0s
+
+vus    [  29% ] 100/100 VUs  0m40.0s/2m20.0s
+
+vus    [  29% ] 100/100 VUs  0m41.0s/2m20.0s
+
+vus    [  30% ] 100/100 VUs  0m42.0s/2m20.0s
+
+vus    [  31% ] 100/100 VUs  0m43.0s/2m20.0s
+
+vus    [  31% ] 100/100 VUs  0m44.0s/2m20.0s
+
+vus    [  32% ] 100/100 VUs  0m45.0s/2m20.0s
+
+vus    [  33% ] 100/100 VUs  0m46.0s/2m20.0s
+
+vus    [  34% ] 100/100 VUs  0m47.0s/2m20.0s
+
+vus    [  34% ] 100/100 VUs  0m48.0s/2m20.0s
+
+vus    [  35% ] 100/100 VUs  0m49.0s/2m20.0s
+
+vus    [  36% ] 100/100 VUs  0m50.0s/2m20.0s
+
+vus    [  36% ] 100/100 VUs  0m51.0s/2m20.0s
+
+vus    [  37% ] 100/100 VUs  0m52.0s/2m20.0s
+
+vus    [  38% ] 100/100 VUs  0m53.0s/2m20.0s
+
+vus    [  39% ] 100/100 VUs  0m54.0s/2m20.0s
+
+vus    [  39% ] 100/100 VUs  0m55.0s/2m20.0s
+
+vus    [  40% ] 100/100 VUs  0m56.0s/2m20.0s
+
+vus    [  41% ] 100/100 VUs  0m57.0s/2m20.0s
+
+vus    [  41% ] 100/100 VUs  0m58.0s/2m20.0s
+
+vus    [  42% ] 100/100 VUs  0m59.0s/2m20.0s
+
+vus    [  43% ] 100/100 VUs  1m00.0s/2m20.0s
+
+vus    [  44% ] 100/100 VUs  1m01.0s/2m20.0s
+
+vus    [  44% ] 100/100 VUs  1m02.0s/2m20.0s
+
+vus    [  45% ] 100/100 VUs  1m03.0s/2m20.0s
+
+vus    [  46% ] 100/100 VUs  1m04.0s/2m20.0s
+
+vus    [  46% ] 100/100 VUs  1m05.0s/2m20.0s
+
+vus    [  47% ] 100/100 VUs  1m06.0s/2m20.0s
+
+vus    [  48% ] 100/100 VUs  1m07.0s/2m20.0s
+
+vus    [  49% ] 100/100 VUs  1m08.0s/2m20.0s
+
+vus    [  49% ] 100/100 VUs  1m09.0s/2m20.0s
+
+vus    [  50% ] 100/100 VUs  1m10.0s/2m20.0s
+
+vus    [  51% ] 100/100 VUs  1m11.0s/2m20.0s
+
+vus    [  51% ] 100/100 VUs  1m12.0s/2m20.0s
+
+vus    [  52% ] 100/100 VUs  1m13.0s/2m20.0s
+
+vus    [  53% ] 100/100 VUs  1m14.0s/2m20.0s
+
+vus    [  54% ] 100/100 VUs  1m15.0s/2m20.0s
+
+vus    [  54% ] 100/100 VUs  1m16.0s/2m20.0s
+
+vus    [  55% ] 100/100 VUs  1m17.0s/2m20.0s
+
+vus    [  56% ] 100/100 VUs  1m18.0s/2m20.0s
+
+vus    [  56% ] 100/100 VUs  1m19.0s/2m20.0s
+
+vus    [  57% ] 100/100 VUs  1m20.0s/2m20.0s
+
+vus    [  58% ] 100/100 VUs  1m21.0s/2m20.0s
+
+vus    [  59% ] 100/100 VUs  1m22.0s/2m20.0s
+
+vus    [  59% ] 100/100 VUs  1m23.0s/2m20.0s
+
+vus    [  60% ] 100/100 VUs  1m24.0s/2m20.0s
+
+vus    [  61% ] 100/100 VUs  1m25.0s/2m20.0s
+
+vus    [  61% ] 100/100 VUs  1m26.0s/2m20.0s
+
+vus    [  62% ] 100/100 VUs  1m27.0s/2m20.0s
+
+vus    [  63% ] 100/100 VUs  1m28.0s/2m20.0s
+
+vus    [  64% ] 100/100 VUs  1m29.0s/2m20.0s
+
+vus    [  64% ] 100/100 VUs  1m30.0s/2m20.0s
+
+vus    [  65% ] 100/100 VUs  1m31.0s/2m20.0s
+
+vus    [  66% ] 100/100 VUs  1m32.0s/2m20.0s
+
+vus    [  66% ] 100/100 VUs  1m33.0s/2m20.0s
+
+vus    [  67% ] 100/100 VUs  1m34.0s/2m20.0s
+
+vus    [  68% ] 100/100 VUs  1m35.0s/2m20.0s
+
+vus    [  69% ] 100/100 VUs  1m36.0s/2m20.0s
+
+vus    [  69% ] 100/100 VUs  1m37.0s/2m20.0s
+
+vus    [  70% ] 100/100 VUs  1m38.0s/2m20.0s
+
+vus    [  71% ] 100/100 VUs  1m39.0s/2m20.0s
+
+vus    [  71% ] 100/100 VUs  1m40.0s/2m20.0s
+
+vus    [  72% ] 100/100 VUs  1m41.0s/2m20.0s
+
+vus    [  73% ] 100/100 VUs  1m42.0s/2m20.0s
+
+vus    [  74% ] 100/100 VUs  1m43.0s/2m20.0s
+
+vus    [  74% ] 100/100 VUs  1m44.0s/2m20.0s
+
+vus    [  75% ] 100/100 VUs  1m45.0s/2m20.0s
+
+vus    [  76% ] 100/100 VUs  1m46.0s/2m20.0s
+
+vus    [  76% ] 100/100 VUs  1m47.0s/2m20.0s
+
+vus    [  77% ] 100/100 VUs  1m48.0s/2m20.0s
+
+vus    [  78% ] 100/100 VUs  1m49.0s/2m20.0s
+
+vus    [  79% ] 100/100 VUs  1m50.0s/2m20.0s
+
+vus    [  79% ] 100/100 VUs  1m51.0s/2m20.0s
+
+vus    [  80% ] 100/100 VUs  1m52.0s/2m20.0s
+
+vus    [  81% ] 100/100 VUs  1m53.0s/2m20.0s
+
+vus    [  81% ] 100/100 VUs  1m54.0s/2m20.0s
+
+vus    [  82% ] 100/100 VUs  1m55.0s/2m20.0s
+
+vus    [  83% ] 100/100 VUs  1m56.0s/2m20.0s
+
+vus    [  84% ] 100/100 VUs  1m57.0s/2m20.0s
+
+vus    [  84% ] 100/100 VUs  1m58.0s/2m20.0s
+
+vus    [  85% ] 100/100 VUs  1m59.0s/2m20.0s
+
+vus    [  86% ] 100/100 VUs  2m00.0s/2m20.0s
+
+vus    [  86% ] 100/100 VUs  2m01.0s/2m20.0s
+
+vus    [  87% ] 099/100 VUs  2m02.0s/2m20.0s
+
+vus    [  88% ] 099/100 VUs  2m03.0s/2m20.0s
+
+vus    [  89% ] 098/100 VUs  2m04.0s/2m20.0s
+
+vus    [  89% ] 098/100 VUs  2m05.0s/2m20.0s
+
+vus    [  90% ] 096/100 VUs  2m06.0s/2m20.0s
+
+vus    [  91% ] 093/100 VUs  2m07.0s/2m20.0s
+
+vus    [  91% ] 091/100 VUs  2m08.0s/2m20.0s
+
+vus    [  92% ] 086/100 VUs  2m09.0s/2m20.0s
+
+vus    [  93% ] 085/100 VUs  2m10.0s/2m20.0s
+
+vus    [  94% ] 076/100 VUs  2m11.0s/2m20.0s
+
+vus    [  94% ] 069/100 VUs  2m12.0s/2m20.0s
+
+vus    [  95% ] 065/100 VUs  2m13.0s/2m20.0s
+
+vus    [  96% ] 052/100 VUs  2m14.0s/2m20.0s
+
+vus    [  96% ] 049/100 VUs  2m15.0s/2m20.0s
+
+vus    [  97% ] 037/100 VUs  2m16.0s/2m20.0s
+
+vus    [  98% ] 035/100 VUs  2m17.0s/2m20.0s
+
+vus    [  99% ] 020/100 VUs  2m18.0s/2m20.0s
+
+vus    [  99% ] 015/100 VUs  2m19.0s/2m20.0s
+
+vus    [ 100% ] 012/100 VUs  2m20.0s/2m20.0s
+
+vus  ↓ [ 100% ] 012/100 VUs  2m20s
+
+vus  ↓ [ 100% ] 012/100 VUs  2m20s
+
+vus  ↓ [ 100% ] 012/100 VUs  2m20s
+
+== vus rate=1/s vus=100 reqs=4816 rps=33.5 fail=0% p95=8583.3ms dropped=0 maxVUs=100 login_fail=0 dup=0 journey_p95=11056ms
+name             n      rps     p50     p95     p99     max   fail%
+login              100     0.7    78.2  2402.1  3620.5    4279       0
+clockin            100     0.7     8.3  3490.1    4258    4739       0
+attendance_list   1154       8  2281.4  8574.9 11664.5   15678       0
+worklogs          1154       8  3334.7  9365.7 13435.4   18996       0
+chat_rooms        1154       8  2283.2  8220.4 12119.5   19194       0
+safety_courses    1154       8  2160.9    8242 12206.3   14589       0
+
+vus  ✓ [ 100% ] 000/100 VUs  2m20s
+time="2026-09-19T06:02:56Z" level=error msg="thresholds on metrics 'http_req_duration{name:attendance_list}, http_req_duration{name:chat_rooms}, http_req_duration{name:clockin}, http_req_duration{name:login}, http_req_duration{name:safety_courses}, http_req_duration{name:worklogs}' have been crossed"

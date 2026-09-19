@@ -1,0 +1,309 @@
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+     execution: local
+        script: journey.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 200 max VUs, 2m0s max duration (incl. graceful stop):
+              * rate: 16.00 iterations/s for 1m30s (maxVUs: 32-200, gracefulStop: 30s)
+
+
+rate   [   1% ] 007/032 VUs  0m01.0s/1m30s  16.00 iters/s
+
+rate   [   2% ] 017/032 VUs  0m02.0s/1m30s  16.00 iters/s
+
+rate   [   3% ] 019/032 VUs  0m03.0s/1m30s  16.00 iters/s
+
+rate   [   4% ] 026/032 VUs  0m04.0s/1m30s  16.00 iters/s
+
+rate   [   6% ] 031/032 VUs  0m05.0s/1m30s  16.00 iters/s
+
+rate   [   7% ] 026/036 VUs  0m06.0s/1m30s  16.00 iters/s
+
+rate   [   8% ] 029/036 VUs  0m07.0s/1m30s  16.00 iters/s
+
+rate   [   9% ] 033/036 VUs  0m08.0s/1m30s  16.00 iters/s
+
+rate   [  10% ] 037/038 VUs  0m09.0s/1m30s  16.00 iters/s
+
+rate   [  11% ] 040/042 VUs  0m10.0s/1m30s  16.00 iters/s
+
+rate   [  12% ] 041/043 VUs  0m11.0s/1m30s  16.00 iters/s
+
+rate   [  13% ] 044/045 VUs  0m12.0s/1m30s  16.00 iters/s
+
+rate   [  14% ] 052/053 VUs  0m13.0s/1m30s  16.00 iters/s
+
+rate   [  16% ] 060/061 VUs  0m14.0s/1m30s  16.00 iters/s
+
+rate   [  17% ] 068/069 VUs  0m15.0s/1m30s  16.00 iters/s
+
+rate   [  18% ] 076/077 VUs  0m16.0s/1m30s  16.00 iters/s
+
+rate   [  19% ] 084/085 VUs  0m17.0s/1m30s  16.00 iters/s
+
+rate   [  20% ] 092/093 VUs  0m18.0s/1m30s  16.00 iters/s
+
+rate   [  21% ] 100/101 VUs  0m19.0s/1m30s  16.00 iters/s
+
+rate   [  22% ] 108/109 VUs  0m20.0s/1m30s  16.00 iters/s
+
+rate   [  23% ] 116/117 VUs  0m21.0s/1m30s  16.00 iters/s
+
+rate   [  24% ] 124/125 VUs  0m22.0s/1m30s  16.00 iters/s
+
+rate   [  26% ] 132/133 VUs  0m23.0s/1m30s  16.00 iters/s
+
+rate   [  27% ] 140/141 VUs  0m24.0s/1m30s  16.00 iters/s
+
+rate   [  28% ] 148/149 VUs  0m25.0s/1m30s  16.00 iters/s
+
+rate   [  29% ] 156/157 VUs  0m26.0s/1m30s  16.00 iters/s
+
+rate   [  30% ] 164/165 VUs  0m27.0s/1m30s  16.00 iters/s
+
+rate   [  31% ] 172/173 VUs  0m28.0s/1m30s  16.00 iters/s
+
+rate   [  32% ] 180/181 VUs  0m29.0s/1m30s  16.00 iters/s
+
+rate   [  33% ] 188/189 VUs  0m30.0s/1m30s  16.00 iters/s
+
+rate   [  34% ] 196/197 VUs  0m31.0s/1m30s  16.00 iters/s
+time="2026-09-19T05:09:30Z" level=warning msg="Insufficient VUs, reached 200 active VUs and cannot initialize more" executor=constant-arrival-rate scenario=rate
+
+rate   [  36% ] 200/200 VUs  0m32.0s/1m30s  16.00 iters/s
+
+rate   [  37% ] 200/200 VUs  0m33.0s/1m30s  16.00 iters/s
+
+rate   [  38% ] 200/200 VUs  0m34.0s/1m30s  16.00 iters/s
+
+rate   [  39% ] 200/200 VUs  0m35.0s/1m30s  16.00 iters/s
+
+rate   [  40% ] 200/200 VUs  0m36.0s/1m30s  16.00 iters/s
+
+rate   [  41% ] 200/200 VUs  0m37.0s/1m30s  16.00 iters/s
+
+rate   [  42% ] 200/200 VUs  0m38.0s/1m30s  16.00 iters/s
+
+rate   [  43% ] 200/200 VUs  0m39.0s/1m30s  16.00 iters/s
+
+rate   [  44% ] 200/200 VUs  0m40.0s/1m30s  16.00 iters/s
+
+rate   [  46% ] 199/200 VUs  0m41.0s/1m30s  16.00 iters/s
+
+rate   [  47% ] 200/200 VUs  0m42.0s/1m30s  16.00 iters/s
+
+rate   [  48% ] 199/200 VUs  0m43.0s/1m30s  16.00 iters/s
+
+rate   [  49% ] 200/200 VUs  0m44.0s/1m30s  16.00 iters/s
+
+rate   [  50% ] 200/200 VUs  0m45.0s/1m30s  16.00 iters/s
+
+rate   [  51% ] 200/200 VUs  0m46.0s/1m30s  16.00 iters/s
+
+rate   [  52% ] 200/200 VUs  0m47.0s/1m30s  16.00 iters/s
+
+rate   [  53% ] 200/200 VUs  0m48.0s/1m30s  16.00 iters/s
+
+rate   [  54% ] 200/200 VUs  0m49.0s/1m30s  16.00 iters/s
+
+rate   [  56% ] 200/200 VUs  0m50.0s/1m30s  16.00 iters/s
+
+rate   [  57% ] 200/200 VUs  0m51.0s/1m30s  16.00 iters/s
+
+rate   [  58% ] 200/200 VUs  0m52.0s/1m30s  16.00 iters/s
+
+rate   [  59% ] 200/200 VUs  0m53.0s/1m30s  16.00 iters/s
+
+rate   [  60% ] 200/200 VUs  0m54.0s/1m30s  16.00 iters/s
+
+rate   [  61% ] 200/200 VUs  0m55.0s/1m30s  16.00 iters/s
+
+rate   [  62% ] 200/200 VUs  0m56.0s/1m30s  16.00 iters/s
+
+rate   [  63% ] 200/200 VUs  0m57.0s/1m30s  16.00 iters/s
+
+rate   [  64% ] 200/200 VUs  0m58.0s/1m30s  16.00 iters/s
+
+rate   [  66% ] 200/200 VUs  0m59.0s/1m30s  16.00 iters/s
+
+rate   [  67% ] 200/200 VUs  1m00.0s/1m30s  16.00 iters/s
+
+rate   [  68% ] 200/200 VUs  1m01.0s/1m30s  16.00 iters/s
+
+rate   [  69% ] 200/200 VUs  1m02.0s/1m30s  16.00 iters/s
+
+rate   [  70% ] 200/200 VUs  1m03.0s/1m30s  16.00 iters/s
+
+rate   [  71% ] 200/200 VUs  1m04.0s/1m30s  16.00 iters/s
+
+rate   [  72% ] 200/200 VUs  1m05.0s/1m30s  16.00 iters/s
+
+rate   [  73% ] 200/200 VUs  1m06.0s/1m30s  16.00 iters/s
+
+rate   [  74% ] 200/200 VUs  1m07.0s/1m30s  16.00 iters/s
+
+rate   [  76% ] 200/200 VUs  1m08.0s/1m30s  16.00 iters/s
+
+rate   [  77% ] 200/200 VUs  1m09.0s/1m30s  16.00 iters/s
+
+rate   [  78% ] 200/200 VUs  1m10.0s/1m30s  16.00 iters/s
+
+rate   [  79% ] 200/200 VUs  1m11.0s/1m30s  16.00 iters/s
+time="2026-09-19T05:10:10Z" level=warning msg="Request Failed" error="Post \"http://172.31.37.25/api/attendance/in\": request timeout"
+time="2026-09-19T05:10:10Z" level=warning msg="Request Failed" error="Post \"http://172.31.37.25/api/attendance/in\": request timeout"
+
+rate   [  80% ] 200/200 VUs  1m12.0s/1m30s  16.00 iters/s
+
+rate   [  81% ] 200/200 VUs  1m13.0s/1m30s  16.00 iters/s
+
+rate   [  82% ] 200/200 VUs  1m14.0s/1m30s  16.00 iters/s
+
+rate   [  83% ] 200/200 VUs  1m15.0s/1m30s  16.00 iters/s
+
+rate   [  84% ] 200/200 VUs  1m16.0s/1m30s  16.00 iters/s
+
+rate   [  86% ] 200/200 VUs  1m17.0s/1m30s  16.00 iters/s
+
+rate   [  87% ] 200/200 VUs  1m18.0s/1m30s  16.00 iters/s
+
+rate   [  88% ] 200/200 VUs  1m19.0s/1m30s  16.00 iters/s
+
+rate   [  89% ] 200/200 VUs  1m20.0s/1m30s  16.00 iters/s
+
+rate   [  90% ] 200/200 VUs  1m21.0s/1m30s  16.00 iters/s
+
+rate   [  91% ] 200/200 VUs  1m22.0s/1m30s  16.00 iters/s
+
+rate   [  92% ] 200/200 VUs  1m23.0s/1m30s  16.00 iters/s
+
+rate   [  93% ] 200/200 VUs  1m24.0s/1m30s  16.00 iters/s
+
+rate   [  94% ] 200/200 VUs  1m25.0s/1m30s  16.00 iters/s
+
+rate   [  96% ] 200/200 VUs  1m26.0s/1m30s  16.00 iters/s
+
+rate   [  97% ] 200/200 VUs  1m27.0s/1m30s  16.00 iters/s
+
+rate   [  98% ] 200/200 VUs  1m28.0s/1m30s  16.00 iters/s
+
+rate   [  99% ] 200/200 VUs  1m29.0s/1m30s  16.00 iters/s
+
+rate   [ 100% ] 200/200 VUs  1m30.0s/1m30s  16.00 iters/s
+
+rate ↓ [ 100% ] 200/200 VUs  1m30s  16.00 iters/s
+
+rate ↓ [ 100% ] 200/200 VUs  1m30s  16.00 iters/s
+
+rate ↓ [ 100% ] 200/200 VUs  1m30s  16.00 iters/s
+
+rate ↓ [ 100% ] 200/200 VUs  1m30s  16.00 iters/s
+
+rate ↓ [ 100% ] 200/200 VUs  1m30s  16.00 iters/s
+
+rate ↓ [ 100% ] 200/200 VUs  1m30s  16.00 iters/s
+
+rate ↓ [ 100% ] 200/200 VUs  1m30s  16.00 iters/s
+
+rate ↓ [ 100% ] 200/200 VUs  1m30s  16.00 iters/s
+
+rate ↓ [ 100% ] 200/200 VUs  1m30s  16.00 iters/s
+
+rate ↓ [ 100% ] 200/200 VUs  1m30s  16.00 iters/s
+time="2026-09-19T05:10:40Z" level=warning msg="Request Failed" error="Post \"http://172.31.37.25/api/attendance/in\": request timeout"
+time="2026-09-19T05:10:40Z" level=warning msg="Request Failed" error="Post \"http://172.31.37.25/api/attendance/in\": request timeout"
+time="2026-09-19T05:10:40Z" level=warning msg="Request Failed" error="Post \"http://172.31.37.25/api/attendance/in\": request timeout"
+
+rate ↓ [ 100% ] 200/200 VUs  1m30s  16.00 iters/s
+time="2026-09-19T05:10:40Z" level=warning msg="Request Failed" error="Post \"http://172.31.37.25/api/attendance/in\": request timeout"
+time="2026-09-19T05:10:40Z" level=warning msg="Request Failed" error="Post \"http://172.31.37.25/api/attendance/in\": request timeout"
+time="2026-09-19T05:10:40Z" level=warning msg="Request Failed" error="Post \"http://172.31.37.25/api/attendance/in\": request timeout"
+time="2026-09-19T05:10:40Z" level=warning msg="Request Failed" error="Post \"http://172.31.37.25/api/attendance/in\": request timeout"
+time="2026-09-19T05:10:40Z" level=warning msg="Request Failed" error="Post \"http://172.31.37.25/api/attendance/in\": request timeout"
+
+rate ↓ [ 100% ] 200/200 VUs  1m30s  16.00 iters/s
+time="2026-09-19T05:10:41Z" level=warning msg="Request Failed" error="Post \"http://172.31.37.25/api/attendance/in\": request timeout"
+time="2026-09-19T05:10:41Z" level=warning msg="Request Failed" error="Post \"http://172.31.37.25/api/attendance/in\": request timeout"
+time="2026-09-19T05:10:41Z" level=warning msg="Request Failed" error="Post \"http://172.31.37.25/api/attendance/in\": request timeout"
+time="2026-09-19T05:10:41Z" level=warning msg="Request Failed" error="Post \"http://172.31.37.25/api/attendance/in\": request timeout"
+time="2026-09-19T05:10:41Z" level=warning msg="Request Failed" error="Post \"http://172.31.37.25/api/attendance/in\": request timeout"
+time="2026-09-19T05:10:41Z" level=warning msg="Request Failed" error="Post \"http://172.31.37.25/api/attendance/in\": request timeout"
+time="2026-09-19T05:10:41Z" level=warning msg="Request Failed" error="Post \"http://172.31.37.25/api/attendance/in\": request timeout"
+time="2026-09-19T05:10:41Z" level=warning msg="Request Failed" error="Post \"http://172.31.37.25/api/attendance/in\": request timeout"
+time="2026-09-19T05:10:41Z" level=warning msg="Request Failed" error="Post \"http://172.31.37.25/api/attendance/in\": request timeout"
+time="2026-09-19T05:10:41Z" level=warning msg="Request Failed" error="Post \"http://172.31.37.25/api/attendance/in\": request timeout"
+time="2026-09-19T05:10:42Z" level=warning msg="Request Failed" error="Post \"http://172.31.37.25/api/attendance/in\": request timeout"
+time="2026-09-19T05:10:42Z" level=warning msg="Request Failed" error="Post \"http://172.31.37.25/api/attendance/in\": request timeout"
+time="2026-09-19T05:10:42Z" level=warning msg="Request Failed" error="Post \"http://172.31.37.25/api/attendance/in\": request timeout"
+time="2026-09-19T05:10:42Z" level=warning msg="Request Failed" error="Post \"http://172.31.37.25/api/attendance/in\": request timeout"
+time="2026-09-19T05:10:42Z" level=warning msg="Request Failed" error="Post \"http://172.31.37.25/api/attendance/in\": request timeout"
+
+rate ↓ [ 100% ] 200/200 VUs  1m30s  16.00 iters/s
+time="2026-09-19T05:10:42Z" level=warning msg="Request Failed" error="Post \"http://172.31.37.25/api/attendance/in\": request timeout"
+time="2026-09-19T05:10:42Z" level=warning msg="Request Failed" error="Get \"http://172.31.37.25/api/safety/user/courses\": request timeout"
+time="2026-09-19T05:10:42Z" level=warning msg="Request Failed" error="Get \"http://172.31.37.25/api/attendance\": request timeout"
+time="2026-09-19T05:10:42Z" level=warning msg="Request Failed" error="Post \"http://172.31.37.25/api/attendance/in\": request timeout"
+time="2026-09-19T05:10:42Z" level=warning msg="Request Failed" error="Get \"http://172.31.37.25/api/safety/user/courses\": request timeout"
+time="2026-09-19T05:10:42Z" level=warning msg="Request Failed" error="Get \"http://172.31.37.25/api/chat/rooms?size=20\": request timeout"
+time="2026-09-19T05:10:42Z" level=warning msg="Request Failed" error="Get \"http://172.31.37.25/api/work-logs?size=20\": request timeout"
+time="2026-09-19T05:10:42Z" level=warning msg="Request Failed" error="Get \"http://172.31.37.25/api/safety/user/courses\": request timeout"
+time="2026-09-19T05:10:42Z" level=warning msg="Request Failed" error="Get \"http://172.31.37.25/api/chat/rooms?size=20\": request timeout"
+time="2026-09-19T05:10:42Z" level=warning msg="Request Failed" error="Get \"http://172.31.37.25/api/work-logs?size=20\": request timeout"
+time="2026-09-19T05:10:42Z" level=warning msg="Request Failed" error="Get \"http://172.31.37.25/api/attendance\": request timeout"
+time="2026-09-19T05:10:42Z" level=warning msg="Request Failed" error="Post \"http://172.31.37.25/api/attendance/in\": request timeout"
+time="2026-09-19T05:10:42Z" level=warning msg="Request Failed" error="Post \"http://172.31.37.25/api/attendance/in\": request timeout"
+time="2026-09-19T05:10:42Z" level=warning msg="Request Failed" error="Post \"http://172.31.37.25/api/attendance/in\": request timeout"
+time="2026-09-19T05:10:42Z" level=warning msg="Request Failed" error="Post \"http://172.31.37.25/api/attendance/in\": request timeout"
+time="2026-09-19T05:10:42Z" level=warning msg="Request Failed" error="Post \"http://172.31.37.25/api/attendance/in\": request timeout"
+time="2026-09-19T05:10:42Z" level=warning msg="Request Failed" error="Post \"http://172.31.37.25/api/attendance/in\": request timeout"
+
+rate ↓ [ 100% ] 200/200 VUs  1m30s  16.00 iters/s
+
+rate ↓ [ 100% ] 200/200 VUs  1m30s  16.00 iters/s
+
+rate ↓ [ 100% ] 200/200 VUs  1m30s  16.00 iters/s
+
+rate ↓ [ 100% ] 200/200 VUs  1m30s  16.00 iters/s
+
+rate ↓ [ 100% ] 200/200 VUs  1m30s  16.00 iters/s
+
+rate ↓ [ 100% ] 200/200 VUs  1m30s  16.00 iters/s
+
+rate ↓ [ 100% ] 200/200 VUs  1m30s  16.00 iters/s
+
+rate ↓ [ 100% ] 200/200 VUs  1m30s  16.00 iters/s
+
+rate ↓ [ 100% ] 200/200 VUs  1m30s  16.00 iters/s
+
+rate ↓ [ 100% ] 200/200 VUs  1m30s  16.00 iters/s
+
+rate ↓ [ 100% ] 200/200 VUs  1m30s  16.00 iters/s
+
+rate ↓ [ 100% ] 200/200 VUs  1m30s  16.00 iters/s
+
+rate ↓ [ 100% ] 200/200 VUs  1m30s  16.00 iters/s
+
+rate ↓ [ 100% ] 200/200 VUs  1m30s  16.00 iters/s
+
+rate ↓ [ 100% ] 200/200 VUs  1m30s  16.00 iters/s
+
+rate ↓ [ 100% ] 200/200 VUs  1m30s  16.00 iters/s
+
+rate ✓ [ 100% ] 000/200 VUs  1m30s  16.00 iters/s
+
+== rate rate=16/s vus=1000 reqs=2132 rps=17.8 fail=15.2% p95=41978.6ms dropped=1079 maxVUs=200 login_fail=8 dup=0 journey_p95=102889ms
+name             n      rps     p50     p95     p99     max   fail%
+login              362       3 12147.4 30005.1 39898.3   58798    2.21
+clockin            354       3 30418.8 60000.5   60001   60001   51.98
+attendance_list    354       3 13067.1 41015.1 44462.6   60001    7.91
+worklogs           354       3 14992.4 40908.1   46219   60001     9.6
+chat_rooms         354       3 14356.3 41999.1 44493.2   60001    9.89
+safety_courses     354       3 13784.8 41302.8 43998.4   60001    9.89
+
+rate ✓ [ 100% ] 000/200 VUs  1m30s  16.00 iters/s
+time="2026-09-19T05:10:59Z" level=error msg="thresholds on metrics 'http_req_duration{name:attendance_list}, http_req_duration{name:chat_rooms}, http_req_duration{name:clockin}, http_req_duration{name:login}, http_req_duration{name:safety_courses}, http_req_duration{name:worklogs}, http_req_failed, http_req_failed{name:attendance_list}, http_req_failed{name:chat_rooms}, http_req_failed{name:clockin}, http_req_failed{name:login}, http_req_failed{name:safety_courses}, http_req_failed{name:worklogs}' have been crossed"
