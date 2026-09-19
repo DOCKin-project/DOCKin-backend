@@ -80,6 +80,7 @@ services:
       # 한쪽만 고치는 사고가 난다(P2-13-3이 그 사례다).
       #- JAVA_OPTS=-Xmx300M
       - AI_SERVER_URL=${AI_SERVER_URL}
+      - AI_SERVER_SERVICE_TOKEN=${AI_SERVER_SERVICE_TOKEN:-}
       - EMBEDDING_SERVER_URL=http://dockin-embedding:80
       - cloud.aws.credentials.access-key=${AWS_ACCESS_KEY}
       - cloud.aws.credentials.secret-key=${AWS_SECRET_KEY}

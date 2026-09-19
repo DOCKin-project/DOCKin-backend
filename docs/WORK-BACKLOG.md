@@ -1881,6 +1881,118 @@ chatbot 100은 가정(주 1회)의 500배라 상한 노릇을 못 했다.
 
 ---
 
+## P2-20 — API 점검에서 나온 것 (2026-09-17, 코드는 완료 — 후속 이슈 #79·#80·#81)
+
+컨트롤러 14개를 훑었다. P2-15·P2-18에서 이미 잡은 것(정렬 없는 페이징, IDOR, 가시성)은 빼고, **클라이언트 입력이 서버 오류로
+기록되거나 응답 계약이 서로 어긋나는 자리**만 골랐다.
+
+| # | 문제 | 어디 | 처리 | 우선 |
+|---|---|---|---|---|
+| ~~P2-20-1~~ | ~~**`?sort=없는컬럼`이 500**~~ **완료**(2026-09-17) — 아래 별도 | `SafetyAdminController:43`, `AbsenceAdminController:33`, `AbsenceRequestController:44`가 클라이언트 `Pageable`을 리포지토리에 그대로. 작업일지·채팅만 `sizeOnly`로 떼고 있었다 | `PageableConfig` — 요청 `sort`를 읽지 않는 리졸버를 스프링 데이터 것 앞에 | ★ |
+| ~~P2-20-2~~ | ~~**페이지 크기 상한 없음**~~ **완료**(2026-09-17) — `?size=2000`(스프링 데이터 기본 상한)까지 받고 `Page`는 그 크기의 COUNT까지 같이 돌았다 | 전체 | `spring.data.web.pageable.max-page-size=100`. 넘치면 400이 아니라 깎인다 | ★ |
+| ~~P2-20-3~~ | ~~`keyword`가 검증 없이 들어온다~~ **완료**(2026-09-17) — 없으면 null, 안전교육은 `CONCAT('%', null, '%')`가 NULL이라 **조용히 빈 목록**, 빈 문자열이면 전체 매칭이었다 | `SafetyAdminController:80`, `SafetyUserController:69`, `WorkLogsController:131` — 셋 다 `String keyword`에 애노테이션 없음 | `@RequestParam @NotBlank`. 아래 별도 — `@Validated`는 안 붙였다 | ★ |
+| ~~P2-20-4~~ | ~~응답 계약 불일치~~ **완료**(2026-09-17) — `POST /member/signup`만 201이 아니라 200, 본문이 JSON이 아니라 `text/plain` 문자열이었다. `/member/**`만 `/api` 프리픽스 없음 | `MemberController:51` | signup 201 + `{userId}`. `/api/member` 정식, `/member`는 앱이 옮길 때까지 별칭. 아래 별도 | ☆ |
+| ~~P2-20-5~~ | ~~안전교육 읽기 3개가 admin/user에 똑같이 두 벌~~ **완료**(2026-09-17) — (`courses`, `courses/user/{userId}`, `courses/search`) 서비스 메서드까지 같은 완전한 복제였다 | `SafetyAdminController`, `SafetyUserController` | admin 쪽 3개 삭제. `AdminPathSecurityTest`가 그 경로로 P2-18-6을 검사하고 있어 체크리스트 상세로 옮겼다(403이 아니면 통과). README는 이미 user 경로만 적고 있었다 | ☆ |
+| ~~P2-20-6~~ | ~~`GET /api/attendance`가 페이징 없이 전부~~ **완료**(2026-09-17) — 1인 1일 1행이라 연 365, 앱은 월 단위로 볼 것 | `AttendanceService:152` | `from`·`to`(ISO 날짜, 포함). 기본 오늘까지 31일, 최대 366일, 넘거나 역순이면 400. 아래 별도 | ☆ |
+| ~~P2-20-7~~ | ~~STT가 사용자 `Authorization`을 FastAPI에 그대로 전달~~ **완료**(2026-09-17) — `DOCKin-aiserver`를 읽어보니 그 헤더를 **읽지 않는다.** 읽는 건 `X-Service-Token`뿐 | `WorkLogsController:59`·`AiController:47` → `SttService:44` | 사용자 토큰 전달 삭제. `fastApiWebClient`가 `X-Service-Token`을 기본 헤더로(`AI_SERVER_SERVICE_TOKEN`, 비면 안 싣음). 아래 별도 | ☆ |
+
+하지 않은 것: `/api/v1` 버저닝, 에러 응답 `code` 필드. 둘 다 프론트 계약이고 후자는 `GlobalExceptionHandler`가 "넣지 않는다"를 이미 결정했다.
+
+### 머지·후속 (2026-09-18)
+
+일곱 개가 PR 여섯으로 전부 `dev`에 들어갔다 — #59(1·2) → #60(3) → #61(4) → #62(5) → #65(6) → #66(7). 각각 CI(컨테이너 테스트 포함) 통과 뒤 순서대로.
+로컬엔 Docker가 없어 `MemberPathWhitelistTest`·`AdminPathSecurityTest`는 CI에서만 돌았다 — 둘 다 통과.
+
+**스택 PR 절차에서 배운 것.** 백로그 표를 같이 고치려고 PR을 앞 PR 브랜치 위에 쌓았는데, 앞이 머지돼도 GitHub이 base를 `dev`로
+안 옮긴다 — 이 저장소가 브랜치를 안 지우는 관례라서(지워야 자동 재지정). `gh pr edit --base dev`로 옮기고, base 변경은 CI를 안
+태우므로(`pull_request` 기본 이벤트에 `edited`가 없다) close/reopen으로 재트리거했다. 다음엔 표 충돌을 감수하고 `dev`에서 따로 따는 게 단순하다.
+
+**관통한 기준 셋.** ① 클라이언트 입력이 500으로 기록되면 안 된다(1·3·6의 깨진 날짜). ② 검증보다 선택지를 없애는 게 낫다 — `sort`는 400을 내는 대신 안 읽는다.
+③ 상한은 있어야 하고 잘리는 걸 클라이언트가 알 수 있어야 한다 — 페이지 크기는 응답 `size`로 보이니 깎고, 기간은 알 길이 없으니 거부. 7은 성격이 달랐다: "인증하는 척"을 진짜 인증으로.
+
+**코드 밖에 남은 것** — 셋 다 이슈로:
+
+| 이슈 | 무엇 | 닫는 조건 |
+|---|---|---|
+| #81 | 앱 팀 확인 — 안전교육 관리자 GET(404)·근태 기본 31일·signup 201+JSON. [앱 팀 안내 문서](https://claude.ai/code/artifact/9c69cf39-3a74-4313-86df-51eaca762ce5) | 앱 팀이 셋 다 확인 |
+| #80 | 운영 FastAPI가 인증 없이 열려 있다 [추측] — `AI_SERVER_SERVICE_TOKEN`(스프링)·`SERVICE_TOKEN`(FastAPI) 같은 값 | 양쪽 설정 뒤 챗봇 호출 확인, `PRODUCTION-READINESS` G7 ✅ |
+| #79 | `/member` 별칭 삭제(네 자리) | 앱이 `/api/member`로 옮긴 뒤 |
+
+같은 날 다른 세션이 #75(rt-translate STT 응답 필드 불일치 — `text` vs `logText`)를 열었다. 7과 같은 파일(`SttService`)이라 함께 볼 것.
+
+### P2-20-7 — FastAPI는 그 헤더를 읽지도 않았다
+
+"FastAPI가 검증하는지부터"가 선결이었는데 팀원에게 묻는 대신 `DOCKin-aiserver` 저장소를 읽었다. `app/core/security.py`의
+`verify_service_token`이 유일한 인증이고, 읽는 헤더는 **`X-Service-Token`**, `SERVICE_TOKEN` 환경변수가 있을 때만 비교한다(없으면 통과).
+STT·번역·챗봇 라우트 전부 이 의존성을 건다. 즉 스프링이 넘기던 사용자 `Authorization`은 **아무도 읽지 않았고**, 사용자 JWT가 다른
+서비스의 요청 로그에 남을 수 있는 자리였을 뿐이다. 그리고 스프링이 `X-Service-Token`을 보낸 적이 없으므로 운영 FastAPI는
+`SERVICE_TOKEN` 없이, 즉 **닿을 수 있는 누구에게나 열린 채**로 돌고 있었을 것이다.
+
+바꾼 것: STT 두 경로(`/api/work-logs/stt`, `/api/ai/rt-translate`)의 `@RequestHeader(AUTHORIZATION)`과 그 인자 전달을 지웠다.
+`fastApiWebClient`가 `external-api.fastapi.service-token`(`AI_SERVER_SERVICE_TOKEN`)을 `X-Service-Token` 기본 헤더로 싣는다 —
+호출 다섯 곳이 아니라 클라이언트 한 곳. 비어 있으면 헤더를 아예 안 싣는다(빈 값을 실으면 FastAPI가 "있는데 틀림"으로 401).
+한쪽만 설정하면 401 → `INTERNAL_SERVER_ERROR`/`STT_CONVERSION_ERROR`로 올라온다. 조용히 열리는 쪽이 아니라 시끄럽게 닫히는 쪽으로 틀리게 뒀다.
+
+**운영에서 할 일**: 비밀 하나를 만들어 스프링 `.env`의 `AI_SERVER_SERVICE_TOKEN`과 FastAPI의 `SERVICE_TOKEN`에 같이 준다. 그 전까지는 지금과 같다(둘 다 비어 검사 없음).
+
+검증은 `WebClientConfigTest` — `exchangeFunction`으로 요청을 가로채 헤더만 본다. 있으면 실리고, `null`·`""`·공백이면 헤더가 없고, `Authorization`은 어떤 경우에도 없다.
+
+### P2-20-6 — 페이지가 아니라 기간으로, 잘라 주지 않고 거부한다
+
+근태는 달력 화면이라 커서·페이지보다 `from`·`to`가 자연스럽다. `to` 없으면 오늘(`Clock` — 출퇴근 판정과 같은 시계), `from` 없으면 `to`의 31일 전,
+둘 다 없으면 "오늘까지 최근 한 달". **상한 366일**은 있어야 한다 — 없으면 `from=2000-01-01`로 예전의 "전부"가 다시 열린다.
+넘치면 조용히 자르지 않고 `ATTENDANCE_RANGE_TOO_LONG`(400)으로 거부한다. 페이지 크기(P2-20-2)는 깎아도 응답의 `size`로 알 수 있지만,
+기간은 잘렸는지 클라이언트가 알 길이 없다. `from > to`는 휴가와 같은 `INVALID_DATE_RANGE`. 회원 조회보다 먼저 거부한다.
+
+**앱 계약이 바뀐다** — 예전엔 파라미터 없이 전부 왔고 지금은 최근 31일이다. 그 이전을 보려면 `from`을 줘야 한다.
+
+검증은 둘로: 기간 규칙(기본값·상한 경계 366/367·역순)은 `AttendanceServiceTest`(Mockito, 고정 시계 2026-07-10),
+파라미터 해석(ISO 파싱·없으면 null·`2026-13-01`은 400)은 `AttendanceRangeParamTest`(`@WebMvcTest`).
+
+### P2-20-4 — 경로를 끊지 않고 둘 다 받는다
+
+signup 응답은 `SignupResponseDto { userId }` + 201로 바꿨다. 이건 응답 파싱 한 줄이라 앱이 맞추기 쉽다.
+
+경로는 다르다. `/member` → `/api/member`로 옮기면 앱의 로그인·가입·갱신·로그아웃·탈퇴 다섯 호출이 한 번에 깨진다. 그래서
+`@RequestMapping({"/api/member", "/member"})`로 **둘 다 받고**, 화이트리스트에 `/api/member/{login,signup,refresh}` 셋을 더했다(옛 셋은 그대로).
+앱이 옮기면 지울 것: 컨트롤러의 `"/member"`, `security.whitelist[11·12·17]`, `MemberApiContractTest.legacyPath`, `MemberPathWhitelistTest.LEGACY_OPEN`.
+넷을 한 커밋에 지우면 된다 — 테스트 둘이 그 네 자리를 가리키고 있다.
+
+검증은 둘로 갈랐다. 응답 계약(201·JSON·두 경로가 같은 핸들러)은 `MemberApiContractTest`(`@WebMvcTest`, DB 없이). 화이트리스트는 실제 시큐리티
+체인이 필요해 `MemberPathWhitelistTest`(컨테이너)로 — 빈 본문을 보내 **401이 아니라 400**이면 화이트리스트를 지나 `@Valid`까지 간 것이다.
+logout은 두 경로 다 401인 것도 본다: 프리픽스를 더하며 열리면 안 되는 것까지 열리지 않았는지.
+
+### P2-20-3 — `@NotBlank`를 붙이자 500이 됐다
+
+`@RequestParam @NotBlank String keyword`로 바꾸고 공백을 넣어보니 400이 아니라 **500**이었다. 스프링 6.1부터 컨트롤러에
+`@Validated`가 없으면 `RequestMappingHandlerAdapter`가 파라미터 제약을 직접 검증하고 `HandlerMethodValidationException`을 던지는데,
+`GlobalExceptionHandler`는 `@Validated` 프록시 경로의 `ConstraintViolationException`만 잡고 있었다 — 그 핸들러는 지금까지 쓰는 곳이 없던
+죽은 코드였다. 캐치올이 새 예외를 500으로 승격시킨 세 번째 사례(403·404·413 다음).
+
+처음 계획은 클래스에 `@Validated`를 붙여 그 죽은 핸들러를 살리는 것이었는데, 그러면 컨트롤러가 CGLIB 프록시로 감싸이고 두 검증 경로가
+컨트롤러마다 갈린다. 대신 `HandlerMethodValidationException` 핸들러를 달았다 — 내장 경로 하나로 통일되고, 다음에 누가 파라미터에 제약을
+붙여도 500이 안 난다. 없는 경우는 `@RequestParam`(필수)의 `MissingServletRequestParameterException`이 이미 400이다.
+
+`KeywordValidationTest`(`@WebMvcTest`)가 없음·공백·있음 셋을 본다. 핸들러를 빼고 돌리면 공백만 500으로 떨어진다.
+
+### P2-20-1·2 — 예외를 400으로 돌리지 않고, `sort`를 읽지 않기로 했다
+
+`?sort=foo`의 실패 지점이 둘이다. 파생 쿼리(`findAll(pageable)`, `findByCreatedBy`)는 `PropertyReferenceException`,
+`@Query`(안전교육 검색)는 하이버네이트 `SemanticException`이 `InvalidDataAccessApiUsageException`으로 감싸져 온다.
+전자만 400으로 매핑하면 절반이고, 후자까지 400으로 돌리면 **잘못 쓴 JPQL(진짜 버그)이 클라이언트 탓으로 숨는다.**
+
+대신 입력을 없앴다. 이 저장소의 목록은 전부 순서가 제품 결정이라(최신순·커서, P2-15-3·P2-12-8) 클라이언트가 고를 정렬이 없고,
+`PageableSortDefaultTest`가 모든 `Pageable`에 `@PageableDefault(sort=…)`를 강제한다. `PageableConfig`가 요청의 `sort` 자리에
+항상 `unsorted`를 넣으면 스프링 데이터가 그 애노테이션의 sort로 채운다 — **애노테이션이 계약을 적어 두는 것에서 동작을 만드는 것으로** 바뀌었다.
+작업일지·채팅의 `sizeOnly`는 그대로 둔다(커서가 있으면 page 번호를 버리는 일은 여전히 거기 몫).
+
+스프링 데이터 리졸버는 `pageableResolver`라는 이름의 빈으로 고정 생성되어 갈아끼우려면 빈 오버라이딩을 켜야 한다. 대신
+`WebMvcConfigurer` + `Ordered.HIGHEST_PRECEDENCE`로 **앞에 하나 더 세웠다.** 순서에 기대는 구조라 `PageableConfigTest`가
+동작(`sort` 무시·`size` 상한)과 함께 **리졸버 목록에 둘 다 있고 우리 것이 먼저**인지를 단언한다. `@WebMvcTest` 슬라이스라 DB 없이 2초.
+설정을 끄고 돌리면 `sort` 테스트와 순서 테스트가 떨어지고 `size` 테스트만 남는다 — 상한은 부트가 기본 리졸버에도 넣기 때문이며, 그래서 키를 부트 것으로 썼다.
+
+---
+
 ## P3 — 이후 (하지 않아도 무방)
 
 우선순위가 낮다. P0~P2를 끝낸 뒤에만 손댄다.

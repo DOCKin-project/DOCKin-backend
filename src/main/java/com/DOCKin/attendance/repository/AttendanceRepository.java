@@ -13,7 +13,8 @@ import java.util.Optional;
 
 @Repository
 public interface AttendanceRepository extends JpaRepository<Attendance,Long> {
-    List<Attendance> findByMemberOrderByWorkDateDesc(Member member);
+    /** 개인 근태 조회. 기간은 서비스가 정한다 — 상한 없이 전부 주던 것을 기간으로 바꿨다(P2-20-6). */
+    List<Attendance> findByMemberAndWorkDateBetweenOrderByWorkDateDesc(Member member, LocalDate from, LocalDate to);
     Optional<Attendance> findByMemberAndWorkDate(Member member, LocalDate workDate);
 
     /**

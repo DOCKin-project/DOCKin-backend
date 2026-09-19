@@ -93,6 +93,8 @@ SPRING_PROFILES_ACTIVE=seed ./gradlew bootRun --args='--rag.indexing.on-startup=
 
 `seed` 프로파일에서만 Flyway가 `db/seed`를 읽는다. **운영·CI 경로에서는 시드 SQL을 열어보지도 않는다.**
 
+**앱이 `UnknownHostException: DOCKin-DB`로 재시작만 반복하면** — `docker compose down`으로 네트워크를 지운 뒤 남아 있던 옛 컨테이너가 Docker 재시작 때 `restart: on-failure`로 혼자 올라온 것이다(`docker inspect dockin-app-1`의 `Networks`가 `{}`). `docker compose up -d dockin-app`이 컨테이너를 다시 만들어 현재 네트워크에 붙인다. 8080을 다른 프로젝트가 쓰면 `compose.override.yaml`(커밋 안 됨)에서 `ports: !override ["8081:8080"]`. (#71)
+
 ---
 
 ## 디렉터리 구조
@@ -139,10 +141,13 @@ DOCKin-spring/
 
 | Method | Endpoint | 설명 |
 |:---|:---|:---|
-| `POST` | `/member/signup` | 회원가입 |
-| `POST` | `/member/login` | 로그인 · JWT 발급 |
-| `POST` | `/member/logout` | 로그아웃 (토큰 무효화) |
-| `DELETE` | `/member/{userId}` | 회원 탈퇴 |
+| `POST` | `/api/member/signup` | 회원가입 (201, `{userId}`) |
+| `POST` | `/api/member/login` | 로그인 · JWT 발급 |
+| `POST` | `/api/member/refresh` | 토큰 갱신 (리프레시 토큰 회전) |
+| `POST` | `/api/member/logout` | 로그아웃 (토큰 무효화) |
+| `DELETE` | `/api/member/{userId}` | 회원 탈퇴 (본인만) |
+
+`/member/*`도 앱이 옮겨 갈 때까지 같은 곳으로 간다.
 
 </details>
 
@@ -153,7 +158,7 @@ DOCKin-spring/
 |:---|:---|:---|
 | `POST` | `/api/attendance/in` | 출근 — 분산락 + 비관적 락 |
 | `POST` | `/api/attendance/out` | 퇴근 |
-| `GET` | `/api/attendance` | 개인 근태 기록 조회 |
+| `GET` | `/api/attendance?from=&to=` | 개인 근태 기록 조회 (기간, 기본 최근 31일, 최대 366일) |
 | `POST` | `/api/absence/requests` | 휴가 신청 (증빙 파일 첨부) |
 | `GET` | `/api/absence/requests` | 내 휴가 신청 목록 |
 | `GET` | `/api/absence/admin/requests` | 전체 신청 목록 (관리자) |

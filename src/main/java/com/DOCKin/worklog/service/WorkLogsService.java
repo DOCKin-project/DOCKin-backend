@@ -75,7 +75,7 @@ public class WorkLogsService {
 
     //stt용게시물 작성
     @Transactional
-    public WorkLogDto createSttWorklog(String userId, WorkLogsCreateRequestDto dto, MultipartFile file,String token, List<MultipartFile> images){
+    public WorkLogDto createSttWorklog(String userId, WorkLogsCreateRequestDto dto, MultipartFile file, List<MultipartFile> images){
         Member member = memberRepository.findByUserId(userId)
                 .orElseThrow(()->new BusinessException(ErrorCode.USER_NOT_FOUND));
 
@@ -87,7 +87,7 @@ public class WorkLogsService {
 
         if(file!=null && !file.isEmpty()){
             try{
-                var sttResponse = sttService.processStt(file,"trace-"+userId,token,"ko").block();
+                var sttResponse = sttService.processStt(file,"trace-"+userId,"ko").block();
 
                 log.info("STT Response 객체: {}", sttResponse);
 

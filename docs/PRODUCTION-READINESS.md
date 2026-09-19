@@ -27,7 +27,10 @@
 | G5 | 토큰 생명주기가 없다 | ✅ 2026-09-14 | refresh 토큰을 저장만 하고(`MemberService.login`) 갱신 엔드포인트가 없다. 로그아웃 폐기는 `JwtBlacklist` in-memory(P2-5) | 만료되면 재로그인뿐이고, 재시작하면 로그아웃이 풀린다. **액세스 토큰이 곧 세션**인 구조라 블랙리스트가 유일한 폐기 수단 |
 | G6 | 관리자 경로를 한 곳에서 막지 않는다 | ✅ 2026-09-14 | `SecurityConfig`는 `/actuator/**`만 `hasRole`. `/api/*/admin/**`은 서비스가 손으로 `role != ADMIN` 검사 | 메서드 하나 빠지면 그대로 구멍 — `SafetyAdminController` 읽기 3개·`ChecklistAdminController` 상세 조회가 이미 그렇다 |
 
+| G7 | AI 서버(FastAPI)가 인증 없이 열려 있다 | △ 2026-09-17 코드 / 운영 설정 #80 | `SttService`가 사용자 `Authorization`을 넘겼는데 FastAPI는 그 헤더를 읽지 않고 `X-Service-Token`만 본다(`SERVICE_TOKEN` 있을 때만). 스프링이 그걸 보낸 적이 없다 | 번역·STT·챗봇(OpenAI 비용)이 닿을 수 있는 누구에게나 열린다 [추측 — 운영 `SERVICE_TOKEN` 미확인]. 코드는 PR #66으로 준비됐고 양쪽에 같은 값을 넣어야 닫힌다 |
+
 > **1절은 이틀에 닫았다** (백로그 P2-18-1~6, P2-5). G5는 `/member/refresh`(회전·재사용 감지) + 블랙리스트 Redis 이관, G6은 `SecurityConfig` 한 줄 + `AdminPathSecurityTest`.
+> G7은 2026-09-17 API 점검(P2-20-7)에서 뒤늦게 나왔다 — 2026-09-13 점검은 스프링 안만 봤고 스프링→FastAPI 경계는 안 봤다. 코드는 끝났고 운영 설정(#80)이 남았다.
 
 ---
 
