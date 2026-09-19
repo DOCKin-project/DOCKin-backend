@@ -9,6 +9,18 @@
 - 다른 PR 위에 쌓아야 하면(스택) base를 그 브랜치로 열고, 아래 PR이 머지되면 base를 `main`으로 옮긴다.
 - 브랜치를 만들 때 워킹트리에 **남의 미커밋 변경**이 있으면 그것까지 따라온다. 커밋할 때 자기 파일만 고른다 — 같은 워킹트리에 세션이 둘일 수 있다. 체크아웃이 막히면 `git worktree add`로 따로 판다.
 
+## 마이그레이션 번호 — PR을 열기 전에 열린 PR 전부의 번호를 본다 (2026-09-19, #138)
+
+- Flyway는 `outOfOrder=false`·`validate`라 **버전이 겹치면 기동이 거부된다.** 세션 여럿이 동시에 PR을 열면 겹친다 — 2026-09-19 하루에 세 번 옮겼다(V10·V11·V12).
+- `db/migration`에 파일을 만들기 전에 **main과 열린 PR 브랜치 전부**의 최고 번호를 보고 그 다음을 쓴다:
+  ```bash
+  git fetch -q origin
+  for b in main $(gh pr list --json headRefName -q '.[].headRefName'); do
+    printf '%s: ' "$b"; git ls-tree -r --name-only "origin/$b" src/main/resources/db/migration | grep -oE 'V[0-9]+' | sort -V | tail -1
+  done
+  ```
+- 먼저 머지된 PR이 내 번호를 가져갔으면 **내 쪽을 옮긴다**(파일명만). 머지 순서가 정해진 스택이면 그 순서대로 번호를 잡는다.
+
 ## 이슈 — 문제를 발견하면 GitHub 이슈로 남긴다 (2026-09-17)
 
 - 작업 중 발견한 **문제**(버그, 미결, 다음에 잴 것, 거둔 결정, 남의 코드에서 본 이상)는 답변이나 문서에만 적지 말고 **`gh issue create`로 이슈를 만든다.** 문서·PR 본문에는 이슈 번호를 적어 잇는다.
