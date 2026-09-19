@@ -59,6 +59,8 @@ public enum ErrorCode {
     ABSENCE_REQUEST_AUTHOR(403, "AB003", "휴가 신청 처리 권한이 없습니다."),
     INSUFFICIENT_LEAVE_DAYS(409, "AB004", "잔여 연차가 부족합니다."),
     INVALID_DATE_RANGE(400, "AB005", "종료일이 시작일보다 빠를 수 없습니다."),
+    ABSENCE_NO_WORKING_DAYS(400, "AB006", "신청 기간에 근무일이 없습니다."),
+    ABSENCE_PERIOD_OVERLAP(409, "AB007", "같은 기간에 이미 신청되었거나 승인된 휴가가 있습니다."),
 
     // Worklog
     LOG_NOT_FOUND(404, "W001", "존재하지 않는 작업 일지입니다."),

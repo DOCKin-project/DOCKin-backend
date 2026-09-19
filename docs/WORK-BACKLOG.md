@@ -270,6 +270,29 @@ private float[] embedding;
 - **배치가 `Clock`을 주입받는다.** `LocalDate.now()`를 직접 부르면 "어제"가 실행 시각에 따라 달라져
   테스트가 불가능하다. 근태는 날짜 경계가 곧 비즈니스 규칙이다.
 
+### P2-4-1 — 연차는 근무일만, 겹치는 휴가는 세 겹으로 (#104, 2026-09-19 완료 — 브랜치 `fix/leave-days-working-days`)
+
+P2-4가 "이미 구현돼 있었다"고 적은 차감이 `DAYS.between + 1`이었다 — 월~일 신청이면 7일. P2-6-1로 캘린더 API가 생겨
+`isWorkingDay`가 쓸 만해진 뒤에야 보였다. 그리고 겹침 검사가 없어 같은 기간을 두 번 내고 둘 다 승인되면 근태는
+기존 행을 건너뛰어 조용히 넘어가고 **잔액만 두 번 깎였다.** 결정은 물어서 정했다.
+
+| 결정 | 골랐다 | 버린 것 |
+|---|---|---|
+| 일수 | **기간 중 근무일 수** — `WorkCalendarService.workingDaysBetween`(캘린더는 기간 한 번만 읽음). 결근 배치·하루 집계와 한 기준 | 달력 일수 |
+| 근무일 0(토~일만) | **신청 시점 400** `AB006`. 차감할 게 없는 연차는 실수라 바로 알려야 고친다. 병가는 차감이 없어 안 본다 | 0일 차감으로 승인 |
+| 겹침 | **신청 시**(PENDING·APPROVED와 겹치면 409 `AB007`) + **승인 시**(APPROVED와 재검사 — 겹치는 PENDING 둘 중 하나만 승인) + **DB**(V11 `EXCLUDE USING gist`, APPROVED끼리, btree_gist) | 승인 시만 / 서비스만 |
+| 승인 근태 행 | **근무일만** — 일수와 같은 기준. 주말 VACATION 행은 하루 집계 vacation을 쉬는 날에 부풀린다 | 기간 전체 |
+| 소급 정정 | **안 한다.** 이미 승인된 건의 잔액은 그대로 | 재계산 |
+| PENDING 취소·`CHECK(end >= start)` | **별도 PR** — 주제가 다르다 | 이번에 같이 |
+
+V11이 기존 데이터에 겹치는 APPROVED가 있으면 실패한다 — 잔액이 두 번 깎인 데이터라 조용히 넘기지 않고, DO 블록이 어떤 행인지
+NOTICE로 먼저 찍는다. 시드는 안 겹친다(7/13~15 하나). EXCLUDE 위반은 서비스 검사가 먼저 잡으므로 실제로는 안 닿고,
+닿으면 `DataIntegrityViolationException` → 500(#108의 핸들러 부재).
+
+검증: 단위(`AbsenceRequestServiceTest` +5, `AbsenceApprovedListenerTest` +1, `WorkCalendarServiceTest` +2) +
+컨테이너 `AbsenceWorkingDaysAndOverlapTest` 3 — 월~일 승인이 잔액 15→10·근태 5행, 겹치는 신청 409, 우회해 넣은 PENDING도 승인에서 409,
+토~일 연차 400·병가 OK, V11이 APPROVED 겹침을 `exclusion_violation`으로 거부(REJECTED·PENDING·인접은 통과).
+
 ### P2-6 — 근무일 캘린더
 
 **1단계 완료.** `work_calendar` 테이블 + `WorkCalendarService`로 결근 배치가 근무일을 판단한다.

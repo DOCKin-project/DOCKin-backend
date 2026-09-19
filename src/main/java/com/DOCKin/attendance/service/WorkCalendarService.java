@@ -16,6 +16,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * 근무일 판단과 캘린더 관리.
@@ -46,6 +49,22 @@ public class WorkCalendarService {
         return workCalendarRepository.findById(date)
                 .map(WorkCalendar::isWorkingDay)
                 .orElseGet(() -> !isWeekend(date));
+    }
+
+    /**
+     * 기간(양끝 포함) 중 근무일만. {@link #isWorkingDay}와 같은 규칙인데 캘린더는 기간 한 번만 읽는다 —
+     * 날짜마다 {@code findById}면 연차 기간만큼 쿼리가 는다. 연차 일수(#104)와 승인 근태 행이 이걸 쓴다.
+     */
+    public List<LocalDate> workingDaysBetween(LocalDate start, LocalDate endInclusive) {
+        Map<LocalDate, WorkCalendar> registered = workCalendarRepository
+                .findByCalendarDateBetweenOrderByCalendarDate(start, endInclusive).stream()
+                .collect(Collectors.toMap(WorkCalendar::getCalendarDate, Function.identity()));
+        return start.datesUntil(endInclusive.plusDays(1))
+                .filter(date -> {
+                    WorkCalendar entry = registered.get(date);
+                    return entry != null ? entry.isWorkingDay() : !isWeekend(date);
+                })
+                .toList();
     }
 
     private boolean isWeekend(LocalDate date) {
