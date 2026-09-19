@@ -165,6 +165,31 @@ public class AbsenceRequestService {
         return response;
     }
 
+    /**
+     * 신청자 취소 — PENDING만. 잘못 낸 신청이 관리자가 거절해 줄 때까지 기간을 점유하던 것(겹침 검사가 PENDING도 본다)을
+     * 신청자가 스스로 거둘 수 있게 한다. 행은 남고 CANCELLED가 된다 — 이력은 지우지 않는다.
+     *
+     * <p>남의 신청은 존재 여부와 무관하게 403. APPROVED 취소(연차 환급·근태 행 삭제)는 다음 PR.
+     */
+    @Transactional
+    public AbsenceRequestResponseDto cancelRequest(String userId, Integer requestId, String comment) {
+        AbsenceRequest request = absenceRequestRepository.findById(requestId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ABSENCE_REQUEST_NOT_FOUND));
+        if (!request.getMember().getUserId().equals(userId)) {
+            throw new BusinessException(ErrorCode.ACCESS_DENIED);
+        }
+        if (request.getStatus() != AbsenceStatus.PENDING) {
+            throw new BusinessException(ErrorCode.ABSENCE_NOT_CANCELLABLE);
+        }
+
+        request.setStatus(AbsenceStatus.CANCELLED);
+        request.setProcessedBy(request.getMember());
+        request.setProcessedAt(LocalDateTime.now());
+        request.setDecisionComment(comment);
+
+        return AbsenceRequestResponseDto.fromEntity(absenceRequestRepository.save(request));
+    }
+
     @Transactional
     public AbsenceRequestResponseDto rejectRequest(String adminUserId, Integer requestId, String comment) {
         Member admin = requireAdmin(adminUserId);

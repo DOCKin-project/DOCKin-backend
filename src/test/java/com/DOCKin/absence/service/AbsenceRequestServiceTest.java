@@ -334,4 +334,52 @@ class AbsenceRequestServiceTest {
         assertEquals("REJECTED", response.getStatus());
         assertEquals("사유 불충분", response.getDecisionComment());
     }
+
+    // ── 신청자 취소 (#104 잔여) ─────────────────────────────────────────────
+
+    @Test
+    @DisplayName("PENDING인 내 신청은 취소된다 - CANCELLED, 처리자는 본인, 잔액은 그대로")
+    void cancelRequest_pending_becomesCancelled() {
+        Member applicant = applicant(15);
+        AbsenceRequest request = pendingRequest(AbsenceType.VACATION, MON, WED, applicant);
+        when(absenceRequestRepository.findById(1)).thenReturn(Optional.of(request));
+        when(absenceRequestRepository.save(any(AbsenceRequest.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        AbsenceRequestResponseDto response = absenceRequestService.cancelRequest(USER_ID, 1, "일정 변경");
+
+        assertEquals("CANCELLED", response.getStatus());
+        assertEquals(USER_ID, request.getProcessedBy().getUserId());
+        assertEquals("일정 변경", response.getDecisionComment());
+        assertEquals(15, applicant.getRemainingLeaveDays());
+        verify(memberRepository, never()).findByUserIdForUpdate(any());
+    }
+
+    @Test
+    @DisplayName("남의 신청은 403 - 존재 여부와 무관하게")
+    void cancelRequest_notOwner_forbidden() {
+        AbsenceRequest request = pendingRequest(AbsenceType.VACATION, MON, WED, applicant(15));
+        when(absenceRequestRepository.findById(1)).thenReturn(Optional.of(request));
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> absenceRequestService.cancelRequest("someone-else", 1, null));
+
+        assertEquals(ErrorCode.ACCESS_DENIED, ex.getErrorCode());
+        assertEquals(AbsenceStatus.PENDING, request.getStatus());
+    }
+
+    @Test
+    @DisplayName("승인·거절된 신청은 이 PR에서는 취소할 수 없다 - 409 ABSENCE_NOT_CANCELLABLE (승인 취소는 환급이 따르므로 별도)")
+    void cancelRequest_notPending_rejected() {
+        Member applicant = applicant(15);
+        AbsenceRequest approved = pendingRequest(AbsenceType.VACATION, MON, WED, applicant);
+        approved.setStatus(AbsenceStatus.APPROVED);
+        when(absenceRequestRepository.findById(1)).thenReturn(Optional.of(approved));
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> absenceRequestService.cancelRequest(USER_ID, 1, null));
+
+        assertEquals(ErrorCode.ABSENCE_NOT_CANCELLABLE, ex.getErrorCode());
+        assertEquals(AbsenceStatus.APPROVED, approved.getStatus());
+        verify(absenceRequestRepository, never()).save(any());
+    }
 }
