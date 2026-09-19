@@ -70,7 +70,7 @@
 | O3 | 로그 집계 | ❌ | 컨테이너 로그가 호스트에만 | CloudWatch Logs나 Loki. `traceId`를 만든 이유가 여기서 살아남는다 |
 | O4 | 슬로우 쿼리 | △ 2026-09-15 | 주 1회 절차 `OPERATIONS-SLOW-QUERY.md` — `scripts/db/slow-query-report.sh`가 누적·평균·호출 top 10 + `wait_event` + 락 대기 로그 수를 남긴다 | 4주 분포 뒤 `log_min_duration_statement`·`auto_explain`. cron 등록 |
 | O5 | 에러 트래킹 | ❌ | `GlobalExceptionHandler`가 500을 삼키고 로그만 남긴다 | Sentry 류. 지금은 사용자가 말해줘야 안다 |
-| O6 | 장애 대응 문서 | ❌ | 없음 | "DB가 안 뜬다 / 번역 서버가 죽었다 / 디스크가 찼다" 세 시나리오면 된다. E8의 "앱 재시작으로 안 돌아오면 DB도 재시작"이 이미 하나다 |
+| O6 | 장애 대응 문서 | △ | `docs/db/incident-response.md` (2026-09-19) — "DB가 안 뜬다 / 삭제가 안 끝난다 / 느려졌는데 재시작으로 안 돌아온다" | DB 시나리오 셋은 겪은 것으로 썼다(DB-IMPROVEMENT-PLAN E4). "번역 서버가 죽었다 / 디스크가 찼다"는 겪은 적이 없어 아직 없다 — #89 |
 
 ---
 

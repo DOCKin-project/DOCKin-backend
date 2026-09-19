@@ -137,6 +137,7 @@ applicant.useLeaveDays((int) days);
 ### 검토했으나 택하지 않은 대안
 
 - **낙관적 락(`@Version`)** — 충돌 시 예외 후 재시도 로직이 필요하다. 경합이 드문 작업이라 복잡도만 늘어난다.
+- **REPEATABLE READ (락 없이)** — 2026-09-19 실측 추가(`LeaveBalanceConcurrencyTest` 셋째 조건, DB-IMPROVEMENT-PLAN C4). PostgreSQL의 RR은 first-updater-wins라 `FOR UPDATE` 없이도 둘째 승인의 UPDATE가 첫째 커밋까지 막혔다가 `40001 could not serialize access due to concurrent update`로 죽는다 — 잔액은 지켜진다(승인 1건, 잔액 2일). 그러나 ① 진 쪽은 "잔액 부족"이 아니라 **예외**로 끝나므로 재시도해서 다시 읽어야 사용자에게 맞는 답이 간다 — 낙관락과 같은 재시도 복잡도. ② 둘째 UPDATE는 어차피 첫째 커밋까지 **막힌다**(실측 99ms) — 비관락 대비 대기가 줄지도 않는다. 얻는 게 없다.
 - **원자적 UPDATE** (`SET remaining = remaining - :days WHERE remaining >= :days`) — 읽기 단계가 없어 lost update가 성립하지 않는 **가장 가벼운 해법**이다. 다만 벌크 UPDATE라 영속성 컨텍스트의 엔티티와 어긋난다. 승인 로직이 이미 엔티티를 다루고 있어 비관적 락 쪽이 코드 흐름과 맞는다.
 
 ### 함께 넣은 방어
