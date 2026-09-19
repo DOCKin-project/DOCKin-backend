@@ -1,0 +1,30 @@
+09:30:09  앱이 떠 있다 — 내린다 (묵은 색인 정리)
+09:30:13  시작 코퍼스 240099 청크 / 원본 200016 / TEI 상한 2.0 고정
+09:30:14  구멍 파기 — 가장 오래된 12000 원본의 청크를 지운다
+09:31:34  ◆ 구멍 완료
+09:31:35  구멍: 240099 → 225728 청크
+09:31:37  ◆ 앱 기동 — 연속 색인 시작(1회차)
+09:32:41  [baseline] 청크 226327 (+599) 원본당 120.0ms | INSERT 2.022ms/건 | ckpt 0/0 wal 39.8MB | dead 14371 vac 21 run=0 | hnsw 405MB | cpu app 0.47% db 0.02% tei 200.29% | dbmem 993/1024MB file 964 anon 19 evmax 76050 | base —
+09:33:44  [baseline] 청크 227300 (+973) 원본당 80.0ms | INSERT 1.906ms/건 | ckpt 1/0 wal 48.3MB | dead 14371 vac 21 run=0 | hnsw 405MB | cpu app 8.48% db 0.02% tei 200.20% | dbmem 994/1024MB file 965 anon 19 evmax 76102 | base —
+09:34:47  [baseline] 청크 228377 (+1077) 원본당 70.0ms | INSERT 1.920ms/건 | ckpt 1/0 wal 57.2MB | dead 14371 vac 21 run=0 | hnsw 405MB | cpu app 0.93% db 0.01% tei 200.42% | dbmem 993/1024MB file 964 anon 19 evmax 76158 | base —
+09:35:51  [baseline] 청크 229355 (+978) 원본당 80.0ms | INSERT 1.905ms/건 | ckpt 1/0 wal 64.2MB | dead 14371 vac 21 run=0 | hnsw 405MB | cpu app 4.31% db 0.03% tei 199.78% | dbmem 993/1024MB file 964 anon 19 evmax 76201 | base —
+09:36:54  [baseline] 청크 230437 (+1082) 원본당 70.0ms | INSERT 1.921ms/건 | ckpt 1/0 wal 70.9MB | dead 14371 vac 21 run=0 | hnsw 405MB | cpu app 0.96% db 0.02% tei 201.44% | dbmem 993/1024MB file 964 anon 19 evmax 76220 | base —
+09:37:58  [baseline] 청크 231509 (+1072) 원본당 71.1ms | INSERT 1.917ms/건 | ckpt 1/0 wal 77.9MB | dead 14371 vac 21 run=0 | hnsw 406MB | cpu app 0.59% db 0.02% tei 199.96% | dbmem 993/1024MB file 964 anon 19 evmax 76221 | base —
+09:39:01  [baseline] 청크 232457 (+948) 원본당 78.8ms | INSERT 1.950ms/건 | ckpt 2/0 wal 87.8MB | dead 14371 vac 21 run=0 | hnsw 406MB | cpu app 1.82% db 21.94% tei 152.85% | dbmem 994/1024MB file 965 anon 19 evmax 76253 | base —
+09:39:02  ◆ 기준선 확정 71.1ms/원본 (유효 5표본 중앙값)
+09:40:05  [watch] 청크 233528 (+1071) 원본당 71.1ms | INSERT 1.952ms/건 | ckpt 2/0 wal 96.9MB | dead 14371 vac 21 run=0 | hnsw 406MB | cpu app 3.44% db 0.01% tei 197.36% | dbmem 990/1024MB file 961 anon 19 evmax 76324 | base 71.1
+09:41:08  [watch] 청크 234481 (+953) 원본당 78.8ms | INSERT 1.934ms/건 | ckpt 2/0 wal 102.9MB | dead 14371 vac 21 run=0 | hnsw 406MB | cpu app 0.22% db 0.02% tei 152.12% | dbmem 992/1024MB file 963 anon 19 evmax 76324 | base 71.1
+09:42:12  [watch] 청크 235572 (+1091) 원본당 71.1ms | INSERT 1.920ms/건 | ckpt 2/0 wal 110.4MB | dead 14371 vac 21 run=0 | hnsw 406MB | cpu app 0.24% db 5.47% tei 199.72% | dbmem 992/1024MB file 963 anon 19 evmax 76324 | base 71.1
+09:43:15  [watch] 청크 236522 (+950) 원본당 78.8ms | INSERT 1.921ms/건 | ckpt 3/0 wal 116.6MB | dead 14371 vac 21 run=0 | hnsw 406MB | cpu app 4.24% db 22.74% tei 201.81% | dbmem 994/1024MB file 964 anon 19 evmax 76338 | base 71.1
+09:44:19  [watch] 청크 237694 (+1172) 원본당 63.0ms | INSERT 1.955ms/건 | ckpt 3/0 wal 127.0MB | dead 14371 vac 21 run=0 | hnsw 406MB | cpu app 0.25% db 4.24% tei 200.48% | dbmem 992/1024MB file 963 anon 19 evmax 76400 | base 71.1
+09:45:22  [watch] 청크 238655 (+961) 원본당 80.0ms | INSERT 1.927ms/건 | ckpt 3/0 wal 134.3MB | dead 14371 vac 21 run=0 | hnsw 406MB | cpu app 0.56% db 0.02% tei 200.45% | dbmem 992/1024MB file 963 anon 19 evmax 76447 | base 71.1
+09:46:26  [watch] 청크 239618 (+963) 원본당 78.8ms | INSERT 1.921ms/건 | ckpt 3/0 wal 141.1MB | dead 14371 vac 21 run=0 | hnsw 406MB | cpu app 0.24% db 23.67% tei 198.91% | dbmem 996/1024MB file 964 anon 22 evmax 76490 | base 71.1
+09:47:29  [watch] 청크 240099 (+481) 원본당 160.0ms | INSERT 1.931ms/건 | ckpt 3/0 wal 144.7MB | dead 14371 vac 21 run=0 | hnsw 406MB | cpu app 0.19% db 4.26% tei 0.18% | dbmem 992/1024MB file 963 anon 19 evmax 78422 | base 71.1
+09:47:30  ◆ 색인 완주 (앱 로그) — 남은 원본 없음
+09:47:30  최종 코퍼스 240099 청크 (시작 240099) / 개입 0단계까지 / 재기동 0회
+09:47:47  완료. 사건 표=measure/e8reopen-20260919T093008/A/e8cause-20260919T093008/marks.csv  본체=measure/e8reopen-20260919T093008/A/e8cause-20260919T093008/rate.csv
+t_epoch     t_iso                 event                                        chunks
+1789810294  2026-09-19T09:31:34Z  구멍 완료                                    225728
+1789810296  2026-09-19T09:31:36Z  앱 기동 — 연속 색인 시작(1회차)              225728
+1789810741  2026-09-19T09:39:01Z  기준선 확정 71.1ms/원본 (유효 5표본 중앙값)  232579
+1789811249  2026-09-19T09:47:29Z  색인 완주 (앱 로그) — 남은 원본 없음         240099
