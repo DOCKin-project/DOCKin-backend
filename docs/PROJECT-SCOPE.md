@@ -10,7 +10,7 @@ DOCKin은 팀 프로젝트다. `docs/adr/*` 문서와 이 저장소(`DOCKin-back
 ## 담당 범위 (본인, 이 저장소)
 
 - 인증/인가: JWT 발급/블랙리스트, RBAC(`ADMIN`/`USER`)
-- 근태: 출퇴근 체크 동시성 제어(Redis 분산락 + DB 유니크 제약), 근무조별 지각 판정 — `docs/adr/0001`
+- 근태: 출퇴근 체크 동시성 제어(Redis 분산락 + DB 유니크 제약), 근무조별 지각 판정 — `docs/adr/0001`; 근무일 = 교대 기준일(야간조) — `docs/adr/0010`
 - 휴가 신청/승인 도메인, 승인 시 근태 반영(`ApplicationEvent` 기반), 자정 결근 배치, 근무일 캘린더
 - DB 스키마 설계 및 쿼리/인덱스 (`docs/adr/0002`의 N+1, LIKE 검색 진단 포함)
 - 채팅(WebSocket/STOMP), 작업일지 CRUD, 안전교육 이수 관리, 장비 점검 체크리스트 API(점검 회차 — `docs/adr/0011`)
