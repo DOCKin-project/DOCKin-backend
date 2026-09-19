@@ -1,0 +1,72 @@
+The files belonging to this database system will be owned by user "postgres".
+This user must also own the server process.
+
+The database cluster will be initialized with locale "en_US.utf8".
+The default database encoding has accordingly been set to "UTF8".
+The default text search configuration will be set to "english".
+
+Data page checksums are disabled.
+
+fixing permissions on existing directory /var/lib/postgresql/data ... ok
+creating subdirectories ... ok
+selecting dynamic shared memory implementation ... posix
+selecting default "max_connections" ... 100
+selecting default "shared_buffers" ... 128MB
+selecting default time zone ... Etc/UTC
+creating configuration files ... ok
+running bootstrap script ... ok
+performing post-bootstrap initialization ... ok
+syncing data to disk ... ok
+
+
+Success. You can now start the database server using:
+
+    pg_ctl -D /var/lib/postgresql/data -l logfile start
+
+initdb: warning: enabling "trust" authentication for local connections
+initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+waiting for server to start....2026-09-19 15:24:55.991 UTC [47] LOG:  starting PostgreSQL 17.11 (Debian 17.11-1.pgdg12+2) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit
+2026-09-19 15:24:56.176 UTC [47] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2026-09-19 15:24:56.506 UTC [50] LOG:  database system was shut down at 2026-09-19 15:24:46 UTC
+.2026-09-19 15:24:56.637 UTC [47] LOG:  database system is ready to accept connections
+ done
+server started
+CREATE DATABASE
+
+
+/usr/local/bin/docker-entrypoint.sh: ignoring /docker-entrypoint-initdb.d/*
+
+waiting for server to shut down...2026-09-19 15:24:57.981 UTC [47] LOG:  received fast shutdown request
+.2026-09-19 15:24:58.017 UTC [47] LOG:  aborting any active transactions
+2026-09-19 15:24:58.047 UTC [47] LOG:  background worker "logical replication launcher" (PID 53) exited with exit code 1
+2026-09-19 15:24:58.048 UTC [48] LOG:  shutting down
+2026-09-19 15:24:58.139 UTC [48] LOG:  checkpoint starting: shutdown immediate
+....2026-09-19 15:25:02.187 UTC [48] LOG:  checkpoint complete: wrote 921 buffers (5.6%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.133 s, sync=3.537 s, total=4.139 s; sync files=301, longest=0.142 s, average=0.012 s; distance=4238 kB, estimate=4238 kB; lsn=0/190A9C0, redo lsn=0/190A9C0
+2026-09-19 15:25:02.330 UTC [47] LOG:  database system is shut down
+ done
+server stopped
+
+PostgreSQL init process complete; ready for start up.
+
+2026-09-19 15:25:02.726 UTC [1] LOG:  starting PostgreSQL 17.11 (Debian 17.11-1.pgdg12+2) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit
+2026-09-19 15:25:02.726 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+2026-09-19 15:25:02.726 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+2026-09-19 15:25:02.925 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2026-09-19 15:25:03.161 UTC [63] LOG:  database system was shut down at 2026-09-19 15:25:02 UTC
+2026-09-19 15:25:03.217 UTC [1] LOG:  database system is ready to accept connections
+2026-09-19 15:26:09.201 UTC [61] LOG:  checkpoint starting: wal
+2026-09-19 15:27:33.254 UTC [116] LOG:  skipping analyze of "work_logs" --- lock not available
+2026-09-19 15:30:45.702 UTC [61] LOG:  checkpoint complete: wrote 266 buffers (1.6%); 0 WAL file(s) added, 0 removed, 33 recycled; write=269.497 s, sync=1.226 s, total=276.501 s; sync files=102, longest=0.672 s, average=0.013 s; distance=533636 kB, estimate=533636 kB; lsn=0/36400208, redo lsn=0/2222BB80
+2026-09-19 15:30:57.309 UTC [61] LOG:  checkpoint starting: wal
+2026-09-19 15:31:40.085 UTC [61] LOG:  checkpoint complete: wrote 9486 buffers (57.9%); 0 WAL file(s) added, 1 removed, 32 recycled; write=35.042 s, sync=2.302 s, total=42.777 s; sync files=13, longest=1.597 s, average=0.178 s; distance=542577 kB, estimate=542577 kB; lsn=0/624B1908, redo lsn=0/43408110
+2026-09-19 15:31:40.086 UTC [61] LOG:  checkpoint starting: wal
+2026-09-19 15:32:33.345 UTC [855] LOG:  skipping vacuum of "work_logs" --- lock not available
+2026-09-19 15:33:06.165 UTC [61] LOG:  checkpoint complete: wrote 5918 buffers (36.1%); 0 WAL file(s) added, 6 removed, 31 recycled; write=57.933 s, sync=5.158 s, total=86.080 s; sync files=17, longest=3.616 s, average=0.305 s; distance=605501 kB, estimate=605501 kB; lsn=0/8741C398, redo lsn=0/68357670
+2026-09-19 15:33:06.166 UTC [61] LOG:  checkpoint starting: wal
+2026-09-19 15:33:50.285 UTC [1033] LOG:  process 1033 still waiting for ShareUpdateExclusiveLock on relation 16397 of database 16384 after 1000.123 ms
+2026-09-19 15:33:50.285 UTC [1033] DETAIL:  Process holding the lock: 926. Wait queue: 1033.
+2026-09-19 15:33:50.285 UTC [1033] STATEMENT:  VACUUM work_logs
+2026-09-19 15:33:50.287 UTC [926] ERROR:  canceling autovacuum task
+2026-09-19 15:33:50.287 UTC [926] CONTEXT:  automatic analyze of table "dockindb.public.work_logs"
+2026-09-19 15:33:50.288 UTC [1033] LOG:  process 1033 acquired ShareUpdateExclusiveLock on relation 16397 of database 16384 after 1002.793 ms
+2026-09-19 15:33:50.288 UTC [1033] STATEMENT:  VACUUM work_logs

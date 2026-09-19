@@ -1,0 +1,218 @@
+-- L1_A0
+                                                                        QUERY PLAN                                                                         
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=0.42..30.07 rows=21 width=462) (actual time=0.054..0.212 rows=21 loops=1)
+   Buffers: shared hit=2 read=22
+   ->  Index Scan using idx_work_logs_area_created on work_logs w  (cost=0.42..240522.06 rows=170386 width=462) (actual time=0.053..0.204 rows=21 loops=1)
+         Index Cond: ((ship_yard_area)::text = 'A0'::text)
+         Buffers: shared hit=2 read=22
+ Planning:
+   Buffers: shared hit=165 read=33
+ Planning Time: 3.040 ms
+ Execution Time: 0.240 ms
+(9 rows)
+
+
+-- L2_A0
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=0.42..69.63 rows=21 width=462) (actual time=0.179..0.797 rows=21 loops=1)
+   Buffers: shared hit=4 read=21
+   ->  Index Scan using idx_work_logs_area_created on work_logs w  (cost=0.42..190919.57 rows=57935 width=462) (actual time=0.177..0.782 rows=21 loops=1)
+         Index Cond: (((ship_yard_area)::text = 'A0'::text) AND (created_at <= '2025-07-14 11:20:00'::timestamp without time zone))
+         Filter: ((created_at < '2025-07-14 11:20:00'::timestamp without time zone) OR (log_id < 381571))
+         Rows Removed by Filter: 1
+         Buffers: shared hit=4 read=21
+ Planning:
+   Buffers: shared hit=223
+ Planning Time: 1.346 ms
+ Execution Time: 0.844 ms
+(11 rows)
+
+
+-- S1_A0
+                                                                             QUERY PLAN                                                                             
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=70251.02..70253.47 rows=21 width=462) (actual time=402.864..412.014 rows=21 loops=1)
+   Buffers: shared hit=3252 read=28858
+   ->  Gather Merge  (cost=70251.02..70254.28 rows=28 width=462) (actual time=402.862..412.004 rows=21 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=3252 read=28858
+         ->  Sort  (cost=69250.99..69251.03 rows=14 width=462) (actual time=396.935..396.939 rows=15 loops=3)
+               Sort Key: created_at DESC, log_id DESC
+               Sort Method: quicksort  Memory: 50kB
+               Buffers: shared hit=3252 read=28858
+               Worker 0:  Sort Method: quicksort  Memory: 61kB
+               Worker 1:  Sort Method: quicksort  Memory: 64kB
+               ->  Parallel Bitmap Heap Scan on work_logs w  (cost=4658.33..69250.73 rows=14 width=462) (actual time=32.307..396.684 rows=33 loops=3)
+                     Recheck Cond: ((ship_yard_area)::text = 'A0'::text)
+                     Filter: (((title)::text ~~ '%크랭크축%'::text) OR (log_text ~~ '%크랭크축%'::text))
+                     Rows Removed by Filter: 55967
+                     Heap Blocks: exact=10583
+                     Buffers: shared hit=3224 read=28858
+                     ->  Bitmap Index Scan on idx_work_logs_area_created  (cost=0.00..4658.32 rows=170386 width=0) (actual time=30.730..30.730 rows=168000 loops=1)
+                           Index Cond: ((ship_yard_area)::text = 'A0'::text)
+                           Buffers: shared hit=5 read=825
+ Planning:
+   Buffers: shared hit=198
+ Planning Time: 1.162 ms
+ Execution Time: 412.115 ms
+(25 rows)
+
+
+-- S2_A0
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=0.42..82.96 rows=21 width=462) (actual time=0.062..0.559 rows=21 loops=1)
+   Buffers: shared hit=56 read=38
+   ->  Index Scan using idx_work_logs_area_created on work_logs w  (cost=0.42..241373.99 rows=61414 width=462) (actual time=0.060..0.551 rows=21 loops=1)
+         Index Cond: ((ship_yard_area)::text = 'A0'::text)
+         Filter: (((title)::text ~~ '%베어링%'::text) OR (log_text ~~ '%베어링%'::text))
+         Rows Removed by Filter: 70
+         Buffers: shared hit=56 read=38
+ Planning:
+   Buffers: shared hit=166 read=32
+ Planning Time: 1.086 ms
+ Execution Time: 0.586 ms
+(11 rows)
+
+
+-- L1_A1
+                                                                        QUERY PLAN                                                                         
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=0.42..11.01 rows=21 width=462) (actual time=0.102..0.315 rows=21 loops=1)
+   Buffers: shared hit=3 read=21
+   ->  Index Scan using idx_work_logs_area_created on work_logs w  (cost=0.42..254692.47 rows=505059 width=462) (actual time=0.100..0.305 rows=21 loops=1)
+         Index Cond: ((ship_yard_area)::text = 'A1'::text)
+         Buffers: shared hit=3 read=21
+ Planning:
+   Buffers: shared hit=198
+ Planning Time: 1.100 ms
+ Execution Time: 0.348 ms
+(9 rows)
+
+
+-- L2_A1
+                                                                        QUERY PLAN                                                                         
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=0.42..30.48 rows=21 width=462) (actual time=0.055..0.191 rows=21 loops=1)
+   Buffers: shared hit=5 read=19
+   ->  Index Scan using idx_work_logs_area_created on work_logs w  (cost=0.42..245793.74 rows=171730 width=462) (actual time=0.053..0.185 rows=21 loops=1)
+         Index Cond: (((ship_yard_area)::text = 'A1'::text) AND (created_at <= '2025-07-14 11:20:00'::timestamp without time zone))
+         Filter: ((created_at < '2025-07-14 11:20:00'::timestamp without time zone) OR (log_id < 381571))
+         Buffers: shared hit=5 read=19
+ Planning:
+   Buffers: shared hit=223
+ Planning Time: 0.610 ms
+ Execution Time: 0.213 ms
+(10 rows)
+
+
+-- S1_A1
+                                                                         QUERY PLAN                                                                          
+-------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=0.42..54016.07 rows=21 width=462) (actual time=1833.351..1833.364 rows=0 loops=1)
+   Buffers: shared hit=337699 read=164767
+   ->  Index Scan using idx_work_logs_area_created on work_logs w  (cost=0.42..257217.76 rows=100 width=462) (actual time=1833.349..1833.349 rows=0 loops=1)
+         Index Cond: ((ship_yard_area)::text = 'A1'::text)
+         Filter: (((title)::text ~~ '%크랭크축%'::text) OR (log_text ~~ '%크랭크축%'::text))
+         Rows Removed by Filter: 500000
+         Buffers: shared hit=337699 read=164767
+ Planning:
+   Buffers: shared hit=198
+ Planning Time: 0.963 ms
+ Execution Time: 1833.391 ms
+(11 rows)
+
+
+-- S2_A1
+                                                                        QUERY PLAN                                                                         
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=0.42..30.10 rows=21 width=462) (actual time=0.086..0.872 rows=21 loops=1)
+   Buffers: shared hit=10 read=68
+   ->  Index Scan using idx_work_logs_area_created on work_logs w  (cost=0.42..257217.76 rows=182044 width=462) (actual time=0.085..0.859 rows=21 loops=1)
+         Index Cond: ((ship_yard_area)::text = 'A1'::text)
+         Filter: (((title)::text ~~ '%베어링%'::text) OR (log_text ~~ '%베어링%'::text))
+         Rows Removed by Filter: 54
+         Buffers: shared hit=10 read=68
+ Planning:
+   Buffers: shared hit=166 read=32
+ Planning Time: 1.636 ms
+ Execution Time: 0.920 ms
+(11 rows)
+
+
+-- L1_A5
+                                                                       QUERY PLAN                                                                       
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=0.42..73.43 rows=21 width=462) (actual time=0.102..0.292 rows=21 loops=1)
+   Buffers: shared hit=2 read=22
+   ->  Index Scan using idx_work_logs_area_created on work_logs w  (cost=0.42..31979.00 rows=9199 width=462) (actual time=0.100..0.281 rows=21 loops=1)
+         Index Cond: ((ship_yard_area)::text = 'A5'::text)
+         Buffers: shared hit=2 read=22
+ Planning:
+   Buffers: shared hit=198
+ Planning Time: 1.280 ms
+ Execution Time: 0.330 ms
+(9 rows)
+
+
+-- L2_A5
+                                                                       QUERY PLAN                                                                       
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=0.42..110.88 rows=21 width=462) (actual time=0.122..0.313 rows=21 loops=1)
+   Buffers: shared hit=8 read=16
+   ->  Index Scan using idx_work_logs_area_created on work_logs w  (cost=0.42..16452.34 rows=3128 width=462) (actual time=0.121..0.301 rows=21 loops=1)
+         Index Cond: (((ship_yard_area)::text = 'A5'::text) AND (created_at <= '2025-07-14 11:20:00'::timestamp without time zone))
+         Filter: ((created_at < '2025-07-14 11:20:00'::timestamp without time zone) OR (log_id < 381571))
+         Buffers: shared hit=8 read=16
+ Planning:
+   Buffers: shared hit=223
+ Planning Time: 1.212 ms
+ Execution Time: 0.344 ms
+(10 rows)
+
+
+-- S1_A5
+                                                                       QUERY PLAN                                                                       
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=25254.57..25254.57 rows=2 width=462) (actual time=95.376..95.386 rows=0 loops=1)
+   Buffers: shared hit=1518 read=6274
+   ->  Sort  (cost=25254.57..25254.57 rows=2 width=462) (actual time=95.374..95.376 rows=0 loops=1)
+         Sort Key: created_at DESC, log_id DESC
+         Sort Method: quicksort  Memory: 25kB
+         Buffers: shared hit=1518 read=6274
+         ->  Bitmap Heap Scan on work_logs w  (cost=253.42..25254.56 rows=2 width=462) (actual time=95.311..95.312 rows=0 loops=1)
+               Recheck Cond: ((ship_yard_area)::text = 'A5'::text)
+               Filter: (((title)::text ~~ '%크랭크축%'::text) OR (log_text ~~ '%크랭크축%'::text))
+               Rows Removed by Filter: 10000
+               Heap Blocks: exact=7733
+               Buffers: shared hit=1512 read=6274
+               ->  Bitmap Index Scan on idx_work_logs_area_created  (cost=0.00..253.42 rows=9199 width=0) (actual time=4.067..4.068 rows=10000 loops=1)
+                     Index Cond: ((ship_yard_area)::text = 'A5'::text)
+                     Buffers: shared hit=4 read=49
+ Planning:
+   Buffers: shared hit=198
+ Planning Time: 3.278 ms
+ Execution Time: 95.583 ms
+(19 rows)
+
+
+-- S2_A5
+                                                                       QUERY PLAN                                                                       
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=0.42..203.23 rows=21 width=462) (actual time=0.141..2.203 rows=21 loops=1)
+   Buffers: shared hit=320
+   ->  Index Scan using idx_work_logs_area_created on work_logs w  (cost=0.42..32025.00 rows=3316 width=462) (actual time=0.139..2.189 rows=21 loops=1)
+         Index Cond: ((ship_yard_area)::text = 'A5'::text)
+         Filter: (((title)::text ~~ '%베어링%'::text) OR (log_text ~~ '%베어링%'::text))
+         Rows Removed by Filter: 294
+         Buffers: shared hit=320
+ Planning:
+   Buffers: shared hit=198
+ Planning Time: 1.315 ms
+ Execution Time: 2.240 ms
+(11 rows)
+
+
