@@ -11,8 +11,11 @@ import java.util.List;
 @Repository
 public interface ChecklistResultRepository extends JpaRepository<ChecklistResult, Integer> {
 
-    // append-only 로그에서 체크리스트 하나의 항목별 "최신" 결과만 한 번의 쿼리로 가져온다 (N+1 방지).
+    // append-only 로그에서 회차 하나의 항목별 "최신" 결과만 한 번의 쿼리로 가져온다 (N+1 방지).
     // 같은 초에 여러 이벤트가 몰려도 checked_at이 아니라 IDENTITY PK(resultId)로 최신을 판정한다.
+    //
+    // 범위는 회차다. 예전 findLatestResultsByChecklistId는 템플릿 전역이라 다른 사람·다른 날의 체크가
+    // 섞였다(ADR-0011). (run_id, checklist_item_id, result_id DESC) 인덱스가 이 GROUP BY를 받는다.
     //
     // 결과가 관리 대상 엔티티(ChecklistResult)이므로 JPQL로 쓴다. 이전에는 같은 뜻의 SQL을
     // nativeQuery로 두었는데, 엔티티를 돌려주는 조회를 SQL로 쓰면 컬럼 이름이 엔티티 매핑과
@@ -21,10 +24,10 @@ public interface ChecklistResultRepository extends JpaRepository<ChecklistResult
             SELECT cr FROM ChecklistResult cr
             WHERE cr.resultId IN (
                 SELECT MAX(r.resultId) FROM ChecklistResult r
-                WHERE r.checklistItem.checklist.checklistId = :checklistId
+                WHERE r.run.runId = :runId
                 GROUP BY r.checklistItem.itemId)
             """)
-    List<ChecklistResult> findLatestResultsByChecklistId(@Param("checklistId") Integer checklistId);
+    List<ChecklistResult> findLatestResultsByRunId(@Param("runId") Long runId);
 
     boolean existsByChecklistItem_ItemId(Integer itemId);
 

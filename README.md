@@ -232,8 +232,12 @@ DOCKin-spring/
 | `GET` | `/api/safety/user/training/uncompleted` | 미이수 항목 |
 | `PATCH` | `/api/safety/user/training/complete` | 이수 처리 |
 | `POST` · `PUT` · `DELETE` | `/api/safety/admin/courses...` | 과정 관리 (관리자) |
-| `GET` | `/api/checklist/user/checklists` | 내 체크리스트 |
-| `PATCH` | `/api/checklist/user/checklists/{checklistId}/items/{itemId}/check` | 항목 체크 |
+| `POST` | `/api/checklist/user/runs` | 점검 회차 열기 (QR/NFC 직후, 멱등 — 12시간 안의 내 열린 회차면 200, 새로 열면 201) |
+| `GET` | `/api/checklist/user/runs/{runId}` · `/runs?from=&to=` | 회차 조회(항목별 상태) · 내 회차 목록 |
+| `PATCH` | `/api/checklist/user/runs/{runId}/items/{itemId}` | 항목 체크/해제 (append-only, 닫힌 회차 409) |
+| `PATCH` | `/api/checklist/user/runs/{runId}/complete` | 점검 완료 — 전 항목 체크여야 (아니면 409) |
+| `GET` | `/api/checklist/user/checklists?equipmentId=&phase=` | [옛 경로] 템플릿 + 내 열린 회차 상태 (`myOpenRunId`) |
+| `PATCH` | `/api/checklist/user/checklists/{checklistId}/items/{itemId}/check` | [옛 경로] 내 열린 회차에 기록, 없으면 연다 |
 | `POST` · `PUT` · `DELETE` | `/api/checklist/admin/checklists...` | 체크리스트 관리 (관리자) |
 
 </details>

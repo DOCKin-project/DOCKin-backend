@@ -11,6 +11,7 @@ import com.DOCKin.checklist.model.ChecklistItem;
 import com.DOCKin.checklist.repository.ChecklistItemRepository;
 import com.DOCKin.checklist.repository.ChecklistRepository;
 import com.DOCKin.checklist.repository.ChecklistResultRepository;
+import com.DOCKin.checklist.repository.ChecklistRunRepository;
 import com.DOCKin.global.error.BusinessException;
 import com.DOCKin.global.error.ErrorCode;
 import com.DOCKin.member.model.Member;
@@ -34,6 +35,7 @@ public class ChecklistService {
     private final ChecklistRepository checklistRepository;
     private final ChecklistItemRepository checklistItemRepository;
     private final ChecklistResultRepository checklistResultRepository;
+    private final ChecklistRunRepository checklistRunRepository;
     private final EquipmentRepository equipmentRepository;
     private final MemberRepository memberRepository;
 
@@ -124,7 +126,8 @@ public class ChecklistService {
         Checklist checklist = checklistRepository.findById(checklistId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.CHECKLIST_NOT_FOUND));
 
-        if (checklistResultRepository.existsByChecklistItem_Checklist_ChecklistId(checklistId)) {
+        // 회차가 하나라도 있으면 이 템플릿은 기록의 일부다. 결과(results)는 회차에 속하므로 회차만 보면 된다(ADR-0011).
+        if (checklistRunRepository.existsByChecklist_ChecklistId(checklistId)) {
             throw new BusinessException(ErrorCode.CHECKLIST_HAS_RESULTS);
         }
 

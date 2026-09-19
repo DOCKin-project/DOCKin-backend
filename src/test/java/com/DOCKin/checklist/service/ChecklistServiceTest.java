@@ -11,6 +11,7 @@ import com.DOCKin.checklist.model.ChecklistPhase;
 import com.DOCKin.checklist.repository.ChecklistItemRepository;
 import com.DOCKin.checklist.repository.ChecklistRepository;
 import com.DOCKin.checklist.repository.ChecklistResultRepository;
+import com.DOCKin.checklist.repository.ChecklistRunRepository;
 import com.DOCKin.global.error.BusinessException;
 import com.DOCKin.global.error.ErrorCode;
 import com.DOCKin.member.model.Member;
@@ -42,6 +43,8 @@ class ChecklistServiceTest {
     private ChecklistItemRepository checklistItemRepository;
     @Mock
     private ChecklistResultRepository checklistResultRepository;
+    @Mock
+    private ChecklistRunRepository checklistRunRepository;
     @Mock
     private EquipmentRepository equipmentRepository;
     @Mock
@@ -187,11 +190,11 @@ class ChecklistServiceTest {
     }
 
     @Test
-    @DisplayName("점검 기록이 존재하는 체크리스트를 삭제하면 CHECKLIST_HAS_RESULTS 예외가 발생하고 delete가 호출되지 않는다")
+    @DisplayName("점검 회차가 존재하는 체크리스트를 삭제하면 CHECKLIST_HAS_RESULTS 예외가 발생하고 delete가 호출되지 않는다")
     void deleteChecklist_hasResults_throwsException() {
         when(memberRepository.findByUserId(ADMIN_ID)).thenReturn(Optional.of(admin()));
         when(checklistRepository.findById(10)).thenReturn(Optional.of(checklist(10, ChecklistPhase.PRE)));
-        when(checklistResultRepository.existsByChecklistItem_Checklist_ChecklistId(10)).thenReturn(true);
+        when(checklistRunRepository.existsByChecklist_ChecklistId(10)).thenReturn(true);
 
         BusinessException ex = assertThrows(BusinessException.class,
                 () -> checklistService.deleteChecklist(ADMIN_ID, 10));
@@ -208,7 +211,7 @@ class ChecklistServiceTest {
                 ChecklistItem.builder().itemId(1).checklist(target).content("c1").sequence(1).build());
         when(memberRepository.findByUserId(ADMIN_ID)).thenReturn(Optional.of(admin()));
         when(checklistRepository.findById(10)).thenReturn(Optional.of(target));
-        when(checklistResultRepository.existsByChecklistItem_Checklist_ChecklistId(10)).thenReturn(false);
+        when(checklistRunRepository.existsByChecklist_ChecklistId(10)).thenReturn(false);
         when(checklistItemRepository.findByChecklist_ChecklistIdOrderBySequenceAscItemIdAsc(10)).thenReturn(items);
 
         checklistService.deleteChecklist(ADMIN_ID, 10);
