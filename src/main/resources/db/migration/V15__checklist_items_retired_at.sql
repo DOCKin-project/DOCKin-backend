@@ -6,5 +6,5 @@
 ALTER TABLE checklist_items ADD COLUMN retired_at timestamp(6) without time zone;
 
 -- 자식 FK 컬럼 인덱스. 항목 조회는 전부 checklist_id로 시작하는데(회차 조회마다 한 번) 인덱스가 없었다 —
--- V3·V4·V11이 다른 자식 테이블에 만든 것과 같은 이유. (checklist_id, sequence)로 두어 ORDER BY까지 받는다.
+-- V3·V4·V14가 다른 자식 테이블에 만든 것과 같은 이유. (checklist_id, sequence)로 두어 ORDER BY까지 받는다.
 CREATE INDEX IF NOT EXISTS idx_checklist_items_checklist ON checklist_items (checklist_id, sequence);
