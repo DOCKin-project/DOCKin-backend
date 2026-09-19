@@ -35,6 +35,7 @@ public enum ErrorCode {
     //SafetyCourse
     SAFETYCOURSE_NOT_FOUND(404, "S001", "존재하지 않는 안전교육입니다."),
     SAFETYCOURSE_AUTHOR(403, "S002", "안전교육 수정 권한이 없습니다."),
+    SAFETYCOURSE_HAS_ENROLLMENTS(409, "S003", "이미 수강 기록이 있어 삭제할 수 없습니다."),
 
 
     // Attendance
