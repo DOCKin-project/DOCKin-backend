@@ -286,7 +286,7 @@ private float[] embedding;
 **HTTP 엔드포인트가 없어 현재는 SQL로만 넣을 수 있다.** 관리자 컨트롤러가 필요하고,
 공공데이터 API(한국천문연구원 특일 정보) 연동으로 법정공휴일을 연 1회 자동 적재하면 손이 덜 간다.
 
-#### P2-6-1 — 등록 API 설계 (2026-09-18 설계 완료, 구현은 다음 — 브랜치 `feat/work-calendar-api`)
+#### P2-6-1 — 등록 API (2026-09-18 설계, 2026-09-19 구현 — 브랜치 `feat/work-calendar-api`)
 
 P2-17-1·P2-17-4를 닫고 이어서 잡았다. 결정은 물어서 정했다.
 
@@ -309,6 +309,12 @@ P2-17-1·P2-17-4를 닫고 이어서 잡았다. 결정은 물어서 정했다.
 `Year.now(clock)` — 서비스에 `Clock`을 넣으면 `WorkCalendarServiceTest`의 `@InjectMocks`가 null을 넣는다. 컨트롤러는
 `WorkCalendarController`(조회)·`WorkCalendarAdminController`(등록·삭제) 둘로 — #78의 `AttendanceAdminController`와 충돌을 피한다.
 테스트는 단위(삭제 404·삭제 후 `isWorkingDay`가 기본 규칙) + 컨테이너(USER가 GET 200·PUT 403, 일괄 upsert가 행에 반영, 삭제 뒤 기본 규칙 복귀).
+
+구현(2026-09-19): 위 그대로. `WorkCalendarController`(GET)·`WorkCalendarAdminController`(PUT 단건·일괄, DELETE 204),
+DTO 셋(`WorkCalendarDto`·`WorkCalendarUpsertRequestDto`·`WorkCalendarBulkUpsertRequestDto`), `ErrorCode.WORK_CALENDAR_NOT_FOUND`(AT005),
+`WorkCalendarService.delete`. 일괄 upsert의 "뒤가 이긴다"는 첫 `save`가 영속성 컨텍스트에 남아 두 번째 `findById`가 그것을 찾는 데
+기댄다 — 컨테이너 테스트(`WorkCalendarApiTest`, 6개)가 같은 날짜 둘을 보내 행 하나·뒤 값인지 본다. 단위 4개 추가(`WorkCalendarServiceTest`).
+공공데이터 연동은 그대로 다음 PR.
 
 **2·3단계는 P3(근무 정책 엔진)** — 교대조별 휴무 패턴, 개인별 예외.
 이 캘린더는 **전사 공통 휴무일만** 다룬다.
