@@ -8,6 +8,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 /**
  * 작업일지의 언어별 번역본.
@@ -74,6 +75,10 @@ public class TranslateLog {
     @Column(name = "language_code", length = 10)
     private String languageCode;
 
+    /** 이 번역을 낸 모델(FastAPI 응답의 {@code model}). V9 이전 행은 null. 캐시 히트 응답이 미스 때와 같은 꼴이려고 남긴다. */
+    @Column(name = "model", length = 100)
+    private String model;
+
     @CreatedDate
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -84,11 +89,23 @@ public class TranslateLog {
 
     /** 재번역 시 새 행을 만들지 않고 기존 행을 갱신한다. 유니크 제약이 중복을 막는다. */
     public void updateTranslation(String originalTitle, String translatedTitle,
-                                  String originalText, String translatedText, String traceId) {
+                                  String originalText, String translatedText, String traceId, String model) {
         this.originalTitle = originalTitle;
         this.translatedTitle = translatedTitle;
         this.originalText = originalText;
         this.translatedText = translatedText;
         this.traceId = traceId;
+        this.model = model;
+    }
+
+    /**
+     * 저장된 번역이 <b>이 원문</b>의 번역인가. 캐시 히트 판단(P2-19-1).
+     *
+     * <p>{@code work_logs.updated_at}이 아니라 원문 자체를 비교한다 — 승인·반려로 status만 바뀌어도
+     * updated_at은 갱신되는데 번역은 낡지 않았다. 표에 번역 당시 원문이 그대로 있으니 그것과 대보면
+     * 정확하고 마이그레이션도 없다. 같은 값이라도 다른 것으로 보는 경우가 없도록 {@code equals}다 — trim 하지 않는다.
+     */
+    public boolean matchesOriginal(String title, String text) {
+        return Objects.equals(originalTitle, title) && Objects.equals(originalText, text);
     }
 }

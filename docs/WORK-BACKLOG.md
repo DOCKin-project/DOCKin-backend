@@ -1902,6 +1902,35 @@ chatbot 100은 가정(주 1회)의 500배라 상한 노릇을 못 했다.
 >
 > 장애 정책 셋(락 열림·블랙리스트 닫힘·한도 열림)과 고르는 질문은 **ADR-0009**에 모았다.
 
+### P2-19-1 — 작업일지 번역 캐시 (2026-09-19, 완료 — 브랜치 `feat/worklog-translate-cache`)
+
+위 표가 보인 것 — 같은 일지·같은 언어를 다시 요청해도 FastAPI에 다시 갔다. `work_log_translations`에 저장은 했지만
+읽는 곳이 RAG 색인뿐이었다. 이제 저장된 행의 원문이 지금 원문과 같으면 그 행을 돌려주고, 다르면 재번역해 덮어쓴다.
+결정은 물어서 정했다.
+
+| 결정 | 골랐다 | 버린 것 |
+|---|---|---|
+| 낡은 번역 판단 | **저장된 원문(`original_title`·`original_text`)과 지금 원문 비교** (`TranslateLog.matchesOriginal`). 표에 번역 당시 원문이 그대로 있어 정확하고 마이그레이션이 없다 | `work_logs.updated_at` 비교 — 승인·반려(#76)로 status만 바뀌어도 갱신돼 쓸데없이 재번역된다 |
+| 히트 때 한도 | **안 깎는다.** 한도는 FastAPI 비용을 막는 것이고 히트는 FastAPI에 안 간다. `AiQuota.consume`이 컨트롤러에서 서비스의 FastAPI 호출 직전으로 옮겨 갔다 — "호출 전 INCR, 실패도 1"은 그대로 | 깎는다 — 위 표의 "20명 일지를 매일 다 읽는 근로자=20"이 히트에도 소모돼 상한 유도 근거가 어긋난다 |
+| 히트 응답의 `model` | **V9 `model` 컬럼 추가**, 미스 때와 같은 꼴. 같은 int8 모델이 호스트마다 다른 문장을 낸 기록(밤 13)이 있어 어느 모델의 번역이 굳어 있는지 표만 보고 알아야 한다. V9 이전 행은 null | `"cached"`·null |
+| 캐시 키 | `(log_id, language_code)` — 사용자 무관. 히트 때 `user_id`·`trace_id`는 첫 번역 것이 남는다 | 사용자별 |
+
+**덤으로 잡힌 것 — `NOT_SUPPORTED` 안에서 리포지토리 쿼리 메서드는 스코프 끝까지 커넥션을 쥔다 (이슈 #93).**
+캐시 조회를 `saveTranslateLog`에 바로 넣자 `TranslateTransactionBoundaryTest`가 "FastAPI 대기 중 활성 커넥션 1"로 빨개졌다.
+프로브(`@Transactional(NOT_SUPPORTED)` 메서드 안에서 하나씩 부르고 HikariCP active를 읽음):
+
+```
+findById inScope=0 | count inScope=0 | @Query jpql inScope=1 | derived findBy… inScope=1 | 별도 빈 @Transactional(readOnly) inScope=0
+```
+
+기존 코드는 `findById`만 써서 우연히 안전했다. 캐시 조회는 `TranslateLogReader.findCached`(별도 빈, readOnly, 엔티티가 아니라 값 반환)로
+뺐고 그 테스트가 다시 0이다. `AttendanceService.clockin`도 같은 모양(NOT_SUPPORTED 안에서 `findByUserId`)인데 거긴 스코프 전체가 짧은 DB
+작업이라 실해가 없다 — 이슈에 적어 뒀다.
+
+검증: `WorkLogTranslateCacheTest`(스텁 FastAPI 호출 수·Redis 카운터로 — 히트 0회·0, 다른 언어 미스, `updated_at`만 바뀌면 히트,
+본문 수정은 재번역·덮어쓰기, 상한+1은 FastAPI 0회) + `TranslateTransactionBoundaryTest` 그대로 0 + `AiQuotaWiringTest`는 번역 쪽을
+"서비스가 던진 429가 Retry-After와 나가는가"로 바꿈(한도가 서비스로 들어와 목으로는 못 본다).
+
 ---
 
 ## P2-20 — API 점검에서 나온 것 (2026-09-17, 코드는 완료 — 후속 이슈 #79·#80·#81)
