@@ -1,0 +1,10 @@
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+     execution: local
+        script: journey.js
+        output: -
+     scenarios: (100.00%) 1 scenario, 800 max VUs, 2m0s max duration (incl. graceful stop):
+              * rate: 48.00 iterations/s for 1m30s (maxVUs: 96-800, gracefulStop: 30s)
