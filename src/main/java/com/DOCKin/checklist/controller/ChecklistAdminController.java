@@ -6,7 +6,17 @@ import com.DOCKin.checklist.dto.ChecklistItemSimpleResponseDto;
 import com.DOCKin.checklist.dto.ChecklistItemUpdateRequestDto;
 import com.DOCKin.checklist.dto.ChecklistResponseDto;
 import com.DOCKin.checklist.dto.ChecklistUpdateRequestDto;
+import com.DOCKin.checklist.dto.ChecklistRunResponseDto;
+import com.DOCKin.checklist.service.ChecklistRunService;
 import com.DOCKin.checklist.service.ChecklistService;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
+
+import java.time.Clock;
+import java.time.LocalDate;
 import com.DOCKin.global.security.auth.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,6 +36,33 @@ import org.springframework.web.bind.annotation.*;
 public class ChecklistAdminController {
 
     private final ChecklistService checklistService;
+    private final ChecklistRunService checklistRunService;
+    private final Clock clock;
+
+    @Operation(summary = "점검 회차 목록 (하루치)",
+            description = "date(기본 오늘)에 시작한 회차를 최신순으로. equipmentId·userId·status(IN_PROGRESS/COMPLETED/ABANDONED)는 선택 필터. "
+                    + "항목은 싣지 않는다 — 회차 하나는 GET /runs/{runId}")
+    @GetMapping("/runs")
+    public ResponseEntity<Slice<ChecklistRunResponseDto>> listRuns(
+            @AuthenticationPrincipal CustomUserDetails customUserDetails,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) Long equipmentId,
+            @RequestParam(required = false) String userId,
+            @RequestParam(required = false) ChecklistRunService.RunStatusFilter status,
+            @PageableDefault(size = 20, sort = "startedAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        String adminUserId = customUserDetails.getMember().getUserId();
+        LocalDate day = date != null ? date : LocalDate.now(clock);
+        return ResponseEntity.ok(checklistRunService.adminRuns(adminUserId, day, equipmentId, userId, status, pageable));
+    }
+
+    @Operation(summary = "점검 회차 상세", description = "회차와 항목별 최신 상태. 관리자는 누구의 회차든 본다")
+    @GetMapping("/runs/{runId}")
+    public ResponseEntity<ChecklistRunResponseDto> getRun(
+            @AuthenticationPrincipal CustomUserDetails customUserDetails,
+            @PathVariable Long runId) {
+        String adminUserId = customUserDetails.getMember().getUserId();
+        return ResponseEntity.ok(checklistRunService.get(runId, adminUserId, true));
+    }
 
     @Operation(summary = "체크리스트 생성", description = "장비의 작업 전/후 점검 체크리스트를 항목과 함께 생성함")
     @PostMapping("/checklists")
