@@ -43,6 +43,7 @@ public enum ErrorCode {
     ATTENDANCE_ALREADY_CHECKED_OUT(409, "AT003", "이미 오늘 퇴근 처리가 완료되었습니다."),
     ATTENDANCE_RANGE_TOO_LONG(400, "AT004", "근태 조회 기간은 최대 366일입니다."),
     WORK_CALENDAR_NOT_FOUND(404, "AT005", "캘린더에 등록되지 않은 날짜입니다."),
+    ATTENDANCE_CLOCK_IN_STALE(409, "AT006", "출근 후 16시간이 지난 기록은 퇴근 처리할 수 없습니다. 관리자에게 문의하세요."),
 
     // Checklist
     CHECKLIST_NOT_FOUND(404, "CK001", "존재하지 않는 체크리스트입니다."),

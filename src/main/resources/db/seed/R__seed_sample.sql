@@ -251,26 +251,28 @@ ON CONFLICT DO NOTHING;
 -- 2026-07-13(월)의 worker03은 일부러 비워 뒀다 -- 결근 배치가 무엇을 대상으로
 -- 삼는지 보려면 "기록이 없는 근무일"이 하나는 있어야 한다.
 -- ---------------------------------------------------------------------------
-INSERT INTO attendance (id, user_id, work_date, clock_in_time, clock_out_time,
-                        in_location, out_location, status, total_work_time) VALUES
-  (1,  'worker01', DATE '2026-07-06', TIMESTAMP '2026-07-06 05:52:00', TIMESTAMP '2026-07-06 15:04:00', '1도크 게이트', '1도크 게이트', 'NORMAL',     '9h12m'),
-  (2,  'worker01', DATE '2026-07-07', TIMESTAMP '2026-07-07 05:58:00', TIMESTAMP '2026-07-07 15:01:00', '1도크 게이트', '1도크 게이트', 'NORMAL',     '9h03m'),
-  (3,  'worker01', DATE '2026-07-08', TIMESTAMP '2026-07-08 06:21:00', TIMESTAMP '2026-07-08 15:10:00', '1도크 게이트', '1도크 게이트', 'LATE',       '8h49m'),
-  (4,  'worker01', DATE '2026-07-09', TIMESTAMP '2026-07-09 05:49:00', TIMESTAMP '2026-07-09 15:02:00', '1도크 게이트', '1도크 게이트', 'NORMAL',     '9h13m'),
-  (5,  'worker01', DATE '2026-07-10', TIMESTAMP '2026-07-10 05:55:00', TIMESTAMP '2026-07-10 12:30:00', '1도크 게이트', '1도크 게이트', 'LEFT_EARLY', '6h35m'),
-  (6,  'worker01', DATE '2026-07-13', NULL, NULL, NULL, NULL, 'VACATION', NULL),
+-- work_shift는 판정 교대의 스냅샷(V10), work_seconds는 출퇴근 차(초). worker03은 야간조라
+-- 근무일(work_date)이 출근 날짜다 — 22:00 출근은 정오 이후라 그날이다(ADR-0010). 퇴근은 다음날 07시.
+INSERT INTO attendance (id, user_id, work_date, work_shift, clock_in_time, clock_out_time,
+                        in_location, out_location, status, work_seconds) VALUES
+  (1,  'worker01', DATE '2026-07-06', 'MORNING', TIMESTAMP '2026-07-06 05:52:00', TIMESTAMP '2026-07-06 15:04:00', '1도크 게이트', '1도크 게이트', 'NORMAL',     33120),
+  (2,  'worker01', DATE '2026-07-07', 'MORNING', TIMESTAMP '2026-07-07 05:58:00', TIMESTAMP '2026-07-07 15:01:00', '1도크 게이트', '1도크 게이트', 'NORMAL',     32580),
+  (3,  'worker01', DATE '2026-07-08', 'MORNING', TIMESTAMP '2026-07-08 06:21:00', TIMESTAMP '2026-07-08 15:10:00', '1도크 게이트', '1도크 게이트', 'LATE',       31740),
+  (4,  'worker01', DATE '2026-07-09', 'MORNING', TIMESTAMP '2026-07-09 05:49:00', TIMESTAMP '2026-07-09 15:02:00', '1도크 게이트', '1도크 게이트', 'NORMAL',     33180),
+  (5,  'worker01', DATE '2026-07-10', 'MORNING', TIMESTAMP '2026-07-10 05:55:00', TIMESTAMP '2026-07-10 12:30:00', '1도크 게이트', '1도크 게이트', 'LEFT_EARLY', 23700),
+  (6,  'worker01', DATE '2026-07-13', 'MORNING', NULL, NULL, NULL, NULL, 'VACATION', NULL),
 
-  (7,  'worker02', DATE '2026-07-06', TIMESTAMP '2026-07-06 13:55:00', TIMESTAMP '2026-07-06 23:02:00', '2도크 게이트', '2도크 게이트', 'NORMAL', '9h07m'),
-  (8,  'worker02', DATE '2026-07-07', TIMESTAMP '2026-07-07 13:51:00', TIMESTAMP '2026-07-07 23:00:00', '2도크 게이트', '2도크 게이트', 'NORMAL', '9h09m'),
-  (9,  'worker02', DATE '2026-07-08', NULL, NULL, NULL, NULL, 'ABSENT', NULL),
-  (10, 'worker02', DATE '2026-07-09', TIMESTAMP '2026-07-09 13:58:00', TIMESTAMP '2026-07-09 23:05:00', '2도크 게이트', '2도크 게이트', 'NORMAL', '9h07m'),
-  (11, 'worker02', DATE '2026-07-10', TIMESTAMP '2026-07-10 13:47:00', TIMESTAMP '2026-07-10 22:58:00', '2도크 게이트', '2도크 게이트', 'NORMAL', '9h11m'),
+  (7,  'worker02', DATE '2026-07-06', 'AFTERNOON', TIMESTAMP '2026-07-06 13:55:00', TIMESTAMP '2026-07-06 23:02:00', '2도크 게이트', '2도크 게이트', 'NORMAL', 32820),
+  (8,  'worker02', DATE '2026-07-07', 'AFTERNOON', TIMESTAMP '2026-07-07 13:51:00', TIMESTAMP '2026-07-07 23:00:00', '2도크 게이트', '2도크 게이트', 'NORMAL', 32940),
+  (9,  'worker02', DATE '2026-07-08', 'AFTERNOON', NULL, NULL, NULL, NULL, 'ABSENT', NULL),
+  (10, 'worker02', DATE '2026-07-09', 'AFTERNOON', TIMESTAMP '2026-07-09 13:58:00', TIMESTAMP '2026-07-09 23:05:00', '2도크 게이트', '2도크 게이트', 'NORMAL', 32820),
+  (11, 'worker02', DATE '2026-07-10', 'AFTERNOON', TIMESTAMP '2026-07-10 13:47:00', TIMESTAMP '2026-07-10 22:58:00', '2도크 게이트', '2도크 게이트', 'NORMAL', 33060),
 
-  (12, 'worker03', DATE '2026-07-06', TIMESTAMP '2026-07-06 21:50:00', TIMESTAMP '2026-07-07 07:02:00', '3도크 게이트', '3도크 게이트', 'NORMAL', '9h12m'),
-  (13, 'worker03', DATE '2026-07-07', TIMESTAMP '2026-07-07 21:56:00', TIMESTAMP '2026-07-08 07:00:00', '3도크 게이트', '3도크 게이트', 'NORMAL', '9h04m'),
-  (14, 'worker03', DATE '2026-07-08', TIMESTAMP '2026-07-08 21:48:00', TIMESTAMP '2026-07-09 07:05:00', '3도크 게이트', '3도크 게이트', 'NORMAL', '9h17m'),
-  (15, 'worker03', DATE '2026-07-09', TIMESTAMP '2026-07-09 22:14:00', TIMESTAMP '2026-07-10 07:01:00', '3도크 게이트', '3도크 게이트', 'LATE',   '8h47m'),
-  (16, 'worker03', DATE '2026-07-10', TIMESTAMP '2026-07-10 21:52:00', TIMESTAMP '2026-07-11 07:03:00', '3도크 게이트', '3도크 게이트', 'NORMAL', '9h11m')
+  (12, 'worker03', DATE '2026-07-06', 'NIGHT', TIMESTAMP '2026-07-06 21:50:00', TIMESTAMP '2026-07-07 07:02:00', '3도크 게이트', '3도크 게이트', 'NORMAL', 33120),
+  (13, 'worker03', DATE '2026-07-07', 'NIGHT', TIMESTAMP '2026-07-07 21:56:00', TIMESTAMP '2026-07-08 07:00:00', '3도크 게이트', '3도크 게이트', 'NORMAL', 32640),
+  (14, 'worker03', DATE '2026-07-08', 'NIGHT', TIMESTAMP '2026-07-08 21:48:00', TIMESTAMP '2026-07-09 07:05:00', '3도크 게이트', '3도크 게이트', 'NORMAL', 33420),
+  (15, 'worker03', DATE '2026-07-09', 'NIGHT', TIMESTAMP '2026-07-09 22:14:00', TIMESTAMP '2026-07-10 07:01:00', '3도크 게이트', '3도크 게이트', 'LATE',   31620),
+  (16, 'worker03', DATE '2026-07-10', 'NIGHT', TIMESTAMP '2026-07-10 21:52:00', TIMESTAMP '2026-07-11 07:03:00', '3도크 게이트', '3도크 게이트', 'NORMAL', 33060)
 ON CONFLICT DO NOTHING;
 
 -- ---------------------------------------------------------------------------

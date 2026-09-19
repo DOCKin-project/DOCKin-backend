@@ -7,7 +7,7 @@ import com.DOCKin.attendance.dto.ClockOutRequestDto;
 import com.DOCKin.global.error.BusinessException;
 import com.DOCKin.global.error.ErrorCode;
 import com.DOCKin.attendance.model.Attendance;
-import com.DOCKin.attendance.model.AttendanceStatus;
+import com.DOCKin.attendance.model.WorkDay;
 import com.DOCKin.member.model.Member;
 import com.DOCKin.member.model.UserRole;
 import com.DOCKin.member.model.WorkShift;
@@ -51,6 +51,9 @@ public class AttendanceService {
     //클래스 레벨 @Transactional(readOnly = true)를 그냥 상속받으면 INSERT가 읽기 전용 커넥션에서 막히므로 NOT_SUPPORTED로 명시한다.
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public AttendanceDto clockin(String userId, ClockInRequestDto dto) {
+        // 락 키의 날짜는 근무일이 아니라 벽시계 날짜다. 근무일(WorkDay)은 사용자의 교대를 알아야 계산되는데
+        // 락은 DB를 보기 전에 잡는다(ADR-0001). 키는 더블클릭을 3초 안에서 가르는 용도라 무엇으로 나누든 상관없고,
+        // 자정을 걸치는 두 요청이 다른 키를 받으면 DB 유니크(2차 방어선)가 받는다.
         LocalDate today = LocalDate.now(clock);
         String lockKey = "attendance:lock:" + userId + ":" + today;
         RLock lock = redissonClient.getLock(lockKey);
@@ -61,7 +64,7 @@ public class AttendanceService {
         } catch (Exception e) {
             // 1차 방어선(Redis) 사용 불가 - 2차 방어선(DB 유니크 제약)에 위임하고 진행한다.
             log.warn("Redis 분산락을 사용할 수 없어 DB 제약으로 폴백합니다. userId={}, cause={}", userId, e.toString());
-            return doClockIn(userId, today, dto);
+            return doClockIn(userId, dto);
         }
 
         if (!locked) {
@@ -70,7 +73,7 @@ public class AttendanceService {
         }
 
         try {
-            return doClockIn(userId, today, dto);
+            return doClockIn(userId, dto);
         } finally {
             if (lock.isHeldByCurrentThread()) {
                 lock.unlock();
@@ -82,29 +85,16 @@ public class AttendanceService {
     // 대신 조회/저장은 Spring Data JPA 리포지토리 자체의 트랜잭션 경계를 사용하고,
     // 두 호출 사이의 원자성은 Redis 락(1차)과 DB 유니크 제약(2차, uk_attendance_user_workdate)이 보장하므로
     // 별도의 트랜잭션 묶음이 필요하지 않다. (ADR-0001 참고)
-    private AttendanceDto doClockIn(String userId, LocalDate today, ClockInRequestDto dto) {
+    private AttendanceDto doClockIn(String userId, ClockInRequestDto dto) {
         Member member = memberRepository.findByUserId(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-
-        if (attendanceRepository.findByMemberAndWorkDate(member, today).isPresent()) {
+        LocalDateTime now = LocalDateTime.now(clock);
+        // 근무일·지각은 교대 기준이다(WorkDay, ADR-0010). 야간조 00:30 출근은 "전날 근무일의 지각"이지
+        // "오늘의 정상 출근"이 아니다 — 예전 LocalDate.now()·시각 비교는 둘 다 후자로 판정했다(#98).
+        Attendance attendance = Attendance.clockIn(member, now, dto.getInLocation());
+        if (attendanceRepository.findByMemberAndWorkDate(member, attendance.getWorkDate()).isPresent()) {
             throw new BusinessException(ErrorCode.ATTENDANCE_ALREADY_CHECKED);
         }
-
-        LocalDateTime now = LocalDateTime.now(clock);
-        // 교대(work_shift)별 시작 시각 기준으로 지각을 판단한다. 필드 도입 이전 데이터 등으로 null이면 MORNING으로 간주.
-        WorkShift shift = member.getWorkShift() != null ? member.getWorkShift() : WorkShift.MORNING;
-        AttendanceStatus status = now.toLocalTime().isAfter(shift.getStartTime())
-                ? AttendanceStatus.LATE
-                : AttendanceStatus.NORMAL;
-
-        Attendance attendance = Attendance.builder()
-                .member(member)
-                .clockInTime(now)
-                .workDate(today)
-                .status(status)
-                .inLocation(dto.getInLocation())
-                .build();
-
         try {
             Attendance saved = attendanceRepository.save(attendance);
             return fromEntity(saved);
@@ -114,35 +104,39 @@ public class AttendanceService {
         }
     }
 
-    //퇴근로직
+    /**
+     * 퇴근. <b>날짜로 찾지 않고 열린 기록을 닫는다.</b>
+     *
+     * <p>예전에는 {@code findByMemberAndWorkDate(오늘)}이었다. 야간조는 어제 근무일의 행을 오늘 새벽에 닫아야 하므로
+     * 항상 {@code ATTENDANCE_NOT_CHECKED_IN}이었다(#98). 근무일을 다시 계산해 찾을 수도 있지만, 닫을 대상은 결국
+     * "출근은 있고 퇴근은 없는 가장 최근 행" 하나다 — 그걸 직접 묻는다.
+     *
+     * <p>그 행이 너무 오래됐으면(출근 뒤 {@link WorkDay#MAX_OPEN_SPAN}) 닫지 않고 409로 거부한다. 어제 퇴근을 잊은
+     * 사람이 오늘 퇴근을 누르면 30시간 근무 행이 생기는데, 그건 데이터가 아니라 오염이다. 정리는 관리자 수정 또는
+     * 미퇴근 배치(P3)의 일이다.
+     */
     @Transactional
     public AttendanceDto clockout(String userId, ClockOutRequestDto dto){
-        //멤버 존재 확인
         Member member = memberRepository.findByUserId(userId)
                 .orElseThrow(()-> new BusinessException(ErrorCode.USER_NOT_FOUND));
-
-        //가장 마지막의 출근 기록을 가져옴
-        LocalDate today = LocalDate.now(clock);
-        Attendance attendance = attendanceRepository.findByMemberAndWorkDate(member,today)
-                .orElseThrow(()->new BusinessException(ErrorCode.ATTENDANCE_NOT_CHECKED_IN));
-
-        if(attendance.getClockOutTime()!=null){
-            throw new BusinessException(ErrorCode.ATTENDANCE_ALREADY_CHECKED_OUT);
-        }
-
-        //시간 갱신
         LocalDateTime now = LocalDateTime.now(clock);
-        attendance.setClockOutTime(now);
-        attendance.setOutLocation(dto.getOutLocation());
-
-        java.time.Duration duration = java.time.Duration.between(attendance.getClockInTime(),now);
-        long h = duration.toHours();
-        long m = duration.toMinutesPart();
-        long s = duration.toSecondsPart();
-
-        String timeString = String.format("%02d:%02d:%02d", h, m, s);
-        attendance.setTotalWorkTime(timeString);
-
+        Attendance attendance = attendanceRepository
+                .findFirstByMemberAndClockInTimeIsNotNullAndClockOutTimeIsNullOrderByClockInTimeDesc(member)
+                .orElseThrow(() -> {
+                    // 열린 기록이 없다: 오늘 출근을 안 했거나, 이미 퇴근했다. 둘을 가른다 — 앱 메시지가 다르다.
+                    boolean closedToday = attendanceRepository
+                            .findByMemberAndWorkDate(member, WorkDay.of(member.workShiftOrDefault(), now))
+                            .filter(a -> a.getClockOutTime() != null)
+                            .isPresent();
+                    return new BusinessException(closedToday
+                            ? ErrorCode.ATTENDANCE_ALREADY_CHECKED_OUT
+                            : ErrorCode.ATTENDANCE_NOT_CHECKED_IN);
+                });
+        if (WorkDay.isStale(attendance.getClockInTime(), now)) {
+            log.warn("[근태] 잊힌 출근 기록에 퇴근 시도 - userId={}, clockIn={}, now={}", userId, attendance.getClockInTime(), now);
+            throw new BusinessException(ErrorCode.ATTENDANCE_CLOCK_IN_STALE);
+        }
+        attendance.clockOut(now, dto.getOutLocation());
         return fromEntity(attendance);
     }
 

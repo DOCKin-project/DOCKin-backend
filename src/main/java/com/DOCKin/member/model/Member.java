@@ -46,6 +46,14 @@ public class Member {
     @Builder.Default
     private WorkShift workShift = WorkShift.MORNING;
 
+    /**
+     * 근태 판정에 쓰는 교대. 컬럼이 nullable(V2)이라 필드 도입 이전 행은 null일 수 있고, 그때는 MORNING으로 본다.
+     * 출근·결근 배치·휴가 반영이 전부 이 메서드를 쓴다 — 기본값 처리가 호출부마다 흩어지지 않게.
+     */
+    public WorkShift workShiftOrDefault() {
+        return workShift != null ? workShift : WorkShift.MORNING;
+    }
+
     // 연차 정책 확정 전까지의 잠정 기본값 (WorkShift와 동일한 패턴)
     @Column(name = "remaining_leave_days", nullable = false)
     @Builder.Default
