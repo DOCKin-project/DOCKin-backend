@@ -1,0 +1,13 @@
+{
+  "logId": null,
+  "userId": null,
+  "equipmentId": 1,
+  "title": null,
+  "logText": "오전 작업 시작 직후부터 용접 와이어가 간헐적으로 멈추는 현상이 발생했다.",
+  "imageUrl": null,
+  "createdAt": null,
+  "updatedAt": null,
+  "audioFileUrl": "speech.wav",
+  "provider": "whisper-faster",
+  "traceId": "trace-stt-1"
+}
