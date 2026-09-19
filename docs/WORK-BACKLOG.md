@@ -286,6 +286,36 @@ private float[] embedding;
 **HTTP 엔드포인트가 없어 현재는 SQL로만 넣을 수 있다.** 관리자 컨트롤러가 필요하고,
 공공데이터 API(한국천문연구원 특일 정보) 연동으로 법정공휴일을 연 1회 자동 적재하면 손이 덜 간다.
 
+#### P2-6-1 — 등록 API (2026-09-18 설계, 2026-09-19 구현 — 브랜치 `feat/work-calendar-api`)
+
+P2-17-1·P2-17-4를 닫고 이어서 잡았다. 결정은 물어서 정했다.
+
+| 경로 | 누가 | 동작 |
+|---|---|---|
+| `GET /api/attendance/calendar?year=` | **로그인한 전원** | 등록된 날만 날짜순. `year` 생략은 올해. 근로자 앱도 공휴일을 보여주고 민감한 것이 없다 |
+| `PUT /api/attendance/admin/calendar/{date}` `{dayType, description}` | ADMIN | upsert — 날짜가 PK라 등록과 갱신이 같은 요청. 두 번 보내도 같다. 주말에 `WORKDAY`면 특근일 |
+| `PUT /api/attendance/admin/calendar` `{entries:[{date, dayType, description}]}` | ADMIN | 연초 공휴일 목록 일괄 upsert. 순서대로라 같은 날짜가 두 번이면 뒤가 이긴다. 최대 366 |
+| `DELETE /api/attendance/admin/calendar/{date}` | ADMIN | **넣는다.** 그 날은 기본 규칙으로 돌아간다. 없으면 404(`AT005`). 서비스에 삭제가 없어 새로 만든다 |
+
+| 결정 | 골랐다 | 버린 것 |
+|---|---|---|
+| 조회 범위 | 로그인한 전원 (`/api/attendance/calendar`) | 관리자만 |
+| 삭제 | 넣는다 — `WEEKEND`/`WORKDAY`로 덮어쓴 날은 여전히 "등록된 날"이라 기본 규칙이 바뀌어도(주 4일제 등) 따라가지 않는다. 잘못 등록한 날을 되돌리는 길은 삭제뿐 | 덮어쓰기로 충분 |
+| 공공데이터 API 연동 | **다음 PR.** data.go.kr 인증키가 필요하고 외부 호출·장애 경로가 별개 | 이번에 같이 |
+| 응답 | `WorkCalendarDto {date, dayType, description, workingDay}` — `workingDay`는 `WORKDAY`만 true | — |
+| 검증 | `dayType @NotNull`, `description @Size(100)`(컬럼 길이 — DB 500 전에 400), 일괄은 `@NotEmpty @Size(366) @Valid` | — |
+
+구현 메모: `registerAll`은 `int` 대신 저장된 `List<WorkCalendar>`를 돌려주도록 바꾼다(응답에 쓰려고). `year` 기본값은 컨트롤러에서
+`Year.now(clock)` — 서비스에 `Clock`을 넣으면 `WorkCalendarServiceTest`의 `@InjectMocks`가 null을 넣는다. 컨트롤러는
+`WorkCalendarController`(조회)·`WorkCalendarAdminController`(등록·삭제) 둘로 — #78의 `AttendanceAdminController`와 충돌을 피한다.
+테스트는 단위(삭제 404·삭제 후 `isWorkingDay`가 기본 규칙) + 컨테이너(USER가 GET 200·PUT 403, 일괄 upsert가 행에 반영, 삭제 뒤 기본 규칙 복귀).
+
+구현(2026-09-19): 위 그대로. `WorkCalendarController`(GET)·`WorkCalendarAdminController`(PUT 단건·일괄, DELETE 204),
+DTO 셋(`WorkCalendarDto`·`WorkCalendarUpsertRequestDto`·`WorkCalendarBulkUpsertRequestDto`), `ErrorCode.WORK_CALENDAR_NOT_FOUND`(AT005),
+`WorkCalendarService.delete`. 일괄 upsert의 "뒤가 이긴다"는 첫 `save`가 영속성 컨텍스트에 남아 두 번째 `findById`가 그것을 찾는 데
+기댄다 — 컨테이너 테스트(`WorkCalendarApiTest`, 6개)가 같은 날짜 둘을 보내 행 하나·뒤 값인지 본다. 단위 4개 추가(`WorkCalendarServiceTest`).
+공공데이터 연동은 그대로 다음 PR.
+
 **2·3단계는 P3(근무 정책 엔진)** — 교대조별 휴무 패턴, 개인별 예외.
 이 캘린더는 **전사 공통 휴무일만** 다룬다.
 
@@ -1773,7 +1803,7 @@ Redis에 해당하는 것이 없었다. `application.properties`의 기본값이
 
 | # | 항목 | PPT 근거 | 없는 것 | 서버 규모 | 순위 |
 |---|---|---|---|---|---|
-| P2-17-1 | **작업일지 승인·반려 루프** | 15P 화면에 `승인됨`/`반려됨` 배지, "승인·반려 실시간 반영" | `WorkLog`에 상태 컬럼이 없다. 관리자 코멘트(`worklog/comments`)만 있다 | 컬럼 1개(V6) + `PATCH .../approve`·`reject` 2개. `AbsenceAdminController`의 승인·거절 패턴을 그대로 옮긴다 | ★ |
+| ~~P2-17-1~~ | ~~**작업일지 승인·반려 루프**~~ **완료**(2026-09-18) — 아래 별도 | 15P 화면에 `승인됨`/`반려됨` 배지, "승인·반려 실시간 반영" | `WorkLog`에 상태 컬럼이 없다. 관리자 코멘트(`worklog/comments`)만 있다 | V8 컬럼 4개 + `PATCH /api/work-logs/admin/{id}/approve`·`reject` + `GET /api/work-logs?status=`. `AbsenceAdminController`의 승인·거절 패턴을 옮겼다 | ★ |
 | P2-17-2 | **공지 발송 (일반·긴급)** | 17P "공지발송(FCM) — 일반공지: FCM 전송 / 긴급공지: 강제 팝업" | `notice`·`announce` 코드 0건. 조선소·근무조 단위 대상 지정도 없다 | 테이블 1개 + 관리자 발송 API + 근무자 조회 API. **긴급 공지는 P2-12-6(FCM) 없이는 반쪽**이라 그쪽과 묶는다 | ★ |
 | P2-17-3 | **FCM** | 17P 긴급 팝업, 12P "감시/알림 FCM" | 의존성·코드 모두 없음 | **P2-12-6이 이미 다뤘다.** 채팅과 공지 둘 다 여기에 걸리므로 P2-17-2보다 먼저 결정해야 한다 | ★ |
 | ~~P2-17-4~~ | ~~**관리자 대시보드 집계**~~ **완료**(2026-09-18) — 아래 별도 | 17P "출근 124명 / 퇴근 52명 / 휴가 8명 / 병결 2명" | `GET /api/attendance`는 **본인 기록만** 돌려준다. 관리자용 일별 인원 집계가 없다 | `GET /api/attendance/admin/daily-summary?date=&shipYardArea=&workShift=` — 쿼리 하나. P3의 "월말 집계"와 다르다 — 이건 오늘 하루의 숫자다 | ★ |
@@ -1786,6 +1816,29 @@ Redis에 해당하는 것이 없었다. `application.properties`의 기본값이
 > **왜 이 순서인가.** 1~4는 각각 반나절 안쪽이고 기존 패턴(휴가 승인, S3, 페이징)을 옮기면 끝난다.
 > 5·6은 선결 항목이나 범위 밖 문제가 얹힌다. 7~9는 **클라이언트 없이 서버만으로는 완주를 확인할
 > 수 없어** P3다 — 이 백로그의 목표가 "완주"인 이상, 확인할 수 없는 항목을 앞에 둘 이유가 없다.
+
+### P2-17-1 — 휴가 승인 패턴을 옮기되, 한 곳이 다르다 (완료, 2026-09-18)
+
+`V8__work_logs_review_status.sql`이 `status`(기본 `PENDING`)·`reviewed_by`·`reviewed_at`·`review_comment`를 붙인다 —
+`absence_requests`의 넷과 같은 꼴이고 이름만 "처리"가 아니라 "검토"다. 상수 DEFAULT라 PG11+에서 메타데이터만 바뀌어
+100만 행 벤치 테이블에서도 순간이다(`online-ddl.md` 2절). 기존 행은 전부 `PENDING` — 아무도 검토한 적 없으니 그게 사실이다.
+`status` 인덱스는 없다(구역 멤버 → 필터, 느리면 부분 인덱스를 재서). `reviewed_by`는 users FK라 V4 원칙대로 인덱스.
+
+| 결정 | 골랐다 | 버린 것 |
+|---|---|---|
+| **작성자가 수정하면** | **`PENDING`으로 되돌리고 검토 필드 셋을 비운다.** 반려 → 고침 → 재승인이 이 기능의 존재 이유고, 승인된 일지를 고쳤는데 배지가 그대로면 승인이 거짓이 된다. 제목·본문·사진·장비 중 무엇을 바꿨든 같다 — "내용"의 경계를 가르기 시작하면 끝이 없다 | 승인된 일지 수정 금지(409) — 더 센 제품 결정. 필요하면 나중에 |
+| 미승인 큐 | 별도 admin 목록이 아니라 **기존 `GET /api/work-logs`에 `?status=`** — 관리자가 볼 범위도 결국 같은 구역이고, 근로자의 "내 반려 건"도 같은 필터다 | `GET /api/work-logs/admin?status=` — 쿼리 하나를 두 벌로 |
+| 두 번째 결정 | `PENDING`이 아니면 409 `W005` — 휴가의 `AB002`와 같다. 되돌아온 뒤에는 다시 결정할 수 있다 | — |
+| 이벤트 | **안 낸다.** 휴가는 근태가 같은 트랜잭션에서 받아야 했지만 여기는 받을 쪽이 없다. FCM이 오면 `AFTER_COMMIT`으로 붙는 자리(P2-12-6) | — |
+| 관리자 구역 | 안 본다 — 휴가와 같다 | — |
+
+`WorkLogReviewService`(승인·반려)와 `WorkLogsService.updateWorklog`(되돌림)로 갈랐다 — 전자는 관리자 경로, 후자는 작성자 경로.
+`?status=`의 null 바인딩은 `beforeCreatedAt`이 겪은 "could not determine data type"이 enum에서도 나서 `CAST(:status AS String)`.
+`WorkLogReviewServiceTest`(규칙)·`WorkLogReviewFlowTest`(필터 null 바인딩·수정 시 행에서 지워지는지·`/api/*/admin/**` 경로 규칙 403).
+
+> 알고 넘어간 것. `@LastModifiedDate`라 승인만 해도 `updated_at`이 바뀐다 — 색인은 `logId` 커서라 무관하지만, P2-19-1(번역 무효화)이
+> `updated_at`을 신호로 잡으면 승인이 번역을 헛되이 무효화하니 그때 `status` 변경은 제외해야 한다. 승인된 일지를 작성자가 삭제할 수
+> 있는 것, ADMIN이 자기 일지를 승인할 수 있는 것은 휴가와 같은 구멍이라 그대로 뒀다.
 
 ### P2-17-4 — 인원부터 세야 "124명 중"이 된다 (완료, 2026-09-18)
 
@@ -1897,9 +1950,38 @@ chatbot 100은 가정(주 1회)의 500배라 상한 노릇을 못 했다.
 >
 > 장애 정책 셋(락 열림·블랙리스트 닫힘·한도 열림)과 고르는 질문은 **ADR-0009**에 모았다.
 
+### P2-19-1 — 작업일지 번역 캐시 (2026-09-19, 완료 — 브랜치 `feat/worklog-translate-cache`)
+
+위 표가 보인 것 — 같은 일지·같은 언어를 다시 요청해도 FastAPI에 다시 갔다. `work_log_translations`에 저장은 했지만
+읽는 곳이 RAG 색인뿐이었다. 이제 저장된 행의 원문이 지금 원문과 같으면 그 행을 돌려주고, 다르면 재번역해 덮어쓴다.
+결정은 물어서 정했다.
+
+| 결정 | 골랐다 | 버린 것 |
+|---|---|---|
+| 낡은 번역 판단 | **저장된 원문(`original_title`·`original_text`)과 지금 원문 비교** (`TranslateLog.matchesOriginal`). 표에 번역 당시 원문이 그대로 있어 정확하고 마이그레이션이 없다 | `work_logs.updated_at` 비교 — 승인·반려(#76)로 status만 바뀌어도 갱신돼 쓸데없이 재번역된다 |
+| 히트 때 한도 | **안 깎는다.** 한도는 FastAPI 비용을 막는 것이고 히트는 FastAPI에 안 간다. `AiQuota.consume`이 컨트롤러에서 서비스의 FastAPI 호출 직전으로 옮겨 갔다 — "호출 전 INCR, 실패도 1"은 그대로 | 깎는다 — 위 표의 "20명 일지를 매일 다 읽는 근로자=20"이 히트에도 소모돼 상한 유도 근거가 어긋난다 |
+| 히트 응답의 `model` | **V9 `model` 컬럼 추가**, 미스 때와 같은 꼴. 같은 int8 모델이 호스트마다 다른 문장을 낸 기록(밤 13)이 있어 어느 모델의 번역이 굳어 있는지 표만 보고 알아야 한다. V9 이전 행은 null | `"cached"`·null |
+| 캐시 키 | `(log_id, language_code)` — 사용자 무관. 히트 때 `user_id`·`trace_id`는 첫 번역 것이 남는다 | 사용자별 |
+
+**덤으로 잡힌 것 — `NOT_SUPPORTED` 안에서 리포지토리 쿼리 메서드는 스코프 끝까지 커넥션을 쥔다 (이슈 #93).**
+캐시 조회를 `saveTranslateLog`에 바로 넣자 `TranslateTransactionBoundaryTest`가 "FastAPI 대기 중 활성 커넥션 1"로 빨개졌다.
+프로브(`@Transactional(NOT_SUPPORTED)` 메서드 안에서 하나씩 부르고 HikariCP active를 읽음):
+
+```
+findById inScope=0 | count inScope=0 | @Query jpql inScope=1 | derived findBy… inScope=1 | 별도 빈 @Transactional(readOnly) inScope=0
+```
+
+기존 코드는 `findById`만 써서 우연히 안전했다. 캐시 조회는 `TranslateLogReader.findCached`(별도 빈, readOnly, 엔티티가 아니라 값 반환)로
+뺐고 그 테스트가 다시 0이다. `AttendanceService.clockin`도 같은 모양(NOT_SUPPORTED 안에서 `findByUserId`)인데 거긴 스코프 전체가 짧은 DB
+작업이라 실해가 없다 — 이슈에 적어 뒀다.
+
+검증: `WorkLogTranslateCacheTest`(스텁 FastAPI 호출 수·Redis 카운터로 — 히트 0회·0, 다른 언어 미스, `updated_at`만 바뀌면 히트,
+본문 수정은 재번역·덮어쓰기, 상한+1은 FastAPI 0회) + `TranslateTransactionBoundaryTest` 그대로 0 + `AiQuotaWiringTest`는 번역 쪽을
+"서비스가 던진 429가 Retry-After와 나가는가"로 바꿈(한도가 서비스로 들어와 목으로는 못 본다).
+
 ---
 
-## P2-20 — API 점검에서 나온 것 (2026-09-17)
+## P2-20 — API 점검에서 나온 것 (2026-09-17, 코드는 완료 — 후속 이슈 #79·#80·#81)
 
 컨트롤러 14개를 훑었다. P2-15·P2-18에서 이미 잡은 것(정렬 없는 페이징, IDOR, 가시성)은 빼고, **클라이언트 입력이 서버 오류로
 기록되거나 응답 계약이 서로 어긋나는 자리**만 골랐다.
@@ -1915,6 +1997,28 @@ chatbot 100은 가정(주 1회)의 500배라 상한 노릇을 못 했다.
 | ~~P2-20-7~~ | ~~STT가 사용자 `Authorization`을 FastAPI에 그대로 전달~~ **완료**(2026-09-17) — `DOCKin-aiserver`를 읽어보니 그 헤더를 **읽지 않는다.** 읽는 건 `X-Service-Token`뿐 | `WorkLogsController:59`·`AiController:47` → `SttService:44` | 사용자 토큰 전달 삭제. `fastApiWebClient`가 `X-Service-Token`을 기본 헤더로(`AI_SERVER_SERVICE_TOKEN`, 비면 안 싣음). 아래 별도 | ☆ |
 
 하지 않은 것: `/api/v1` 버저닝, 에러 응답 `code` 필드. 둘 다 프론트 계약이고 후자는 `GlobalExceptionHandler`가 "넣지 않는다"를 이미 결정했다.
+
+### 머지·후속 (2026-09-18)
+
+일곱 개가 PR 여섯으로 전부 `dev`에 들어갔다 — #59(1·2) → #60(3) → #61(4) → #62(5) → #65(6) → #66(7). 각각 CI(컨테이너 테스트 포함) 통과 뒤 순서대로.
+로컬엔 Docker가 없어 `MemberPathWhitelistTest`·`AdminPathSecurityTest`는 CI에서만 돌았다 — 둘 다 통과.
+
+**스택 PR 절차에서 배운 것.** 백로그 표를 같이 고치려고 PR을 앞 PR 브랜치 위에 쌓았는데, 앞이 머지돼도 GitHub이 base를 `dev`로
+안 옮긴다 — 이 저장소가 브랜치를 안 지우는 관례라서(지워야 자동 재지정). `gh pr edit --base dev`로 옮기고, base 변경은 CI를 안
+태우므로(`pull_request` 기본 이벤트에 `edited`가 없다) close/reopen으로 재트리거했다. 다음엔 표 충돌을 감수하고 `dev`에서 따로 따는 게 단순하다.
+
+**관통한 기준 셋.** ① 클라이언트 입력이 500으로 기록되면 안 된다(1·3·6의 깨진 날짜). ② 검증보다 선택지를 없애는 게 낫다 — `sort`는 400을 내는 대신 안 읽는다.
+③ 상한은 있어야 하고 잘리는 걸 클라이언트가 알 수 있어야 한다 — 페이지 크기는 응답 `size`로 보이니 깎고, 기간은 알 길이 없으니 거부. 7은 성격이 달랐다: "인증하는 척"을 진짜 인증으로.
+
+**코드 밖에 남은 것** — 셋 다 이슈로:
+
+| 이슈 | 무엇 | 닫는 조건 |
+|---|---|---|
+| #81 | 앱 팀 확인 — 안전교육 관리자 GET(404)·근태 기본 31일·signup 201+JSON. [앱 팀 안내 문서](https://claude.ai/code/artifact/9c69cf39-3a74-4313-86df-51eaca762ce5) | 앱 팀이 셋 다 확인 |
+| #80 | 운영 FastAPI가 인증 없이 열려 있다 [추측] — `AI_SERVER_SERVICE_TOKEN`(스프링)·`SERVICE_TOKEN`(FastAPI) 같은 값 | 양쪽 설정 뒤 챗봇 호출 확인, `PRODUCTION-READINESS` G7 ✅ |
+| #79 | `/member` 별칭 삭제(네 자리) | 앱이 `/api/member`로 옮긴 뒤 |
+
+같은 날 다른 세션이 #75(rt-translate STT 응답 필드 불일치 — `text` vs `logText`)를 열었다. 7과 같은 파일(`SttService`)이라 함께 볼 것.
 
 ### P2-20-7 — FastAPI는 그 헤더를 읽지도 않았다
 

@@ -94,10 +94,7 @@ public class AiController {
 
         String userId = customUserDetails.getMember().getUserId();
 
-        aiQuota.consume(AiQuotaKind.WORKLOG_TRANSLATE, userId);
-
-        TranslateDomain.Response response = fastApiService.saveTranslateLog(logId,request,userId);
-
-        return response;
+        // 한도는 서비스가 캐시 미스일 때만 깎는다(P2-19-1). 히트는 FastAPI에 가지 않는다.
+        return fastApiService.saveTranslateLog(logId, request, userId);
     }
 }

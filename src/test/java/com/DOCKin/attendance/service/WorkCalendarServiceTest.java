@@ -16,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -115,6 +116,70 @@ class WorkCalendarServiceTest {
 
         assertEquals(ErrorCode.ACCESS_DENIED, ex.getErrorCode());
         verify(workCalendarRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("일괄 등록은 저장된 엔티티를 요청 순서대로 돌려준다 - 있던 날은 갱신, 없던 날은 저장")
+    void 일괄_등록_반환() {
+        WorkCalendar existing = entry(WEDNESDAY, DayType.WORKDAY, "평일");
+        WorkCalendar incoming = entry(SATURDAY, DayType.WORKDAY, "특근");
+        when(memberRepository.findByUserId("admin1"))
+                .thenReturn(Optional.of(Member.builder().userId("admin1").role(UserRole.ADMIN).build()));
+        when(workCalendarRepository.findById(WEDNESDAY)).thenReturn(Optional.of(existing));
+        when(workCalendarRepository.findById(SATURDAY)).thenReturn(Optional.empty());
+        when(workCalendarRepository.save(incoming)).thenReturn(incoming);
+
+        List<WorkCalendar> saved = workCalendarService.registerAll("admin1", List.of(
+                entry(WEDNESDAY, DayType.HOLIDAY, "임시공휴일"), incoming));
+
+        // 응답에 쓰려고 int 건수 대신 목록을 돌려준다. 있던 날은 새 객체가 아니라 그 엔티티다.
+        assertEquals(List.of(existing, incoming), saved);
+        assertEquals(DayType.HOLIDAY, existing.getDayType());
+        verify(workCalendarRepository, never()).save(existing);
+    }
+
+    @Test
+    @DisplayName("삭제하면 그 날은 기본 규칙으로 돌아간다 - 주말이면 휴무")
+    void 삭제_후_기본_규칙() {
+        WorkCalendar special = entry(SATURDAY, DayType.WORKDAY, "특근");
+        when(memberRepository.findByUserId("admin1"))
+                .thenReturn(Optional.of(Member.builder().userId("admin1").role(UserRole.ADMIN).build()));
+        when(workCalendarRepository.findById(SATURDAY))
+                .thenReturn(Optional.of(special))
+                .thenReturn(Optional.empty());
+
+        workCalendarService.delete("admin1", SATURDAY);
+
+        verify(workCalendarRepository).delete(special);
+        // 덮어쓰기로는 여기까지 못 돌아온다 — WEEKEND로 덮어쓴 날도 "등록된 날"이다.
+        assertFalse(workCalendarService.isWorkingDay(SATURDAY));
+    }
+
+    @Test
+    @DisplayName("등록되지 않은 날을 삭제하면 404 - 조용히 성공하면 오타 난 날짜를 못 알아챈다")
+    void 미등록_삭제는_404() {
+        when(memberRepository.findByUserId("admin1"))
+                .thenReturn(Optional.of(Member.builder().userId("admin1").role(UserRole.ADMIN).build()));
+        when(workCalendarRepository.findById(WEDNESDAY)).thenReturn(Optional.empty());
+
+        BusinessException ex = assertThrows(BusinessException.class, () ->
+                workCalendarService.delete("admin1", WEDNESDAY));
+
+        assertEquals(ErrorCode.WORK_CALENDAR_NOT_FOUND, ex.getErrorCode());
+        verify(workCalendarRepository, never()).delete(any(WorkCalendar.class));
+    }
+
+    @Test
+    @DisplayName("관리자가 아니면 삭제도 못 한다")
+    void 삭제_권한_없음() {
+        when(memberRepository.findByUserId("user1"))
+                .thenReturn(Optional.of(Member.builder().userId("user1").role(UserRole.USER).build()));
+
+        BusinessException ex = assertThrows(BusinessException.class, () ->
+                workCalendarService.delete("user1", WEDNESDAY));
+
+        assertEquals(ErrorCode.ACCESS_DENIED, ex.getErrorCode());
+        verify(workCalendarRepository, never()).delete(any(WorkCalendar.class));
     }
 
     private WorkCalendar entry(LocalDate date, DayType type, String description) {

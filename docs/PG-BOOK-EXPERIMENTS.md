@@ -75,7 +75,7 @@
 | **Ch.2** | 트랜잭션·MVCC·**Vacuum**·팽창 | `work_logs` 대량 삭제, `document_chunks` 대량 삽입, `Page<>`의 COUNT | 🟡 20,362행에 힙 780MB · 🟡 0행에 26MB · 🟡 VACUUM truncate 거부 · 🟡 VACUUM 40분 · 🟢 COUNT 4초(MVCC라 전부 세야 한다) | ⬜ **autovacuum 관측 0건** — `n_dead_tup`·`pgstattuple`·`pg_stat_progress_vacuum`을 이 저장소가 읽은 적이 없다(`grep` 결과). 관찰은 다섯인데 실험은 없다 | **②** |
 | **Ch.3** | 락 — 행 락·`lock_timeout`·교착 | ADR-0001(출근), 4-1(연차), ADR-0008 5-3(`nextRoomSeq`) | 🟢 `FOR UPDATE` 없으면 3일치 증발(lost update 재현) · 🟢 방 행 락 직렬 23ms/건 → 단일 방 43 msg/s · 🟢 `lock_timeout=0`이면 13분 44초 hang | ⬜ `pg_locks`·`pg_stat_activity.wait_event`를 **실물로 본 기록이 없다**(ShadowFit은 `data_locks`로 GRANTED/WAITING을 봤다) · ⬜ `deadlock_timeout=1s`가 설정돼 있는데 교착을 재현한 적이 없다 | ③ |
 | **Ch.4** | SQL Execution — 실행계획·인덱스·조인·페이징 | 작업일지 목록·검색 6쿼리(P2-15-5), FK 인덱스(V3·V4), 채팅 N+1, 색인 커서 | 🟢 FK 인덱스 893배·22배·110.7배 · 🟢 복합 인덱스를 플래너가 **안 고른다**(선택도 16% → Parallel Seq Scan) · 🟢 N+1 41개 → 3개(P2-12-1) · 🟢 OFFSET → keyset(P1-13) · 🟢 권한 `OR` 분리 14%(P1-12) | 🟢 **`pg_trgm`** (2026-09-16) — 희귀 4자에서만 160배(희귀 3자 `[실측 필요]`), 흔한 3자는 계획이 흔들리고 2자는 무효. 크기 39%·쓰기 4.5배. **느린 자리는 LIKE가 아니라 구역 필터+정렬** · 🟢 목록 COUNT → `Slice`(A4) · 🟢 OFFSET → keyset(D2) · 🟢 `pg_stat_statements` top-N 절차(D3) | ④ |
-| **부록** | 격리 수준 | 연차 lost update | 🟢 READ COMMITTED + `FOR UPDATE`만 | ⬜ 같은 시나리오를 REPEATABLE READ로 — PG의 RR은 first-updater-wins라 **락 없이도 두 번째가 실패한다**. 그게 답이 되는지, 재시도 비용이 얼마인지 | ⑤ |
+| **부록** | 격리 수준 | 연차 lost update | 🟢 READ COMMITTED + `FOR UPDATE`만 · 🟢 REPEATABLE READ — 둘째가 40001로 죽는다(2026-09-19) | — (⑤ 완료: 답은 되지만 재시도가 필요하고 대기도 안 준다) | ⑤ |
 | **부록** | 테이블 팽창 모니터링 | Ch.2와 같다 | — | Ch.2 ②에 흡수 | — |
 | **부록** | SQL 모니터링 | `pg_stat_statements` | 🟡 시퀀스 호출 횟수 세기만 | Ch.4 ④에 흡수 | — |
 | (책 밖) | pgvector HNSW | ADR-0006 | 🟢 브루트포스 → pgvector 70배, 병목은 클라이언트 전송 81% · 🟢 `iterative_scan` recall · 🟢 코퍼스 19만 무릎 | ADR-0006·0007이 관리한다. 여기 안 둔다 | — |
@@ -112,17 +112,17 @@
 - **왜 이게 다음인가**: 이 저장소에서 가장 큰 "고친 결과가 다음 병목을 드러낸" 사례(`WORK-BACKLOG.md:1417`)가 팽창인데, 팽창을 잰 도구가 `pg_relation_size` 하나였다. 부록 "테이블 팽창 모니터링"이 이 실험의 교재다.
 - **결과 ✅ (2026-09-15, 로컬 279MB·4판)**: `cost_delay` 2ms → 0으로 VACUUM 자체가 **24.6/25.7s → 8.2/13.2s (2~3배)**. 네 판의 일이 동일해 차이는 전부 `cost_delay`고, buffer usage로 센 "일부러 자는 시간" 10.8s가 실측 차이와 맞는다. 힙은 네 판 모두 그대로(앞쪽 구멍). 깨어남은 34~52s(launcher 위상).
   - **가설 (b)의 답**: 오는가는 문제가 아니고, 얼마나 걸리는가도 이 규모에선 **1분 안팎**이다. 사고의 5분·24분·40분은 autovacuum이 아니었다(FK 인덱스·HNSW).
-  - **A2 추천**: 기본값 유지 — 15초를 아끼려 I/O를 3배 쓰는 것. 결정은 사용자. `DB-IMPROVEMENT-PLAN.md` 4절.
+  - **A2 결정(2026-09-19, 추천대로)**: 기본값 유지 — 15초를 아끼려 I/O를 3배 쓰는 것. `DB-IMPROVEMENT-PLAN.md` 4절.
   - **부수 발견**: INSERT만으로 autovacuum이 온다(PG13+). 밤 2의 연속 색인 → `document_chunks` HNSW 청소가 E8 열화 후보에 메커니즘으로 붙었다(이슈 #42).
   - 전문·rig 함정 6개: `measure/bloat/autovac-20260915T150118/README.md`. rig: `scripts/db/autovacuum-lab.sh`.
 - **회고**: 실험 하나에 rig를 여섯 번 띄웠다. 죽인 것은 전부 rig였고 실험 설계는 한 번도 안 바꿨다 — 임시 서버·`n_dead_tup` 덮어쓰기·로그 파싱·컨테이너 이름. ShadowFit의 "버림판" 교훈이 여기선 "연기 시험을 작게 두 번"이었다.
 
-### ③ Ch.3 — 락을 실물로 본다 ⬜
+### ③ Ch.3 — 락을 실물로 본다 🟡
 
 - **개념**: `pg_locks`의 `granted`, `pg_stat_activity`의 `wait_event_type='Lock'`, `pg_blocking_pids()`.
 - **가설**: `LeaveBalanceConcurrencyTest`의 두 번째 트랜잭션은 `FOR UPDATE` 대기 중 `wait_event='transactionid'`로 보인다 — 13분 44초 hang 때 `pg_stat_activity`에서 본 그것이다. `nextRoomSeq`도 같은 모양이다.
 - **설계**: 기존 두 테스트에 관측 스레드 하나를 붙여 대기 중 `pg_locks`/`pg_stat_activity`를 찍어 산출물로 남긴다. 추가로 `deadlock_timeout=1s`가 실제로 동작하는지 — 두 트랜잭션이 서로 반대 순서로 `FOR UPDATE`를 잡는 테스트 하나.
-- **결과**: ⬜
+- **결과** (2026-09-19, 교착 쪽만 — `DeadlockDetectionTest`, DB-IMPROVEMENT-PLAN C3): 🟢 행 A·B를 반대 순서로 `FOR UPDATE`. T1이 B를 기다리는 동안 셋째 커넥션이 읽은 `pg_stat_activity`는 `wait_event_type='Lock'`, `wait_event='transactionid'`, `pg_blocking_pids()` = T2의 pid — 장애 #4에서 사람이 본 그 모양이 재현됐다. T2가 A를 요청해 사이클을 닫자 **1,106ms** 뒤 T1이 `40P01 deadlock detected`, T2는 970ms 만에 커밋. `55P03`(lock_timeout 5s)은 0건 — 교착 감지가 락 대기 타임아웃보다 먼저 온다. 남은 것: 기존 두 테스트에 관측 스레드 붙이기(산출물 파일로).
 
 ### ④ Ch.4 — 남은 세 개: `pg_trgm`, `Slice`, keyset 🟢
 
@@ -132,14 +132,14 @@
 - **결과** (2026-09-16, `pg_trgm`): 🟢 100만 행 A B A B, `measure/trgm/trgm-20260916T135051/README.md`.
   - GIN이 계획을 바꾼 건 **희귀 4자**뿐 — 실제 검색 SQL에서 241/300ms → 1.7/1.7ms(160배). 희귀 3자는 안 쟀다 `[실측 필요]`. 흔한 3자는 통계 표본에 따라 GIN을 쓰기도 안 쓰기도(122↔261ms). **2자는 트라이그램이 없어 무효** — 한국어 검색어의 흔한 길이다.
   - 대가: `title` 24MB + `log_text` 157MB(힙의 39%), 벌크 쓰기 4.5배, CONCURRENTLY 빌드 180s(일반의 2배), 512MB에서 캐시 경합 가능성`[추정]`.
-  - **책의 언어로**: `LIKE '%kw%'`가 B-tree를 못 타는 건 맞지만, 이 쿼리의 비용은 그 자리가 아니었다. Bitmap Heap Scan이 구역 84명의 행이 흩어진 3만 페이지를 읽고 `ORDER BY`가 `LIMIT`의 조기 종료를 막는다 — 실행계획을 읽기 전엔 "키워드 인덱스"가 답으로 보였다. **D1 추천: 지금은 안 붙인다.**
+  - **책의 언어로**: `LIKE '%kw%'`가 B-tree를 못 타는 건 맞지만, 이 쿼리의 비용은 그 자리가 아니었다. Bitmap Heap Scan이 구역 84명의 행이 흩어진 3만 페이지를 읽고 `ORDER BY`가 `LIMIT`의 조기 종료를 막는다 — 실행계획을 읽기 전엔 "키워드 인덱스"가 답으로 보였다. **D1 결정(2026-09-19, 추천대로): 지금은 안 붙인다.** 느린 자리 자체는 #91.
   - 부수 발견: `ANALYZE`가 행 수와 무관하게 50초 — en_US.utf8 `strcoll`이 한국어 표본 3만 행을 정렬하는 값(`COLLATE "C"`면 0.4s). 운영 auto-analyze도 같은 값을 문다 `[미검증]`.
 
 ### ⑤ 부록 — 격리 수준 ⬜
 
 - **가설**: 연차 시나리오를 `REPEATABLE READ`로 돌리면 `FOR UPDATE` 없이도 두 번째 승인이 `could not serialize access`로 실패한다. 즉 lost update는 막히지만 재시도가 필요해진다 — ADR-0001 4-1이 낙관락을 거절한 이유(재시도 복잡도)가 그대로 돌아온다.
 - **설계**: `LeaveBalanceConcurrencyTest`에 조건 하나 추가. 결과가 "막힌다"면 ADR-0001 4-1의 대안 표에 한 줄이 는다.
-- **결과**: ⬜
+- **결과** (2026-09-19): 🟢 가설대로. 잔액 5일·3일 신청 둘, RR·락 없음: 승인 **1건**, 직렬화 실패 **1건**(`40001`), 잔액 2일. 진 쪽의 UPDATE는 첫째가 커밋할 때까지 **막혔다가**(99ms) 죽는다 — 즉 RR은 lost update를 막지만 ① 재시도 없이는 사용자에게 "잔액 부족" 대신 예외가 가고 ② 대기 시간은 비관락과 같다. ADR-0001 4-1 대안 목록에 한 줄 추가. 4-1의 선택(`FOR UPDATE`) 유지.
 
 ---
 
@@ -191,7 +191,7 @@
 | 1 | **3절 ② 팽창·autovacuum** | 관찰 5건·실험 0건. PostgreSQL 축의 고유 주제라 ShadowFit과 안 겹친다. 로컬에서 된다 | 100만 벤치 시드(있음), `pgstattuple` 확장 |
 | 2 | 3절 ① E8 열화 원인 | 스크립트가 있다. 한 시간(밤 3이 30분에 약 $0.6이었다) | AWS 한 시간 |
 | 3 | 3절 ⓪ 백본 | 1·2를 하면서 스냅샷 습관을 같이 만든다 | — |
-| 4 | 3절 ③ 락 실물 | 기존 테스트에 관측만 붙인다 | — |
-| 5 | 3절 ④·⑤ | 각각 반나절 | — |
+| 4 | 3절 ③ 락 실물 | 교착 쪽 완료(2026-09-19). 관측 스레드는 남음 | — |
+| ~~5~~ | ~~3절 ④·⑤~~ | ④ 2026-09-16, ⑤ 2026-09-19 완료 | — |
 
 읽기 순서는 『막힘없이』 2장 → 부록 "테이블 팽창 모니터링" → 『SQL TUNER』 10장(VACUUM) → 『Internals』 버퍼 캐시·WAL → 『막힘없이』 1장·3장 → 『Wait Interface』 → 『SQL TUNER』 나머지. 실험 1·2가 요구하는 장부터다.

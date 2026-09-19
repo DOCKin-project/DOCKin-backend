@@ -12,6 +12,7 @@ import com.DOCKin.worklog.model.Equipment;
 import com.DOCKin.member.model.Member;
 import com.DOCKin.worklog.model.WorkLogImage;
 import com.DOCKin.worklog.model.WorkLog;
+import com.DOCKin.worklog.model.WorkLogStatus;
 import com.DOCKin.worklog.repository.EquipmentRepository;
 import com.DOCKin.member.repository.MemberRepository;
 import com.DOCKin.worklog.repository.WorkLogRepository;
@@ -142,13 +143,13 @@ public class WorkLogsService {
 
     //전체 게시물 조회
     @Transactional(readOnly = true)
-    public Slice<WorkLogDto> readWorklog(String userId, WorkLogCursor before, Pageable pageable){
+    public Slice<WorkLogDto> readWorklog(String userId, WorkLogStatus status, WorkLogCursor before, Pageable pageable){
         Member member = memberRepository.findByUserId(userId)
                 .orElseThrow(()->new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         String area = member.getShipYardArea();
        List<Member> areaMembers= memberRepository.findByShipYardArea(area);
-       Slice<WorkLog> logs = workLogsRepository.findByMemberIn(areaMembers,
+       Slice<WorkLog> logs = workLogsRepository.findByMemberIn(areaMembers, status,
                beforeCreatedAt(before), beforeLogId(before), sizeOnly(before, pageable));
 
        return logs.map(WorkLogDto::from);
@@ -200,6 +201,9 @@ public class WorkLogsService {
 
         if(dto.getTitle()!=null) logs.setTitle(dto.getTitle());
         if(dto.getLogText()!=null) logs.setLogText(dto.getLogText());
+        // 승인·반려 뒤에 고쳤으면 그 결정은 다른 내용에 대한 것이다. 검토를 처음부터 (P2-17-1).
+        // 제목·본문·사진·장비 중 무엇을 바꿨든 같다 — 무엇이 "내용"인지 가르기 시작하면 끝이 없다.
+        logs.resetReview();
         if(images !=null && !images.isEmpty()){
             logs.getImages().clear();
 

@@ -1,0 +1,400 @@
+	at org.springframework.boot.loader.launch.JarLauncher.main(JarLauncher.java:40) ~[app.jar:0.0.1-SNAPSHOT]
+
+2026-09-17T22:43:54.801+09:00 ERROR [] 1 --- [DOCKin-spring] [           main] com.DOCKin.rag.service.IndexingService   : [RAG] 인덱싱 중단 종료 - 신규 임베딩 1572건 / 전체 청크 1572건 / 84068ms / 사유: 임베딩 서버 호출에 실패했습니다.
+2026-09-17T22:43:54.806+09:00 ERROR [] 1 --- [DOCKin-spring] [           main] c.DOCKin.rag.service.SeedIndexingRunner  : [RAG] 기동 직후 색인 중단 - 신규 임베딩 1572건까지 반영됨: 임베딩 서버 호출에 실패했습니다.
+2026-09-17T22:43:54.807+09:00  WARN [] 1 --- [DOCKin-spring] [           main] o.s.core.events.SpringDocAppInitializer  : SpringDoc /v3/api-docs endpoint is enabled by default. To disable it in production, set the property 'springdoc.api-docs.enabled=false'
+2026-09-17T22:43:54.807+09:00  WARN [] 1 --- [DOCKin-spring] [           main] o.s.core.events.SpringDocAppInitializer  : SpringDoc /swagger-ui.html endpoint is enabled by default. To disable it in production, set the property 'springdoc.swagger-ui.enabled=false'
+2026-09-17T22:43:56.761+09:00  INFO [] 1 --- [DOCKin-spring] [ionShutdownHook] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-09-17T22:43:56.763+09:00  INFO [] 1 --- [DOCKin-spring] [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2026-09-17T22:43:56.767+09:00  INFO [] 1 --- [DOCKin-spring] [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.0.1)
+
+2026-09-17T22:45:20.715+09:00  INFO [] 1 --- [DOCKin-spring] [           main] com.DOCKin.DocKinSpringApplication       : Starting DocKinSpringApplication v0.0.1-SNAPSHOT using Java 21.0.12.1 with PID 1 (/app.jar started by root in /)
+2026-09-17T22:45:20.719+09:00  INFO [] 1 --- [DOCKin-spring] [           main] com.DOCKin.DocKinSpringApplication       : The following 2 profiles are active: "secret", "seed"
+2026-09-17T22:45:22.916+09:00  INFO [] 1 --- [DOCKin-spring] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-09-17T22:45:23.330+09:00  INFO [] 1 --- [DOCKin-spring] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 407 ms. Found 20 JPA repository interfaces.
+2026-09-17T22:45:25.037+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8080 (http)
+2026-09-17T22:45:25.100+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-09-17T22:45:25.100+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.15]
+2026-09-17T22:45:25.218+09:00  INFO [] 1 --- [DOCKin-spring] [           main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 4394 ms
+2026-09-17T22:45:26.417+09:00  INFO [] 1 --- [DOCKin-spring] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-09-17T22:45:26.715+09:00  INFO [] 1 --- [DOCKin-spring] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@1af78e37
+2026-09-17T22:45:26.717+09:00  INFO [] 1 --- [DOCKin-spring] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-09-17T22:45:26.738+09:00  INFO [] 1 --- [DOCKin-spring] [           main] org.flywaydb.core.FlywayExecutor         : Database: jdbc:postgresql://DOCKin-DB:5432/dockindb (PostgreSQL 17.11)
+2026-09-17T22:45:26.908+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.f.core.internal.command.DbValidate     : Successfully validated 8 migrations (execution time 00:00.102s)
+2026-09-17T22:45:26.916+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.f.core.internal.command.DbMigrate      : Current version of schema "public": 7
+2026-09-17T22:45:26.918+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.f.core.internal.command.DbMigrate      : Schema "public" is up to date. No migration necessary.
+2026-09-17T22:45:27.110+09:00  INFO [] 1 --- [DOCKin-spring] [           main] org.hibernate.orm.jpa                    : HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-09-17T22:45:27.214+09:00  INFO [] 1 --- [DOCKin-spring] [           main] org.hibernate.orm.core                   : HHH000001: Hibernate ORM core version 7.2.0.Final
+2026-09-17T22:45:27.923+09:00  INFO [] 1 --- [DOCKin-spring] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [jdbc:postgresql://DOCKin-DB:5432/dockindb]
+	Database driver: PostgreSQL JDBC Driver
+	Database dialect: PostgreSQLDialect
+	Database version: 17.11
+	Default catalog/schema: dockindb/public
+	Autocommit mode: undefined/unknown
+	Isolation level: READ_COMMITTED [default READ_COMMITTED]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-09-17T22:45:28.318+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-09-17T22:45:30.709+09:00  INFO [] 1 --- [DOCKin-spring] [           main] org.hibernate.orm.core                   : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-09-17T22:45:30.712+09:00  INFO [] 1 --- [DOCKin-spring] [           main] org.hibernate.orm.jdbc.batch             : HHH100501: Automatic JDBC statement batching enabled (maximum batch size 100)
+2026-09-17T22:45:30.799+09:00  INFO [] 1 --- [DOCKin-spring] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-09-17T22:45:31.007+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.s.d.j.r.query.QueryEnhancerFactories   : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-09-17T22:45:34.606+09:00  INFO [] 1 --- [DOCKin-spring] [           main] org.redisson.Version                     : Redisson 3.37.0
+2026-09-17T22:45:35.030+09:00  INFO [] 1 --- [DOCKin-spring] [isson-netty-1-6] o.redisson.connection.ConnectionsHolder  : 1 connections initialized for dockin-redis/172.18.0.2:6379
+2026-09-17T22:45:35.030+09:00  INFO [] 1 --- [DOCKin-spring] [isson-netty-1-5] o.redisson.connection.ConnectionsHolder  : 1 connections initialized for dockin-redis/172.18.0.2:6379
+2026-09-17T22:45:36.337+09:00  WARN [] 1 --- [DOCKin-spring] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-09-17T22:45:36.607+09:00  INFO [] 1 --- [DOCKin-spring] [           main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name customUserDetailsService
+2026-09-17T22:45:37.321+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 3 endpoints beneath base path '/actuator'
+2026-09-17T22:45:38.024+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : Starting...
+2026-09-17T22:45:38.024+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : BrokerAvailabilityEvent[available=true, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@3ceb5831]]
+2026-09-17T22:45:38.026+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : Started.
+2026-09-17T22:45:38.097+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 8080 (http) with context path '/'
+2026-09-17T22:45:38.108+09:00  INFO [] 1 --- [DOCKin-spring] [           main] com.DOCKin.DocKinSpringApplication       : Started DocKinSpringApplication in 18.201 seconds (process running for 19.25)
+2026-09-17T22:45:38.115+09:00  INFO [] 1 --- [DOCKin-spring] [           main] c.DOCKin.rag.service.SeedIndexingRunner  : [RAG] seed 프로파일 - 기동 직후 색인을 시작합니다. (rag.indexing.on-startup=true)
+2026-09-17T22:45:39.119+09:00  INFO [] 1 --- [DOCKin-spring] [nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-09-17T22:45:39.120+09:00  INFO [] 1 --- [DOCKin-spring] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-09-17T22:45:39.122+09:00  INFO [] 1 --- [DOCKin-spring] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 2 ms
+2026-09-17T22:45:39.205+09:00  WARN [77d47a7f85014272] 1 --- [DOCKin-spring] [nio-8080-exec-1] o.s.w.s.h.HandlerMappingIntrospector     : Cache miss for REQUEST dispatch to '/actuator/health' (previous null). Performing CorsConfiguration lookup. This is logged once only at WARN level, and every time at TRACE.
+2026-09-17T22:46:38.002+09:00  INFO [] 1 --- [DOCKin-spring] [MessageBroker-1] o.s.w.s.c.WebSocketMessageBrokerStats    : WebSocketSession[0 current WS(0)-HttpStream(0)-HttpPoll(0), 0 total, 0 closed abnormally (0 connect failure, 0 send limit, 0 transport error)], stompSubProtocol[processed CONNECT(0)-CONNECTED(0)-DISCONNECT(0)], stompBrokerRelay[null], inboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], outboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], sockJsScheduler[pool size = 1, active threads = 1, queued tasks = 5, completed tasks = 18]
+2026-09-17T22:47:38.713+09:00  INFO [] 1 --- [DOCKin-spring] [ionShutdownHook] o.s.boot.tomcat.GracefulShutdown         : Commencing graceful shutdown. Waiting for active requests to complete
+2026-09-17T22:47:38.714+09:00  INFO [] 1 --- [DOCKin-spring] [tomcat-shutdown] o.s.boot.tomcat.GracefulShutdown         : Graceful shutdown complete
+2026-09-17T22:47:38.716+09:00  INFO [] 1 --- [DOCKin-spring] [ionShutdownHook] o.s.m.s.b.SimpleBrokerMessageHandler     : Stopping...
+2026-09-17T22:47:38.717+09:00  INFO [] 1 --- [DOCKin-spring] [ionShutdownHook] o.s.m.s.b.SimpleBrokerMessageHandler     : BrokerAvailabilityEvent[available=false, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@3ceb5831]]
+2026-09-17T22:47:38.717+09:00  INFO [] 1 --- [DOCKin-spring] [ionShutdownHook] o.s.m.s.b.SimpleBrokerMessageHandler     : Stopped.
+2026-09-17T22:47:38.728+09:00  WARN [] 1 --- [DOCKin-spring] [or-http-epoll-1] r.netty.http.client.HttpClientConnect    : [be903251-39, L:/172.18.0.5:46648 ! R:dockin-embedding/172.18.0.3:80] The connection observed an error
+
+reactor.netty.http.client.PrematureCloseException: Connection prematurely closed BEFORE response
+
+2026-09-17T22:47:38.738+09:00 ERROR [] 1 --- [DOCKin-spring] [           main] com.DOCKin.rag.service.EmbeddingClient   : 임베딩 서버 호출 실패 [WebClientRequestException]: Connection prematurely closed BEFORE response
+2026-09-17T22:47:38.739+09:00 ERROR [] 1 --- [DOCKin-spring] [           main] com.DOCKin.rag.service.IndexingService   : [RAG] 인덱싱 중단 - 신규 임베딩 2283건까지 반영됨: 임베딩 서버 호출에 실패했습니다.
+
+com.DOCKin.global.error.BusinessException: 임베딩 서버 호출에 실패했습니다.
+	at com.DOCKin.rag.service.EmbeddingClient.call(EmbeddingClient.java:119) ~[!/:0.0.1-SNAPSHOT]
+	at com.DOCKin.rag.service.EmbeddingClient.embedPassages(EmbeddingClient.java:82) ~[!/:0.0.1-SNAPSHOT]
+	at com.DOCKin.rag.service.ChunkIndexWriter.flush(ChunkIndexWriter.java:96) ~[!/:0.0.1-SNAPSHOT]
+	at com.DOCKin.rag.service.ChunkIndexWriter.writePage(ChunkIndexWriter.java:56) ~[!/:0.0.1-SNAPSHOT]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359) ~[spring-aop-7.0.2.jar!/:7.0.2]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:190) ~[spring-aop-7.0.2.jar!/:7.0.2]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:158) ~[spring-aop-7.0.2.jar!/:7.0.2]
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:370) ~[spring-tx-7.0.2.jar!/:7.0.2]
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:118) ~[spring-tx-7.0.2.jar!/:7.0.2]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179) ~[spring-aop-7.0.2.jar!/:7.0.2]
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:719) ~[spring-aop-7.0.2.jar!/:7.0.2]
+	at com.DOCKin.rag.service.ChunkIndexWriter$$SpringCGLIB$$0.writePage(<generated>) ~[!/:0.0.1-SNAPSHOT]
+	at com.DOCKin.rag.service.IndexingService.indexWorkLogs(IndexingService.java:238) ~[!/:0.0.1-SNAPSHOT]
+	at com.DOCKin.rag.service.IndexingService.runIndexing(IndexingService.java:191) ~[!/:0.0.1-SNAPSHOT]
+	at com.DOCKin.rag.service.IndexingService.indexAll(IndexingService.java:165) ~[!/:0.0.1-SNAPSHOT]
+	at com.DOCKin.rag.service.SeedIndexingRunner.run(SeedIndexingRunner.java:53) ~[!/:0.0.1-SNAPSHOT]
+	at org.springframework.boot.SpringApplication.lambda$callRunner$0(SpringApplication.java:788) ~[spring-boot-4.0.1.jar!/:4.0.1]
+	at org.springframework.util.function.ThrowingConsumer$1.acceptWithException(ThrowingConsumer.java:82) ~[spring-core-7.0.2.jar!/:7.0.2]
+	at org.springframework.util.function.ThrowingConsumer.accept(ThrowingConsumer.java:60) ~[spring-core-7.0.2.jar!/:7.0.2]
+	at org.springframework.util.function.ThrowingConsumer$1.accept(ThrowingConsumer.java:86) ~[spring-core-7.0.2.jar!/:7.0.2]
+	at org.springframework.boot.SpringApplication.callRunner(SpringApplication.java:800) ~[spring-boot-4.0.1.jar!/:4.0.1]
+	at org.springframework.boot.SpringApplication.callRunner(SpringApplication.java:788) ~[spring-boot-4.0.1.jar!/:4.0.1]
+	at org.springframework.boot.SpringApplication.lambda$callRunners$0(SpringApplication.java:776) ~[spring-boot-4.0.1.jar!/:4.0.1]
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:184) ~[na:na]
+	at java.base/java.util.stream.SortedOps$SizedRefSortingSink.end(SortedOps.java:357) ~[na:na]
+	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:510) ~[na:na]
+	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499) ~[na:na]
+	at java.base/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:151) ~[na:na]
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:174) ~[na:na]
+	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234) ~[na:na]
+	at java.base/java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:596) ~[na:na]
+	at org.springframework.boot.SpringApplication.callRunners(SpringApplication.java:776) ~[spring-boot-4.0.1.jar!/:4.0.1]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:328) ~[spring-boot-4.0.1.jar!/:4.0.1]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1365) ~[spring-boot-4.0.1.jar!/:4.0.1]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1354) ~[spring-boot-4.0.1.jar!/:4.0.1]
+	at com.DOCKin.DocKinSpringApplication.main(DocKinSpringApplication.java:23) ~[!/:0.0.1-SNAPSHOT]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
+	at org.springframework.boot.loader.launch.Launcher.launch(Launcher.java:106) ~[app.jar:0.0.1-SNAPSHOT]
+	at org.springframework.boot.loader.launch.Launcher.launch(Launcher.java:64) ~[app.jar:0.0.1-SNAPSHOT]
+	at org.springframework.boot.loader.launch.JarLauncher.main(JarLauncher.java:40) ~[app.jar:0.0.1-SNAPSHOT]
+
+2026-09-17T22:47:38.750+09:00 ERROR [] 1 --- [DOCKin-spring] [           main] com.DOCKin.rag.service.IndexingService   : [RAG] 인덱싱 중단 종료 - 신규 임베딩 2283건 / 전체 청크 2283건 / 120635ms / 사유: 임베딩 서버 호출에 실패했습니다.
+2026-09-17T22:47:38.755+09:00 ERROR [] 1 --- [DOCKin-spring] [           main] c.DOCKin.rag.service.SeedIndexingRunner  : [RAG] 기동 직후 색인 중단 - 신규 임베딩 2283건까지 반영됨: 임베딩 서버 호출에 실패했습니다.
+2026-09-17T22:47:38.756+09:00  WARN [] 1 --- [DOCKin-spring] [           main] o.s.core.events.SpringDocAppInitializer  : SpringDoc /v3/api-docs endpoint is enabled by default. To disable it in production, set the property 'springdoc.api-docs.enabled=false'
+2026-09-17T22:47:38.756+09:00  WARN [] 1 --- [DOCKin-spring] [           main] o.s.core.events.SpringDocAppInitializer  : SpringDoc /swagger-ui.html endpoint is enabled by default. To disable it in production, set the property 'springdoc.swagger-ui.enabled=false'
+2026-09-17T22:47:40.758+09:00  INFO [] 1 --- [DOCKin-spring] [ionShutdownHook] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-09-17T22:47:40.760+09:00  INFO [] 1 --- [DOCKin-spring] [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2026-09-17T22:47:40.764+09:00  INFO [] 1 --- [DOCKin-spring] [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.0.1)
+
+2026-09-17T22:47:44.528+09:00  INFO [] 1 --- [DOCKin-spring] [           main] com.DOCKin.DocKinSpringApplication       : Starting DocKinSpringApplication v0.0.1-SNAPSHOT using Java 21.0.12.1 with PID 1 (/app.jar started by root in /)
+2026-09-17T22:47:44.532+09:00  INFO [] 1 --- [DOCKin-spring] [           main] com.DOCKin.DocKinSpringApplication       : The following 2 profiles are active: "secret", "seed"
+2026-09-17T22:47:46.714+09:00  INFO [] 1 --- [DOCKin-spring] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-09-17T22:47:47.235+09:00  INFO [] 1 --- [DOCKin-spring] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 514 ms. Found 20 JPA repository interfaces.
+2026-09-17T22:47:48.910+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8080 (http)
+2026-09-17T22:47:48.923+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-09-17T22:47:48.923+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.15]
+2026-09-17T22:47:49.101+09:00  INFO [] 1 --- [DOCKin-spring] [           main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 4473 ms
+2026-09-17T22:47:50.330+09:00  INFO [] 1 --- [DOCKin-spring] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-09-17T22:47:50.633+09:00  INFO [] 1 --- [DOCKin-spring] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@4154ecd3
+2026-09-17T22:47:50.634+09:00  INFO [] 1 --- [DOCKin-spring] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-09-17T22:47:50.713+09:00  INFO [] 1 --- [DOCKin-spring] [           main] org.flywaydb.core.FlywayExecutor         : Database: jdbc:postgresql://DOCKin-DB:5432/dockindb (PostgreSQL 17.11)
+2026-09-17T22:47:50.900+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.f.core.internal.command.DbValidate     : Successfully validated 8 migrations (execution time 00:00.169s)
+2026-09-17T22:47:50.910+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.f.core.internal.command.DbMigrate      : Current version of schema "public": 7
+2026-09-17T22:47:50.913+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.f.core.internal.command.DbMigrate      : Schema "public" is up to date. No migration necessary.
+2026-09-17T22:47:51.109+09:00  INFO [] 1 --- [DOCKin-spring] [           main] org.hibernate.orm.jpa                    : HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-09-17T22:47:51.218+09:00  INFO [] 1 --- [DOCKin-spring] [           main] org.hibernate.orm.core                   : HHH000001: Hibernate ORM core version 7.2.0.Final
+2026-09-17T22:47:52.031+09:00  INFO [] 1 --- [DOCKin-spring] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [jdbc:postgresql://DOCKin-DB:5432/dockindb]
+	Database driver: PostgreSQL JDBC Driver
+	Database dialect: PostgreSQLDialect
+	Database version: 17.11
+	Default catalog/schema: dockindb/public
+	Autocommit mode: undefined/unknown
+	Isolation level: READ_COMMITTED [default READ_COMMITTED]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-09-17T22:47:52.440+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-09-17T22:47:54.831+09:00  INFO [] 1 --- [DOCKin-spring] [           main] org.hibernate.orm.core                   : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-09-17T22:47:54.835+09:00  INFO [] 1 --- [DOCKin-spring] [           main] org.hibernate.orm.jdbc.batch             : HHH100501: Automatic JDBC statement batching enabled (maximum batch size 100)
+2026-09-17T22:47:54.936+09:00  INFO [] 1 --- [DOCKin-spring] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-09-17T22:47:55.104+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.s.d.j.r.query.QueryEnhancerFactories   : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-09-17T22:47:58.717+09:00  INFO [] 1 --- [DOCKin-spring] [           main] org.redisson.Version                     : Redisson 3.37.0
+2026-09-17T22:47:59.202+09:00  INFO [] 1 --- [DOCKin-spring] [isson-netty-1-6] o.redisson.connection.ConnectionsHolder  : 1 connections initialized for dockin-redis/172.18.0.2:6379
+2026-09-17T22:47:59.202+09:00  INFO [] 1 --- [DOCKin-spring] [isson-netty-1-5] o.redisson.connection.ConnectionsHolder  : 1 connections initialized for dockin-redis/172.18.0.2:6379
+2026-09-17T22:48:00.419+09:00  WARN [] 1 --- [DOCKin-spring] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-09-17T22:48:00.697+09:00  INFO [] 1 --- [DOCKin-spring] [           main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name customUserDetailsService
+2026-09-17T22:48:01.426+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 3 endpoints beneath base path '/actuator'
+2026-09-17T22:48:02.137+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : Starting...
+2026-09-17T22:48:02.137+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : BrokerAvailabilityEvent[available=true, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@162c239e]]
+2026-09-17T22:48:02.139+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : Started.
+2026-09-17T22:48:02.210+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 8080 (http) with context path '/'
+2026-09-17T22:48:02.224+09:00  INFO [] 1 --- [DOCKin-spring] [           main] com.DOCKin.DocKinSpringApplication       : Started DocKinSpringApplication in 18.591 seconds (process running for 19.71)
+2026-09-17T22:48:02.231+09:00  INFO [] 1 --- [DOCKin-spring] [           main] c.DOCKin.rag.service.SeedIndexingRunner  : [RAG] seed 프로파일 - 기동 직후 색인을 시작합니다. (rag.indexing.on-startup=true)
+2026-09-17T22:48:02.917+09:00  INFO [] 1 --- [DOCKin-spring] [nio-8080-exec-2] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-09-17T22:48:02.917+09:00  INFO [] 1 --- [DOCKin-spring] [nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-09-17T22:48:02.919+09:00  INFO [] 1 --- [DOCKin-spring] [nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : Completed initialization in 2 ms
+2026-09-17T22:48:03.010+09:00  WARN [232c6280a09d47d2] 1 --- [DOCKin-spring] [nio-8080-exec-2] o.s.w.s.h.HandlerMappingIntrospector     : Cache miss for REQUEST dispatch to '/actuator/health' (previous null). Performing CorsConfiguration lookup. This is logged once only at WARN level, and every time at TRACE.
+2026-09-17T22:48:52.839+09:00  INFO [] 1 --- [DOCKin-spring] [ionShutdownHook] o.s.boot.tomcat.GracefulShutdown         : Commencing graceful shutdown. Waiting for active requests to complete
+2026-09-17T22:48:52.841+09:00  INFO [] 1 --- [DOCKin-spring] [tomcat-shutdown] o.s.boot.tomcat.GracefulShutdown         : Graceful shutdown complete
+2026-09-17T22:48:52.843+09:00  INFO [] 1 --- [DOCKin-spring] [ionShutdownHook] o.s.m.s.b.SimpleBrokerMessageHandler     : Stopping...
+2026-09-17T22:48:52.843+09:00  INFO [] 1 --- [DOCKin-spring] [ionShutdownHook] o.s.m.s.b.SimpleBrokerMessageHandler     : BrokerAvailabilityEvent[available=false, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@162c239e]]
+2026-09-17T22:48:52.843+09:00  INFO [] 1 --- [DOCKin-spring] [ionShutdownHook] o.s.m.s.b.SimpleBrokerMessageHandler     : Stopped.
+2026-09-17T22:48:52.950+09:00  WARN [] 1 --- [DOCKin-spring] [or-http-epoll-1] r.netty.http.client.HttpClientConnect    : [062e7c22-16, L:/172.18.0.5:55020 ! R:dockin-embedding/172.18.0.3:80] The connection observed an error
+
+reactor.netty.http.client.PrematureCloseException: Connection prematurely closed BEFORE response
+
+2026-09-17T22:48:52.960+09:00 ERROR [] 1 --- [DOCKin-spring] [           main] com.DOCKin.rag.service.EmbeddingClient   : 임베딩 서버 호출 실패 [WebClientRequestException]: Connection prematurely closed BEFORE response
+2026-09-17T22:48:52.962+09:00 ERROR [] 1 --- [DOCKin-spring] [           main] com.DOCKin.rag.service.IndexingService   : [RAG] 인덱싱 중단 - 신규 임베딩 875건까지 반영됨: 임베딩 서버 호출에 실패했습니다.
+
+com.DOCKin.global.error.BusinessException: 임베딩 서버 호출에 실패했습니다.
+	at com.DOCKin.rag.service.EmbeddingClient.call(EmbeddingClient.java:119) ~[!/:0.0.1-SNAPSHOT]
+	at com.DOCKin.rag.service.EmbeddingClient.embedPassages(EmbeddingClient.java:82) ~[!/:0.0.1-SNAPSHOT]
+	at com.DOCKin.rag.service.ChunkIndexWriter.flush(ChunkIndexWriter.java:96) ~[!/:0.0.1-SNAPSHOT]
+	at com.DOCKin.rag.service.ChunkIndexWriter.writePage(ChunkIndexWriter.java:56) ~[!/:0.0.1-SNAPSHOT]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359) ~[spring-aop-7.0.2.jar!/:7.0.2]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:190) ~[spring-aop-7.0.2.jar!/:7.0.2]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:158) ~[spring-aop-7.0.2.jar!/:7.0.2]
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:370) ~[spring-tx-7.0.2.jar!/:7.0.2]
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:118) ~[spring-tx-7.0.2.jar!/:7.0.2]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179) ~[spring-aop-7.0.2.jar!/:7.0.2]
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:719) ~[spring-aop-7.0.2.jar!/:7.0.2]
+	at com.DOCKin.rag.service.ChunkIndexWriter$$SpringCGLIB$$0.writePage(<generated>) ~[!/:0.0.1-SNAPSHOT]
+	at com.DOCKin.rag.service.IndexingService.indexWorkLogs(IndexingService.java:238) ~[!/:0.0.1-SNAPSHOT]
+	at com.DOCKin.rag.service.IndexingService.runIndexing(IndexingService.java:191) ~[!/:0.0.1-SNAPSHOT]
+	at com.DOCKin.rag.service.IndexingService.indexAll(IndexingService.java:165) ~[!/:0.0.1-SNAPSHOT]
+	at com.DOCKin.rag.service.SeedIndexingRunner.run(SeedIndexingRunner.java:53) ~[!/:0.0.1-SNAPSHOT]
+	at org.springframework.boot.SpringApplication.lambda$callRunner$0(SpringApplication.java:788) ~[spring-boot-4.0.1.jar!/:4.0.1]
+	at org.springframework.util.function.ThrowingConsumer$1.acceptWithException(ThrowingConsumer.java:82) ~[spring-core-7.0.2.jar!/:7.0.2]
+	at org.springframework.util.function.ThrowingConsumer.accept(ThrowingConsumer.java:60) ~[spring-core-7.0.2.jar!/:7.0.2]
+	at org.springframework.util.function.ThrowingConsumer$1.accept(ThrowingConsumer.java:86) ~[spring-core-7.0.2.jar!/:7.0.2]
+	at org.springframework.boot.SpringApplication.callRunner(SpringApplication.java:800) ~[spring-boot-4.0.1.jar!/:4.0.1]
+	at org.springframework.boot.SpringApplication.callRunner(SpringApplication.java:788) ~[spring-boot-4.0.1.jar!/:4.0.1]
+	at org.springframework.boot.SpringApplication.lambda$callRunners$0(SpringApplication.java:776) ~[spring-boot-4.0.1.jar!/:4.0.1]
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:184) ~[na:na]
+	at java.base/java.util.stream.SortedOps$SizedRefSortingSink.end(SortedOps.java:357) ~[na:na]
+	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:510) ~[na:na]
+	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499) ~[na:na]
+	at java.base/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:151) ~[na:na]
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:174) ~[na:na]
+	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234) ~[na:na]
+	at java.base/java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:596) ~[na:na]
+	at org.springframework.boot.SpringApplication.callRunners(SpringApplication.java:776) ~[spring-boot-4.0.1.jar!/:4.0.1]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:328) ~[spring-boot-4.0.1.jar!/:4.0.1]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1365) ~[spring-boot-4.0.1.jar!/:4.0.1]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1354) ~[spring-boot-4.0.1.jar!/:4.0.1]
+	at com.DOCKin.DocKinSpringApplication.main(DocKinSpringApplication.java:23) ~[!/:0.0.1-SNAPSHOT]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
+	at org.springframework.boot.loader.launch.Launcher.launch(Launcher.java:106) ~[app.jar:0.0.1-SNAPSHOT]
+	at org.springframework.boot.loader.launch.Launcher.launch(Launcher.java:64) ~[app.jar:0.0.1-SNAPSHOT]
+	at org.springframework.boot.loader.launch.JarLauncher.main(JarLauncher.java:40) ~[app.jar:0.0.1-SNAPSHOT]
+
+2026-09-17T22:48:52.974+09:00 ERROR [] 1 --- [DOCKin-spring] [           main] com.DOCKin.rag.service.IndexingService   : [RAG] 인덱싱 중단 종료 - 신규 임베딩 875건 / 전체 청크 3158건 / 50742ms / 사유: 임베딩 서버 호출에 실패했습니다.
+2026-09-17T22:48:52.979+09:00 ERROR [] 1 --- [DOCKin-spring] [           main] c.DOCKin.rag.service.SeedIndexingRunner  : [RAG] 기동 직후 색인 중단 - 신규 임베딩 875건까지 반영됨: 임베딩 서버 호출에 실패했습니다.
+2026-09-17T22:48:52.981+09:00  WARN [] 1 --- [DOCKin-spring] [           main] o.s.core.events.SpringDocAppInitializer  : SpringDoc /v3/api-docs endpoint is enabled by default. To disable it in production, set the property 'springdoc.api-docs.enabled=false'
+2026-09-17T22:48:52.981+09:00  WARN [] 1 --- [DOCKin-spring] [           main] o.s.core.events.SpringDocAppInitializer  : SpringDoc /swagger-ui.html endpoint is enabled by default. To disable it in production, set the property 'springdoc.swagger-ui.enabled=false'
+2026-09-17T22:48:54.978+09:00  INFO [] 1 --- [DOCKin-spring] [ionShutdownHook] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-09-17T22:48:54.980+09:00  INFO [] 1 --- [DOCKin-spring] [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2026-09-17T22:48:54.983+09:00  INFO [] 1 --- [DOCKin-spring] [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.0.1)
+
+2026-09-17T22:49:04.523+09:00  INFO [] 1 --- [DOCKin-spring] [           main] com.DOCKin.DocKinSpringApplication       : Starting DocKinSpringApplication v0.0.1-SNAPSHOT using Java 21.0.12.1 with PID 1 (/app.jar started by root in /)
+2026-09-17T22:49:04.527+09:00  INFO [] 1 --- [DOCKin-spring] [           main] com.DOCKin.DocKinSpringApplication       : The following 2 profiles are active: "secret", "seed"
+2026-09-17T22:49:06.805+09:00  INFO [] 1 --- [DOCKin-spring] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-09-17T22:49:07.219+09:00  INFO [] 1 --- [DOCKin-spring] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 405 ms. Found 20 JPA repository interfaces.
+2026-09-17T22:49:09.133+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8080 (http)
+2026-09-17T22:49:09.199+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-09-17T22:49:09.200+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.15]
+2026-09-17T22:49:09.320+09:00  INFO [] 1 --- [DOCKin-spring] [           main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 4688 ms
+2026-09-17T22:49:10.505+09:00  INFO [] 1 --- [DOCKin-spring] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-09-17T22:49:10.732+09:00  INFO [] 1 --- [DOCKin-spring] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@1af78e37
+2026-09-17T22:49:10.733+09:00  INFO [] 1 --- [DOCKin-spring] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-09-17T22:49:10.818+09:00  INFO [] 1 --- [DOCKin-spring] [           main] org.flywaydb.core.FlywayExecutor         : Database: jdbc:postgresql://DOCKin-DB:5432/dockindb (PostgreSQL 17.11)
+2026-09-17T22:49:11.010+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.f.core.internal.command.DbValidate     : Successfully validated 8 migrations (execution time 00:00.175s)
+2026-09-17T22:49:11.018+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.f.core.internal.command.DbMigrate      : Current version of schema "public": 7
+2026-09-17T22:49:11.020+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.f.core.internal.command.DbMigrate      : Schema "public" is up to date. No migration necessary.
+2026-09-17T22:49:11.207+09:00  INFO [] 1 --- [DOCKin-spring] [           main] org.hibernate.orm.jpa                    : HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-09-17T22:49:11.311+09:00  INFO [] 1 --- [DOCKin-spring] [           main] org.hibernate.orm.core                   : HHH000001: Hibernate ORM core version 7.2.0.Final
+2026-09-17T22:49:11.943+09:00  INFO [] 1 --- [DOCKin-spring] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [jdbc:postgresql://DOCKin-DB:5432/dockindb]
+	Database driver: PostgreSQL JDBC Driver
+	Database dialect: PostgreSQLDialect
+	Database version: 17.11
+	Default catalog/schema: dockindb/public
+	Autocommit mode: undefined/unknown
+	Isolation level: READ_COMMITTED [default READ_COMMITTED]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-09-17T22:49:12.343+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-09-17T22:49:14.529+09:00  INFO [] 1 --- [DOCKin-spring] [           main] org.hibernate.orm.core                   : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-09-17T22:49:14.532+09:00  INFO [] 1 --- [DOCKin-spring] [           main] org.hibernate.orm.jdbc.batch             : HHH100501: Automatic JDBC statement batching enabled (maximum batch size 100)
+2026-09-17T22:49:14.597+09:00  INFO [] 1 --- [DOCKin-spring] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-09-17T22:49:14.730+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.s.d.j.r.query.QueryEnhancerFactories   : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-09-17T22:49:18.339+09:00  INFO [] 1 --- [DOCKin-spring] [           main] org.redisson.Version                     : Redisson 3.37.0
+2026-09-17T22:49:18.801+09:00  INFO [] 1 --- [DOCKin-spring] [isson-netty-1-5] o.redisson.connection.ConnectionsHolder  : 1 connections initialized for dockin-redis/172.18.0.2:6379
+2026-09-17T22:49:18.801+09:00  INFO [] 1 --- [DOCKin-spring] [isson-netty-1-6] o.redisson.connection.ConnectionsHolder  : 1 connections initialized for dockin-redis/172.18.0.2:6379
+2026-09-17T22:49:20.119+09:00  WARN [] 1 --- [DOCKin-spring] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-09-17T22:49:20.399+09:00  INFO [] 1 --- [DOCKin-spring] [           main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name customUserDetailsService
+2026-09-17T22:49:21.120+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 3 endpoints beneath base path '/actuator'
+2026-09-17T22:49:21.809+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : Starting...
+2026-09-17T22:49:21.810+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : BrokerAvailabilityEvent[available=true, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@3ceb5831]]
+2026-09-17T22:49:21.811+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : Started.
+2026-09-17T22:49:21.825+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 8080 (http) with context path '/'
+2026-09-17T22:49:21.897+09:00  INFO [] 1 --- [DOCKin-spring] [           main] com.DOCKin.DocKinSpringApplication       : Started DocKinSpringApplication in 18.179 seconds (process running for 19.232)
+2026-09-17T22:49:21.904+09:00  INFO [] 1 --- [DOCKin-spring] [           main] c.DOCKin.rag.service.SeedIndexingRunner  : [RAG] seed 프로파일 - 기동 직후 색인을 시작합니다. (rag.indexing.on-startup=true)
+2026-09-17T22:49:23.109+09:00  INFO [] 1 --- [DOCKin-spring] [nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-09-17T22:49:23.109+09:00  INFO [] 1 --- [DOCKin-spring] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-09-17T22:49:23.111+09:00  INFO [] 1 --- [DOCKin-spring] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 2 ms
+2026-09-17T22:49:23.200+09:00  WARN [b11b18c21d1d4b51] 1 --- [DOCKin-spring] [nio-8080-exec-1] o.s.w.s.h.HandlerMappingIntrospector     : Cache miss for REQUEST dispatch to '/actuator/health' (previous null). Performing CorsConfiguration lookup. This is logged once only at WARN level, and every time at TRACE.
+2026-09-17T22:49:49.623+09:00  INFO [] 1 --- [DOCKin-spring] [           main] com.DOCKin.rag.service.IndexingService   : [RAG] 번역본 색인이 비활성화되어 있어 건너뜁니다. (rag.indexing.translations.enabled=false)
+2026-09-17T22:49:49.771+09:00  INFO [] 1 --- [DOCKin-spring] [           main] com.DOCKin.rag.service.IndexingService   : [RAG] 인덱싱 완주 - 신규 임베딩 494건 / 전체 청크 3652건 / 27866ms
+2026-09-17T22:49:49.776+09:00  INFO [] 1 --- [DOCKin-spring] [           main] c.DOCKin.rag.service.SeedIndexingRunner  : [RAG] 기동 직후 색인 완주 - 신규 임베딩 494건
+2026-09-17T22:49:49.777+09:00  WARN [] 1 --- [DOCKin-spring] [           main] o.s.core.events.SpringDocAppInitializer  : SpringDoc /v3/api-docs endpoint is enabled by default. To disable it in production, set the property 'springdoc.api-docs.enabled=false'
+2026-09-17T22:49:49.777+09:00  WARN [] 1 --- [DOCKin-spring] [           main] o.s.core.events.SpringDocAppInitializer  : SpringDoc /swagger-ui.html endpoint is enabled by default. To disable it in production, set the property 'springdoc.swagger-ui.enabled=false'
+2026-09-17T22:50:21.734+09:00  INFO [] 1 --- [DOCKin-spring] [MessageBroker-1] o.s.w.s.c.WebSocketMessageBrokerStats    : WebSocketSession[0 current WS(0)-HttpStream(0)-HttpPoll(0), 0 total, 0 closed abnormally (0 connect failure, 0 send limit, 0 transport error)], stompSubProtocol[processed CONNECT(0)-CONNECTED(0)-DISCONNECT(0)], stompBrokerRelay[null], inboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], outboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], sockJsScheduler[pool size = 1, active threads = 1, queued tasks = 5, completed tasks = 18]
+2026-09-17T22:50:53.091+09:00  INFO [] 1 --- [DOCKin-spring] [ionShutdownHook] o.s.boot.tomcat.GracefulShutdown         : Commencing graceful shutdown. Waiting for active requests to complete
+2026-09-17T22:50:53.093+09:00  INFO [] 1 --- [DOCKin-spring] [tomcat-shutdown] o.s.boot.tomcat.GracefulShutdown         : Graceful shutdown complete
+2026-09-17T22:50:53.095+09:00  INFO [] 1 --- [DOCKin-spring] [ionShutdownHook] o.s.m.s.b.SimpleBrokerMessageHandler     : Stopping...
+2026-09-17T22:50:53.095+09:00  INFO [] 1 --- [DOCKin-spring] [ionShutdownHook] o.s.m.s.b.SimpleBrokerMessageHandler     : BrokerAvailabilityEvent[available=false, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@3ceb5831]]
+2026-09-17T22:50:53.095+09:00  INFO [] 1 --- [DOCKin-spring] [ionShutdownHook] o.s.m.s.b.SimpleBrokerMessageHandler     : Stopped.
+2026-09-17T22:50:55.233+09:00  INFO [] 1 --- [DOCKin-spring] [ionShutdownHook] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-09-17T22:50:55.235+09:00  INFO [] 1 --- [DOCKin-spring] [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2026-09-17T22:50:55.239+09:00  INFO [] 1 --- [DOCKin-spring] [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.0.1)
+
+2026-09-17T22:51:44.106+09:00  INFO [] 1 --- [DOCKin-spring] [           main] com.DOCKin.DocKinSpringApplication       : Starting DocKinSpringApplication v0.0.1-SNAPSHOT using Java 21.0.12.1 with PID 1 (/app.jar started by root in /)
+2026-09-17T22:51:44.110+09:00  INFO [] 1 --- [DOCKin-spring] [           main] com.DOCKin.DocKinSpringApplication       : The following 2 profiles are active: "secret", "seed"
+2026-09-17T22:51:46.310+09:00  INFO [] 1 --- [DOCKin-spring] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-09-17T22:51:46.798+09:00  INFO [] 1 --- [DOCKin-spring] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 480 ms. Found 20 JPA repository interfaces.
+2026-09-17T22:51:48.522+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8080 (http)
+2026-09-17T22:51:48.534+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-09-17T22:51:48.534+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.15]
+2026-09-17T22:51:48.714+09:00  INFO [] 1 --- [DOCKin-spring] [           main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 4497 ms
+2026-09-17T22:51:50.000+09:00  INFO [] 1 --- [DOCKin-spring] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-09-17T22:51:50.299+09:00  INFO [] 1 --- [DOCKin-spring] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@1af78e37
+2026-09-17T22:51:50.301+09:00  INFO [] 1 --- [DOCKin-spring] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-09-17T22:51:50.325+09:00  INFO [] 1 --- [DOCKin-spring] [           main] org.flywaydb.core.FlywayExecutor         : Database: jdbc:postgresql://DOCKin-DB:5432/dockindb (PostgreSQL 17.11)
+2026-09-17T22:51:50.515+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.f.core.internal.command.DbValidate     : Successfully validated 8 migrations (execution time 00:00.171s)
+2026-09-17T22:51:50.523+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.f.core.internal.command.DbMigrate      : Current version of schema "public": 7
+2026-09-17T22:51:50.526+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.f.core.internal.command.DbMigrate      : Schema "public" is up to date. No migration necessary.
+2026-09-17T22:51:50.724+09:00  INFO [] 1 --- [DOCKin-spring] [           main] org.hibernate.orm.jpa                    : HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-09-17T22:51:50.830+09:00  INFO [] 1 --- [DOCKin-spring] [           main] org.hibernate.orm.core                   : HHH000001: Hibernate ORM core version 7.2.0.Final
+2026-09-17T22:51:51.533+09:00  INFO [] 1 --- [DOCKin-spring] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [jdbc:postgresql://DOCKin-DB:5432/dockindb]
+	Database driver: PostgreSQL JDBC Driver
+	Database dialect: PostgreSQLDialect
+	Database version: 17.11
+	Default catalog/schema: dockindb/public
+	Autocommit mode: undefined/unknown
+	Isolation level: READ_COMMITTED [default READ_COMMITTED]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-09-17T22:51:51.939+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-09-17T22:51:54.309+09:00  INFO [] 1 --- [DOCKin-spring] [           main] org.hibernate.orm.core                   : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-09-17T22:51:54.313+09:00  INFO [] 1 --- [DOCKin-spring] [           main] org.hibernate.orm.jdbc.batch             : HHH100501: Automatic JDBC statement batching enabled (maximum batch size 100)
+2026-09-17T22:51:54.355+09:00  INFO [] 1 --- [DOCKin-spring] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-09-17T22:51:54.522+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.s.d.j.r.query.QueryEnhancerFactories   : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-09-17T22:51:57.950+09:00  INFO [] 1 --- [DOCKin-spring] [           main] org.redisson.Version                     : Redisson 3.37.0
+2026-09-17T22:51:58.415+09:00  INFO [] 1 --- [DOCKin-spring] [isson-netty-1-5] o.redisson.connection.ConnectionsHolder  : 1 connections initialized for dockin-redis/172.18.0.2:6379
+2026-09-17T22:51:58.415+09:00  INFO [] 1 --- [DOCKin-spring] [isson-netty-1-6] o.redisson.connection.ConnectionsHolder  : 1 connections initialized for dockin-redis/172.18.0.2:6379
+2026-09-17T22:51:59.641+09:00  WARN [] 1 --- [DOCKin-spring] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-09-17T22:51:59.923+09:00  INFO [] 1 --- [DOCKin-spring] [           main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name customUserDetailsService
+2026-09-17T22:52:00.632+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 3 endpoints beneath base path '/actuator'
+2026-09-17T22:52:01.316+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : Starting...
+2026-09-17T22:52:01.317+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : BrokerAvailabilityEvent[available=true, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@3ceb5831]]
+2026-09-17T22:52:01.318+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : Started.
+2026-09-17T22:52:01.333+09:00  INFO [] 1 --- [DOCKin-spring] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 8080 (http) with context path '/'
+2026-09-17T22:52:01.397+09:00  INFO [] 1 --- [DOCKin-spring] [           main] com.DOCKin.DocKinSpringApplication       : Started DocKinSpringApplication in 18.09 seconds (process running for 19.242)
+2026-09-17T22:52:01.406+09:00  INFO [] 1 --- [DOCKin-spring] [           main] c.DOCKin.rag.service.SeedIndexingRunner  : [RAG] seed 프로파일 - 기동 직후 색인을 시작합니다. (rag.indexing.on-startup=true)
+2026-09-17T22:52:02.512+09:00  INFO [] 1 --- [DOCKin-spring] [nio-8080-exec-2] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-09-17T22:52:02.512+09:00  INFO [] 1 --- [DOCKin-spring] [nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-09-17T22:52:02.515+09:00  INFO [] 1 --- [DOCKin-spring] [nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : Completed initialization in 3 ms
+2026-09-17T22:52:02.542+09:00  WARN [0e4815284b7044f6] 1 --- [DOCKin-spring] [nio-8080-exec-2] o.s.w.s.h.HandlerMappingIntrospector     : Cache miss for REQUEST dispatch to '/actuator/health' (previous null). Performing CorsConfiguration lookup. This is logged once only at WARN level, and every time at TRACE.
+2026-09-17T22:53:01.236+09:00  INFO [] 1 --- [DOCKin-spring] [MessageBroker-1] o.s.w.s.c.WebSocketMessageBrokerStats    : WebSocketSession[0 current WS(0)-HttpStream(0)-HttpPoll(0), 0 total, 0 closed abnormally (0 connect failure, 0 send limit, 0 transport error)], stompSubProtocol[processed CONNECT(0)-CONNECTED(0)-DISCONNECT(0)], stompBrokerRelay[null], inboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], outboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], sockJsScheduler[pool size = 1, active threads = 1, queued tasks = 5, completed tasks = 18]
+2026-09-17T23:23:01.237+09:00  INFO [] 1 --- [DOCKin-spring] [MessageBroker-1] o.s.w.s.c.WebSocketMessageBrokerStats    : WebSocketSession[0 current WS(0)-HttpStream(0)-HttpPoll(0), 0 total, 0 closed abnormally (0 connect failure, 0 send limit, 0 transport error)], stompSubProtocol[processed CONNECT(0)-CONNECTED(0)-DISCONNECT(0)], stompBrokerRelay[null], inboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], outboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], sockJsScheduler[pool size = 1, active threads = 1, queued tasks = 5, completed tasks = 559]
+2026-09-17T23:53:01.237+09:00  INFO [] 1 --- [DOCKin-spring] [MessageBroker-1] o.s.w.s.c.WebSocketMessageBrokerStats    : WebSocketSession[0 current WS(0)-HttpStream(0)-HttpPoll(0), 0 total, 0 closed abnormally (0 connect failure, 0 send limit, 0 transport error)], stompSubProtocol[processed CONNECT(0)-CONNECTED(0)-DISCONNECT(0)], stompBrokerRelay[null], inboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], outboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], sockJsScheduler[pool size = 1, active threads = 1, queued tasks = 5, completed tasks = 1100]
+2026-09-18T00:10:00.045+09:00  INFO [] 1 --- [DOCKin-spring] [MessageBroker-1] c.D.a.service.AttendanceBatchService     : [근태] 결근 처리 완료 - 2026-09-17 대상 504건 (기존 기록 0건)
+2026-09-18T00:23:01.238+09:00  INFO [] 1 --- [DOCKin-spring] [MessageBroker-1] o.s.w.s.c.WebSocketMessageBrokerStats    : WebSocketSession[0 current WS(0)-HttpStream(0)-HttpPoll(0), 0 total, 0 closed abnormally (0 connect failure, 0 send limit, 0 transport error)], stompSubProtocol[processed CONNECT(0)-CONNECTED(0)-DISCONNECT(0)], stompBrokerRelay[null], inboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], outboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], sockJsScheduler[pool size = 1, active threads = 1, queued tasks = 5, completed tasks = 1642]
+2026-09-18T00:53:01.238+09:00  INFO [] 1 --- [DOCKin-spring] [MessageBroker-1] o.s.w.s.c.WebSocketMessageBrokerStats    : WebSocketSession[0 current WS(0)-HttpStream(0)-HttpPoll(0), 0 total, 0 closed abnormally (0 connect failure, 0 send limit, 0 transport error)], stompSubProtocol[processed CONNECT(0)-CONNECTED(0)-DISCONNECT(0)], stompBrokerRelay[null], inboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], outboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], sockJsScheduler[pool size = 1, active threads = 1, queued tasks = 5, completed tasks = 2183]
+2026-09-18T01:23:01.239+09:00  INFO [] 1 --- [DOCKin-spring] [MessageBroker-1] o.s.w.s.c.WebSocketMessageBrokerStats    : WebSocketSession[0 current WS(0)-HttpStream(0)-HttpPoll(0), 0 total, 0 closed abnormally (0 connect failure, 0 send limit, 0 transport error)], stompSubProtocol[processed CONNECT(0)-CONNECTED(0)-DISCONNECT(0)], stompBrokerRelay[null], inboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], outboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], sockJsScheduler[pool size = 1, active threads = 1, queued tasks = 5, completed tasks = 2724]
+2026-09-18T01:53:01.239+09:00  INFO [] 1 --- [DOCKin-spring] [MessageBroker-1] o.s.w.s.c.WebSocketMessageBrokerStats    : WebSocketSession[0 current WS(0)-HttpStream(0)-HttpPoll(0), 0 total, 0 closed abnormally (0 connect failure, 0 send limit, 0 transport error)], stompSubProtocol[processed CONNECT(0)-CONNECTED(0)-DISCONNECT(0)], stompBrokerRelay[null], inboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], outboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], sockJsScheduler[pool size = 1, active threads = 1, queued tasks = 5, completed tasks = 3265]

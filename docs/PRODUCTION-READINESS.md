@@ -27,7 +27,10 @@
 | G5 | 토큰 생명주기가 없다 | ✅ 2026-09-14 | refresh 토큰을 저장만 하고(`MemberService.login`) 갱신 엔드포인트가 없다. 로그아웃 폐기는 `JwtBlacklist` in-memory(P2-5) | 만료되면 재로그인뿐이고, 재시작하면 로그아웃이 풀린다. **액세스 토큰이 곧 세션**인 구조라 블랙리스트가 유일한 폐기 수단 |
 | G6 | 관리자 경로를 한 곳에서 막지 않는다 | ✅ 2026-09-14 | `SecurityConfig`는 `/actuator/**`만 `hasRole`. `/api/*/admin/**`은 서비스가 손으로 `role != ADMIN` 검사 | 메서드 하나 빠지면 그대로 구멍 — `SafetyAdminController` 읽기 3개·`ChecklistAdminController` 상세 조회가 이미 그렇다 |
 
+| G7 | AI 서버(FastAPI)가 인증 없이 열려 있다 | △ 2026-09-17 코드 / 운영 설정 #80 | `SttService`가 사용자 `Authorization`을 넘겼는데 FastAPI는 그 헤더를 읽지 않고 `X-Service-Token`만 본다(`SERVICE_TOKEN` 있을 때만). 스프링이 그걸 보낸 적이 없다 | 번역·STT·챗봇(OpenAI 비용)이 닿을 수 있는 누구에게나 열린다 [추측 — 운영 `SERVICE_TOKEN` 미확인]. 코드는 PR #66으로 준비됐고 양쪽에 같은 값을 넣어야 닫힌다 |
+
 > **1절은 이틀에 닫았다** (백로그 P2-18-1~6, P2-5). G5는 `/member/refresh`(회전·재사용 감지) + 블랙리스트 Redis 이관, G6은 `SecurityConfig` 한 줄 + `AdminPathSecurityTest`.
+> G7은 2026-09-17 API 점검(P2-20-7)에서 뒤늦게 나왔다 — 2026-09-13 점검은 스프링 안만 봤고 스프링→FastAPI 경계는 안 봤다. 코드는 끝났고 운영 설정(#80)이 남았다.
 
 ---
 
@@ -67,7 +70,7 @@
 | O3 | 로그 집계 | ❌ | 컨테이너 로그가 호스트에만 | CloudWatch Logs나 Loki. `traceId`를 만든 이유가 여기서 살아남는다 |
 | O4 | 슬로우 쿼리 | △ 2026-09-15 | 주 1회 절차 `OPERATIONS-SLOW-QUERY.md` — `scripts/db/slow-query-report.sh`가 누적·평균·호출 top 10 + `wait_event` + 락 대기 로그 수를 남긴다 | 4주 분포 뒤 `log_min_duration_statement`·`auto_explain`. cron 등록 |
 | O5 | 에러 트래킹 | ❌ | `GlobalExceptionHandler`가 500을 삼키고 로그만 남긴다 | Sentry 류. 지금은 사용자가 말해줘야 안다 |
-| O6 | 장애 대응 문서 | ❌ | 없음 | "DB가 안 뜬다 / 번역 서버가 죽었다 / 디스크가 찼다" 세 시나리오면 된다. E8의 "앱 재시작으로 안 돌아오면 DB도 재시작"이 이미 하나다 |
+| O6 | 장애 대응 문서 | △ | `docs/db/incident-response.md` (2026-09-19) — "DB가 안 뜬다 / 삭제가 안 끝난다 / 느려졌는데 재시작으로 안 돌아온다" | DB 시나리오 셋은 겪은 것으로 썼다(DB-IMPROVEMENT-PLAN E4). "번역 서버가 죽었다 / 디스크가 찼다"는 겪은 적이 없어 아직 없다 — #89 |
 
 ---
 

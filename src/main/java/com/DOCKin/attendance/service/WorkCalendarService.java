@@ -80,16 +80,42 @@ public class WorkCalendarService {
                         .build()));
     }
 
-    /** 연초 일괄 등록용. 공휴일 목록을 한 번에 넣는다. */
+    /**
+     * 연초 일괄 등록용. 공휴일 목록을 한 번에 넣는다.
+     *
+     * <p>순서대로 처리한다. 같은 날짜가 두 번 오면 첫 번째 {@code save}가 영속성 컨텍스트에 남아
+     * 두 번째 {@code findById}가 그것을 찾으므로 뒤가 이긴다. 돌려주는 목록은 요청 순서·건수 그대로다 —
+     * 중복 날짜는 같은 엔티티가 두 번 들어 있다.
+     */
     @Transactional
-    public int registerAll(String adminUserId, List<WorkCalendar> entries) {
+    public List<WorkCalendar> registerAll(String adminUserId, List<WorkCalendar> entries) {
         requireAdmin(adminUserId);
-        entries.forEach(entry -> workCalendarRepository.findById(entry.getCalendarDate())
-                .ifPresentOrElse(
-                        existing -> existing.update(entry.getDayType(), entry.getDescription()),
-                        () -> workCalendarRepository.save(entry)));
-        log.info("[근태] 근무일 캘린더 {}건 등록/갱신", entries.size());
-        return entries.size();
+        List<WorkCalendar> saved = entries.stream()
+                .map(entry -> workCalendarRepository.findById(entry.getCalendarDate())
+                        .map(existing -> {
+                            existing.update(entry.getDayType(), entry.getDescription());
+                            return existing;
+                        })
+                        .orElseGet(() -> workCalendarRepository.save(entry)))
+                .toList();
+        log.info("[근태] 근무일 캘린더 {}건 등록/갱신", saved.size());
+        return saved;
+    }
+
+    /**
+     * 캘린더에서 날짜를 지운다. 그 날은 기본 규칙(평일=근무, 주말=휴무)으로 돌아간다.
+     *
+     * <p>덮어쓰기로는 되돌릴 수 없다 — {@code WEEKEND}나 {@code WORKDAY}로 덮어쓴 날도 여전히
+     * "등록된 날"이라 기본 규칙이 바뀌어도(주 4일제 등) 따라가지 않는다. 잘못 등록한 날을
+     * 되돌리는 길은 삭제뿐이다. 없는 날은 404 — 조용히 성공하면 오타 난 날짜를 못 알아챈다.
+     */
+    @Transactional
+    public void delete(String adminUserId, LocalDate date) {
+        requireAdmin(adminUserId);
+        WorkCalendar entry = workCalendarRepository.findById(date)
+                .orElseThrow(() -> new BusinessException(ErrorCode.WORK_CALENDAR_NOT_FOUND));
+        workCalendarRepository.delete(entry);
+        log.info("[근태] 근무일 캘린더 {} 삭제", date);
     }
 
     private void requireAdmin(String userId) {

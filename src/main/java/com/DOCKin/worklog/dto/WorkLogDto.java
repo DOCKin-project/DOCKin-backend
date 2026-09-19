@@ -2,6 +2,7 @@ package com.DOCKin.worklog.dto;
 
 import com.DOCKin.worklog.model.WorkLogImage;
 import com.DOCKin.worklog.model.WorkLog;
+import com.DOCKin.worklog.model.WorkLogStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -43,6 +44,19 @@ public class WorkLogDto {
     private LocalDateTime updatedAt;
 
     private String audioFileUrl;
+
+    @Schema(description = "검토 상태 (P2-17-1). 작성자가 수정하면 PENDING으로 돌아간다",
+            example = "PENDING", requiredMode = Schema.RequiredMode.REQUIRED)
+    private WorkLogStatus status;
+
+    @Schema(description = "검토한 관리자 사원번호. PENDING이면 null")
+    private String reviewedBy;
+
+    @Schema(description = "검토 일시. PENDING이면 null", example = "2026-01-13T09:00:00")
+    private LocalDateTime reviewedAt;
+
+    @Schema(description = "승인/반려 사유. PENDING이면 null")
+    private String reviewComment;
 
     /**
      * 엔티티를 응답 DTO로 옮긴다.
@@ -104,6 +118,13 @@ public class WorkLogDto {
                 .audioFileUrl(entity.getAudioFileUrl())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
+                .status(entity.getStatus())
+                // equipment와 같은 이유로 null 가드 — 검토 전엔 FK가 NULL이라 프록시가 아니라 null이다.
+                .reviewedBy(entity.getReviewedBy() == null
+                        ? null
+                        : entity.getReviewedBy().getUserId())
+                .reviewedAt(entity.getReviewedAt())
+                .reviewComment(entity.getReviewComment())
                 .build();
     }
 }

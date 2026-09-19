@@ -6,6 +6,7 @@ import com.DOCKin.worklog.dto.WorkLogCursor;
 import com.DOCKin.worklog.dto.WorkLogsCreateRequestDto;
 import com.DOCKin.worklog.dto.WorkLogsUpdateRequestDto;
 import com.DOCKin.worklog.dto.WorkLogDto;
+import com.DOCKin.worklog.model.WorkLogStatus;
 import com.DOCKin.global.security.auth.CustomUserDetails;
 import com.DOCKin.worklog.service.WorkLogsService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -86,17 +87,19 @@ public class WorkLogsController {
      * OFFSET이라 뒤로 갈수록 비싸진다(500페이지 150ms, P2-15-5 ③). 커서가 있으면 {@code page}는 무시한다.
      */
     @Operation(summary="전체 작업일지 조회",
-            description = "같은 구역의 작업일지를 최신순으로. 다음 페이지는 마지막 원소의 createdAt·logId를 "
+            description = "같은 구역의 작업일지를 최신순으로. status(PENDING/APPROVED/REJECTED)를 주면 그 상태만 — "
+                    + "관리자의 미승인 큐, 근로자의 반려 건이 이 필터다. 다음 페이지는 마지막 원소의 createdAt·logId를 "
                     + "beforeCreatedAt·beforeLogId로. 둘 다 없으면 첫 페이지. last=false면 다음이 있다")
     @GetMapping
     public ResponseEntity<Slice<WorkLogDto>> getWorkLog(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
+            @RequestParam(required = false) WorkLogStatus status,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime beforeCreatedAt,
             @RequestParam(required = false) Long beforeLogId,
             @PageableDefault(size = 20, sort = {"createdAt", "logId"}, direction = Sort.Direction.DESC) Pageable pageable
             ){
         String userId = customUserDetails.getMember().getUserId();
-        return ResponseEntity.ok(workLogsService.readWorklog(userId,
+        return ResponseEntity.ok(workLogsService.readWorklog(userId, status,
                 WorkLogCursor.of(beforeCreatedAt, beforeLogId), pageable));
     }
 
