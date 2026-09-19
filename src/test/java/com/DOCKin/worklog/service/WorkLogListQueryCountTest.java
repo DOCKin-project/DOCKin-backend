@@ -146,15 +146,15 @@ class WorkLogListQueryCountTest extends ContainerTestSupport {
      *
      * <p>고정 비용이 엔드포인트마다 다른 것이 그 자체로 정보다.
      * <ul>
-     *   <li>전체 목록 3개 — 내 정보 / <b>구역 사용자 전체</b> / 본문</li>
+     *   <li>전체 목록 2개 — 내 정보 / 본문. 2026-09-19까지는 3개였다 — 둘째가
+     *       {@code findByShipYardArea}로 <b>구역 사용자를 전부</b> 메모리로 올린 뒤 {@code IN} 절에
+     *       통째로 넣었고, 쿼리 <b>개수</b>로는 1이라 여기서는 작아 보였는데 AWS 밤 15 k6 부하에서
+     *       그 한 줄이 가장 비쌌다(구역 1.3만 명 = 바인드 1.3만 개, #118). 지금은 본문이 users를
+     *       조인해 구역을 거른다</li>
      *   <li>타인 목록 3개 — 내 정보 / 대상자 정보 / 본문</li>
-     *   <li>키워드 검색 3개 — 내 정보 / 구역 사용자 전체 / 본문. 원래 1개였다 —
-     *       검색만 구역 필터가 없어 전체를 뒤졌기 때문이고(P2-18-10), 전체 목록과 같은 범위로
-     *       맞추면서 같은 고정 비용이 됐다</li>
+     *   <li>키워드 검색 2개 — 내 정보 / 본문. 원래 1개였다가(검색만 구역 필터가 없었다, P2-18-10)
+     *       전체 목록과 같은 범위로 맞추며 3개가 됐고, #118로 다시 2개다</li>
      * </ul>
-     * 전체 목록의 두 번째가 {@code findByShipYardArea}이고, 이것은 <b>구역 사용자를 전부</b>
-     * 메모리로 올린 뒤 {@code IN} 절에 통째로 넣는다. 쿼리 <b>개수</b>로는 1이라 여기서는
-     * 작아 보이지만, 규모가 커지면 이 한 줄이 가장 비싸진다 — 그쪽은 2/2 벤치마크가 잰다.
      */
     @Test
     @DisplayName("목록 API 쿼리 수 = 고정 비용 + 행당 1 (이미지 컬렉션)")
@@ -174,12 +174,13 @@ class WorkLogListQueryCountTest extends ContainerTestSupport {
         assertEquals(20, other.rows(), "타인 목록 표본이 한 페이지를 채우지 못했다");
         assertEquals(20, search.rows(), "키워드 검색 표본이 한 페이지를 채우지 못했다");
 
-        // 고정 비용 3 = 요청자 조회 + (구역원 목록 | 대상 조회) + 본문. 2026-09-15까지는 4였다 --
-        // Page<>가 COUNT를 하나 더 던졌고, Slice로 바꾸며 사라졌다(DB-IMPROVEMENT-PLAN A4).
-        assertEquals(3 + 10, all10.queries(), explain("전체 목록(10)", all10));
-        assertEquals(3 + 20, all20.queries(), explain("전체 목록(20)", all20));
+        // 고정 비용 = 요청자 조회 + 본문 (+ 타인 목록은 대상 조회). 2026-09-15까지는 하나 더 있었다 --
+        // Page<>가 COUNT를 던졌고 Slice로 바꾸며 사라졌다(DB-IMPROVEMENT-PLAN A4). 2026-09-19까지는
+        // 전체 목록·검색에 구역원 목록 조회가 하나 더 있었다(#118, 위 주석).
+        assertEquals(2 + 10, all10.queries(), explain("전체 목록(10)", all10));
+        assertEquals(2 + 20, all20.queries(), explain("전체 목록(20)", all20));
         assertEquals(3 + 20, other.queries(), explain("타인 목록(20)", other));
-        assertEquals(3 + 20, search.queries(), explain("키워드 검색(20)", search));
+        assertEquals(2 + 20, search.queries(), explain("키워드 검색(20)", search));
 
         // 행당 1이 어디서 나오는지까지 고정한다. 개수만 고정하면 다음 사람이 다시 세야 한다.
         assertEquals(all20.rows(), all20.collectionFetches(),
@@ -198,7 +199,7 @@ class WorkLogListQueryCountTest extends ContainerTestSupport {
     @DisplayName("첫 페이지의 작성자와 장비가 행마다 모두 다르다 - 위 측정의 전제")
     void 표본_전제_검사() {
         // 첫 페이지에 해당하는 20건을 뽑아 그 안의 서로 다른 값 개수를 센다.
-        // 정렬을 log_id로 두는 것은 findByMemberIn이 정렬 없는 Pageable을 받아
+        // 정렬을 log_id로 두는 것은 findByArea가 정렬 없는 Pageable을 받아
         // 삽입 순서로 돌려주기 때문이다(측정 호출도 정렬 없는 PageRequest를 쓴다).
         Sample sample = jdbc.queryForObject("""
                 SELECT COUNT(*), COUNT(DISTINCT user_id), COUNT(DISTINCT equipment_id)

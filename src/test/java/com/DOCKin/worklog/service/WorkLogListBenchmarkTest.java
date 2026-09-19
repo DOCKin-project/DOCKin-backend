@@ -211,7 +211,7 @@ class WorkLogListBenchmarkTest {
      * Hibernate가 실제로 만드는 문장을 그대로 옮긴다.
      *
      * <p>JPQL을 흉내 내 다시 쓰면 <b>측정 대상이 실제 실행되는 것과 달라진다.</b>
-     * 예를 들어 {@code findByMemberIn}은 {@code Page}이므로 본문과 COUNT 두 문장이 나가고,
+     * 예를 들어 {@code findByArea}(당시 findByMemberIn)는 {@code Page}였으므로 본문과 COUNT 두 문장이 나가고,
      * 둘의 비용이 서로 다르다 — 합쳐서 재면 어느 쪽이 문제인지 알 수 없다.
      */
     private List<Case> cases(List<String> areaOwners) {
@@ -220,7 +220,7 @@ class WorkLogListBenchmarkTest {
 
         List<Case> cases = new ArrayList<>();
 
-        // 1. 전체 목록 첫 페이지 - findByMemberIn의 본문. 정렬이 없다.
+        // 1. 전체 목록 첫 페이지 - findByArea(당시 findByMemberIn)의 본문. 정렬이 없다.
         //
         //    [2026-08-08 정정] 이 줄의 전제가 P2-15-3으로 뒤집혔다. 원래는 "컨트롤러의
         //    @PageableDefault에 sort가 비어 있어 GET /api/work-logs가 정해지지 않은 순서로

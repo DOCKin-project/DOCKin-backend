@@ -147,10 +147,9 @@ public class WorkLogsService {
         Member member = memberRepository.findByUserId(userId)
                 .orElseThrow(()->new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        String area = member.getShipYardArea();
-       List<Member> areaMembers= memberRepository.findByShipYardArea(area);
-       Slice<WorkLog> logs = workLogsRepository.findByMemberIn(areaMembers, status,
-               beforeCreatedAt(before), beforeLogId(before), sizeOnly(before, pageable));
+        // 구역은 쿼리 안에서 조인으로 거른다. 구역 사용자를 전부 올려 IN에 넣던 방식은 #118.
+        Slice<WorkLog> logs = workLogsRepository.findByArea(member.getShipYardArea(), status,
+                beforeCreatedAt(before), beforeLogId(before), sizeOnly(before, pageable));
 
        return logs.map(WorkLogDto::from);
     }
@@ -182,8 +181,7 @@ public class WorkLogsService {
     public Slice<WorkLogDto> searchByKeyword(String userId, String keyword, WorkLogCursor before, Pageable pageable){
         Member member = memberRepository.findByUserId(userId)
                 .orElseThrow(()->new BusinessException(ErrorCode.USER_NOT_FOUND));
-        List<Member> areaMembers = memberRepository.findByShipYardArea(member.getShipYardArea());
-        Slice<WorkLog> workLog = workLogsRepository.searchWorkLogs(keyword, areaMembers,
+        Slice<WorkLog> workLog = workLogsRepository.searchWorkLogs(keyword, member.getShipYardArea(),
                 beforeCreatedAt(before), beforeLogId(before), sizeOnly(before, pageable));
         return workLog.map(WorkLogDto::from);
     }
