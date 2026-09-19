@@ -1,6 +1,7 @@
 package com.DOCKin.member.repository;
 
 import com.DOCKin.member.model.Member;
+import com.DOCKin.member.model.UserRole;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
@@ -15,6 +16,9 @@ import java.util.Optional;
 public interface MemberRepository extends JpaRepository<Member,String> {
     Optional<Member> findByUserId(String userId);
     List<Member> findByShipYardArea(String shipYardArea);
+
+    /** 결근 배치의 대상 — 근무자만. {@code findAll()}은 ADMIN까지 결근으로 만들었다(#105). */
+    List<Member> findByRole(UserRole role);
 
     /**
      * 잔여 연차를 갱신하기 위해 사용자 행에 비관적 쓰기 락({@code SELECT ... FOR UPDATE})을 건다.
