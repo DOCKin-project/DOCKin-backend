@@ -1,0 +1,30 @@
+04:59:24  시작 코퍼스 0 청크 / 원본 200016 / TEI 상한 2.0 고정
+04:59:27  ◆ 앱 기동 — 연속 색인 시작(1회차)
+05:00:31  [baseline] 청크 599 (+599) 원본당 120.0ms | INSERT 0.717ms/건 | ckpt 0/0 wal 5.3MB | dead 0 vac 0 run=0 | hnsw 1MB | cpu app 0.47% db 0.16% tei 201.73% | dbmem 465/512MB file 436 anon 18 evmax 4023 | base —
+05:01:34  [baseline] 청크 1572 (+973) 원본당 78.8ms | INSERT 0.855ms/건 | ckpt 0/0 wal 11.0MB | dead 0 vac 0 run=0 | hnsw 3MB | cpu app 0.29% db 0.03% tei 175.64% | dbmem 483/512MB file 454 anon 19 evmax 4023 | base —
+05:02:37  [baseline] 청크 2649 (+1077) 원본당 70.0ms | INSERT 0.948ms/건 | ckpt 1/0 wal 21.0MB | dead 0 vac 1 run=0 | hnsw 5MB | cpu app 1.04% db 53.25% tei 199.00% | dbmem 508/512MB file 474 anon 23 evmax 4031 | base —
+05:03:40  [baseline] 청크 3627 (+978) 원본당 78.8ms | INSERT 0.974ms/건 | ckpt 1/0 wal 26.8MB | dead 0 vac 2 run=0 | hnsw 7MB | cpu app 1.11% db 100.23% tei 200.44% | dbmem 503/512MB file 467 anon 24 evmax 4111 | base —
+05:03:41  ◆ 기준선 확정 78.8ms/원본 (유효 3표본 중앙값)
+05:04:44  [watch] 청크 4709 (+1082) 원본당 71.1ms | INSERT 1.038ms/건 | ckpt 1/0 wal 33.0MB | dead 0 vac 2 run=0 | hnsw 9MB | cpu app 0.20% db 100.22% tei 200.02% | dbmem 496/512MB file 466 anon 19 evmax 4266 | base 78.8
+05:04:44  ◆ 열화 감지 — 1표본 연속 ≥ 78.8×0.5 (마지막 71.1ms)
+05:04:45  ◆ 개입 1: DB 컨테이너 상한 → 1g (재시작 없이) 직전 [496|512|466|19|142|4266]
+05:04:46  ◆ 개입 1: 상한 변경 완료 [496|1024|466|19|142|4266] — 앱은 그대로
+05:05:49  [observe-1] 청크 5781 (+1072) 원본당 72.2ms | INSERT 1.064ms/건 | ckpt 1/0 wal 39.2MB | dead 0 vac 2 run=0 | hnsw 11MB | cpu app 0.20% db 4.51% tei 199.03% | dbmem 503/1024MB file 473 anon 19 evmax 4266 | base 78.8
+05:06:52  [observe-1] 청크 6729 (+948) 원본당 78.8ms | INSERT 1.085ms/건 | ckpt 1/0 wal 44.7MB | dead 0 vac 3 run=0 | hnsw 12MB | cpu app 0.29% db 0.01% tei 200.84% | dbmem 516/1024MB file 487 anon 19 evmax 4266 | base 78.8
+05:07:56  [observe-1] 청크 7800 (+1071) 원본당 71.1ms | INSERT 1.173ms/건 | ckpt 2/0 wal 62.4MB | dead 0 vac 3 run=0 | hnsw 14MB | cpu app 1.14% db 0.10% tei 199.38% | dbmem 535/1024MB file 505 anon 19 evmax 4266 | base 78.8
+05:07:56  ◆ 회복 — 개입 1 뒤 중앙값 74.9ms (기준선 78.8) → 원인은 컨테이너 메모리 상한(페이지 캐시가 상한을 나눠 쓰는 것)
+05:09:00  [settled] 청크 8867 (+1067) 원본당 71.1ms | INSERT 1.067ms/건 | ckpt 2/0 wal 68.5MB | dead 0 vac 3 run=0 | hnsw 16MB | cpu app 0.22% db 0.09% tei 200.03% | dbmem 546/1024MB file 516 anon 19 evmax 4266 | base 78.8
+05:10:03  [settled] 청크 9844 (+977) 원본당 78.8ms | INSERT 1.154ms/건 | ckpt 2/0 wal 74.0MB | dead 0 vac 4 run=0 | hnsw 18MB | cpu app 0.67% db 0.09% tei 201.61% | dbmem 556/1024MB file 526 anon 19 evmax 4266 | base 78.8
+05:11:06  [settled] 청크 10915 (+1071) 원본당 70.0ms | INSERT 1.126ms/건 | ckpt 2/0 wal 80.0MB | dead 0 vac 4 run=0 | hnsw 20MB | cpu app 3.75% db 0.09% tei 200.77% | dbmem 566/1024MB file 536 anon 19 evmax 4266 | base 78.8
+05:12:09  [settled] 청크 11966 (+1051) 원본당 70.0ms | INSERT 1.251ms/건 | ckpt 3/0 wal 86.0MB | dead 0 vac 4 run=0 | hnsw 22MB | cpu app 0.21% db 0.09% tei 197.96% | dbmem 577/1024MB file 547 anon 19 evmax 4266 | base 78.8
+05:12:10  ◆ !! 0.2시간 상한 — 원본이 남은 채로 끝낸다
+05:12:10  최종 코퍼스 11966 청크 (시작 0) / 개입 1단계까지 / 재기동 0회
+05:12:32  완료. 사건 표=measure/practice-night15/e8cause-20260919T045922/marks.csv  본체=measure/practice-night15/e8cause-20260919T045922/rate.csv
+t_epoch     t_iso                 event                                                                                                          chunks
+1789793967  2026-09-19T04:59:27Z  앱 기동 — 연속 색인 시작(1회차)                                                                                0
+1789794220  2026-09-19T05:03:40Z  기준선 확정 78.8ms/원본 (유효 3표본 중앙값)                                                                    3627
+1789794284  2026-09-19T05:04:44Z  열화 감지 — 1표본 연속 ≥ 78.8×0.5 (마지막 71.1ms)                                                              4709
+1789794285  2026-09-19T05:04:45Z  개입 1: DB 컨테이너 상한 → 1g (재시작 없이) 직전 [496|512|466|19|142|4266]                                     4709
+1789794286  2026-09-19T05:04:46Z  개입 1: 상한 변경 완료 [496|1024|466|19|142|4266] — 앱은 그대로                                                4709
+1789794476  2026-09-19T05:07:56Z  회복 — 개입 1 뒤 중앙값 74.9ms (기준선 78.8) → 원인은 컨테이너 메모리 상한(페이지 캐시가 상한을 나눠 쓰는 것)  7800
+1789794729  2026-09-19T05:12:09Z  !! 0.2시간 상한 — 원본이 남은 채로 끝낸다                                                                      11966
