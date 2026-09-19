@@ -34,6 +34,20 @@
 > [`scripts/demo/rag-chatbot-demo.sh`](scripts/demo/rag-chatbot-demo.sh).
 > HNSW recall은 측정 중이며, 결과가 나오기 전까지 "인덱스를 켜도 되는가"에 결론을 내지 않는다.
 
+**시연 결과 (2026-09-19, 로컬, 시드 30청크, 스텁 생성기)** — 같은 베트남어 질문
+*"Dây hàn CO2 bị kẹt, dừng liên tục thì xử lý thế nào?"* (CO2 용접 와이어가 자꾸 걸려 멈추면?)을 세 사용자로.
+정답 문서는 **`WORK_LOG #1` "CO2 용접기 3호기 와이어 송급 불량"** — worker01의 한국어 일지다.
+
+| 사용자 | `retrieval.sources` 상위 5 (유사도) | `WORK_LOG #1` |
+|---|---|---|
+| admin01 (관리자, 전체) | TRANSLATION #4 .844 · **WORK_LOG #1 .828** · TRANSLATION #2 .813 · WORK_LOG #3 .805 · WORK_LOG #9 .804 | **보인다** |
+| worker02 (응웬반·vi, 남의 일지) | TRANSLATION #4 .844 · TRANSLATION #2 .813 · WORK_LOG #9 .804 · TRANSLATION #3 .804 · TRANSLATION #5 .792 | **없다** — 전부 자기 일지(7~11)와 그 베트남어 번역 |
+| worker01 (김철수, 일지 주인) | **WORK_LOG #1 .828** · WORK_LOG #3 .805 · SAFETY_COURSE #1 .789 · WORK_LOG #5 .779 · SAFETY_COURSE #5 .777 | **보인다** |
+
+- 베트남어로 물어 한국어 일지를 찾았다(0.828, 관리자·주인 모두 2위 이내). 언어별 analyzer 없이 임베딩만으로.
+- worker02는 같은 질문에 `WORK_LOG #1`이 **후보에 아예 없다.** 후필터였다면 "5건 요청에 4건"으로 존재가 새고, 선필터라 5건이 자기 문서로 채워진다.
+- 전문은 [`docs/demo/rag-chatbot-demo-2026-09-19.txt`](docs/demo/rag-chatbot-demo-2026-09-19.txt). 답변 문장은 스텁이라 근거 목록 그대로다 — FastAPI를 붙이면 그 자리에 생성 답변이 오고 `retrieval`은 같다.
+
 ---
 
 ## 기술 스택
