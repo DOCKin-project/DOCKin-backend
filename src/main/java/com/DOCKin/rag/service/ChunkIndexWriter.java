@@ -38,6 +38,31 @@ public class ChunkIndexWriter {
     private final EmbeddingClient embeddingClient;
     private final List<ChunkingStrategy> chunkingStrategies;
 
+    /**
+     * 작업일지가 지워질 때 그 일지와 번역들의 청크를 지운다 (#101). V1 주석의 "원본 삭제 시 정리는 IndexingService 책임"이
+     * 코드로는 없었다 — 지운 일지가 RAG 근거로 계속 검색됐다. 호출자의 트랜잭션에 합류한다({@code REQUIRED}) —
+     * 원본 삭제와 함께 커밋되거나 함께 롤백된다(사용자 결정: 같은 트랜잭션).
+     *
+     * <p>번역 청크의 {@code source_id}는 {@code translation_id}라 번역 id 목록을 따로 받는다. 원본이 지워지면 번역은
+     * DB가 cascade로 지우지만(V12) 청크는 FK가 없어 여기서 지워야 한다.
+     *
+     * <p>새벽 색인 배치와 겹치면 — 배치가 번역 행을 읽은 뒤 여기서 지우고, 배치가 그 청크를 넣으면 고아 청크가 남는다.
+     * 창이 새벽 몇 초이고 다음 재색인이 원본 없는 청크를 정리하지 않으므로, 실제로 남으면 그때 배치에 고아 정리를 넣는다.
+     *
+     * @return 지운 청크 수
+     */
+    @Transactional
+    public int deleteForWorkLog(Long logId, List<Long> translationIds) {
+        int deleted = documentChunkRepository.deleteBySource(SourceType.WORK_LOG, List.of(logId));
+        if (!translationIds.isEmpty()) {
+            deleted += documentChunkRepository.deleteBySource(SourceType.WORK_LOG_TRANSLATION, translationIds);
+        }
+        if (deleted > 0) {
+            log.info("[색인] 작업일지 {} 삭제로 청크 {}건 정리 (번역 {}건)", logId, deleted, translationIds.size());
+        }
+        return deleted;
+    }
+
     /** 색인 대상 원본 하나의 스냅샷. 원본 엔티티 종류에 의존하지 않도록 평평하게 만든다. */
     public record IndexTarget(SourceType sourceType, Long sourceId, String text,
                               String languageCode, Visibility visibility, String ownerUserId) {}

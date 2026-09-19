@@ -1,6 +1,8 @@
 package com.DOCKin.worklog.service;
 
+import com.DOCKin.ai.repository.TranslateRepository;
 import com.DOCKin.ai.service.SttService;
+import com.DOCKin.rag.service.ChunkIndexWriter;
 import com.DOCKin.global.file.S3PresignedService;
 import com.DOCKin.worklog.dto.WorkLogsCreateRequestDto;
 import com.DOCKin.worklog.dto.WorkLogsUpdateRequestDto;
@@ -39,6 +41,8 @@ public class WorkLogsService {
     private final EquipmentRepository equipmentRepository;
     private final SttService sttService;
     private final S3PresignedService s3PresignedService;
+    private final TranslateRepository translateRepository;
+    private final ChunkIndexWriter chunkIndexWriter;
 
     //게시물 작성
     @Transactional
@@ -265,6 +269,12 @@ public class WorkLogsService {
             throw new BusinessException(ErrorCode.NOT_LOG_AUTHOR);
         }
 
-      workLogsRepository.delete(log);
+        // RAG 청크 먼저 — FK가 없어 DB가 따라 지우지 않는다(#101). 번역 청크는 translation_id로 걸려 있어
+        // 번역이 cascade로 사라지기 전에 id를 받아 둔다. 같은 트랜잭션이라 일지 삭제가 실패하면 청크도 돌아온다.
+        List<Long> translationIds = translateRepository.findIdsByLogId(logId);
+        chunkIndexWriter.deleteForWorkLog(logId, translationIds);
+
+        // 댓글·이미지는 엔티티 cascade, 번역은 DB cascade(V12). 전에는 번역이 NO ACTION이라 번역된 일지는 삭제가 500이었다.
+        workLogsRepository.delete(log);
     }
 }

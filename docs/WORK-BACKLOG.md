@@ -482,6 +482,22 @@ ADR-0003 3-3은 동기화 방식을 **배치 vs CDC(Debezium)** 둘로 놓고 �
 이벤트 방식은 P2-1/P2-2에서 휴가 승인 → 근태 반영에 이미 쓴 패턴이고 인프라가 늘지 않는다.
 CDC의 장점은 "애플리케이션을 우회한 변경도 잡는다"인데, **작업일지는 API로만 들어온다.**
 
+### P2-8-7 — 원본 삭제 시 번역·청크 정리 (#101, 2026-09-19 완료 — 브랜치 `fix/worklog-delete-cascade`)
+
+번역이 한 번이라도 된 작업일지는 `DELETE /api/work-logs/{id}`가 **500**이었다 — `work_log_translations.log_id`가 NO ACTION.
+그리고 V1이 "원본 삭제 시 청크 정리는 IndexingService 책임"이라고 적었는데 코드로는 없어 지운 일지가 RAG 근거로 계속 검색됐다.
+
+| 결정 | 골랐다 | 버린 것 |
+|---|---|---|
+| 번역 | **V12 `ON DELETE CASCADE`** — V6 `chat_message_translations`와 같은 결정. FK 이름이 Hibernate 자동 생성이라 카탈로그에서 찾아 지운다 | 엔티티 cascade(번역을 하나씩 읽어 지울 이유가 없다) |
+| 청크 | **같은 트랜잭션에서**(사용자 결정) — `ChunkIndexWriter.deleteForWorkLog(logId, translationIds)`, 벌크 JPQL. 번역 청크의 `source_id`는 `translation_id`라 번역이 cascade로 사라지기 전에 id를 받아 둔다 | 이벤트·다음 색인 배치가 정리 |
+| S3 이미지 객체 | **안 건드림** — 이슈가 별도라 했다. `deleteObject` 호출이 코드베이스에 없다 | — |
+
+알고 넘어간 것: 새벽 색인 배치와 겹치면(배치가 번역 행을 읽은 뒤 지우고, 배치가 청크를 넣으면) 고아 청크가 남는다. 창이 몇 초고
+재색인은 원본 없는 청크를 정리하지 않으므로, 실제로 남으면 그때 배치에 고아 정리를 넣는다.
+검증은 `WorkLogDeleteCascadeTest` 2 — 번역 2·청크 3·댓글이 있는 일지를 지우면 전부 사라지고 남의 일지·청크·같은 id의 다른 종류(SAFETY_COURSE) 청크는 남는다,
+작성자가 아니면 403이고 청크도 그대로.
+
 ---
 
 ## P2-9 — 인프라 설정 정합성 (2026-08-05 점검에서 발견)
