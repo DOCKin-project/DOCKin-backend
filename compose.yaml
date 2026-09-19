@@ -238,7 +238,15 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512M # MySQL(300M)보다 여유를 둔다. 벡터 검색 시 공유 버퍼가 필요하다.
+          # 1G. 2026-09-19까지 512M이었다("MySQL(300M)보다 여유를 둔다").
+          # 이 상한은 shared_buffers(128M)만이 아니라 PostgreSQL이 읽는 파일의 OS 페이지 캐시까지 센다
+          # (cgroup v2 memory.stat의 file). 512M이면 공유 메모리 142M·anon 18M을 뺀 순수 캐시가 ≈330M이라,
+          # 힙+HNSW의 뜨거운 페이지가 그걸 넘는 ≈17만 청크(HNSW ≈300MB)부터 인덱스 읽기가 디스크로 가서
+          # INSERT 한 건이 3 → 26ms, 원본당 1.5배(AWS 밤 2·14·16, DB-IMPROVEMENT-PLAN B2·6절 순서 6-2).
+          # 재시작 없이 docker update --memory 1g 한 줄로 다음 표본부터 회복했다 — 밤 16, #83.
+          # 값의 뜻은 "힙 + HNSW + shared_buffers + 여유"다. 24만 청크(힙 150 + HNSW 405)는 1G에 든다.
+          # 코퍼스가 그 두 배가 되면 이 값도 다시 본다(ADR-0007 보존 삭제가 코퍼스 크기를 묶는 쪽).
+          memory: 1G
           # 색인 중 실측 180%. 그 수요를 거의 그대로 보장한다.
           # 다섯 중 스로틀링이 가장 적었다(4.3%). 값이 수요에 맞다는 뜻이다.
           cpus: '1.5'
