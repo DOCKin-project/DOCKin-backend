@@ -23,6 +23,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -38,6 +40,7 @@ public class ChecklistService {
     private final ChecklistRunRepository checklistRunRepository;
     private final EquipmentRepository equipmentRepository;
     private final MemberRepository memberRepository;
+    private final Clock clock;
 
     private Member requireAdmin(String userId) {
         Member member = memberRepository.findByUserId(userId)
@@ -159,7 +162,16 @@ public class ChecklistService {
         requireAdmin(userId);
 
         ChecklistItem item = requireItemOfChecklist(checklistId, itemId);
+        if (item.isRetired()) {
+            throw new BusinessException(ErrorCode.CHECKLIST_ITEM_RETIRED);
+        }
 
+        // 문구는 기록의 뜻이다. 체크된 적이 있는 항목의 문구를 바꾸면 그 체크가 무엇에 대한 것이었는지가 바뀐다 —
+        // 그래서 막고, 대신 퇴역 + 새 항목(ADR-0011 5절). 순서는 뜻이 아니라 표시라 언제든 바꿔도 된다.
+        if (dto.getContent() != null && !dto.getContent().equals(item.getContent())
+                && checklistResultRepository.existsByChecklistItem_ItemId(itemId)) {
+            throw new BusinessException(ErrorCode.CHECKLIST_ITEM_IN_USE);
+        }
         if (dto.getContent() != null) {
             item.setContent(dto.getContent());
         }
@@ -176,8 +188,15 @@ public class ChecklistService {
 
         ChecklistItem item = requireItemOfChecklist(checklistId, itemId);
 
+        // 점검 기록이 있으면 지우지 않고 퇴역시킨다. 예전에는 409였다 — 그러면 한 번이라도 쓰인 항목은 영영 빼지 못했다.
+        // 퇴역한 항목은 새 회차에 나오지 않고, 그 전에 연 회차는 그대로 참조한다. 응답은 둘 다 204 — 호출자가 원한 것은
+        // "다음 점검부터 이 항목이 없다"이고 그건 둘 다 같다.
         if (checklistResultRepository.existsByChecklistItem_ItemId(itemId)) {
-            throw new BusinessException(ErrorCode.CHECKLIST_ITEM_HAS_RESULTS);
+            if (!item.isRetired()) {
+                item.retire(LocalDateTime.now(clock));
+                checklistItemRepository.save(item);
+            }
+            return;
         }
 
         checklistItemRepository.delete(item);

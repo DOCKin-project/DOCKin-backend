@@ -24,8 +24,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Clock;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 
@@ -49,11 +53,14 @@ class ChecklistServiceTest {
     private EquipmentRepository equipmentRepository;
     @Mock
     private MemberRepository memberRepository;
+    @Spy
+    private Clock clock = Clock.fixed(NOW.atZone(ZoneId.systemDefault()).toInstant(), ZoneId.systemDefault());
 
     @InjectMocks
     private ChecklistService checklistService;
 
     private static final String ADMIN_ID = "admin1";
+    private static final LocalDateTime NOW = LocalDateTime.of(2026, 7, 10, 9, 0);
     private static final String USER_ID = "user1";
 
     private Member admin() {
@@ -236,19 +243,71 @@ class ChecklistServiceTest {
     }
 
     @Test
-    @DisplayName("점검 기록이 있는 항목을 삭제하려 하면 CHECKLIST_ITEM_HAS_RESULTS 예외가 발생한다")
-    void deleteItem_hasResults_throwsException() {
+    @DisplayName("점검 기록이 있는 항목을 삭제하면 지우지 않고 퇴역시킨다 — retiredAt이 찍히고 delete는 안 부른다 (ADR-0011 5절)")
+    void deleteItem_hasResults_retiresInstead() {
         Checklist target = checklist(10, ChecklistPhase.PRE);
         ChecklistItem item = ChecklistItem.builder().itemId(5).checklist(target).content("c").sequence(1).build();
         when(memberRepository.findByUserId(ADMIN_ID)).thenReturn(Optional.of(admin()));
         when(checklistItemRepository.findById(5)).thenReturn(Optional.of(item));
         when(checklistResultRepository.existsByChecklistItem_ItemId(5)).thenReturn(true);
 
-        BusinessException ex = assertThrows(BusinessException.class,
-                () -> checklistService.deleteItem(ADMIN_ID, 10, 5));
+        checklistService.deleteItem(ADMIN_ID, 10, 5);
 
-        assertEquals(ErrorCode.CHECKLIST_ITEM_HAS_RESULTS, ex.getErrorCode());
+        assertEquals(NOW, item.getRetiredAt());
+        verify(checklistItemRepository).save(item);
         verify(checklistItemRepository, never()).delete(any());
+    }
+
+    @Test
+    @DisplayName("이미 퇴역한 항목을 다시 삭제해도 시각이 바뀌지 않는다 — 멱등")
+    void deleteItem_alreadyRetired_keepsTimestamp() {
+        Checklist target = checklist(10, ChecklistPhase.PRE);
+        ChecklistItem item = ChecklistItem.builder().itemId(5).checklist(target).content("c").sequence(1)
+                .retiredAt(NOW.minusDays(3)).build();
+        when(memberRepository.findByUserId(ADMIN_ID)).thenReturn(Optional.of(admin()));
+        when(checklistItemRepository.findById(5)).thenReturn(Optional.of(item));
+        when(checklistResultRepository.existsByChecklistItem_ItemId(5)).thenReturn(true);
+
+        checklistService.deleteItem(ADMIN_ID, 10, 5);
+
+        assertEquals(NOW.minusDays(3), item.getRetiredAt());
+        verify(checklistItemRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("점검 기록이 있는 항목의 문구를 바꾸면 CHECKLIST_ITEM_IN_USE — 기록의 뜻이 바뀐다. 순서 변경은 된다")
+    void updateItem_inUse_contentBlockedSequenceAllowed() {
+        Checklist target = checklist(10, ChecklistPhase.PRE);
+        ChecklistItem item = ChecklistItem.builder().itemId(5).checklist(target).content("c").sequence(1).build();
+        when(memberRepository.findByUserId(ADMIN_ID)).thenReturn(Optional.of(admin()));
+        when(checklistItemRepository.findById(5)).thenReturn(Optional.of(item));
+        when(checklistResultRepository.existsByChecklistItem_ItemId(5)).thenReturn(true);
+        when(checklistItemRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> checklistService.updateItem(ADMIN_ID, 10, 5,
+                        ChecklistItemUpdateRequestDto.builder().content("new").build()));
+        assertEquals(ErrorCode.CHECKLIST_ITEM_IN_USE, ex.getErrorCode());
+        assertEquals("c", item.getContent());
+
+        checklistService.updateItem(ADMIN_ID, 10, 5, ChecklistItemUpdateRequestDto.builder().sequence(7).build());
+        assertEquals(7, item.getSequence());
+    }
+
+    @Test
+    @DisplayName("퇴역한 항목은 수정할 수 없다 — CHECKLIST_ITEM_RETIRED")
+    void updateItem_retired_rejected() {
+        Checklist target = checklist(10, ChecklistPhase.PRE);
+        ChecklistItem item = ChecklistItem.builder().itemId(5).checklist(target).content("c").sequence(1)
+                .retiredAt(NOW.minusDays(1)).build();
+        when(memberRepository.findByUserId(ADMIN_ID)).thenReturn(Optional.of(admin()));
+        when(checklistItemRepository.findById(5)).thenReturn(Optional.of(item));
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> checklistService.updateItem(ADMIN_ID, 10, 5,
+                        ChecklistItemUpdateRequestDto.builder().sequence(2).build()));
+
+        assertEquals(ErrorCode.CHECKLIST_ITEM_RETIRED, ex.getErrorCode());
     }
 
     @Test

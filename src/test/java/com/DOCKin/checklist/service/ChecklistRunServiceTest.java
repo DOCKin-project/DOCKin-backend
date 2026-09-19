@@ -39,6 +39,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
@@ -86,7 +87,7 @@ class ChecklistRunServiceTest {
         when(equipmentRepository.findById(EQUIPMENT)).thenReturn(Optional.of(equipment));
         when(checklistRepository.findByEquipment_EquipmentIdAndPhase(EQUIPMENT, ChecklistPhase.PRE)).thenReturn(Optional.of(checklist));
         when(checklistRepository.findById(CHECKLIST)).thenReturn(Optional.of(checklist));
-        when(checklistItemRepository.findByChecklist_ChecklistIdOrderBySequenceAscItemIdAsc(CHECKLIST)).thenReturn(List.of(item1, item2));
+        when(checklistItemRepository.findActiveAt(eq(CHECKLIST), any())).thenReturn(List.of(item1, item2));
         when(checklistItemRepository.findById(1)).thenReturn(Optional.of(item1));
         when(checklistItemRepository.findById(2)).thenReturn(Optional.of(item2));
         when(memberRepository.findByUserId(USER)).thenReturn(Optional.of(member(USER)));
@@ -223,6 +224,34 @@ class ChecklistRunServiceTest {
                 assertThrows(BusinessException.class, () -> service.check(42L, 9, USER, true)).getErrorCode());
     }
 
+    @Test
+    @DisplayName("회차가 열리기 전에 퇴역한 항목은 체크할 수 없다(CHECKLIST_ITEM_RETIRED); 회차 도중 퇴역한 항목은 된다")
+    void check_retiredItem_dependsOnRunStart() {
+        ChecklistRun run = openRun(42L, NOW.minusHours(1));
+        when(checklistRunRepository.findById(42L)).thenReturn(Optional.of(run));
+        ChecklistItem retiredBefore = ChecklistItem.builder().itemId(3).checklist(checklist).content("옛 항목").sequence(3)
+                .retiredAt(NOW.minusHours(2)).build();
+        ChecklistItem retiredDuring = ChecklistItem.builder().itemId(4).checklist(checklist).content("방금 퇴역").sequence(4)
+                .retiredAt(NOW.minusMinutes(10)).build();
+        when(checklistItemRepository.findById(3)).thenReturn(Optional.of(retiredBefore));
+        when(checklistItemRepository.findById(4)).thenReturn(Optional.of(retiredDuring));
+
+        assertEquals(ErrorCode.CHECKLIST_ITEM_RETIRED,
+                assertThrows(BusinessException.class, () -> service.check(42L, 3, USER, true)).getErrorCode());
+        assertEquals(4, service.check(42L, 4, USER, true).getItemId());
+    }
+
+    @Test
+    @DisplayName("회차의 항목 목록은 회차가 열린 시점 기준이다 — findActiveAt(checklist, startedAt)")
+    void run_itemsAreActiveAtStart() {
+        ChecklistRun run = openRun(42L, NOW.minusHours(3));
+        when(checklistRunRepository.findById(42L)).thenReturn(Optional.of(run));
+
+        service.get(42L, USER, false);
+
+        verify(checklistItemRepository).findActiveAt(CHECKLIST, NOW.minusHours(3));
+    }
+
     // ── 완료 ──────────────────────────────────────────────────────────────────
 
     @Test
@@ -269,12 +298,13 @@ class ChecklistRunServiceTest {
     // ── 옛 경로 ───────────────────────────────────────────────────────────────
 
     @Test
-    @DisplayName("옛 조회: 열린 회차가 없으면 전부 미체크, myOpenRunId는 null — 남의 최신 결과를 보여 주지 않는다")
+    @DisplayName("옛 조회: 열린 회차가 없으면 전부 미체크, myOpenRunId는 null — 남의 최신 결과를 보여 주지 않는다. 항목은 지금 살아 있는 것")
     void template_noOpenRun_allUnchecked() {
         noOpenRun();
 
         ChecklistDetailResponseDto dto = service.templateWithMyOpenRun(USER, EQUIPMENT, ChecklistPhase.PRE);
 
+        verify(checklistItemRepository).findActiveAt(CHECKLIST, NOW);
         assertNull(dto.getMyOpenRunId());
         assertEquals(2, dto.getItems().size());
         assertTrue(dto.getItems().stream().noneMatch(i -> i.isChecked()));

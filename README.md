@@ -252,7 +252,7 @@ DOCKin-spring/
 | `PATCH` | `/api/checklist/user/runs/{runId}/complete` | 점검 완료 — 전 항목 체크여야 (아니면 409) |
 | `GET` | `/api/checklist/user/checklists?equipmentId=&phase=` | [옛 경로] 템플릿 + 내 열린 회차 상태 (`myOpenRunId`) |
 | `PATCH` | `/api/checklist/user/checklists/{checklistId}/items/{itemId}/check` | [옛 경로] 내 열린 회차에 기록, 없으면 연다 |
-| `POST` · `PUT` · `DELETE` | `/api/checklist/admin/checklists...` | 체크리스트 관리 (관리자) |
+| `POST` · `PUT` · `DELETE` | `/api/checklist/admin/checklists...` | 체크리스트 관리 (관리자). 점검 기록이 있는 항목은 DELETE가 퇴역(`retiredAt`)이고 문구 수정은 409 |
 | `GET` | `/api/checklist/admin/runs?date=&equipmentId=&userId=&status=` · `/runs/{runId}` | 하루치 점검 회차 목록(장비·점검자·상태 필터) · 상세 (관리자) |
 
 </details>
