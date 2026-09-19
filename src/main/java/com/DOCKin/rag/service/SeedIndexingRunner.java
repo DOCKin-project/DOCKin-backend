@@ -2,10 +2,10 @@ package com.DOCKin.rag.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.ApplicationArguments;
-import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Profile;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 /**
@@ -32,21 +32,38 @@ import org.springframework.stereotype.Component;
  *   <li>{@code rag.indexing.on-startup=true} (기본값 false)</li>
  * </ul>
  * 기본값을 false로 둔 이유는 임베딩 서버(TEI)가 떠 있어야 하고, 코퍼스가 크면
- * 기동이 그만큼 늦어지기 때문이다. 대량 생성기로 수만 건을 넣어둔 상태라면
- * 기동에 수십 분이 걸린다.
+ * 색인이 그만큼 오래 걸리기 때문이다. 대량 생성기로 수만 건을 넣어둔 상태라면 수십 분이다.
+ *
+ * <h3>왜 ApplicationRunner가 아니라 ApplicationReadyEvent + 별도 스레드인가 (#113)</h3>
+ * 2026-09-19까지는 {@code ApplicationRunner}였다. 러너는 {@code ApplicationReadyEvent} <b>앞</b>에서
+ * 돌고, Spring Boot는 그 이벤트에서 readiness를 {@code ACCEPTING_TRAFFIC}으로 바꾼다. 그래서 색인이
+ * 끝날 때까지 {@code /actuator/health}가 {@code readinessState=OUT_OF_SERVICE}로 503이었다 — Tomcat은
+ * 떠서 API는 답하는데 컨테이너는 unhealthy고, {@code depends_on: service_healthy}가 걸린 것은 못 뜬다.
+ * 코퍼스가 비어 있던 동안은 러너가 즉시 끝나 안 보였고, 작업일지 12만 건을 넣은 AWS 밤 15에서 드러났다.
+ *
+ * <p>이제는 준비 완료 이벤트를 받아 <b>데몬 스레드 하나</b>에서 돌린다. readiness는 즉시 UP이고
+ * 색인은 뒤에서 돈다. 스케줄 배치({@code rag.indexing.cron})와 겹쳐도 {@link IndexingService#indexAll}의
+ * Redis 락이 한쪽을 건너뛰게 한다. 실행기를 새로 두지 않는 이유는 이 스레드가 기동당 하나뿐이고
+ * 끝나면 사라지기 때문이다 — 풀을 만들면 그 풀의 크기·거부 정책이 또 하나의 결정이 된다.
  */
 @Slf4j
 @Component
 @Profile("seed")
 @ConditionalOnProperty(name = "rag.indexing.on-startup", havingValue = "true")
 @RequiredArgsConstructor
-public class SeedIndexingRunner implements ApplicationRunner {
+public class SeedIndexingRunner {
+
+    static final String THREAD_NAME = "seed-indexing";
 
     private final IndexingService indexingService;
 
-    @Override
-    public void run(ApplicationArguments args) {
-        log.info("[RAG] seed 프로파일 - 기동 직후 색인을 시작합니다. (rag.indexing.on-startup=true)");
+    @EventListener(ApplicationReadyEvent.class)
+    public void onReady() {
+        log.info("[RAG] seed 프로파일 - 기동 직후 색인을 뒤에서 시작합니다. (rag.indexing.on-startup=true)");
+        Thread.ofPlatform().name(THREAD_NAME).daemon(true).start(this::indexOnce);
+    }
+
+    void indexOnce() {
         try {
             // 예외 없이 돌아왔다고 완주한 것이 아니다. indexAll()은 안에서 예외를 잡고
             // 커밋된 분량을 살린 뒤 정상 반환하므로, 완주 여부는 반환값에 물어야 한다.

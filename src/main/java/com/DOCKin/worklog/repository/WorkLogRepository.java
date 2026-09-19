@@ -1,6 +1,5 @@
 package com.DOCKin.worklog.repository;
 
-import com.DOCKin.member.model.Member;
 import com.DOCKin.worklog.model.WorkLog;
 import com.DOCKin.worklog.model.WorkLogStatus;
 import org.springframework.data.domain.Pageable;
@@ -27,7 +26,7 @@ public interface WorkLogRepository extends JpaRepository<WorkLog, Long> {
      *   - ORDER BY는 쿼리가 정한다. 클라이언트 sort를 붙이면 커서와 어긋난다.
      *
      * 커서 조건을 (createdAt, logId) < (:c, :id) 행 비교로 쓰지 않는 것은 JPQL이 그 문법을
-     * 모르기 때문이다. 풀어 쓴 아래 형태를 PostgreSQL 플래너는 같은 뜻으로 읽는다.
+     * 모르기 때문이다. 풀어 쓰는 형태는 둘인데 뜻은 같아도 실행계획이 다르다 — findByArea 주석(#118).
      *
      * CAST(:beforeCreatedAt AS Timestamp)가 붙은 이유: 커서가 null이면 Hibernate가 `? IS NULL`의
      * ?를 타입 없이 보내고, PostgreSQL은 "could not determine data type of parameter"로 거부한다
@@ -36,32 +35,43 @@ public interface WorkLogRepository extends JpaRepository<WorkLog, Long> {
      */
 
     /**
-     * {@code status}는 선택 필터다(P2-17-1). null이면 전부. 관리자의 미승인 큐와 근로자의 "내 반려 건"이
-     * 같은 쿼리를 쓴다. {@code CAST(:status AS String)}은 {@code beforeCreatedAt}과 같은 이유 —
-     * null이면 Hibernate가 타입 없는 ?를 보내고 PostgreSQL이 거부한다. enum은 STRING으로 매핑되므로
-     * String으로 캐스팅한다.
+     * 같은 구역의 작업일지 목록. {@code status}는 선택 필터다(P2-17-1). null이면 전부. 관리자의 미승인 큐와
+     * 근로자의 "내 반려 건"이 같은 쿼리를 쓴다. {@code CAST(:status AS String)}은 {@code beforeCreatedAt}과
+     * 같은 이유 — null이면 Hibernate가 타입 없는 ?를 보내고 PostgreSQL이 거부한다. enum은 STRING으로
+     * 매핑되므로 String으로 캐스팅한다.
+     *
+     * <p><b>구역은 조인으로 거른다, 사용자 목록으로 거르지 않는다 (#118).</b> 2026-09-19까지는 서비스가
+     * {@code findByShipYardArea}로 구역 사용자를 전부 엔티티로 올린 뒤 {@code w.member IN :members}에
+     * 넣었다. 쿼리 개수로는 1이라 안 보였는데(QueryCountTest), 크기로는 구역 1.3만 명이면 바인드 1.3만 개에
+     * 15ms짜리 사용자 조회와 엔티티 1.3만 개 하이드레이션이 요청마다 붙었다 — AWS 밤 15 k6 부하에서
+     * {@code pg_stat_statements} 1위. {@code w.member.shipYardArea}는 users를 PK로 조인한다.
+     *
+     * <p>커서 조건이 {@code created_at <= :c AND (created_at < :c OR log_id < :id)}인 이유: 위 클래스
+     * 주석의 OR 풀어쓰기는 뜻은 같지만 플래너가 인덱스 범위 조건(Index Cond)으로 못 쓰고 필터로만 써서,
+     * V10 인덱스가 있어도 중간 페이지는 인덱스를 처음부터 걷는다(실측 367ms). {@code <=}를 앞에 두면
+     * 그것이 Index Cond가 되고 나머지가 필터다(3.5ms). 첫 페이지(커서 null)는 {@code IS NULL}로 통과한다.
      */
     @Query("""
             SELECT w FROM WorkLog w
-            WHERE w.member IN :members
+            WHERE w.member.shipYardArea = :shipYardArea
               AND (CAST(:status AS String) IS NULL OR w.status = :status)
               AND (CAST(:beforeCreatedAt AS Timestamp) IS NULL
-                   OR w.createdAt < :beforeCreatedAt
-                   OR (w.createdAt = :beforeCreatedAt AND w.logId < :beforeLogId))
+                   OR (w.createdAt <= :beforeCreatedAt
+                       AND (w.createdAt < :beforeCreatedAt OR w.logId < :beforeLogId)))
             ORDER BY w.createdAt DESC, w.logId DESC
             """)
-    Slice<WorkLog> findByMemberIn(@Param("members") List<Member> members,
-                                  @Param("status") WorkLogStatus status,
-                                  @Param("beforeCreatedAt") LocalDateTime beforeCreatedAt,
-                                  @Param("beforeLogId") Long beforeLogId,
-                                  Pageable pageable);
+    Slice<WorkLog> findByArea(@Param("shipYardArea") String shipYardArea,
+                              @Param("status") WorkLogStatus status,
+                              @Param("beforeCreatedAt") LocalDateTime beforeCreatedAt,
+                              @Param("beforeLogId") Long beforeLogId,
+                              Pageable pageable);
 
     @Query("""
             SELECT w FROM WorkLog w
             WHERE w.member.userId = :targetUserId
               AND (CAST(:beforeCreatedAt AS Timestamp) IS NULL
-                   OR w.createdAt < :beforeCreatedAt
-                   OR (w.createdAt = :beforeCreatedAt AND w.logId < :beforeLogId))
+                   OR (w.createdAt <= :beforeCreatedAt
+                       AND (w.createdAt < :beforeCreatedAt OR w.logId < :beforeLogId)))
             ORDER BY w.createdAt DESC, w.logId DESC
             """)
     Slice<WorkLog> findAllByMemberUserId(@Param("targetUserId") String targetUserId,
@@ -72,23 +82,24 @@ public interface WorkLogRepository extends JpaRepository<WorkLog, Long> {
     /**
      * 키워드 검색. <b>같은 구역의 작업일지만.</b>
      *
-     * <p>목록({@code findByMemberIn})과 타인 조회({@code readOtherWorklog})는 구역으로 가리는데
-     * 검색만 전체를 뒤졌다(백로그 P2-18-10). 검색이 목록보다 넓게 보이면 안 된다.
+     * <p>목록({@code findByArea})과 타인 조회({@code readOtherWorklog})는 구역으로 가리는데
+     * 검색만 전체를 뒤졌다(백로그 P2-18-10). 검색이 목록보다 넓게 보이면 안 된다. 구역 필터와
+     * 커서 형태는 {@code findByArea}와 같은 이유로 같은 꼴이다(#118).
      *
      * <p>{@code LIKE %kw%}는 양쪽 와일드카드라 B-tree를 못 탄다(P2-15-5 ⑤). {@code pg_trgm}은
      * 측정 뒤 결정한다(DB-IMPROVEMENT-PLAN D1).
      */
     @Query("""
             SELECT w FROM WorkLog w
-            WHERE w.member IN :members
+            WHERE w.member.shipYardArea = :shipYardArea
               AND (w.title LIKE %:keyword% OR w.logText LIKE %:keyword%)
               AND (CAST(:beforeCreatedAt AS Timestamp) IS NULL
-                   OR w.createdAt < :beforeCreatedAt
-                   OR (w.createdAt = :beforeCreatedAt AND w.logId < :beforeLogId))
+                   OR (w.createdAt <= :beforeCreatedAt
+                       AND (w.createdAt < :beforeCreatedAt OR w.logId < :beforeLogId)))
             ORDER BY w.createdAt DESC, w.logId DESC
             """)
     Slice<WorkLog> searchWorkLogs(@Param("keyword") String keyword,
-                                  @Param("members") List<Member> members,
+                                  @Param("shipYardArea") String shipYardArea,
                                   @Param("beforeCreatedAt") LocalDateTime beforeCreatedAt,
                                   @Param("beforeLogId") Long beforeLogId,
                                   Pageable pageable);

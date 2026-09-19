@@ -21,6 +21,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.Clock;
 import java.time.temporal.ChronoUnit;
@@ -44,6 +45,7 @@ public class AttendanceService {
     private final MemberRepository memberRepository;
     private final RedissonClient redissonClient;
     private final Clock clock;
+    private final TransactionTemplate transactionTemplate;
 
 
     //출근로직
@@ -61,7 +63,7 @@ public class AttendanceService {
         } catch (Exception e) {
             // 1차 방어선(Redis) 사용 불가 - 2차 방어선(DB 유니크 제약)에 위임하고 진행한다.
             log.warn("Redis 분산락을 사용할 수 없어 DB 제약으로 폴백합니다. userId={}, cause={}", userId, e.toString());
-            return doClockIn(userId, today, dto);
+            return clockInTx(userId, today, dto);
         }
 
         if (!locked) {
@@ -70,7 +72,7 @@ public class AttendanceService {
         }
 
         try {
-            return doClockIn(userId, today, dto);
+            return clockInTx(userId, today, dto);
         } finally {
             if (lock.isHeldByCurrentThread()) {
                 lock.unlock();
@@ -78,10 +80,23 @@ public class AttendanceService {
         }
     }
 
-    // Spring AOP는 같은 클래스 내부 호출(this.doClockIn())에는 프록시를 적용하지 못해 @Transactional이 무시된다.
-    // 대신 조회/저장은 Spring Data JPA 리포지토리 자체의 트랜잭션 경계를 사용하고,
-    // 두 호출 사이의 원자성은 Redis 락(1차)과 DB 유니크 제약(2차, uk_attendance_user_workdate)이 보장하므로
-    // 별도의 트랜잭션 묶음이 필요하지 않다. (ADR-0001 참고)
+    // 조회·중복 확인·저장을 트랜잭션 하나로 묶는다. Spring AOP는 같은 클래스 내부 호출(this.doClockIn())에
+    // 프록시를 못 붙이므로 애노테이션 대신 TransactionTemplate 으로 경계를 잡는다.
+    //
+    // 원래는 리포지토리 호출 셋이 각자 트랜잭션이었다("두 호출 사이 원자성은 락과 유니크 제약이 보장하므로
+    // 묶을 필요가 없다"). 정합성은 맞았지만 커넥션이 문제였다 — NOT_SUPPORTED 범위 안에서 리포지토리
+    // 트랜잭션이 끝나도 첫 조회가 잡은 커넥션이 요청 끝까지 반납되지 않아(HikariCP 누수 감지 스택이
+    // findByUserId 를 가리켰다) save() 가 두 번째 커넥션을 요구했고, 동시 출근 10건이면 풀 10개를 각자
+    // 하나씩 쥔 채 서로를 기다리는 풀 데드락이 났다(#115, AWS 밤 15). 트랜잭션 하나면 커넥션도 하나다.
+    private AttendanceDto clockInTx(String userId, LocalDate today, ClockInRequestDto dto) {
+        try {
+            return transactionTemplate.execute(status -> doClockIn(userId, today, dto));
+        } catch (DataIntegrityViolationException e) {
+            // 유니크 제약 위반은 커밋(flush) 시점에 나므로 execute 바깥에서 잡는다.
+            throw new BusinessException(ErrorCode.ATTENDANCE_ALREADY_CHECKED);
+        }
+    }
+
     private AttendanceDto doClockIn(String userId, LocalDate today, ClockInRequestDto dto) {
         Member member = memberRepository.findByUserId(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));

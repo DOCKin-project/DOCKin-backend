@@ -1,0 +1,30 @@
+dockin-app-1  | 2026-09-19T15:00:16.383+09:00 ERROR [fdd3b4d171b34b63] 1 --- [DOCKin-spring] [o-8080-exec-195] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T15:00:16.382+09:00 ERROR [34e36c591b0448a8] 1 --- [DOCKin-spring] [io-8080-exec-17] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T15:00:16.384+09:00 ERROR [11e485a38c084a7d] 1 --- [DOCKin-spring] [io-8080-exec-68] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T15:00:16.382+09:00 ERROR [1518f64467ff4e38] 1 --- [DOCKin-spring] [io-8080-exec-56] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T15:00:16.386+09:00 ERROR [dae38e0119414469] 1 --- [DOCKin-spring] [io-8080-exec-91] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T15:00:16.737+09:00 ERROR [7f5eb2f7632b4407] 1 --- [DOCKin-spring] [o-8080-exec-135] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T15:00:16.737+09:00 ERROR [b564dcfcf68d4f5c] 1 --- [DOCKin-spring] [o-8080-exec-167] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T15:00:16.737+09:00 ERROR [3e13da9ba20a4b6f] 1 --- [DOCKin-spring] [o-8080-exec-192] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T15:00:17.160+09:00 ERROR [4a18e23b1ffc4279] 1 --- [DOCKin-spring] [io-8080-exec-66] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T15:00:17.162+09:00 ERROR [f8cc67d57b604ede] 1 --- [DOCKin-spring] [io-8080-exec-53] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T15:00:17.537+09:00 ERROR [9392c2fd6e4d4efd] 1 --- [DOCKin-spring] [io-8080-exec-45] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T15:00:17.537+09:00 ERROR [81bfeefb68744a30] 1 --- [DOCKin-spring] [io-8080-exec-99] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T15:00:17.538+09:00 ERROR [343fe248dd524f48] 1 --- [DOCKin-spring] [io-8080-exec-95] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T15:00:17.539+09:00 ERROR [2e9f07c747f3404c] 1 --- [DOCKin-spring] [io-8080-exec-69] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T15:00:17.540+09:00 ERROR [5b21410036d04437] 1 --- [DOCKin-spring] [io-8080-exec-25] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T15:00:17.540+09:00 ERROR [cbcdbf3811af4c68] 1 --- [DOCKin-spring] [o-8080-exec-178] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T15:00:17.591+09:00 ERROR [974d38b542b24b9a] 1 --- [DOCKin-spring] [io-8080-exec-29] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T15:00:17.592+09:00 ERROR [d7e17e8199e14177] 1 --- [DOCKin-spring] [o-8080-exec-116] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T15:00:17.624+09:00 ERROR [6347889583094d9e] 1 --- [DOCKin-spring] [io-8080-exec-79] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T15:00:55.503+09:00  WARN [] 1 --- [DOCKin-spring] [MessageBroker-6] c.DOCKin.global.config.HikariPoolWatch   : HikariPool 대기 pending=12 active=10 idle=0 total=10 max=10 — 풀 고갈이면 '누가 잡고 있나'부터 (ADR-0008 7-1)
+dockin-app-1  | 2026-09-19T15:01:05.511+09:00  WARN [] 1 --- [DOCKin-spring] [MessageBroker-5] c.DOCKin.global.config.HikariPoolWatch   : HikariPool 대기 pending=97 active=9 idle=1 total=10 max=10 — 풀 고갈이면 '누가 잡고 있나'부터 (ADR-0008 7-1)
+dockin-app-1  | 2026-09-19T15:01:15.565+09:00  WARN [] 1 --- [DOCKin-spring] [MessageBroker-4] c.DOCKin.global.config.HikariPoolWatch   : HikariPool 대기 pending=153 active=10 idle=0 total=10 max=10 — 풀 고갈이면 '누가 잡고 있나'부터 (ADR-0008 7-1)
+dockin-app-1  | 2026-09-19T15:01:25.749+09:00  WARN [] 1 --- [DOCKin-spring] [MessageBroker-1] c.DOCKin.global.config.HikariPoolWatch   : HikariPool 대기 pending=86 active=10 idle=0 total=10 max=10 — 풀 고갈이면 '누가 잡고 있나'부터 (ADR-0008 7-1)
+dockin-app-1  | 2026-09-19T15:01:35.757+09:00  WARN [] 1 --- [DOCKin-spring] [MessageBroker-6] c.DOCKin.global.config.HikariPoolWatch   : HikariPool 대기 pending=173 active=10 idle=0 total=10 max=10 — 풀 고갈이면 '누가 잡고 있나'부터 (ADR-0008 7-1)
+dockin-app-1  | 2026-09-19T15:01:45.916+09:00  WARN [] 1 --- [DOCKin-spring] [MessageBroker-6] c.DOCKin.global.config.HikariPoolWatch   : HikariPool 대기 pending=149 active=10 idle=0 total=10 max=10 — 풀 고갈이면 '누가 잡고 있나'부터 (ADR-0008 7-1)
+dockin-app-1  | 2026-09-19T15:01:55.933+09:00  WARN [] 1 --- [DOCKin-spring] [MessageBroker-7] c.DOCKin.global.config.HikariPoolWatch   : HikariPool 대기 pending=72 active=10 idle=0 total=10 max=10 — 풀 고갈이면 '누가 잡고 있나'부터 (ADR-0008 7-1)
+dockin-app-1  | 2026-09-19T15:02:06.190+09:00  WARN [] 1 --- [DOCKin-spring] [MessageBroker-6] c.DOCKin.global.config.HikariPoolWatch   : HikariPool 대기 pending=160 active=10 idle=0 total=10 max=10 — 풀 고갈이면 '누가 잡고 있나'부터 (ADR-0008 7-1)
+dockin-app-1  | 2026-09-19T15:02:16.261+09:00  WARN [] 1 --- [DOCKin-spring] [MessageBroker-6] c.DOCKin.global.config.HikariPoolWatch   : HikariPool 대기 pending=151 active=10 idle=0 total=10 max=10 — 풀 고갈이면 '누가 잡고 있나'부터 (ADR-0008 7-1)
+dockin-app-1  | 2026-09-19T15:02:26.408+09:00  WARN [] 1 --- [DOCKin-spring] [MessageBroker-6] c.DOCKin.global.config.HikariPoolWatch   : HikariPool 대기 pending=94 active=10 idle=0 total=10 max=10 — 풀 고갈이면 '누가 잡고 있나'부터 (ADR-0008 7-1)
+dockin-app-1  | 2026-09-19T15:02:36.412+09:00  WARN [] 1 --- [DOCKin-spring] [MessageBroker-7] c.DOCKin.global.config.HikariPoolWatch   : HikariPool 대기 pending=137 active=10 idle=0 total=10 max=10 — 풀 고갈이면 '누가 잡고 있나'부터 (ADR-0008 7-1)

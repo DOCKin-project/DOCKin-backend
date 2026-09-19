@@ -1,0 +1,30 @@
+dockin-app-1  | 2026-09-19T14:50:38.027+09:00  WARN [] 1 --- [DOCKin-spring] [l-1:housekeeper] com.zaxxer.hikari.pool.ProxyLeakTask     : Connection leak detection triggered for org.postgresql.jdbc.PgConnection@4353cbfd on thread http-nio-8080-exec-161, stack trace follows
+dockin-app-1  | 2026-09-19T14:50:38.090+09:00  WARN [] 1 --- [DOCKin-spring] [l-1:housekeeper] com.zaxxer.hikari.pool.ProxyLeakTask     : Connection leak detection triggered for org.postgresql.jdbc.PgConnection@a6df3d3 on thread http-nio-8080-exec-47, stack trace follows
+dockin-app-1  | 2026-09-19T14:50:38.715+09:00  WARN [] 1 --- [DOCKin-spring] [MessageBroker-2] c.DOCKin.global.config.HikariPoolWatch   : HikariPool 대기 pending=177 active=20 idle=0 total=20 max=20 — 풀 고갈이면 '누가 잡고 있나'부터 (ADR-0008 7-1)
+dockin-app-1  | 2026-09-19T14:50:38.715+09:00  WARN [] 1 --- [DOCKin-spring] [l-1:housekeeper] com.zaxxer.hikari.pool.ProxyLeakTask     : Connection leak detection triggered for org.postgresql.jdbc.PgConnection@6ff6d472 on thread http-nio-8080-exec-24, stack trace follows
+dockin-app-1  | 2026-09-19T14:50:38.734+09:00  WARN [] 1 --- [DOCKin-spring] [l-1:housekeeper] com.zaxxer.hikari.pool.ProxyLeakTask     : Connection leak detection triggered for org.postgresql.jdbc.PgConnection@165cd85d on thread http-nio-8080-exec-93, stack trace follows
+dockin-app-1  | 2026-09-19T14:50:39.358+09:00  WARN [] 1 --- [DOCKin-spring] [l-1:housekeeper] com.zaxxer.hikari.pool.ProxyLeakTask     : Connection leak detection triggered for org.postgresql.jdbc.PgConnection@190ffe1f on thread http-nio-8080-exec-49, stack trace follows
+dockin-app-1  | 2026-09-19T14:50:39.960+09:00  WARN [] 1 --- [DOCKin-spring] [l-1:housekeeper] com.zaxxer.hikari.pool.ProxyLeakTask     : Connection leak detection triggered for org.postgresql.jdbc.PgConnection@585901cb on thread http-nio-8080-exec-68, stack trace follows
+dockin-app-1  | 2026-09-19T14:50:39.985+09:00 ERROR [ab0847657928470a] 1 --- [DOCKin-spring] [o-8080-exec-196] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T14:50:39.988+09:00 ERROR [11dafe531cb14263] 1 --- [DOCKin-spring] [o-8080-exec-147] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T14:50:40.501+09:00  WARN [] 1 --- [DOCKin-spring] [l-1:housekeeper] com.zaxxer.hikari.pool.ProxyLeakTask     : Connection leak detection triggered for org.postgresql.jdbc.PgConnection@1e4af70c on thread http-nio-8080-exec-82, stack trace follows
+dockin-app-1  | 2026-09-19T14:50:40.513+09:00 ERROR [17550fbd906747e3] 1 --- [DOCKin-spring] [io-8080-exec-93] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T14:50:40.517+09:00 ERROR [0262b15fa590494c] 1 --- [DOCKin-spring] [io-8080-exec-82] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T14:50:40.510+09:00 ERROR [153398a30066481c] 1 --- [DOCKin-spring] [io-8080-exec-68] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T14:50:40.559+09:00 ERROR [a49b0176b717436e] 1 --- [DOCKin-spring] [io-8080-exec-31] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T14:50:40.584+09:00  WARN [] 1 --- [DOCKin-spring] [l-1:housekeeper] com.zaxxer.hikari.pool.ProxyLeakTask     : Connection leak detection triggered for org.postgresql.jdbc.PgConnection@25c7bb5d on thread http-nio-8080-exec-186, stack trace follows
+dockin-app-1  | 2026-09-19T14:50:41.054+09:00  WARN [] 1 --- [DOCKin-spring] [l-1:housekeeper] com.zaxxer.hikari.pool.ProxyLeakTask     : Connection leak detection triggered for org.postgresql.jdbc.PgConnection@109ada8 on thread http-nio-8080-exec-171, stack trace follows
+dockin-app-1  | 2026-09-19T14:50:41.062+09:00 ERROR [b0344b2cdb6f41d8] 1 --- [DOCKin-spring] [o-8080-exec-186] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T14:50:41.086+09:00 ERROR [e6a546cfa727465c] 1 --- [DOCKin-spring] [o-8080-exec-161] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T14:50:41.570+09:00  WARN [] 1 --- [DOCKin-spring] [l-1:housekeeper] com.zaxxer.hikari.pool.ProxyLeakTask     : Connection leak detection triggered for org.postgresql.jdbc.PgConnection@7e9e5bbe on thread http-nio-8080-exec-33, stack trace follows
+dockin-app-1  | 2026-09-19T14:50:41.576+09:00 ERROR [565d458789684741] 1 --- [DOCKin-spring] [io-8080-exec-33] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T14:50:41.577+09:00 ERROR [7e3f070c5b5d4a0f] 1 --- [DOCKin-spring] [o-8080-exec-106] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T14:50:41.588+09:00 ERROR [d7d76eefec2649cf] 1 --- [DOCKin-spring] [io-8080-exec-53] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T14:50:41.707+09:00 ERROR [7ef9b609b0434bf9] 1 --- [DOCKin-spring] [io-8080-exec-37] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T14:50:42.184+09:00 ERROR [20f74672ed6643c1] 1 --- [DOCKin-spring] [o-8080-exec-171] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T14:50:41.684+09:00 ERROR [a12da501046d4a2d] 1 --- [DOCKin-spring] [o-8080-exec-199] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T14:50:42.687+09:00 ERROR [a1193e177f4948a6] 1 --- [DOCKin-spring] [o-8080-exec-131] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T14:50:42.772+09:00 ERROR [19283c5dc0fe4d6e] 1 --- [DOCKin-spring] [io-8080-exec-10] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T14:50:42.801+09:00 ERROR [3858ef8644014940] 1 --- [DOCKin-spring] [o-8080-exec-116] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T14:50:42.809+09:00 ERROR [8dd4545c4b4f4757] 1 --- [DOCKin-spring] [o-8080-exec-172] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T14:50:43.332+09:00 ERROR [ea608a20eead4f7a] 1 --- [DOCKin-spring] [io-8080-exec-63] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외

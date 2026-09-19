@@ -1,0 +1,129 @@
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+     execution: local
+        script: journey.js
+        output: -
+     scenarios: (100.00%) 1 scenario, 500 max VUs, 2m20s max duration (incl. graceful stop):
+              * spike: Up to 50.00 iterations/s for 1m50s over 5 stages (maxVUs: 100-500, gracefulStop: 30s)
+spike   [   1% ] 000/100 VUs  0m01.0s/1m50s  01.00 iters/s
+spike   [   2% ] 000/100 VUs  0m02.0s/1m50s  01.00 iters/s
+spike   [   3% ] 000/100 VUs  0m03.0s/1m50s  01.00 iters/s
+spike   [   4% ] 000/100 VUs  0m04.0s/1m50s  01.00 iters/s
+spike   [   5% ] 000/100 VUs  0m05.0s/1m50s  01.00 iters/s
+spike   [   5% ] 000/100 VUs  0m06.0s/1m50s  01.00 iters/s
+spike   [   6% ] 000/100 VUs  0m07.0s/1m50s  01.00 iters/s
+spike   [   7% ] 000/100 VUs  0m08.0s/1m50s  01.00 iters/s
+spike   [   8% ] 000/100 VUs  0m09.0s/1m50s  01.00 iters/s
+spike   [   9% ] 000/100 VUs  0m10.0s/1m50s  01.00 iters/s
+spike   [  10% ] 000/100 VUs  0m11.0s/1m50s  01.00 iters/s
+spike   [  11% ] 000/100 VUs  0m12.0s/1m50s  01.00 iters/s
+spike   [  12% ] 000/100 VUs  0m13.0s/1m50s  01.00 iters/s
+spike   [  13% ] 000/100 VUs  0m14.0s/1m50s  01.00 iters/s
+spike   [  14% ] 000/100 VUs  0m15.0s/1m50s  01.00 iters/s
+spike   [  15% ] 000/100 VUs  0m16.0s/1m50s  01.00 iters/s
+spike   [  15% ] 000/100 VUs  0m17.0s/1m50s  01.00 iters/s
+spike   [  16% ] 000/100 VUs  0m18.0s/1m50s  01.00 iters/s
+spike   [  17% ] 000/100 VUs  0m19.0s/1m50s  01.00 iters/s
+spike   [  18% ] 000/100 VUs  0m20.0s/1m50s  01.00 iters/s
+spike   [  19% ] 001/100 VUs  0m21.0s/1m50s  05.93 iters/s
+spike   [  20% ] 001/100 VUs  0m22.0s/1m50s  10.66 iters/s
+spike   [  21% ] 001/100 VUs  0m23.0s/1m50s  15.53 iters/s
+spike   [  22% ] 001/100 VUs  0m24.0s/1m50s  20.43 iters/s
+spike   [  23% ] 002/100 VUs  0m25.0s/1m50s  25.36 iters/s
+spike   [  24% ] 002/100 VUs  0m26.0s/1m50s  30.29 iters/s
+spike   [  25% ] 003/100 VUs  0m27.0s/1m50s  35.22 iters/s
+spike   [  25% ] 004/100 VUs  0m28.0s/1m50s  40.16 iters/s
+spike   [  26% ] 004/100 VUs  0m29.0s/1m50s  45.00 iters/s
+spike   [  27% ] 005/100 VUs  0m30.0s/1m50s  49.95 iters/s
+spike   [  28% ] 003/100 VUs  0m31.0s/1m50s  50.00 iters/s
+spike   [  29% ] 004/100 VUs  0m32.0s/1m50s  50.00 iters/s
+spike   [  30% ] 004/100 VUs  0m33.0s/1m50s  50.00 iters/s
+spike   [  31% ] 005/100 VUs  0m34.0s/1m50s  50.00 iters/s
+spike   [  32% ] 005/100 VUs  0m35.0s/1m50s  50.00 iters/s
+spike   [  33% ] 005/100 VUs  0m36.0s/1m50s  50.00 iters/s
+spike   [  34% ] 005/100 VUs  0m37.0s/1m50s  50.00 iters/s
+spike   [  35% ] 004/100 VUs  0m38.0s/1m50s  50.00 iters/s
+spike   [  35% ] 005/100 VUs  0m39.0s/1m50s  50.00 iters/s
+spike   [  36% ] 004/100 VUs  0m40.0s/1m50s  50.00 iters/s
+spike   [  37% ] 005/100 VUs  0m41.0s/1m50s  50.00 iters/s
+spike   [  38% ] 004/100 VUs  0m42.0s/1m50s  50.00 iters/s
+spike   [  39% ] 005/100 VUs  0m43.0s/1m50s  50.00 iters/s
+spike   [  40% ] 005/100 VUs  0m44.0s/1m50s  50.00 iters/s
+spike   [  41% ] 005/100 VUs  0m45.0s/1m50s  50.00 iters/s
+spike   [  42% ] 005/100 VUs  0m46.0s/1m50s  50.00 iters/s
+spike   [  43% ] 005/100 VUs  0m47.0s/1m50s  50.00 iters/s
+spike   [  44% ] 005/100 VUs  0m48.0s/1m50s  50.00 iters/s
+spike   [  45% ] 005/100 VUs  0m49.0s/1m50s  50.00 iters/s
+spike   [  45% ] 005/100 VUs  0m50.0s/1m50s  50.00 iters/s
+spike   [  46% ] 005/100 VUs  0m51.0s/1m50s  50.00 iters/s
+spike   [  47% ] 005/100 VUs  0m52.0s/1m50s  50.00 iters/s
+spike   [  48% ] 004/100 VUs  0m53.0s/1m50s  50.00 iters/s
+spike   [  49% ] 004/100 VUs  0m54.0s/1m50s  50.00 iters/s
+spike   [  50% ] 004/100 VUs  0m55.0s/1m50s  50.00 iters/s
+spike   [  51% ] 005/100 VUs  0m56.0s/1m50s  50.00 iters/s
+spike   [  52% ] 003/100 VUs  0m57.0s/1m50s  50.00 iters/s
+spike   [  53% ] 005/100 VUs  0m58.0s/1m50s  50.00 iters/s
+spike   [  54% ] 004/100 VUs  0m59.0s/1m50s  50.00 iters/s
+spike   [  55% ] 004/100 VUs  1m00.0s/1m50s  50.00 iters/s
+spike   [  55% ] 003/100 VUs  1m01.0s/1m50s  45.21 iters/s
+spike   [  56% ] 003/100 VUs  1m02.0s/1m50s  40.29 iters/s
+spike   [  57% ] 003/100 VUs  1m03.0s/1m50s  35.36 iters/s
+spike   [  58% ] 003/100 VUs  1m04.0s/1m50s  30.45 iters/s
+spike   [  59% ] 002/100 VUs  1m05.0s/1m50s  25.55 iters/s
+spike   [  60% ] 002/100 VUs  1m06.0s/1m50s  20.67 iters/s
+spike   [  61% ] 001/100 VUs  1m07.0s/1m50s  15.84 iters/s
+spike   [  62% ] 000/100 VUs  1m08.0s/1m50s  11.11 iters/s
+spike   [  63% ] 001/100 VUs  1m09.0s/1m50s  05.93 iters/s
+spike   [  64% ] 000/100 VUs  1m10.0s/1m50s  02.14 iters/s
+spike   [  65% ] 000/100 VUs  1m11.0s/1m50s  01.00 iters/s
+spike   [  65% ] 000/100 VUs  1m12.0s/1m50s  01.00 iters/s
+spike   [  66% ] 000/100 VUs  1m13.0s/1m50s  01.00 iters/s
+spike   [  67% ] 000/100 VUs  1m14.0s/1m50s  01.00 iters/s
+spike   [  68% ] 000/100 VUs  1m15.0s/1m50s  01.00 iters/s
+spike   [  69% ] 000/100 VUs  1m16.0s/1m50s  01.00 iters/s
+spike   [  70% ] 000/100 VUs  1m17.0s/1m50s  01.00 iters/s
+spike   [  71% ] 000/100 VUs  1m18.0s/1m50s  01.00 iters/s
+spike   [  72% ] 000/100 VUs  1m19.0s/1m50s  01.00 iters/s
+spike   [  73% ] 000/100 VUs  1m20.0s/1m50s  01.00 iters/s
+spike   [  74% ] 000/100 VUs  1m21.0s/1m50s  01.00 iters/s
+spike   [  75% ] 000/100 VUs  1m22.0s/1m50s  01.00 iters/s
+spike   [  75% ] 000/100 VUs  1m23.0s/1m50s  01.00 iters/s
+spike   [  76% ] 000/100 VUs  1m24.0s/1m50s  01.00 iters/s
+spike   [  77% ] 000/100 VUs  1m25.0s/1m50s  01.00 iters/s
+spike   [  78% ] 000/100 VUs  1m26.0s/1m50s  01.00 iters/s
+spike   [  79% ] 000/100 VUs  1m27.0s/1m50s  01.00 iters/s
+spike   [  80% ] 000/100 VUs  1m28.0s/1m50s  01.00 iters/s
+spike   [  81% ] 000/100 VUs  1m29.0s/1m50s  01.00 iters/s
+spike   [  82% ] 000/100 VUs  1m30.0s/1m50s  01.00 iters/s
+spike   [  83% ] 000/100 VUs  1m31.0s/1m50s  01.00 iters/s
+spike   [  84% ] 000/100 VUs  1m32.0s/1m50s  01.00 iters/s
+spike   [  85% ] 000/100 VUs  1m33.0s/1m50s  01.00 iters/s
+spike   [  85% ] 000/100 VUs  1m34.0s/1m50s  01.00 iters/s
+spike   [  86% ] 000/100 VUs  1m35.0s/1m50s  01.00 iters/s
+spike   [  87% ] 000/100 VUs  1m36.0s/1m50s  01.00 iters/s
+spike   [  88% ] 000/100 VUs  1m37.0s/1m50s  01.00 iters/s
+spike   [  89% ] 000/100 VUs  1m38.0s/1m50s  01.00 iters/s
+spike   [  90% ] 000/100 VUs  1m39.0s/1m50s  01.00 iters/s
+spike   [  91% ] 000/100 VUs  1m40.0s/1m50s  01.00 iters/s
+spike   [  92% ] 000/100 VUs  1m41.0s/1m50s  01.00 iters/s
+spike   [  93% ] 000/100 VUs  1m42.0s/1m50s  01.00 iters/s
+spike   [  94% ] 000/100 VUs  1m43.0s/1m50s  01.00 iters/s
+spike   [  95% ] 000/100 VUs  1m44.0s/1m50s  01.00 iters/s
+spike   [  95% ] 000/100 VUs  1m45.0s/1m50s  01.00 iters/s
+spike   [  96% ] 000/100 VUs  1m46.0s/1m50s  01.00 iters/s
+spike   [  97% ] 000/100 VUs  1m47.0s/1m50s  01.00 iters/s
+spike   [  98% ] 000/100 VUs  1m48.0s/1m50s  01.00 iters/s
+spike   [  99% ] 000/100 VUs  1m49.0s/1m50s  01.00 iters/s
+spike   [ 100% ] 000/100 VUs  1m50.0s/1m50s  01.00 iters/s
+== spike rate=50/s vus=1000 reqs=12414 rps=112.9 fail=0% p95=75.4ms dropped=0 maxVUs=100 login_fail=0 dup=0 journey_p95=90ms
+name             n      rps     p50     p95     p99     max   fail%
+login             2069    18.8    73.7    78.8    80.8      84       0
+clockin           2069    18.8       4       7     8.8      11       0
+attendance_list   2069    18.8     3.1     6.4     8.2      12       0
+worklogs          2069    18.8     4.9     8.1    10.1      13       0
+chat_rooms        2069    18.8     3.1     6.5       8      12       0
+safety_courses    2069    18.8     3.2     6.5     8.2      11       0
+spike ✓ [ 100% ] 000/100 VUs  1m50s  01.00 iters/s

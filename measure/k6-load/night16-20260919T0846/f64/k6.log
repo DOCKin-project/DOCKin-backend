@@ -1,0 +1,29 @@
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+     execution: local
+        script: journey.js
+        output: -
+     scenarios: (100.00%) 1 scenario, 800 max VUs, 2m0s max duration (incl. graceful stop):
+              * rate: 64.00 iterations/s for 1m30s (maxVUs: 128-800, gracefulStop: 30s)
+time="2026-09-19T09:08:27Z" level=warning msg="Insufficient VUs, reached 800 active VUs and cannot initialize more" executor=constant-arrival-rate scenario=rate
+rate ↓ [ 100% ] 797/800 VUs  1m30s  64.00 iters/s
+rate ↓ [ 100% ] 797/800 VUs  1m30s  64.00 iters/s
+rate ↓ [ 100% ] 797/800 VUs  1m30s  64.00 iters/s
+rate ↓ [ 100% ] 797/800 VUs  1m30s  64.00 iters/s
+rate ↓ [ 100% ] 797/800 VUs  1m30s  64.00 iters/s
+rate ↓ [ 100% ] 797/800 VUs  1m30s  64.00 iters/s
+rate ↓ [ 100% ] 797/800 VUs  1m30s  64.00 iters/s
+rate ↓ [ 100% ] 797/800 VUs  1m30s  64.00 iters/s
+== rate rate=64/s vus=1000 reqs=30456 rps=308.6 fail=0% p95=6803.3ms dropped=684 maxVUs=800 login_fail=0 dup=0 journey_p95=18026ms
+name             n      rps     p50     p95     p99     max   fail%
+login             5076    51.4  1815.1  8797.7 10928.2   18508       0
+clockin           5076    51.4  1804.5  5504.8  9496.2   12797       0
+attendance_list   5076    51.4  1654.9  5805.1 10595.6   12899       0
+worklogs          5076    51.4  1624.4  6603.6   10497   13797    0.02
+chat_rooms        5076    51.4  1597.9  6401.8 10099.4   14494       0
+safety_courses    5076    51.4  1619.5  6502.9   10000   13989       0
+rate ✓ [ 100% ] 000/800 VUs  1m30s  64.00 iters/s
+time="2026-09-19T09:08:36Z" level=error msg="thresholds on metrics 'http_req_duration{name:attendance_list}, http_req_duration{name:chat_rooms}, http_req_duration{name:clockin}, http_req_duration{name:login}, http_req_duration{name:safety_courses}, http_req_duration{name:worklogs}' have been crossed"

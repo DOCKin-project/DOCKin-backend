@@ -27,8 +27,26 @@
 - **폴백도 같은 권한 모델을 쓴다.** 임베딩 서버가 죽으면 키워드 검색으로 떨어지는데,
   기존 검색을 그대로 갖다 썼다면 **장애 상황에서만 남의 일지가 새어 나갔을 것이다.**
 
-> 현재 상태: **검색(R)까지 동작 확인.** 답변 생성(G)은 팀원 FastAPI 서버가 필요하다.
+> 현재 상태: **검색(R)·권한 선필터·프롬프트 조립까지 동작 확인.** 답변 생성(G)은 팀원 FastAPI 서버가 맡고,
+> 그 서버가 없는 환경에서는 `AI_CHATBOT_STUB=true`로 모델 없이 **근거 목록만 답변 자리에** 돌려준다(#95).
+> 응답의 `retrieval` 필드(모드·청크 ID·유사도)는 두 경우 모두 같다 — 시연의 요점은 답변 문장이 아니라
+> **같은 질문에 권한 없는 사용자는 근거 0건**이라는 그 필드다. 세 사용자로 돌려보는 스크립트:
+> [`scripts/demo/rag-chatbot-demo.sh`](scripts/demo/rag-chatbot-demo.sh).
 > HNSW recall은 측정 중이며, 결과가 나오기 전까지 "인덱스를 켜도 되는가"에 결론을 내지 않는다.
+
+**시연 결과 (2026-09-19, 로컬, 시드 30청크, 스텁 생성기)** — 같은 베트남어 질문
+*"Dây hàn CO2 bị kẹt, dừng liên tục thì xử lý thế nào?"* (CO2 용접 와이어가 자꾸 걸려 멈추면?)을 세 사용자로.
+정답 문서는 **`WORK_LOG #1` "CO2 용접기 3호기 와이어 송급 불량"** — worker01의 한국어 일지다.
+
+| 사용자 | `retrieval.sources` 상위 5 (유사도) | `WORK_LOG #1` |
+|---|---|---|
+| admin01 (관리자, 전체) | TRANSLATION #4 .844 · **WORK_LOG #1 .828** · TRANSLATION #2 .813 · WORK_LOG #3 .805 · WORK_LOG #9 .804 | **보인다** |
+| worker02 (응웬반·vi, 남의 일지) | TRANSLATION #4 .844 · TRANSLATION #2 .813 · WORK_LOG #9 .804 · TRANSLATION #3 .804 · TRANSLATION #5 .792 | **없다** — 전부 자기 일지(7~11)와 그 베트남어 번역 |
+| worker01 (김철수, 일지 주인) | **WORK_LOG #1 .828** · WORK_LOG #3 .805 · SAFETY_COURSE #1 .789 · WORK_LOG #5 .779 · SAFETY_COURSE #5 .777 | **보인다** |
+
+- 베트남어로 물어 한국어 일지를 찾았다(0.828, 관리자·주인 모두 2위 이내). 언어별 analyzer 없이 임베딩만으로.
+- worker02는 같은 질문에 `WORK_LOG #1`이 **후보에 아예 없다.** 후필터였다면 "5건 요청에 4건"으로 존재가 새고, 선필터라 5건이 자기 문서로 채워진다.
+- 전문은 [`docs/demo/rag-chatbot-demo-2026-09-19.txt`](docs/demo/rag-chatbot-demo-2026-09-19.txt). 답변 문장은 스텁이라 근거 목록 그대로다 — FastAPI를 붙이면 그 자리에 생성 답변이 오고 `retrieval`은 같다.
 
 ---
 
@@ -103,7 +121,7 @@ SPRING_PROFILES_ACTIVE=seed ./gradlew bootRun --args='--rag.indexing.on-startup=
 DOCKin-spring/
 ├── .github/workflows/          # CI — 테스트 자동 실행
 ├── docs/                       # 설계 결정 기록 (아래 "문서" 참고)
-│   ├── adr/                    # ADR 0001~0010
+│   ├── adr/                    # ADR 0001~0011
 │   └── db/                     # 스키마 스냅샷, HNSW 재생성 SQL
 ├── nginx/conf.d/               # 리버스 프록시 설정
 ├── src/main/java/com/DOCKin/
@@ -262,6 +280,10 @@ AI 경로는 본문의 `traceId`가 우선한다 — `chat_history.trace_id`와 
 | [`docs/PROJECT-SCOPE.md`](docs/PROJECT-SCOPE.md) | 범위와 경계 |
 
 ### 측정이 가설을 뒤집은 기록
+
+실사용자는 없다. 그래서 잰 것은 **사용자 분포가 없어도 참/거짓이 갈리는 메커니즘**이고
+(설정이 먹는가, 병목이 어디인가), 분포에 의존하는 값은 `[측정 필요]`로 남겨 파일럿에서 채운다 —
+왜 그렇게 갈랐는지는 [`SERVICE-SCALE-ASSUMPTIONS.md` 1-1](docs/SERVICE-SCALE-ASSUMPTIONS.md#1-1-그러면-왜-사용자-없이-재는가-2026-09-19-97).
 
 이 프로젝트에서 반복적으로 확인한 것은 **"설정은 있는데 안 먹는다"** 는 부류의 결함이다.
 

@@ -1,0 +1,4 @@
+dockin-app-1  | 2026-09-19T18:06:24.382+09:00  WARN [] 1 --- [DOCKin-spring] [MessageBroker-7] c.DOCKin.global.config.HikariPoolWatch   : HikariPool 대기 pending=175 active=10 idle=0 total=10 max=10 — 풀 고갈이면 '누가 잡고 있나'부터 (ADR-0008 7-1)
+dockin-app-1  | 2026-09-19T18:07:24.383+09:00  WARN [] 1 --- [DOCKin-spring] [MessageBroker-1] c.DOCKin.global.config.HikariPoolWatch   : HikariPool 대기 pending=188 active=10 idle=0 total=10 max=10 — 풀 고갈이면 '누가 잡고 있나'부터 (ADR-0008 7-1)
+dockin-app-1  | 2026-09-19T18:07:34.384+09:00  WARN [] 1 --- [DOCKin-spring] [MessageBroker-2] c.DOCKin.global.config.HikariPoolWatch   : HikariPool 대기 pending=190 active=10 idle=0 total=10 max=10 — 풀 고갈이면 '누가 잡고 있나'부터 (ADR-0008 7-1)
+dockin-app-1  | 2026-09-19T18:07:44.384+09:00  WARN [] 1 --- [DOCKin-spring] [MessageBroker-4] c.DOCKin.global.config.HikariPoolWatch   : HikariPool 대기 pending=70 active=10 idle=0 total=10 max=10 — 풀 고갈이면 '누가 잡고 있나'부터 (ADR-0008 7-1)

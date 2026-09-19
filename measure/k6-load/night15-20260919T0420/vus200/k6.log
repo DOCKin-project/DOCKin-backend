@@ -1,0 +1,324 @@
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+     execution: local
+        script: journey.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 200 max VUs, 2m30s max duration (incl. graceful stop):
+              * vus: Up to 200 looping VUs for 2m20s over 3 stages (gracefulRampDown: 10s, gracefulStop: 30s)
+
+
+vus    [   1% ] 006/200 VUs  0m01.0s/2m20.0s
+
+vus    [   1% ] 013/200 VUs  0m02.0s/2m20.0s
+
+vus    [   2% ] 019/200 VUs  0m03.0s/2m20.0s
+
+vus    [   3% ] 026/200 VUs  0m04.0s/2m20.0s
+
+vus    [   4% ] 033/200 VUs  0m05.0s/2m20.0s
+
+vus    [   4% ] 039/200 VUs  0m06.0s/2m20.0s
+
+vus    [   5% ] 046/200 VUs  0m07.0s/2m20.0s
+
+vus    [   6% ] 053/200 VUs  0m08.0s/2m20.0s
+
+vus    [   6% ] 059/200 VUs  0m09.0s/2m20.0s
+
+vus    [   7% ] 066/200 VUs  0m10.0s/2m20.0s
+
+vus    [   8% ] 073/200 VUs  0m11.0s/2m20.0s
+
+vus    [   9% ] 079/200 VUs  0m12.0s/2m20.0s
+
+vus    [   9% ] 086/200 VUs  0m13.0s/2m20.0s
+
+vus    [  10% ] 093/200 VUs  0m14.0s/2m20.0s
+
+vus    [  11% ] 099/200 VUs  0m15.0s/2m20.0s
+
+vus    [  11% ] 106/200 VUs  0m16.0s/2m20.0s
+
+vus    [  12% ] 113/200 VUs  0m17.0s/2m20.0s
+
+vus    [  13% ] 119/200 VUs  0m18.0s/2m20.0s
+
+vus    [  14% ] 126/200 VUs  0m19.0s/2m20.0s
+
+vus    [  14% ] 133/200 VUs  0m20.0s/2m20.0s
+
+vus    [  15% ] 139/200 VUs  0m21.0s/2m20.0s
+
+vus    [  16% ] 146/200 VUs  0m22.0s/2m20.0s
+
+vus    [  16% ] 153/200 VUs  0m23.0s/2m20.0s
+
+vus    [  17% ] 159/200 VUs  0m24.0s/2m20.0s
+
+vus    [  18% ] 166/200 VUs  0m25.0s/2m20.0s
+
+vus    [  19% ] 173/200 VUs  0m26.0s/2m20.0s
+
+vus    [  19% ] 179/200 VUs  0m27.0s/2m20.0s
+
+vus    [  20% ] 186/200 VUs  0m28.0s/2m20.0s
+
+vus    [  21% ] 193/200 VUs  0m29.0s/2m20.0s
+
+vus    [  21% ] 199/200 VUs  0m30.0s/2m20.0s
+
+vus    [  22% ] 200/200 VUs  0m31.0s/2m20.0s
+
+vus    [  23% ] 200/200 VUs  0m32.0s/2m20.0s
+
+vus    [  24% ] 200/200 VUs  0m33.0s/2m20.0s
+
+vus    [  24% ] 200/200 VUs  0m34.0s/2m20.0s
+
+vus    [  25% ] 200/200 VUs  0m35.0s/2m20.0s
+
+vus    [  26% ] 200/200 VUs  0m36.0s/2m20.0s
+
+vus    [  26% ] 200/200 VUs  0m37.0s/2m20.0s
+
+vus    [  27% ] 200/200 VUs  0m38.0s/2m20.0s
+
+vus    [  28% ] 200/200 VUs  0m39.0s/2m20.0s
+
+vus    [  29% ] 200/200 VUs  0m40.0s/2m20.0s
+
+vus    [  29% ] 200/200 VUs  0m41.0s/2m20.0s
+
+vus    [  30% ] 200/200 VUs  0m42.0s/2m20.0s
+
+vus    [  31% ] 200/200 VUs  0m43.0s/2m20.0s
+
+vus    [  31% ] 200/200 VUs  0m44.0s/2m20.0s
+
+vus    [  32% ] 200/200 VUs  0m45.0s/2m20.0s
+
+vus    [  33% ] 200/200 VUs  0m46.0s/2m20.0s
+
+vus    [  34% ] 200/200 VUs  0m47.0s/2m20.0s
+
+vus    [  34% ] 200/200 VUs  0m48.0s/2m20.0s
+
+vus    [  35% ] 200/200 VUs  0m49.0s/2m20.0s
+
+vus    [  36% ] 200/200 VUs  0m50.0s/2m20.0s
+
+vus    [  36% ] 200/200 VUs  0m51.0s/2m20.0s
+
+vus    [  37% ] 200/200 VUs  0m52.0s/2m20.0s
+
+vus    [  38% ] 200/200 VUs  0m53.0s/2m20.0s
+
+vus    [  39% ] 200/200 VUs  0m54.0s/2m20.0s
+
+vus    [  39% ] 200/200 VUs  0m55.0s/2m20.0s
+
+vus    [  40% ] 200/200 VUs  0m56.0s/2m20.0s
+
+vus    [  41% ] 200/200 VUs  0m57.0s/2m20.0s
+
+vus    [  41% ] 200/200 VUs  0m58.0s/2m20.0s
+
+vus    [  42% ] 200/200 VUs  0m59.0s/2m20.0s
+
+vus    [  43% ] 200/200 VUs  1m00.0s/2m20.0s
+
+vus    [  44% ] 200/200 VUs  1m01.0s/2m20.0s
+
+vus    [  44% ] 200/200 VUs  1m02.0s/2m20.0s
+
+vus    [  45% ] 200/200 VUs  1m03.0s/2m20.0s
+
+vus    [  46% ] 200/200 VUs  1m04.0s/2m20.0s
+
+vus    [  46% ] 200/200 VUs  1m05.0s/2m20.0s
+
+vus    [  47% ] 200/200 VUs  1m06.0s/2m20.0s
+
+vus    [  48% ] 200/200 VUs  1m07.0s/2m20.0s
+
+vus    [  49% ] 200/200 VUs  1m08.0s/2m20.0s
+
+vus    [  49% ] 200/200 VUs  1m09.0s/2m20.0s
+
+vus    [  50% ] 200/200 VUs  1m10.0s/2m20.0s
+
+vus    [  51% ] 200/200 VUs  1m11.0s/2m20.0s
+
+vus    [  51% ] 200/200 VUs  1m12.0s/2m20.0s
+
+vus    [  52% ] 200/200 VUs  1m13.0s/2m20.0s
+
+vus    [  53% ] 200/200 VUs  1m14.0s/2m20.0s
+
+vus    [  54% ] 200/200 VUs  1m15.0s/2m20.0s
+
+vus    [  54% ] 200/200 VUs  1m16.0s/2m20.0s
+
+vus    [  55% ] 200/200 VUs  1m17.0s/2m20.0s
+
+vus    [  56% ] 200/200 VUs  1m18.0s/2m20.0s
+
+vus    [  56% ] 200/200 VUs  1m19.0s/2m20.0s
+
+vus    [  57% ] 200/200 VUs  1m20.0s/2m20.0s
+
+vus    [  58% ] 200/200 VUs  1m21.0s/2m20.0s
+
+vus    [  59% ] 200/200 VUs  1m22.0s/2m20.0s
+
+vus    [  59% ] 200/200 VUs  1m23.0s/2m20.0s
+
+vus    [  60% ] 200/200 VUs  1m24.0s/2m20.0s
+
+vus    [  61% ] 200/200 VUs  1m25.0s/2m20.0s
+
+vus    [  61% ] 200/200 VUs  1m26.0s/2m20.0s
+
+vus    [  62% ] 200/200 VUs  1m27.0s/2m20.0s
+
+vus    [  63% ] 200/200 VUs  1m28.0s/2m20.0s
+
+vus    [  64% ] 200/200 VUs  1m29.0s/2m20.0s
+
+vus    [  64% ] 200/200 VUs  1m30.0s/2m20.0s
+
+vus    [  65% ] 200/200 VUs  1m31.0s/2m20.0s
+
+vus    [  66% ] 200/200 VUs  1m32.0s/2m20.0s
+
+vus    [  66% ] 200/200 VUs  1m33.0s/2m20.0s
+
+vus    [  67% ] 200/200 VUs  1m34.0s/2m20.0s
+
+vus    [  68% ] 200/200 VUs  1m35.0s/2m20.0s
+
+vus    [  69% ] 200/200 VUs  1m36.0s/2m20.0s
+
+vus    [  69% ] 200/200 VUs  1m37.0s/2m20.0s
+
+vus    [  70% ] 200/200 VUs  1m38.0s/2m20.0s
+
+vus    [  71% ] 200/200 VUs  1m39.0s/2m20.0s
+
+vus    [  71% ] 200/200 VUs  1m40.0s/2m20.0s
+
+vus    [  72% ] 200/200 VUs  1m41.0s/2m20.0s
+
+vus    [  73% ] 200/200 VUs  1m42.0s/2m20.0s
+
+vus    [  74% ] 200/200 VUs  1m43.0s/2m20.0s
+
+vus    [  74% ] 200/200 VUs  1m44.0s/2m20.0s
+
+vus    [  75% ] 200/200 VUs  1m45.0s/2m20.0s
+
+vus    [  76% ] 200/200 VUs  1m46.0s/2m20.0s
+
+vus    [  76% ] 200/200 VUs  1m47.0s/2m20.0s
+
+vus    [  77% ] 200/200 VUs  1m48.0s/2m20.0s
+
+vus    [  78% ] 200/200 VUs  1m49.0s/2m20.0s
+
+vus    [  79% ] 200/200 VUs  1m50.0s/2m20.0s
+
+vus    [  79% ] 200/200 VUs  1m51.0s/2m20.0s
+
+vus    [  80% ] 200/200 VUs  1m52.0s/2m20.0s
+
+vus    [  81% ] 200/200 VUs  1m53.0s/2m20.0s
+
+vus    [  81% ] 200/200 VUs  1m54.0s/2m20.0s
+
+vus    [  82% ] 200/200 VUs  1m55.0s/2m20.0s
+
+vus    [  83% ] 200/200 VUs  1m56.0s/2m20.0s
+
+vus    [  84% ] 200/200 VUs  1m57.0s/2m20.0s
+
+vus    [  84% ] 200/200 VUs  1m58.0s/2m20.0s
+
+vus    [  85% ] 200/200 VUs  1m59.0s/2m20.0s
+
+vus    [  86% ] 200/200 VUs  2m00.0s/2m20.0s
+
+vus    [  86% ] 200/200 VUs  2m01.0s/2m20.0s
+
+vus    [  87% ] 200/200 VUs  2m02.0s/2m20.0s
+
+vus    [  88% ] 200/200 VUs  2m03.0s/2m20.0s
+
+vus    [  89% ] 200/200 VUs  2m04.0s/2m20.0s
+
+vus    [  89% ] 193/200 VUs  2m05.0s/2m20.0s
+
+vus    [  90% ] 192/200 VUs  2m06.0s/2m20.0s
+
+vus    [  91% ] 188/200 VUs  2m07.0s/2m20.0s
+
+vus    [  91% ] 183/200 VUs  2m08.0s/2m20.0s
+
+vus    [  92% ] 181/200 VUs  2m09.0s/2m20.0s
+
+vus    [  93% ] 180/200 VUs  2m10.0s/2m20.0s
+
+vus    [  94% ] 169/200 VUs  2m11.0s/2m20.0s
+
+vus    [  94% ] 156/200 VUs  2m12.0s/2m20.0s
+
+vus    [  95% ] 152/200 VUs  2m13.0s/2m20.0s
+
+vus    [  96% ] 138/200 VUs  2m14.0s/2m20.0s
+
+vus    [  96% ] 129/200 VUs  2m15.0s/2m20.0s
+
+vus    [  97% ] 121/200 VUs  2m16.0s/2m20.0s
+
+vus    [  98% ] 112/200 VUs  2m17.0s/2m20.0s
+
+vus    [  99% ] 099/200 VUs  2m18.0s/2m20.0s
+
+vus    [  99% ] 092/200 VUs  2m19.0s/2m20.0s
+
+vus    [ 100% ] 082/200 VUs  2m20.0s/2m20.0s
+
+vus  ↓ [ 100% ] 082/200 VUs  2m20s
+
+vus  ↓ [ 100% ] 082/200 VUs  2m20s
+
+vus  ↓ [ 100% ] 082/200 VUs  2m20s
+
+vus  ↓ [ 100% ] 082/200 VUs  2m20s
+
+vus  ↓ [ 100% ] 082/200 VUs  2m20s
+
+vus  ↓ [ 100% ] 082/200 VUs  2m20s
+
+vus  ↓ [ 100% ] 082/200 VUs  2m20s
+
+vus  ↓ [ 100% ] 082/200 VUs  2m20s
+
+vus  ↓ [ 100% ] 082/200 VUs  2m20s
+
+== vus rate=1/s vus=200 reqs=5514 rps=36.9 fail=0% p95=19936.7ms dropped=0 maxVUs=200 login_fail=0 dup=0 journey_p95=35618ms
+name             n      rps     p50     p95     p99     max   fail%
+login              200     1.3   957.1    5896  8110.9   13052       0
+clockin            200     1.3  2547.7 11893.9 19143.8   34656       0
+attendance_list   1285     8.6   10318 19440.1   24631   37649       0
+worklogs          1270     8.5 11653.1   21528 26239.2   33500       0
+chat_rooms        1281     8.6 10629.9 20638.2 25314.5   32443       0
+safety_courses    1278     8.6 10466.8 19401.1   26475   32123       0
+
+vus  ✓ [ 100% ] 000/200 VUs  2m20s
+time="2026-09-19T06:05:52Z" level=error msg="thresholds on metrics 'http_req_duration{name:attendance_list}, http_req_duration{name:chat_rooms}, http_req_duration{name:clockin}, http_req_duration{name:login}, http_req_duration{name:safety_courses}, http_req_duration{name:worklogs}' have been crossed"

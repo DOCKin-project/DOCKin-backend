@@ -25,13 +25,14 @@ import java.util.stream.Collectors;
 public class CommentService {
     private final CommentRepository commentRepository;
     private final WorkLogRepository workLogsRepository;
+    private final WorkLogsService workLogsService;
     private  final MemberRepository memberRepository;
 
     //댓글 생성
     @Transactional
     public CommentResponseDto createComment(Long logId,String userId,CommentCreateRequestDto dto){
-        WorkLog workLog = workLogsRepository.findById(logId)
-                .orElseThrow(()->new BusinessException(ErrorCode.LOG_NOT_FOUND));
+        // 같은 구역만(#99). 관리자라도 다른 구역 일지에는 못 단다 — 목록도 못 보는 일지다.
+        WorkLog workLog = workLogsService.requireVisible(logId, userId);
 
         Member member = memberRepository.findByUserId(userId)
                 .orElseThrow(()->new BusinessException(ErrorCode.USER_NOT_FOUND));
@@ -72,12 +73,10 @@ public class CommentService {
         return CommentResponseDto.from(comment);
     }
 
-    //댓글 조회
+    //댓글 조회 — 같은 구역만(#99). 전에는 existsById뿐이라 남의 구역 일지의 관리자 코멘트가 보였다.
     @Transactional(readOnly = true)
-    public List<CommentResponseDto> readComment(Long logId){
-        if(!workLogsRepository.existsById(logId)){
-            throw new BusinessException(ErrorCode.LOG_NOT_FOUND);
-        }
+    public List<CommentResponseDto> readComment(Long logId, String userId){
+        workLogsService.requireVisible(logId, userId);
 
         List<Comment> comments = commentRepository.findAllByLogId_LogId(logId);
         return comments.stream()

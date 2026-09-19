@@ -49,7 +49,7 @@ public class WorkLogCommentController {
     @GetMapping
     public ResponseEntity<List<CommentResponseDto>> getComment(@AuthenticationPrincipal CustomUserDetails customUserDetails,
                                                                @PathVariable Long logId){
-        List<CommentResponseDto> comment = commentService.readComment(logId);
+        List<CommentResponseDto> comment = commentService.readComment(logId, customUserDetails.getMember().getUserId());
         return ResponseEntity.ok(comment);
     }
 

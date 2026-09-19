@@ -1,0 +1,30 @@
+dockin-app-1  | 2026-09-19T13:33:41.867+09:00  WARN [1051c9d3720141fd] 1 --- [DOCKin-spring] [o-8080-exec-177] org.hibernate.orm.jdbc.error             : HHH000247: ErrorCode: 0, SQLState: null
+dockin-app-1  | 2026-09-19T13:33:41.867+09:00  WARN [1051c9d3720141fd] 1 --- [DOCKin-spring] [o-8080-exec-177] org.hibernate.orm.jdbc.error             : HikariPool-1 - Connection is not available, request timed out after 30000ms (total=10, active=10, idle=0, waiting=198)
+dockin-app-1  | 2026-09-19T13:33:41.867+09:00  WARN [44ec32f7f01f4c52] 1 --- [DOCKin-spring] [io-8080-exec-23] org.hibernate.orm.jdbc.error             : HHH000247: ErrorCode: 0, SQLState: null
+dockin-app-1  | 2026-09-19T13:33:41.867+09:00  WARN [44ec32f7f01f4c52] 1 --- [DOCKin-spring] [io-8080-exec-23] org.hibernate.orm.jdbc.error             : HikariPool-1 - Connection is not available, request timed out after 30000ms (total=10, active=10, idle=0, waiting=196)
+dockin-app-1  | 2026-09-19T13:33:41.867+09:00  WARN [46068a5199bf47c6] 1 --- [DOCKin-spring] [io-8080-exec-21] org.hibernate.orm.jdbc.error             : HHH000247: ErrorCode: 0, SQLState: null
+dockin-app-1  | 2026-09-19T13:33:41.867+09:00  WARN [46068a5199bf47c6] 1 --- [DOCKin-spring] [io-8080-exec-21] org.hibernate.orm.jdbc.error             : HikariPool-1 - Connection is not available, request timed out after 30000ms (total=10, active=10, idle=0, waiting=195)
+dockin-app-1  | 2026-09-19T13:33:41.867+09:00  WARN [3d3733c02d524594] 1 --- [DOCKin-spring] [io-8080-exec-61] org.hibernate.orm.jdbc.error             : HHH000247: ErrorCode: 0, SQLState: null
+dockin-app-1  | 2026-09-19T13:33:41.867+09:00  WARN [3d3733c02d524594] 1 --- [DOCKin-spring] [io-8080-exec-61] org.hibernate.orm.jdbc.error             : HikariPool-1 - Connection is not available, request timed out after 30000ms (total=10, active=10, idle=0, waiting=197)
+dockin-app-1  | 2026-09-19T13:33:41.867+09:00  WARN [00bed06ab98f4648] 1 --- [DOCKin-spring] [nio-8080-exec-6] org.hibernate.orm.jdbc.error             : HHH000247: ErrorCode: 0, SQLState: null
+dockin-app-1  | 2026-09-19T13:33:41.867+09:00  WARN [00bed06ab98f4648] 1 --- [DOCKin-spring] [nio-8080-exec-6] org.hibernate.orm.jdbc.error             : HikariPool-1 - Connection is not available, request timed out after 30000ms (total=10, active=10, idle=0, waiting=198)
+dockin-app-1  | 2026-09-19T13:33:41.867+09:00 ERROR [1051c9d3720141fd] 1 --- [DOCKin-spring] [o-8080-exec-177] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T13:33:41.868+09:00 ERROR [44ec32f7f01f4c52] 1 --- [DOCKin-spring] [io-8080-exec-23] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T13:33:41.868+09:00 ERROR [3d3733c02d524594] 1 --- [DOCKin-spring] [io-8080-exec-61] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T13:33:41.868+09:00 ERROR [00bed06ab98f4648] 1 --- [DOCKin-spring] [nio-8080-exec-6] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T13:33:41.868+09:00 ERROR [46068a5199bf47c6] 1 --- [DOCKin-spring] [io-8080-exec-21] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T13:33:42.333+09:00  WARN [b24285c404164b21] 1 --- [DOCKin-spring] [o-8080-exec-182] o.s.b.h.a.e.HealthEndpointSupport        : Health contributor org.springframework.boot.jdbc.health.DataSourceHealthIndicator (db) took 33564ms to respond
+dockin-app-1  | 2026-09-19T13:33:42.780+09:00 ERROR [86821774e0de4fc9] 1 --- [DOCKin-spring] [io-8080-exec-53] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T13:33:42.862+09:00 ERROR [6798ee1926254287] 1 --- [DOCKin-spring] [io-8080-exec-87] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T13:33:42.884+09:00 ERROR [15bc3505d576401b] 1 --- [DOCKin-spring] [io-8080-exec-56] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T13:33:43.360+09:00 ERROR [b227b12ad07a4532] 1 --- [DOCKin-spring] [o-8080-exec-120] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T13:33:43.374+09:00 ERROR [ea87d3a8fefb4716] 1 --- [DOCKin-spring] [io-8080-exec-85] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T13:33:43.460+09:00 ERROR [a4903ce7a1594cab] 1 --- [DOCKin-spring] [io-8080-exec-91] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T13:33:43.759+09:00 ERROR [ec55800b079a4af7] 1 --- [DOCKin-spring] [o-8080-exec-141] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T13:33:43.761+09:00 ERROR [d2cdc5ec4fe24474] 1 --- [DOCKin-spring] [o-8080-exec-157] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T13:33:43.961+09:00 ERROR [f50760b492b54256] 1 --- [DOCKin-spring] [o-8080-exec-171] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T13:33:43.966+09:00 ERROR [6d61b498e8b34642] 1 --- [DOCKin-spring] [o-8080-exec-124] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T13:33:44.289+09:00 ERROR [dc44ac07f8f94902] 1 --- [DOCKin-spring] [o-8080-exec-167] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T13:33:44.456+09:00 ERROR [062dfd6f74354a4b] 1 --- [DOCKin-spring] [o-8080-exec-173] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T13:33:44.462+09:00 ERROR [05de12ca214648ea] 1 --- [DOCKin-spring] [io-8080-exec-70] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T13:33:44.558+09:00 ERROR [a93e8f5958714cc8] 1 --- [DOCKin-spring] [o-8080-exec-104] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외

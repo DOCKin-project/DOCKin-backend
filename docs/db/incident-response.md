@@ -115,13 +115,13 @@ SELECT relid::regclass, phase, heap_blks_scanned, heap_blks_total FROM pg_stat_p
 
 | 보이는 것 | 원인 | 이 저장소에서 있었던 일 | 조치 |
 |---|---|---|---|
-| ⑤에서 미스/건은 같고 ms/건만 10배+, `docker stats` DB 메모리가 상한 근처 | **DB 컨테이너 메모리 상한이 페이지 캐시까지 세서 인덱스 읽기가 디스크로 간다** `[추측, #83]` | 밤 2·밤 14: 17만 청크부터 INSERT/건 2.7 → 70ms, 앱 재시작 미회복, **DB 재시작 즉시 회복**(장애 #6) | 현장을 찍었으면 `docker compose restart dockin-db`(11초). 근본은 상한을 힙+인덱스+`shared_buffers`가 들어가게 올리는 것 — #83 뒤에 |
+| ⑤에서 미스/건은 같고 ms/건만 10배+, `memory.stat`의 file이 상한 근처에서 고정, `memory.events`의 max가 분당 수백~수천씩 는다 | **DB 컨테이너 메모리 상한이 페이지 캐시까지 세서 인덱스 읽기가 디스크로 간다** (밤 16에서 확정) | 밤 2·14·15: 17만 청크부터 INSERT/건 3 → 26ms, 앱 재시작 미회복, DB 재시작 즉시 회복(장애 #6). 밤 16: 재시작 없이 상한만 1G로 올려 다음 표본부터 회복 | **재시작 대신 `docker update --memory <힙+HNSW+shared_buffers+여유> --memory-swap <같은 값> dockin-db`** — 무중단, 다음 표본부터 돌아온다. `compose.yaml`의 값도 같이 올려 두지 않으면 다음 `up`에서 되돌아간다(B2). 2026-09-19부터 compose는 1G — 그래도 이 증상이면 코퍼스가 1G를 넘은 것 |
 | ④의 `num_requested`가 분 단위로 는다 | **`max_wal_size`(1GB)에 자주 걸린다** | 밤 14에서 3시간 반 requested 0 — 지금 부하에선 아니다 | 그때 가서. 값을 먼저 올리지 않는다(B1) |
 | ⑥에 그 테이블이 있고 `wait_event`에 `Lock`이 보인다 | **autovacuum과 경합** | 밤 14에서 18회 왔지만 열화 구간엔 없었다 — 아니었다 | 실험 ② 결론대로 기본값 유지. 끝나기를 기다린다 |
 | `slow-query-report` [4]에 `wait_event_type='Lock'` 세션이 쌓여 있다 | **한 트랜잭션이 오래 쥐고 있다** — 느린 게 아니라 기다리는 것 | 장애 #4, 장애 #8(풀 고갈은 `@Async` 631 스레드 — DB 사고처럼 보이는 앱 사고) | 1절 ①. `blocked_by`가 앱 커넥션이면 앱 쪽 트랜잭션 경계를 본다. **풀을 올리지 않는다**(B4) |
 | ⑤에서 `calls`는 그대로인데 `hit_per_call`이 크게 늘었다 | **계획이 바뀌었다** (통계 낡음, 인덱스 invalid) | D1에서 흔한 3자 검색이 통계 표본 따라 GIN을 쓰다 말다 했다 | `ANALYZE <table>` — 단, `work_logs`는 로케일 정렬로 50초(D1 부수 발견). `SELECT indexrelid::regclass FROM pg_index WHERE NOT indisvalid` |
 
-**해 본 기록.** 밤 14(2026-09-17, `AWS-MEASUREMENT-RESULTS.md`): 앱 재시작 → 12분 미회복 → DB 재시작 → 즉시 회복. 그 밤이 안 찍은 것(cgroup `memory.stat`)이 위 네 번째 명령이고, 그래서 첫 행이 아직 `[추측]`이다.
+**해 본 기록.** 밤 14(2026-09-17, `AWS-MEASUREMENT-RESULTS.md`): 앱 재시작 → 12분 미회복 → DB 재시작 → 즉시 회복. 밤 16(2026-09-19): 위 네 번째 명령(cgroup)을 매 분 찍으며 재현, `docker update --memory 1g`만으로 회복 — 첫 행은 이제 실측이다.
 
 ---
 

@@ -182,6 +182,32 @@ class WorkCalendarServiceTest {
         verify(workCalendarRepository, never()).delete(any(WorkCalendar.class));
     }
 
+    @Test
+    @DisplayName("기간의 근무일 - 등록된 날은 등록값, 나머지는 평일 규칙. 캘린더는 한 번만 읽는다 (#104)")
+    void 기간_근무일() {
+        // 2026-08-10 월 ~ 08-16 일. 수요일은 임시공휴일, 토요일은 특근으로 등록.
+        LocalDate mon = LocalDate.of(2026, 8, 10);
+        LocalDate sun = LocalDate.of(2026, 8, 16);
+        when(workCalendarRepository.findByCalendarDateBetweenOrderByCalendarDate(mon, sun)).thenReturn(List.of(
+                entry(WEDNESDAY, DayType.HOLIDAY, "임시공휴일"),
+                entry(SATURDAY, DayType.WORKDAY, "특근")));
+
+        List<LocalDate> days = workCalendarService.workingDaysBetween(mon, sun);
+
+        // 월·화·목·금 + 토(특근) = 5. 수(공휴일)·일은 빠진다.
+        assertEquals(List.of(mon, mon.plusDays(1), mon.plusDays(3), mon.plusDays(4), SATURDAY), days);
+        verify(workCalendarRepository, never()).findById(any());
+    }
+
+    @Test
+    @DisplayName("토~일만이면 근무일이 없다")
+    void 주말만() {
+        LocalDate sun = SATURDAY.plusDays(1);
+        when(workCalendarRepository.findByCalendarDateBetweenOrderByCalendarDate(SATURDAY, sun)).thenReturn(List.of());
+
+        assertTrue(workCalendarService.workingDaysBetween(SATURDAY, sun).isEmpty());
+    }
+
     private WorkCalendar entry(LocalDate date, DayType type, String description) {
         return WorkCalendar.builder()
                 .calendarDate(date)

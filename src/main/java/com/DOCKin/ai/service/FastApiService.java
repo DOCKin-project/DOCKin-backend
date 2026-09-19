@@ -10,7 +10,7 @@ import com.DOCKin.ai.repository.ChatLogRepository;
 import com.DOCKin.global.error.BusinessException;
 import com.DOCKin.global.error.ErrorCode;
 import com.DOCKin.worklog.model.WorkLog;
-import com.DOCKin.worklog.repository.WorkLogRepository;
+import com.DOCKin.worklog.service.WorkLogsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -30,7 +30,7 @@ import java.util.Optional;
 public class FastApiService {
     private final ChatLogRepository chatLogRepository;
     private final WebClient fastApiWebClient;
-    private final WorkLogRepository workLogsRepository;
+    private final WorkLogsService workLogsService;
     private final SttService sttService;
     private final TranslateLogWriter translateLogWriter;
     private final TranslateLogReader translateLogReader;
@@ -147,11 +147,13 @@ public class FastApiService {
      */
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public TranslateDomain.Response saveTranslateLog(Long logId, TranslateDomain.Request request, String userId) {
-        // 1. 원본 조회. title·logText는 즉시 로딩 컬럼이라 트랜잭션 밖에서 읽어도 된다.
-        WorkLog workLogEntity = workLogsRepository.findById(logId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.LOG_NOT_FOUND));
+        // 1. 원본 조회 — 같은 구역만(#99). 전에는 findById뿐이라 아무 logId나 번역해 줬다.
+        //    title·logText는 즉시 로딩 컬럼이라 트랜잭션 밖에서 읽어도 된다.
+        WorkLog workLogEntity = workLogsService.requireVisible(logId, userId);
         String originalTitle = workLogEntity.getTitle();
         String originalText = workLogEntity.getLogText();
+        // 요청의 source를 쓴다. 전에는 "ko" 하드코딩이라 DTO의 source가 죽은 값이었다 — 없으면 그대로 ko.
+        String source = request.source() == null || request.source().isBlank() ? "ko" : request.source();
 
         // 1-1. 저장된 번역이 이 원문의 것이면 그대로. 리포지토리를 여기서 바로 부르지 않는 이유는 TranslateLogReader에 —
         //      NOT_SUPPORTED 안의 쿼리 메서드는 스코프 끝까지 커넥션을 쥔다.
@@ -169,11 +171,11 @@ public class FastApiService {
 
         // 2. 제목 번역용 요청 생성
         TranslateDomain.ApiRequest titleReq = new TranslateDomain.ApiRequest(
-                originalTitle, "ko", request.target(), request.traceId());
+                originalTitle, source, request.target(), request.traceId());
 
         // 3. 본문 번역용 요청 생성
         TranslateDomain.ApiRequest contentReq = new TranslateDomain.ApiRequest(
-                originalText, "ko", request.target(), request.traceId());
+                originalText, source, request.target(), request.traceId());
 
         // 4. 각각 통신 (FastAPI 응답의 'translated' 필드를 맵에서 꺼냄)
         // ADR-0002 2-1: 제목/본문 번역은 서로 의존관계가 없어 Mono.zip으로 동시에 보내고
