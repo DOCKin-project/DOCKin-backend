@@ -1912,6 +1912,20 @@ PPT의 넷에 인원(분모)·지각·결근을 더했다. `absent`는 자정 �
 > **괜찮았던 것.** SQL 인젝션(전부 바인딩), CORS(완료), actuator(health만), bcrypt, 시크릿(커밋 이력 없음),
 > 작업일지·댓글·채팅방 REST의 소유자 검사, HTTP JWT 로깅(S4 완료).
 
+### P2-18-10-1 — 단건 logId 경로가 그 경계를 우회했다 (#99, 2026-09-19 완료 — 브랜치 `fix/worklog-visibility-translate-comment`)
+
+P2-18-10이 목록·타인 조회·검색을 "같은 구역"으로 맞췄는데, 단건 `logId`를 받는 경로는 그대로였다 — 번역은 `findById`,
+댓글 조회는 `existsById`, 댓글 작성은 `findById` + ADMIN만. 인증만 있으면 아무 logId로 남의 구역 일지를 번역문으로 받아 보고,
+남의 구역 일지의 관리자 코멘트를 읽고, 다른 구역 관리자가 코멘트를 달 수 있었다. 위 "괜찮았던 것"의 "댓글의 소유자 검사"는
+수정·삭제(작성자 본인)만 맞았다.
+
+가시성 검사를 `WorkLogsService.requireVisible(logId, userId)` 한 곳으로 — 같은 구역이면 그 일지, 아니면 403, 없으면 404.
+ADMIN 예외 없음(목록 경로에도 없다). 번역·댓글 조회·댓글 작성이 이걸 거친다. 자기 트랜잭션인 이유는 #93 —
+`saveTranslateLog`의 `NOT_SUPPORTED` 안에서 `findByUserId`를 바로 부르면 FastAPI 대기 중 커넥션을 쥔다.
+`TranslateTransactionBoundaryTest`가 여전히 0인 것으로 확인. 덤: 번역 요청의 `source`가 "ko" 하드코딩이라 죽은 값이었다 →
+요청 값을 쓰고 비면 ko(사용자 결정). 검증은 `WorkLogVisibilityTest` 3 — 번역은 FastAPI 없이도 403이 먼저(검사가 호출 앞),
+댓글은 다른 구역 관리자 403·같은 구역 OK.
+
 ---
 
 ## P2-19 — AI 호출 한도 (2026-09-16, 완료)
