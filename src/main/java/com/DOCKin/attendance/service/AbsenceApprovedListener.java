@@ -37,6 +37,7 @@ public class AbsenceApprovedListener {
 
     private final AttendanceRepository attendanceRepository;
     private final MemberRepository memberRepository;
+    private final WorkCalendarService workCalendarService;
 
     @EventListener
     public void onAbsenceApproved(AbsenceApprovedEvent event) {
@@ -55,8 +56,10 @@ public class AbsenceApprovedListener {
         // 이미 기록이 있는 날은 건드리지 않는다.
         // 소급 승인(이미 출근한 날에 대한 휴가 승인)에서 실제 출퇴근 기록을 덮어쓰면
         // 근무한 사실이 사라진다. 덮어쓰기는 관리자의 명시적 수정으로 처리할 문제다.
-        List<Attendance> toCreate = event.startDate()
-                .datesUntil(event.endDate().plusDays(1))
+        //
+        // 근무일만 만든다(#104) — 연차 일수와 같은 기준. 주말·공휴일에 VACATION 행이 있으면
+        // 하루 인원 집계의 vacation이 쉬는 날에 부풀고, 결근 배치는 어차피 근무일만 본다.
+        List<Attendance> toCreate = workCalendarService.workingDaysBetween(event.startDate(), event.endDate()).stream()
                 .filter(date -> !alreadyRecorded.contains(date))
                 .map(date -> Attendance.ofApprovedAbsence(member, date, status))
                 .toList();

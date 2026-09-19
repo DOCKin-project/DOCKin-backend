@@ -9,6 +9,7 @@ import com.DOCKin.global.error.BusinessException;
 import com.DOCKin.member.model.Member;
 import com.DOCKin.member.model.UserRole;
 import com.DOCKin.member.repository.MemberRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,6 +18,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -27,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -40,12 +43,41 @@ class AbsenceApprovedListenerTest {
     private AttendanceRepository attendanceRepository;
     @Mock
     private MemberRepository memberRepository;
+    @Mock
+    private WorkCalendarService workCalendarService;
 
     @InjectMocks
     private AbsenceApprovedListener listener;
 
+    /** 근무일 규칙은 기본(평일)으로 흉내 낸다 — 규칙 자체는 {@code WorkCalendarServiceTest}가 본다. 안 쓰는 테스트가 있어 lenient. */
+    @BeforeEach
+    void weekdaysAsWorkingDays() {
+        lenient().when(workCalendarService.workingDaysBetween(any(), any())).thenAnswer(inv -> {
+            LocalDate start = inv.getArgument(0);
+            LocalDate end = inv.getArgument(1);
+            return start.datesUntil(end.plusDays(1))
+                    .filter(d -> d.getDayOfWeek() != DayOfWeek.SATURDAY && d.getDayOfWeek() != DayOfWeek.SUNDAY)
+                    .toList();
+        });
+    }
+
     @Test
-    @DisplayName("휴가가 승인되면 기간 전체에 VACATION 근태가 생성된다")
+    @DisplayName("월~일 7일 승인이면 근태 행은 근무일 5개만 - 연차 일수와 같은 기준 (#104)")
+    void 근무일만_근태_행() {
+        when(memberRepository.findByUserId(USER_ID)).thenReturn(Optional.of(member()));
+        when(attendanceRepository.findByMemberAndWorkDateBetween(any(), any(), any())).thenReturn(List.of());
+
+        listener.onAbsenceApproved(new AbsenceApprovedEvent(
+                USER_ID, AbsenceType.VACATION,
+                LocalDate.of(2026, 8, 10), LocalDate.of(2026, 8, 16)));
+
+        List<Attendance> saved = captureSaved();
+        assertEquals(5, saved.size(), "토·일(8/15·8/16)에는 VACATION 행을 만들지 않는다");
+        assertEquals(LocalDate.of(2026, 8, 14), saved.get(4).getWorkDate());
+    }
+
+    @Test
+    @DisplayName("휴가가 승인되면 기간의 근무일 전체에 VACATION 근태가 생성된다 (8/10 월~8/12 수)")
     void 휴가_승인_반영() {
         Member member = member();
         when(memberRepository.findByUserId(USER_ID)).thenReturn(Optional.of(member));
