@@ -109,12 +109,19 @@ class AiQuotaWiringTest extends ContainerTestSupport {
         verify(ragChatService, times(1)).chat(any(), eq(userId), anyBoolean());
     }
 
+    /**
+     * 작업일지 번역의 한도는 2026-09-19부터 컨트롤러가 아니라 서비스 안, FastAPI 호출 직전에 있다(P2-19-1 — 캐시 히트는
+     * 안 깎으려고). 서비스가 목인 여기서는 "상한+1이 FastAPI를 안 부른다"를 볼 수 없다 — 그건
+     * {@code WorkLogTranslateCacheTest}가 실제 서비스·Redis로 본다. 여기 남는 것은 서비스가 던진 429가
+     * HTTP로 {@code Retry-After}와 함께 나가는가, 즉 핸들러 우선순위다.
+     */
     @Test
-    @DisplayName("작업일지 번역: 상한+1은 FastAPI를 부르지 않는다")
+    @DisplayName("작업일지 번역: 서비스가 던진 한도 초과는 429 + Retry-After로 나간다")
     void worklogTranslate() throws Exception {
         String userId = "wire-tr-" + System.nanoTime();
         when(fastApiService.saveTranslateLog(anyLong(), any(), eq(userId)))
-                .thenReturn(new TranslateDomain.Response("제목", "translated", "m", "t-2"));
+                .thenReturn(new TranslateDomain.Response("제목", "translated", "m", "t-2"))
+                .thenThrow(new AiQuotaExceededException(AiQuotaKind.WORKLOG_TRANSLATE, 3600));
 
         mockMvc.perform(post("/api/ai/translate/1")
                         .with(user(principal(userId)))
@@ -127,11 +134,10 @@ class AiQuotaWiringTest extends ContainerTestSupport {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(TRANSLATE_BODY))
                 .andExpect(status().isTooManyRequests())
-                .andExpect(header().exists("Retry-After"));
-
-        verify(fastApiService, times(1)).saveTranslateLog(anyLong(), any(), eq(userId));
+                .andExpect(header().string("Retry-After", "3600"));
     }
 
+    /** 번역 쪽 카운터는 목 안에 있어 여기서는 안 오른다. 종류 분리 자체는 {@code AiQuotaRedisTest}가 카운터 수준에서 본다. */
     @Test
     @DisplayName("종류가 다르면 서로 소진시키지 않는다 - 챗봇을 다 써도 번역은 나간다")
     void kindsAreIndependent() throws Exception {
