@@ -20,6 +20,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -34,6 +36,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * <p>이 테스트는 <b>락이 없을 때 실제로 깨지는 것</b>과 {@code SELECT ... FOR UPDATE}로
  * 막히는 것을 같은 조건에서 비교한다. 막히는 것만 보이면 애초에 문제가 있었는지 알 수 없다.
+ *
+ * <p>셋째 조건은 {@code REPEATABLE READ}다(DB-IMPROVEMENT-PLAN C4, 실험 카드 ⑤). PostgreSQL의 RR은
+ * first-updater-wins라 {@code FOR UPDATE} 없이도 둘째 UPDATE가 {@code 40001}
+ * ({@code could not serialize access due to concurrent update})로 죽는다. 그러면 lost update는
+ * 막히지만 <b>재시도</b>가 필요해진다 — ADR-0001 4-1이 낙관락을 거절한 이유가 그대로 돌아오는지를 잰다.
  *
  * <p>실제 서비스 코드가 아니라 동일한 읽기-검사-쓰기 순서를 JDBC로 재현한다.
  * 스프링 컨텍스트 없이 <b>DB 락 동작 자체</b>를 격리해서 보기 위함이다.
@@ -57,7 +64,7 @@ class LeaveBalanceConcurrencyTest extends ContainerTestSupport {
 
         try (Connection setup = connect()) {
             prepare(setup);
-            Result result = runConcurrentApprovals(password, false);
+            Result result = runConcurrentApprovals(password, Mode.NONE);
 
             System.out.println();
             System.out.println("=== 락 없음 ===");
@@ -84,7 +91,7 @@ class LeaveBalanceConcurrencyTest extends ContainerTestSupport {
 
         try (Connection setup = connect()) {
             prepare(setup);
-            Result result = runConcurrentApprovals(password, true);
+            Result result = runConcurrentApprovals(password, Mode.FOR_UPDATE);
 
             System.out.println();
             System.out.println("=== 비관적 락 (SELECT ... FOR UPDATE) ===");
@@ -96,6 +103,33 @@ class LeaveBalanceConcurrencyTest extends ContainerTestSupport {
             assertEquals(1, result.approved(), "락이 있으면 한 건만 승인되어야 한다");
             assertEquals(INITIAL_DAYS - REQUEST_DAYS, result.finalBalance());
             System.out.println(">>> 잔액을 초과하지 않는다.");
+        } catch (SQLException e) {
+            Assumptions.abort("테스트 컨테이너 접속 실패로 검증을 건너뜁니다: " + e.getMessage());
+        }
+    }
+
+    @Test
+    @DisplayName("REPEATABLE READ면 FOR UPDATE 없이도 둘째 승인이 40001로 죽는다 — 대신 재시도가 필요하다")
+    void 반복읽기는_둘째를_죽인다() throws Exception {
+        String password = password();
+
+        try (Connection setup = connect()) {
+            prepare(setup);
+            Result result = runConcurrentApprovals(password, Mode.REPEATABLE_READ);
+
+            System.out.println();
+            System.out.println("=== REPEATABLE READ (락 없음) ===");
+            System.out.printf("승인 성공 %d건 / 직렬화 실패 %d건(%s) / 진 쪽 UPDATE 대기 %dms / DB 잔액 %d일%n",
+                    result.approved(), result.serializationFailures(), result.loserSqlState(),
+                    result.loserWaitMs(), result.finalBalance());
+
+            // 둘 다 5일을 읽고 검사를 통과해 둘 다 UPDATE를 던진다. 먼저 쓴 쪽이 이기고,
+            // 둘째 UPDATE는 첫째가 커밋할 때까지 막혔다가 스냅샷보다 새 행을 보고 40001로 죽는다.
+            assertEquals(1, result.approved(), "RR이면 한 건만 커밋된다");
+            assertEquals(1, result.serializationFailures(), "다른 한 건은 직렬화 실패여야 한다");
+            assertEquals("40001", result.loserSqlState(), "SQLSTATE 40001 serialization_failure");
+            assertEquals(INITIAL_DAYS - REQUEST_DAYS, result.finalBalance());
+            System.out.println(">>> 잔액은 지켜졌지만 진 쪽은 예외로 끝났다 — 재시도해야 사용자에게 '잔액 부족'이 간다.");
         } catch (SQLException e) {
             Assumptions.abort("테스트 컨테이너 접속 실패로 검증을 건너뜁니다: " + e.getMessage());
         }
@@ -120,12 +154,18 @@ class LeaveBalanceConcurrencyTest extends ContainerTestSupport {
      * 첫 번째의 커밋을 기다린다. 거기에 배리어를 걸면 먼저 읽은 쪽은 배리어에서,
      * 뒤엣것은 락에서 서로를 기다려 <b>교착</b>이 된다. 락 있는 쪽은 막히는 것 자체가
      * 확정적이라 배리어가 필요하지도 않다.
+     *
+     * <p>REPEATABLE READ는 읽기에서 안 막히므로(스냅샷) 락 없는 쪽과 같이 배리어를 건다.
+     * 막히는 자리는 둘째 UPDATE다 — 첫째가 커밋할 때까지 기다렸다가 40001로 죽는다.
      */
-    private Result runConcurrentApprovals(String password, boolean useLock) throws Exception {
+    private Result runConcurrentApprovals(String password, Mode mode) throws Exception {
         CountDownLatch start = new CountDownLatch(1);
         CountDownLatch done = new CountDownLatch(2);
         CyclicBarrier bothRead = new CyclicBarrier(2);
         AtomicInteger approved = new AtomicInteger();
+        AtomicInteger serializationFailures = new AtomicInteger();
+        AtomicReference<String> loserSqlState = new AtomicReference<>();
+        AtomicLong loserWaitMs = new AtomicLong();
         AtomicBoolean interleaveFailed = new AtomicBoolean();
         ExecutorService pool = Executors.newFixedThreadPool(2);
 
@@ -133,13 +173,16 @@ class LeaveBalanceConcurrencyTest extends ContainerTestSupport {
             pool.submit(() -> {
                 try (Connection conn = connect()) {
                     conn.setAutoCommit(false);
+                    if (mode == Mode.REPEATABLE_READ) {
+                        conn.setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
+                    }
                     start.await();
 
                     // approveRequest()와 같은 순서: 읽고 → 검사하고 → 쓴다.
-                    Integer remaining = readBalance(conn, useLock);
+                    Integer remaining = readBalance(conn, mode == Mode.FOR_UPDATE);
 
-                    // 둘 다 읽은 뒤에 쓴다. 위 주석의 이유로 락 없는 경우에만 건다.
-                    if (!useLock) {
+                    // 둘 다 읽은 뒤에 쓴다. 위 주석의 이유로 FOR UPDATE가 아닌 경우에만 건다.
+                    if (mode != Mode.FOR_UPDATE) {
                         try {
                             bothRead.await(10, TimeUnit.SECONDS);
                         } catch (TimeoutException | BrokenBarrierException e) {
@@ -151,9 +194,20 @@ class LeaveBalanceConcurrencyTest extends ContainerTestSupport {
                     }
 
                     if (remaining != null && remaining >= REQUEST_DAYS) {
-                        writeBalance(conn, remaining - REQUEST_DAYS);
-                        conn.commit();
-                        approved.incrementAndGet();
+                        long t0 = System.nanoTime();
+                        try {
+                            writeBalance(conn, remaining - REQUEST_DAYS);
+                            conn.commit();
+                            approved.incrementAndGet();
+                        } catch (SQLException e) {
+                            // RR의 둘째 UPDATE: 첫째 커밋까지 막혔다가 40001. 얼마나 기다렸는지도 남긴다.
+                            loserWaitMs.set((System.nanoTime() - t0) / 1_000_000);
+                            loserSqlState.set(e.getSQLState());
+                            if ("40001".equals(e.getSQLState())) {
+                                serializationFailures.incrementAndGet();
+                            }
+                            conn.rollback();
+                        }
                     } else {
                         conn.rollback();
                     }
@@ -173,7 +227,8 @@ class LeaveBalanceConcurrencyTest extends ContainerTestSupport {
                 "겹침이 성립하지 않았다 - 이 실행의 결과는 lost update의 근거로 읽으면 안 된다");
 
         try (Connection conn = connect()) {
-            return new Result(approved.get(), readBalance(conn, false));
+            return new Result(approved.get(), readBalance(conn, false),
+                    serializationFailures.get(), loserSqlState.get(), loserWaitMs.get());
         }
     }
 
@@ -206,5 +261,9 @@ class LeaveBalanceConcurrencyTest extends ContainerTestSupport {
         }
     }
 
-    private record Result(int approved, Integer finalBalance) {}
+    /** 세 조건: 아무것도 안 함 / SELECT ... FOR UPDATE / REPEATABLE READ(락 없음). */
+    private enum Mode { NONE, FOR_UPDATE, REPEATABLE_READ }
+
+    private record Result(int approved, Integer finalBalance,
+                          int serializationFailures, String loserSqlState, long loserWaitMs) {}
 }
