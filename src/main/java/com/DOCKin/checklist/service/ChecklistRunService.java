@@ -158,6 +158,11 @@ public class ChecklistRunService {
         if (!item.getChecklist().getChecklistId().equals(run.getChecklist().getChecklistId())) {
             throw new BusinessException(ErrorCode.CHECKLIST_ITEM_MISMATCH);
         }
+        // 회차가 열릴 때 이미 퇴역한 항목은 그 회차의 항목이 아니다. 회차 도중에 퇴역한 항목은 계속 체크할 수 있다 —
+        // 그 회차의 목록(itemsOf)에 아직 있으니 완료 조건에도 들어간다.
+        if (!item.isActiveAt(run.getStartedAt())) {
+            throw new BusinessException(ErrorCode.CHECKLIST_ITEM_RETIRED);
+        }
         ChecklistResult result = ChecklistResult.builder()
                 .run(run)
                 .checklistItem(item)
@@ -195,11 +200,13 @@ public class ChecklistRunService {
      */
     public ChecklistDetailResponseDto templateWithMyOpenRun(String userId, Long equipmentId, ChecklistPhase phase) {
         Checklist checklist = requireChecklist(equipmentId, phase);
-        List<ChecklistItem> items = checklistItemRepository
-                .findByChecklist_ChecklistIdOrderBySequenceAscItemIdAsc(checklist.getChecklistId());
+        LocalDateTime now = LocalDateTime.now(clock);
         Optional<ChecklistRun> open = checklistRunRepository
                 .findFirstByChecklist_ChecklistIdAndMember_UserIdAndClosedAtIsNull(checklist.getChecklistId(), userId)
-                .filter(run -> !run.isStale(LocalDateTime.now(clock)));
+                .filter(run -> !run.isStale(now));
+        // 항목은 "그 시점에 살아 있던 것" — 열린 회차가 있으면 그 회차가 열린 시점, 없으면 지금(새로 열면 볼 목록).
+        List<ChecklistItem> items = checklistItemRepository
+                .findActiveAt(checklist.getChecklistId(), open.map(ChecklistRun::getStartedAt).orElse(now));
         Map<Integer, ChecklistResult> latest = open.map(this::latestOf).orElse(Map.of());
         return ChecklistDetailResponseDto.of(checklist, open.map(ChecklistRun::getRunId).orElse(null),
                 statusOf(items, latest));
@@ -227,9 +234,9 @@ public class ChecklistRunService {
         return ChecklistRunResponseDto.of(run, statusOf(itemsOf(run), latestOf(run)));
     }
 
+    /** 회차의 항목 — 회차가 열릴 때 살아 있던 것. 그 뒤 퇴역한 항목도 이 회차에서는 그대로다(ADR-0011 5절). */
     private List<ChecklistItem> itemsOf(ChecklistRun run) {
-        return checklistItemRepository
-                .findByChecklist_ChecklistIdOrderBySequenceAscItemIdAsc(run.getChecklist().getChecklistId());
+        return checklistItemRepository.findActiveAt(run.getChecklist().getChecklistId(), run.getStartedAt());
     }
 
     private Map<Integer, ChecklistResult> latestOf(ChecklistRun run) {

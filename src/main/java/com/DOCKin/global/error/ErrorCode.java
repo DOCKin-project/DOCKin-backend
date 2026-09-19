@@ -55,6 +55,8 @@ public enum ErrorCode {
     CHECKLIST_RUN_NOT_FOUND(404, "CK008", "존재하지 않는 점검 회차입니다."),
     CHECKLIST_RUN_CLOSED(409, "CK009", "이미 닫힌 점검 회차입니다."),
     CHECKLIST_RUN_INCOMPLETE(409, "CK010", "체크되지 않은 항목이 있어 점검을 완료할 수 없습니다."),
+    CHECKLIST_ITEM_IN_USE(409, "CK011", "점검 기록이 있는 항목은 문구를 바꿀 수 없습니다. 항목을 퇴역시키고 새 항목을 추가하세요."),
+    CHECKLIST_ITEM_RETIRED(409, "CK012", "퇴역한 항목입니다."),
 
     // Absence Request
     ABSENCE_REQUEST_NOT_FOUND(404, "AB001", "존재하지 않는 휴가 신청입니다."),
