@@ -1,5 +1,6 @@
 package com.DOCKin.attendance.service;
 
+import com.DOCKin.attendance.dto.AttendanceDailySummaryDto;
 import com.DOCKin.attendance.dto.AttendanceDto;
 import com.DOCKin.attendance.dto.ClockInRequestDto;
 import com.DOCKin.attendance.dto.ClockOutRequestDto;
@@ -8,6 +9,7 @@ import com.DOCKin.global.error.ErrorCode;
 import com.DOCKin.attendance.model.Attendance;
 import com.DOCKin.attendance.model.AttendanceStatus;
 import com.DOCKin.member.model.Member;
+import com.DOCKin.member.model.UserRole;
 import com.DOCKin.member.model.WorkShift;
 import com.DOCKin.attendance.repository.AttendanceRepository;
 import com.DOCKin.member.repository.MemberRepository;
@@ -21,6 +23,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
+import java.time.temporal.ChronoUnit;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -143,16 +146,70 @@ public class AttendanceService {
         return fromEntity(attendance);
     }
 
-    //개인 출퇴 기록 조회
+    /** {@code from}·{@code to}를 둘 다 안 주면 오늘까지 이 일수. 앱의 "최근 한 달" 화면 기준이다. */
+    static final int DEFAULT_RANGE_DAYS = 31;
+    /** 한 요청이 돌려줄 수 있는 최대 기간. 없으면 {@code from=2000-01-01}로 상한이 다시 사라진다. */
+    static final int MAX_RANGE_DAYS = 366;
+
+    /**
+     * 개인 근태 조회 — 기간으로 (P2-20-6).
+     *
+     * <p>상한 없이 전부 주던 것을 바꿨다. 1인 1일 1행이라 당장은 작지만 자라기만 하고, 앱은 어차피
+     * 월 단위로 본다. {@code to}가 없으면 오늘, {@code from}이 없으면 {@code to}에서
+     * {@link #DEFAULT_RANGE_DAYS} 전. 둘 다 없으면 "오늘까지 최근 한 달"이다. 날짜는 {@link Clock} 기준 —
+     * 출퇴근 판정과 같은 시계를 쓴다.
+     *
+     * <p>{@code from > to}는 400({@code INVALID_DATE_RANGE}), {@link #MAX_RANGE_DAYS}를 넘으면
+     * 400({@code ATTENDANCE_RANGE_TOO_LONG}). 조용히 잘라 주지 않는다 — 잘렸는지 클라이언트가 알 수 없다.
+     */
     @Transactional(readOnly = true)
-    public List<AttendanceDto> getMyAttendanceRecords(String userId){
+    public List<AttendanceDto> getMyAttendanceRecords(String userId, LocalDate from, LocalDate to){
+        LocalDate end = to != null ? to : LocalDate.now(clock);
+        LocalDate start = from != null ? from : end.minusDays(DEFAULT_RANGE_DAYS - 1);
+        if (start.isAfter(end)) {
+            throw new BusinessException(ErrorCode.INVALID_DATE_RANGE);
+        }
+        if (ChronoUnit.DAYS.between(start, end) + 1 > MAX_RANGE_DAYS) {
+            throw new BusinessException(ErrorCode.ATTENDANCE_RANGE_TOO_LONG);
+        }
+
         Member member = memberRepository.findByUserId(userId)
                 .orElseThrow(()-> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        List<Attendance> records = attendanceRepository.findByMemberOrderByWorkDateDesc(member);
+        List<Attendance> records = attendanceRepository
+                .findByMemberAndWorkDateBetweenOrderByWorkDateDesc(member, start, end);
 
         return records.stream()
                 .map(AttendanceDto::fromEntity)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * 관리자 대시보드의 하루 인원 집계 (P2-17-4). {@code date} 생략은 오늘, {@code shipYardArea} 생략은 관리자 자신의 구역,
+     * {@code workShift} 생략은 전 근무조.
+     *
+     * <p>다른 구역을 볼 수 있다 — 휴가 승인이 관리자의 구역을 보지 않는 것과 같다. 미래 날짜도 막지 않는다:
+     * 휴가 승인이 그 기간의 {@code VACATION} 행을 미리 만들므로(P2-1) 내일의 휴가 인원은 이미 의미가 있다.
+     * ADMIN 검사는 {@code /api/*}{@code /admin/**} 경로 규칙과 여기, 두 겹(P2-18-6).
+     */
+    @Transactional(readOnly = true)
+    public AttendanceDailySummaryDto getDailySummary(String adminUserId, LocalDate date, String shipYardArea,
+                                                     WorkShift workShift) {
+        Member admin = memberRepository.findByUserId(adminUserId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        if (admin.getRole() != UserRole.ADMIN) {
+            throw new BusinessException(ErrorCode.ACCESS_DENIED);
+        }
+        LocalDate day = date != null ? date : LocalDate.now(clock);
+        String area = shipYardArea != null ? shipYardArea : admin.getShipYardArea();
+
+        Object[] row = attendanceRepository.summarizeByAreaAndDate(area, workShift, day).get(0);
+        return new AttendanceDailySummaryDto(day, area, workShift,
+                count(row[0]), count(row[1]), count(row[2]), count(row[3]), count(row[4]), count(row[5]), count(row[6]));
+    }
+
+    /** 집계 컬럼은 {@code Long}이고, 구역에 사람이 없으면 SUM이 NULL이다. */
+    private static long count(Object v) {
+        return v == null ? 0L : ((Number) v).longValue();
     }
 }

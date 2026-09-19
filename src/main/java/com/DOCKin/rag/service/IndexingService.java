@@ -12,6 +12,8 @@ import com.DOCKin.worklog.model.WorkLog;
 import com.DOCKin.worklog.repository.WorkLogRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Value;
 
 import org.springframework.data.domain.PageRequest;
@@ -20,6 +22,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 원본 문서를 청킹·임베딩해 {@code document_chunks}에 적재하는 배치의 진입점.
@@ -66,6 +69,22 @@ public class IndexingService {
     private final DocumentChunkRepository documentChunkRepository;
     private final ChunkIndexWriter chunkIndexWriter;
     private final EmbeddingClient embeddingClient;
+    private final RedissonClient redissonClient;
+
+    /**
+     * 색인 실행 상호배제 키.
+     *
+     * <p><b>해시 기반 멱등성은 동시 실행을 막지 못한다.</b> 두 색인기가 같은 원본을 동시에
+     * 집으면 둘 다 "아직 없다"를 읽고 둘 다 삽입을 시도하며, 뒤에 커밋하는 쪽이
+     * {@code uk_chunk_source}(source_type, source_id, chunk_index, embedding_model)에 걸려
+     * 통째로 죽는다. 멱등성은 <b>순차 재실행</b>을 안전하게 만들 뿐 동시 실행을 안전하게
+     * 만들지 않는다 -- 두 트랜잭션이 서로의 미커밋 삽입을 볼 수 없기 때문이다.
+     *
+     * <p>2026-08-13 밤 1 무인 측정이 정확히 이것으로 죽었다. 앱이 02:59:57에 뜨면서
+     * 기동 러너가 색인을 시작했고, 3초 뒤 03:00 정각 cron이 같은 일을 또 시작했다.
+     * 코퍼스 165,016원본 중 21,800원본(13%)에서 밤이 끝났다.
+     */
+    private static final String INDEXING_LOCK_KEY = "rag:indexing:lock";
 
     @Value("${rag.indexing.enabled}")
     private boolean indexingEnabled;
@@ -110,6 +129,53 @@ public class IndexingService {
      */
     public IndexRun indexAll() {
         long start = System.currentTimeMillis();
+
+        // ── 상호배제 ────────────────────────────────────────────────────────────
+        // 대기하지 않는다(waitTime 0). 이미 도는 색인이 있다면 이번 주기는 **건너뛰는 것이
+        // 정답**이다 -- 줄을 서 봐야 앞의 실행이 끝낸 일을 다시 훑을 뿐이고, cron 주기가
+        // 실행 시간보다 짧으면 대기가 계속 쌓인다(색인은 시간 단위로 걸린다).
+        //
+        // leaseTime을 주지 않는 이유: 색인이 3시간을 넘기기도 하는데 고정 임대 시간을 주면
+        // 그 시간이 지난 순간 락이 풀려 두 번째 실행이 들어온다 -- 막으려던 사고가 그대로
+        // 일어난다. leaseTime 없이 잡으면 Redisson 워치독이 보유 스레드가 살아 있는 동안
+        // 갱신하고, JVM이 죽으면 워치독 타임아웃(기본 30초) 뒤 자동으로 풀린다.
+        RLock lock = redissonClient.getLock(INDEXING_LOCK_KEY);
+        // "잡았다"와 "Redis가 없어 그냥 간다"를 구분해 둔다. 아래 finally가 이 값으로 unlock 여부를
+        // 정한다 -- lock.isHeldByCurrentThread()로 물어보면 그것도 Redis에 가는 명령(HEXISTS)이라
+        // Redis가 죽어 있으면 finally에서 예외가 나고, 몇 시간 훑은 색인의 결과가 거기서 통째로
+        // 사라진다. IndexingLockRedisTest "Redis가 죽으면 상호배제 없이 진행하고 결과를 돌려준다"가
+        // 그 경로를 잡았다(2026-09-16).
+        boolean acquired;
+        try {
+            acquired = lock.tryLock(0, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            // Redis를 못 쓰는 상황. 여기서 멈추면 Redis가 흔들릴 때마다 색인이 통째로
+            // 서 버린다. 동시 실행은 "둘이 겹칠 때만" 일어나는 사고이고 평시에는 단일
+            // 실행이므로, 경고를 남기고 진행한다(ADR-0001이 근태에서 택한 것과 같은 판단).
+            log.warn("[RAG] 색인 분산락을 사용할 수 없어 상호배제 없이 진행합니다. cause={}", e.toString());
+            return runIndexing(start);
+        }
+        if (!acquired) {
+            long total = documentChunkRepository.countByEmbeddingModel(embeddingClient.getModelName());
+            log.info("[RAG] 다른 색인이 이미 진행 중이라 이번 실행을 건너뜁니다.");
+            return IndexRun.skipped(total, System.currentTimeMillis() - start);
+        }
+
+        try {
+            return runIndexing(start);
+        } finally {
+            // 잡은 락만 놓는다. 놓다가 실패해도(색인 중에 Redis가 죽었다) 결과는 돌려줘야 한다 --
+            // 워치독 갱신이 같이 끊겼으므로 키는 30초 뒤 스스로 사라진다. 로그만 남긴다.
+            try {
+                lock.unlock();
+            } catch (Exception e) {
+                log.warn("[RAG] 색인 분산락을 놓지 못했습니다. 워치독 만료(30초)로 풀립니다. cause={}", e.toString());
+            }
+        }
+    }
+
+    /** 실제 색인. 상호배제는 {@link #indexAll()}이 이미 걸어 두었다. */
+    private IndexRun runIndexing(long start) {
 
         // 누산기를 필드가 아닌 지역 객체로 두되 하위 메서드에 넘긴다.
         //
@@ -287,6 +353,17 @@ public class IndexingService {
         /** 코퍼스를 끝까지 훑었는가. 예외로 끊겼으면 false다. */
         public boolean completed() {
             return abortReason == null;
+        }
+
+        /**
+         * 다른 색인이 이미 돌고 있어 이번 실행이 아무 일도 하지 않은 경우.
+         *
+         * <p><b>실패가 아니다.</b> 그런데 완주도 아니다 -- 이 실행은 코퍼스를 훑지 않았으므로
+         * {@code completed()}가 true를 돌려주면 호출자가 "색인이 끝났다"로 읽는다.
+         * 무인 실행이 그 한 줄로 인스턴스를 껐던 것이 밤 1의 사고였다.
+         */
+        static IndexRun skipped(long totalChunks, long elapsedMs) {
+            return new IndexRun(0, totalChunks, elapsedMs, "다른 색인이 진행 중이라 건너뜀");
         }
     }
 }

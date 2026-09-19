@@ -24,6 +24,8 @@ public enum ErrorCode {
     USERID_DUPLICATION(400, "U002", "이미 가입된 사원번호입니다."),
     LOGIN_INPUT_INVALID(400, "U003", "사원번호 또는 비밀번호가 일치하지 않습니다."),
     EQUIPMENT_NOT_FOUND(400, "U004", "존재하지 않는 장비 번호입니다."),
+    LOGIN_ATTEMPTS_EXCEEDED(429, "U005", "로그인 시도가 너무 많습니다. 잠시 후 다시 시도해 주세요."),
+    LOGIN_UNAVAILABLE(503, "U006", "지금은 로그인을 처리할 수 없습니다. 잠시 후 다시 시도해 주세요."),
 
    // Chat
     CHATROOM_NOT_FOUND(400, "CT001", "존재하지 않는 채팅입니다."),
@@ -39,6 +41,8 @@ public enum ErrorCode {
     ATTENDANCE_ALREADY_CHECKED(409, "AT001", "이미 오늘 출근 처리가 완료되었습니다."),
     ATTENDANCE_NOT_CHECKED_IN(404, "AT002", "오늘 출근 기록이 존재하지 않습니다."),
     ATTENDANCE_ALREADY_CHECKED_OUT(409, "AT003", "이미 오늘 퇴근 처리가 완료되었습니다."),
+    ATTENDANCE_RANGE_TOO_LONG(400, "AT004", "근태 조회 기간은 최대 366일입니다."),
+    WORK_CALENDAR_NOT_FOUND(404, "AT005", "캘린더에 등록되지 않은 날짜입니다."),
 
     // Checklist
     CHECKLIST_NOT_FOUND(404, "CK001", "존재하지 않는 체크리스트입니다."),
@@ -61,10 +65,13 @@ public enum ErrorCode {
     NOT_LOG_AUTHOR(403, "W002", "해당 일지의 작성자가 아닙니다."),
     NOT_COMMENT_AUTHOR(403, "W003", "해당 댓글의 권한이 아닙니다."),
     COMMENT_NOT_FOUND(404, "W004", "존재하지 않는 댓글입니다."),
+    LOG_ALREADY_REVIEWED(409, "W005", "이미 검토된 작업 일지입니다."),
+    NOT_LOG_REVIEWER(403, "W006", "작업 일지 검토 권한이 없습니다."),
 
     // FastApi
     CHATBOT_NOT_WORK(404, "F001", "챗봇이 에러가 발생했습니다."),
     STT_CONVERSION_ERROR(404, "F002", "STT에서 에러가 발생했습니다."),
+    AI_QUOTA_EXCEEDED(429, "F003", "오늘 사용 가능한 AI 호출 횟수를 모두 사용했습니다."),
 
     // RAG
     EMBEDDING_SERVER_ERROR(503, "R001", "임베딩 서버 호출에 실패했습니다."),

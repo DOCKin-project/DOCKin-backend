@@ -2,34 +2,96 @@ package com.DOCKin.worklog.repository;
 
 import com.DOCKin.member.model.Member;
 import com.DOCKin.worklog.model.WorkLog;
-import jakarta.transaction.Transactional;
-import org.springframework.data.domain.Page;
+import com.DOCKin.worklog.model.WorkLogStatus;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface WorkLogRepository extends JpaRepository<WorkLog, Long> {
-    @Transactional
-    Page<WorkLog> findByMemberIn(List<Member> members, Pageable pageable);
-    Page<WorkLog> findAllByMemberUserId(String targetUserId, Pageable pageable);
+
+    /*
+     * 세 목록 쿼리는 같은 꼴이다 (DB-IMPROVEMENT-PLAN A4·D2, 2026-09-15).
+     *
+     *   - Slice: COUNT를 내지 않는다. 100만 행에서 COUNT는 인덱스가 있어도 매 요청 12.8ms였고
+     *     (P2-15-5 ②), MVCC라 LIMIT의 이득이 없다 — 보이는 행인지 전부 확인해야 센다.
+     *     Slice는 size+1을 읽어 hasNext만 답한다. 채팅(findChatHistory)과 같은 선택이다.
+     *   - 커서 (beforeCreatedAt, beforeLogId): OFFSET은 앞의 행을 읽고 버린다 — 500페이지가
+     *     150ms였다(P2-15-5 ③). 커서는 마지막으로 본 행 "다음"부터 인덱스로 바로 간다.
+     *     둘 다 null이면 첫 페이지(OFFSET 0)다. 정렬 키 (created_at, log_id)는 PK가 뒤에
+     *     붙어 전순서라 경계에서 행이 겹치거나 빠지지 않는다 — findForIndexingAfter와 같은 판단.
+     *   - ORDER BY는 쿼리가 정한다. 클라이언트 sort를 붙이면 커서와 어긋난다.
+     *
+     * 커서 조건을 (createdAt, logId) < (:c, :id) 행 비교로 쓰지 않는 것은 JPQL이 그 문법을
+     * 모르기 때문이다. 풀어 쓴 아래 형태를 PostgreSQL 플래너는 같은 뜻으로 읽는다.
+     *
+     * CAST(:beforeCreatedAt AS Timestamp)가 붙은 이유: 커서가 null이면 Hibernate가 `? IS NULL`의
+     * ?를 타입 없이 보내고, PostgreSQL은 "could not determine data type of parameter"로 거부한다
+     * (2026-09-15 실측). 채팅의 :beforeSeq(Long)는 같은 꼴로도 통과했는데 timestamp는 안 됐다 —
+     * JPA가 DB를 가려 주는 데도 구멍이 있다. MySQL은 타입 없는 null을 받아 주므로 거기선 안 드러난다.
+     */
+
+    /**
+     * {@code status}는 선택 필터다(P2-17-1). null이면 전부. 관리자의 미승인 큐와 근로자의 "내 반려 건"이
+     * 같은 쿼리를 쓴다. {@code CAST(:status AS String)}은 {@code beforeCreatedAt}과 같은 이유 —
+     * null이면 Hibernate가 타입 없는 ?를 보내고 PostgreSQL이 거부한다. enum은 STRING으로 매핑되므로
+     * String으로 캐스팅한다.
+     */
+    @Query("""
+            SELECT w FROM WorkLog w
+            WHERE w.member IN :members
+              AND (CAST(:status AS String) IS NULL OR w.status = :status)
+              AND (CAST(:beforeCreatedAt AS Timestamp) IS NULL
+                   OR w.createdAt < :beforeCreatedAt
+                   OR (w.createdAt = :beforeCreatedAt AND w.logId < :beforeLogId))
+            ORDER BY w.createdAt DESC, w.logId DESC
+            """)
+    Slice<WorkLog> findByMemberIn(@Param("members") List<Member> members,
+                                  @Param("status") WorkLogStatus status,
+                                  @Param("beforeCreatedAt") LocalDateTime beforeCreatedAt,
+                                  @Param("beforeLogId") Long beforeLogId,
+                                  Pageable pageable);
+
+    @Query("""
+            SELECT w FROM WorkLog w
+            WHERE w.member.userId = :targetUserId
+              AND (CAST(:beforeCreatedAt AS Timestamp) IS NULL
+                   OR w.createdAt < :beforeCreatedAt
+                   OR (w.createdAt = :beforeCreatedAt AND w.logId < :beforeLogId))
+            ORDER BY w.createdAt DESC, w.logId DESC
+            """)
+    Slice<WorkLog> findAllByMemberUserId(@Param("targetUserId") String targetUserId,
+                                         @Param("beforeCreatedAt") LocalDateTime beforeCreatedAt,
+                                         @Param("beforeLogId") Long beforeLogId,
+                                         Pageable pageable);
 
     /**
      * 키워드 검색. <b>같은 구역의 작업일지만.</b>
      *
      * <p>목록({@code findByMemberIn})과 타인 조회({@code readOtherWorklog})는 구역으로 가리는데
      * 검색만 전체를 뒤졌다(백로그 P2-18-10). 검색이 목록보다 넓게 보이면 안 된다.
+     *
+     * <p>{@code LIKE %kw%}는 양쪽 와일드카드라 B-tree를 못 탄다(P2-15-5 ⑤). {@code pg_trgm}은
+     * 측정 뒤 결정한다(DB-IMPROVEMENT-PLAN D1).
      */
     @Query("""
             SELECT w FROM WorkLog w
             WHERE w.member IN :members
               AND (w.title LIKE %:keyword% OR w.logText LIKE %:keyword%)
+              AND (CAST(:beforeCreatedAt AS Timestamp) IS NULL
+                   OR w.createdAt < :beforeCreatedAt
+                   OR (w.createdAt = :beforeCreatedAt AND w.logId < :beforeLogId))
+            ORDER BY w.createdAt DESC, w.logId DESC
             """)
-    Page<WorkLog> searchWorkLogs(@Param("keyword") String keyword,
-                                 @Param("members") List<Member> members,
-                                 Pageable pageable);
+    Slice<WorkLog> searchWorkLogs(@Param("keyword") String keyword,
+                                  @Param("members") List<Member> members,
+                                  @Param("beforeCreatedAt") LocalDateTime beforeCreatedAt,
+                                  @Param("beforeLogId") Long beforeLogId,
+                                  Pageable pageable);
 
     /**
      * 작업일지 사진 다운로드 권한(P2-18-7). 그 사진이 붙은 작업일지가 요청자와 같은 구역이면 된다 —

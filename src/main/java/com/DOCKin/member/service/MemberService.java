@@ -5,6 +5,7 @@ import com.DOCKin.global.error.ErrorCode;
 import com.DOCKin.global.security.jwt.JwtBlacklist;
 import com.DOCKin.global.security.jwt.JwtUtil;
 import com.DOCKin.member.dto.*;
+import com.DOCKin.member.login.LoginAttempts;
 import com.DOCKin.member.model.Member;
 import com.DOCKin.member.model.RefreshToken;
 import com.DOCKin.member.model.UserRole;
@@ -27,6 +28,7 @@ public class MemberService{
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtBlacklist jwtBlacklist;
+    private final LoginAttempts loginAttempts;
 
     /** 없는 사용자에게 돌릴 bcrypt 해시. 값은 무의미하고 비용만 같으면 된다("dummy"의 해시). */
     private static final String DUMMY_HASH = "$2a$10$7EqJtq98hPqEX7fNZaFWoOhi5XkfM9x1Sgb4c5Z0zVfLg5T5Yqz0K";
@@ -36,12 +38,18 @@ public class MemberService{
         // "없는 사원번호"와 "틀린 비밀번호"를 같은 답으로 돌려준다. 다르게 답하면 로그인 창이
         // 사원번호 목록을 확인해 주는 도구가 된다(P2-18-8). 없는 사용자에게도 bcrypt를 한 번 돌려
         // 응답 시간으로도 가르지 못하게 한다 — 그래서 orElseThrow가 아니라 map이다.
+        //
+        // 시도 제한은 bcrypt 앞이다(P2-18-12). 막힌 요청이 해시를 태우면 제한이 CPU 소모의 도구가 된다.
+        // 없는 사원번호도 같은 카운터로 센다 — 있는 계정만 세면 429가 존재 여부를 말해 준다.
+        loginAttempts.check(dto.getUserId());
         Member member = memberRepository.findByUserId(dto.getUserId()).orElse(null);
         String storedHash = member != null ? member.getPassword() : DUMMY_HASH;
         boolean matches = passwordEncoder.matches(dto.getPassword(), storedHash);
         if (member == null || !matches) {
+            loginAttempts.failed(dto.getUserId());
             throw new BusinessException(ErrorCode.LOGIN_INPUT_INVALID);
         }
+        loginAttempts.succeeded(dto.getUserId());
         CustomUserInfoDto info = CustomUserInfoDto.builder()
                 .userId(member.getUserId())
                 .name(member.getName())

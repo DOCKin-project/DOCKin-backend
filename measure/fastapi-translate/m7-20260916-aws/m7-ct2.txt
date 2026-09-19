@@ -1,0 +1,11 @@
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+CT2 int8 beam 4  n=24 p50=    34  max=    46  mean=    34 ms
+CT2 int8 beam 1  n=24 p50=    23  max=    31  mean=    23 ms
+== 품질 표본 (CT2 int8 beam 4)
+  안전모 착용하세요 -> Wear your safety helmet.
+  오늘 3번 도크 용접 작업 오전 10시에 시작합니다 -> Today's third dock welding starts at 10:00 a.m.
+  크레인 작업 중이니 아래로 지나가지 마세요 -> I'm working on the crane. Don't go down there.
+  점심 후에 블록 조립 이어서 하겠습니다 -> We'll do the block assembly after lunch.
+CT2 inter_threads=1: 24건 1.3s → 18.02 req/s
+CT2 inter_threads=2: 24건 0.8s → 31.26 req/s
+CT2 inter_threads=4: 24건 0.9s → 27.33 req/s

@@ -40,6 +40,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * 나오지 않게</b> 컨트롤러 전체를 훑는다. 새 페이징 API를 추가하면서 {@code sort}를
  * 빠뜨리면 이 테스트가 그 자리에서 실패한다.
  *
+ * <h3>2026-09-17부터 이 선언은 동작이기도 하다</h3>
+ * {@code PageableConfig}가 요청의 {@code sort}를 읽지 않으므로, 컨트롤러가 받는 {@code Pageable}의
+ * 정렬은 <b>오직 여기서 검사하는 {@code @PageableDefault(sort = …)}에서 온다.</b> 이 테스트가 놓치면
+ * 그 엔드포인트는 unsorted가 되고 클라이언트가 고칠 방법도 없다 — 이 테스트의 값어치가 그만큼 올랐다.
+ *
  * <h3>애플리케이션 컨텍스트를 띄우지 않는다</h3>
  * {@code ClassPathScanningCandidateComponentProvider}로 바이트코드만 훑으므로 DB도 컨테이너도
  * 필요 없다. 검증 대상이 <b>런타임 동작이 아니라 선언</b>이라 그것으로 충분하고, 대신 이
@@ -56,18 +61,16 @@ class PageableSortDefaultTest {
     private static final String BASE_PACKAGE = "com.DOCKin";
 
     /**
-     * 정렬이 없다는 것을 <b>알고 둔</b> 엔드포인트.
+     * 정렬이 없다는 것을 <b>알고 둔</b> 엔드포인트. <b>지금은 비어 있다.</b>
      *
-     * <ul>
-     *   <li>{@code ChatRoomController#findAllRooms} — 채팅방 목록의 정렬 키는
-     *       {@code last_message_at}이 자연스럽지만, 그 컬럼은 P2-12-4가 <b>경합으로 실제
-     *       마지막 메시지가 아닐 수 있다</b>고 지적한 자리다. 순서의 기준으로 삼기 전에
-     *       그쪽을 먼저 정해야 하므로 작업일지 수정에 섞지 않았다. → P2-12-8</li>
-     * </ul>
+     * <p>마지막까지 남아 있던 {@code ChatRoomController#findAllRooms}는 2026-09-14에 빠졌다. 정렬 키
+     * {@code last_message_at}이 P2-12-4의 경합 자리였는데, V6 이후 그 컬럼은 방 시퀀스 발급과
+     * <b>같은 UPDATE·같은 행 락</b> 안에서만 바뀌므로 경합이 사라졌다(ADR-0008 5-3). 목록 조회 자체도
+     * SQL이 정렬을 정하고({@code ChatJdbcRepository.roomsOf}) 컨트롤러의 {@code sort}는 그 계약을 적어 둔 것이다.
+     *
+     * <p>비어 있어도 목록을 지우지 않는다 — 새 위반이 생기면 여기에 적히는 대신 테스트가 실패한다.
      */
-    private static final Set<String> KNOWN_UNSORTED = new LinkedHashSet<>(Set.of(
-            "ChatRoomController#findAllRooms"
-    ));
+    private static final Set<String> KNOWN_UNSORTED = new LinkedHashSet<>();
 
     @Test
     @DisplayName("Pageable을 받는 모든 컨트롤러 메서드에 기본 정렬이 있다")

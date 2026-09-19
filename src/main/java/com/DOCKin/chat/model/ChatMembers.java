@@ -31,12 +31,10 @@ public class ChatMembers {
     @Column(name="joined_at")
     private LocalDateTime joinedAt;
 
-    @Column(name="last_read_time")
-    private LocalDateTime lastReadTime;
-
     /**
      * 이 멤버가 읽은 마지막 {@code room_seq}(V6, ADR-0008 D7). 0은 "아무것도 안 읽음"이다.
-     * {@code lastReadTime}은 한 릴리스 동안 병행하고 V7에서 내린다 — 읽음 API가 seq를 쓰게 바뀐 뒤.
+     * 시각 기준이던 {@code last_read_time}은 V7이 내렸다 — 읽는 곳이 0이 된 뒤다. 올리는 곳은
+     * {@code ChatJdbcRepository.markRead} 하나이며 엔티티는 읽기 전용으로만 든다.
      */
     @Builder.Default
     @Column(name = "last_read_seq", nullable = false)
@@ -45,10 +43,5 @@ public class ChatMembers {
     @PrePersist
     public void prePersist(){
         this.joinedAt=LocalDateTime.now();
-        this.lastReadTime= LocalDateTime.now();
-    }
-
-    public void updateLastReadTime(LocalDateTime lastReadTime) {
-        this.lastReadTime = lastReadTime;
     }
 }

@@ -58,7 +58,7 @@ class ActuatorEndpointTest extends ContainerTestSupport {
     void healthHidesComponentsFromAnonymous() throws Exception {
         mockMvc.perform(get("/actuator/health"))
                 .andExpect(status().isOk())
-                // components에는 db / redis / diskSpace가 이름 그대로 들어 있다.
+                // components에는 db / redis / diskSpace가 이름 그대로 들어 있다(redis는 RedisHealthIndicator, 2026-09-16부터).
                 .andExpect(jsonPath("$.components").doesNotExist());
     }
 
@@ -85,6 +85,17 @@ class ActuatorEndpointTest extends ContainerTestSupport {
                 .andExpect(status().isOk())
                 // 이 이름이 나오는지가 곧 "풀 상태를 물어볼 수 있다"는 뜻이다.
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("hikaricp.connections")));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    @DisplayName("health 세부 항목에 redis가 있다 - 없으면 블랙리스트 장애를 401 급증으로만 알게 된다 (ADR-0009 7절)")
+    void healthListsRedisComponent() throws Exception {
+        mockMvc.perform(get("/actuator/health"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.components.db").exists())
+                .andExpect(jsonPath("$.components.redis").exists())
+                .andExpect(jsonPath("$.components.redis.status").value("UP"));
     }
 
     @Test

@@ -1,0 +1,71 @@
+# bloat snapshot  2026-09-17T17:08:28+0000  container=dockin-db db=dockindb tag=not-recovered-stage1
+
+[1] pg_stat_user_tables — 통계 수집기 값 (스캔 없음)
++---------------------------+--------+------+----------+------------+------------+--------------+-----------+-------------+------------------+
+|           table           |  live  | dead | dead_pct |    heap    |  indexes   | last_autovac | autovac_n | last_vacuum | last_autoanalyze |
++---------------------------+--------+------+----------+------------+------------+--------------+-----------+-------------+------------------+
+| document_chunks           | 214793 |    0 |      0.0 | 165 MB     | 395 MB     | 09-18 01:51  |        18 | 09-17 22:42 | 09-18 02:07      |
+| work_logs                 | 200016 | 3000 |      1.5 | 152 MB     | 6280 kB    | 09-17 22:42  |         1 | 09-17 22:51 | 09-17 22:42      |
+| work_log_translations     |  59938 |  863 |      1.4 | 68 MB      | 3232 kB    | 09-17 22:51  |         1 |             | 09-17 22:51      |
+| users                     |    504 |    0 |      0.0 | 168 kB     | 32 kB      | 09-17 22:51  |         1 |             | 09-17 22:51      |
+| attendance                |    520 |    0 |      0.0 | 40 kB      | 64 kB      |              |         0 |             | 09-18 00:10      |
+| work_calendar             |      6 |    0 |      0.0 | 8192 bytes | 16 kB      |              |         0 |             |                  |
+| safety_courses            |      5 |    0 |      0.0 | 8192 bytes | 16 kB      |              |         0 |             |                  |
+| absence_requests          |      3 |    0 |      0.0 | 8192 bytes | 48 kB      |              |         0 |             |                  |
+| flyway_schema_history     |      8 |    0 |      0.0 | 8192 bytes | 32 kB      |              |         0 |             |                  |
+| equipment                 |      5 |    0 |      0.0 | 8192 bytes | 32 kB      |              |         0 |             |                  |
+| work_log_comments         |      0 |    0 |        0 | 0 bytes    | 24 kB      |              |         0 |             |                  |
+| chat_rooms                |      0 |    0 |        0 | 0 bytes    | 8192 bytes |              |         0 |             |                  |
+| checklist_results         |      0 |    0 |        0 | 0 bytes    | 16 kB      |              |         0 |             |                  |
+| work_log_images           |      0 |    0 |        0 | 0 bytes    | 16 kB      |              |         0 |             |                  |
+| chat_message_translations |      0 |    0 |        0 | 0 bytes    | 8192 bytes |              |         0 |             |                  |
+| checklists                |      0 |    0 |        0 | 0 bytes    | 16 kB      |              |         0 |             |                  |
+| chat_messages             |      0 |    0 |        0 | 0 bytes    | 24 kB      |              |         0 |             |                  |
+| chat_members              |      0 |    0 |        0 | 0 bytes    | 16 kB      |              |         0 |             |                  |
+| refresh_token             |      0 |    0 |        0 | 0 bytes    | 8192 bytes |              |         0 |             |                  |
+| authority                 |      0 |    0 |        0 | 0 bytes    | 16 kB      |              |         0 |             |                  |
+| checklist_items           |      0 |    0 |        0 | 0 bytes    | 8192 bytes |              |         0 |             |                  |
+| safety_enrollments        |      0 |    0 |        0 | 0 bytes    | 16 kB      |              |         0 |             |                  |
+| chat_history              |      0 |    0 |        0 | 0 bytes    | 8192 bytes |              |         0 |             |                  |
++---------------------------+--------+------+----------+------------+------------+--------------+-----------+-------------+------------------+
+
+
+[2] pgstattuple_approx — 힙 기준 추정 (전부 보이는 페이지는 건너뛴다)
++-----------------------+--------+-------------+----------+----------+----------+------------+
+|         table         |  heap  | scanned_pct | live_pct | dead_pct | free_pct |    free    |
++-----------------------+--------+-------------+----------+----------+----------+------------+
+| document_chunks       | 165 MB |         5.3 |     96.9 |      0.0 |      3.0 | 5084 kB    |
+| work_logs             | 152 MB |         1.5 |     96.4 |      0.0 |      3.6 | 5562 kB    |
+| work_log_translations | 68 MB  |         1.4 |     93.6 |      0.0 |      6.3 | 4443 kB    |
+| users                 | 168 kB |         0.0 |     48.4 |      0.0 |     51.6 | 87 kB      |
+| attendance            | 40 kB  |       100.0 |     78.0 |      0.0 |     11.4 | 4684 bytes |
++-----------------------+--------+-------------+----------+----------+----------+------------+
+
+
+[4] autovacuum 설정 — 전역값과 테이블 단위 재정의
++--------------------------------+---------+------+
+|              name              | setting | unit |
++--------------------------------+---------+------+
+| autovacuum                     | on      |      |
+| autovacuum_max_workers         | 3       |      |
+| autovacuum_naptime             | 60      | s    |
+| autovacuum_vacuum_cost_delay   | 2       | ms   |
+| autovacuum_vacuum_cost_limit   | -1      |      |
+| autovacuum_vacuum_scale_factor | 0.2     |      |
+| autovacuum_vacuum_threshold    | 50      |      |
+| autovacuum_work_mem            | -1      | kB   |
+| maintenance_work_mem           | 65536   | kB   |
++--------------------------------+---------+------+
+
++-------+------------+
+| table | reloptions |
++-------+------------+
++-------+------------+
+
+
+[5] 지금 도는 VACUUM
++-----+---------+-------+--------+------------+----------+
+| pid | relname | phase | blocks | idx_passes | dead_ids |
++-----+---------+-------+--------+------------+----------+
++-----+---------+-------+--------+------------+----------+
+

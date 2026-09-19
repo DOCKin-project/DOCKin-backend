@@ -1,0 +1,5 @@
+seq,label,shared_buffers_req,shared_buffers_applied,mem_req,mem_applied_bytes,window_s,corpus_at_open,chunks,sources,ms_per_chunk,ms_per_source,note
+1,A,128MB,128MB,512m,536870912,300,191099,5779,4800,51.9,62.5,
+2,B,1GB,1GB,2g,2147483648,300,190976,5896,4900,50.9,61.2,
+3,C,128MB,128MB,2g,2147483648,300,190976,6019,5000,49.8,60.0,
+4,D,128MB,128MB,512m,536870912,300,190976,5902,4900,50.8,61.2,

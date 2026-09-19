@@ -1,5 +1,8 @@
 package com.DOCKin.global.error;
 
+import com.DOCKin.ai.quota.AiQuotaExceededException;
+import com.DOCKin.ai.quota.AiQuotaKind;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
@@ -157,6 +160,16 @@ class GlobalExceptionHandlerTest {
      * HTTP 상태 코드와 본문의 status 필드를 함께 본다.
      * 둘이 어긋나면 클라이언트가 어느 쪽을 믿느냐에 따라 다르게 동작한다.
      */
+    @Test
+    @DisplayName("AI 한도 초과는 429이고 Retry-After에 자정까지 남은 초가 실린다")
+    void aiQuotaExceededReturns429WithRetryAfter() {
+        var response = handler.handleAiQuotaExceeded(
+                new AiQuotaExceededException(AiQuotaKind.CHATBOT, 3600));
+
+        assertStatus(response, 429);
+        assertThat(response.getHeaders().getFirst("Retry-After")).isEqualTo("3600");
+    }
+
     private void assertStatus(ResponseEntity<ErrorResponseDto> response, int expected) {
         assertThat(response.getStatusCode().value()).isEqualTo(expected);
         assertThat(response.getBody()).isNotNull();

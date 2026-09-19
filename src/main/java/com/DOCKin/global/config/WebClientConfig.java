@@ -67,13 +67,41 @@ public class WebClientConfig {
     @Value("${external-api.connect-timeout-ms}")
     private int connectTimeoutMs;
 
+    @Value("${external-api.fastapi.service-token:}")
+    private String fastapiServiceToken;
+
+    /** FastAPI가 서비스 간 인증에 읽는 헤더({@code DOCKin-aiserver app/core/security.py}). */
+    static final String SERVICE_TOKEN_HEADER = "X-Service-Token";
+
+    /**
+     * 팀원 FastAPI(번역/STT/챗봇) 클라이언트.
+     *
+     * <p><b>서비스 토큰은 여기서 한 번 싣는다</b>(P2-20-7). 이전에는 STT 두 경로가 사용자의
+     * {@code Authorization} 헤더를 그대로 FastAPI에 넘겼는데, FastAPI는 그 헤더를 읽지 않는다 —
+     * 읽는 것은 {@code X-Service-Token} 하나고, 그 값이 설정돼 있을 때만 검사한다. 즉 사용자 JWT를
+     * 다른 서비스로 흘려보내기만 했고 인증은 아무것도 안 되고 있었다. 서비스 간 인증은 사용자 자격이
+     * 아니라 서비스 자격으로 한다: 비밀 하나를 양쪽이 나눠 갖고, 호출마다 기본 헤더로 나간다.
+     *
+     * <p>토큰이 비어 있으면 헤더를 싣지 않는다. FastAPI도 {@code SERVICE_TOKEN}이 없으면 검사를 건너뛰므로
+     * 로컬은 둘 다 비워 두면 되고, 운영은 양쪽에 같은 값을 준다. 한쪽만 주면 FastAPI가 401을 내고
+     * 그건 {@code INTERNAL_SERVER_ERROR}/{@code STT_CONVERSION_ERROR}로 올라온다 — 조용히 열리는 쪽이 아니라
+     * 시끄럽게 닫히는 쪽으로 틀리게 해뒀다.
+     */
     @Bean
     public WebClient fastApiWebClient() {
-        return WebClient.builder()
+        return withServiceToken(WebClient.builder()
                 .baseUrl(fastapiBaseUrl)
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .clientConnector(connector(fastapiResponseTimeoutMs))
+                .clientConnector(connector(fastapiResponseTimeoutMs)), fastapiServiceToken)
                 .build();
+    }
+
+    /** 비어 있으면 헤더를 싣지 않는다. 테스트가 이 메서드만 떼어 검사한다({@code WebClientConfigTest}). */
+    static WebClient.Builder withServiceToken(WebClient.Builder builder, String serviceToken) {
+        if (serviceToken == null || serviceToken.isBlank()) {
+            return builder;
+        }
+        return builder.defaultHeader(SERVICE_TOKEN_HEADER, serviceToken);
     }
 
     /**

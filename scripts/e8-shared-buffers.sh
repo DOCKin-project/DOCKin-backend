@@ -52,6 +52,23 @@ CONDITIONS=${CONDITIONS:-"A:128MB:512m B:1GB:2g C:128MB:2g D:128MB:512m"}
 WINDOW_SEC=${WINDOW_SEC:-300}
 WARMUP_CHUNKS=${WARMUP_CHUNKS:-50}
 HOLE_SOURCES=${HOLE_SOURCES:-6000}     # 구멍 크기. 창 하나가 먹는 것보다 넉넉해야 한다
+DIG_HOLE=${DIG_HOLE:-1}                # 0이면 이미 파인 구멍을 그대로 쓴다(중단 후 재개)
+
+# 되돌릴 때의 VACUUM 옵션.
+#
+# [왜 INDEX_CLEANUP OFF가 기본인가] 2026-08-13 밤 3의 첫 시도가 여기서 죽었다 --
+# `VACUUM (ANALYZE)` 하나가 **40분을 넘겼다.** 19만 행에 HNSW 인덱스가 붙어 있고
+# maintenance_work_mem이 64MB, 컨테이너가 512M이라 인덱스를 통째로 훑는 비용이 그렇게 된다.
+# 조건마다 이것을 붙이면 여덟 조건에 5시간이 VACUUM에만 간다.
+#
+# INDEX_CLEANUP OFF는 힙의 죽은 튜플만 정리하고 인덱스 청소를 건너뛴다. 대신 **죽은
+# 인덱스 항목이 조건을 넘어 쌓이므로**, 뒤 조건일수록 그래프에 쓰레기가 많은 상태에서
+# 삽입하게 된다. 그것이 상한 효과로 둔갑할 수 있다.
+#
+# **그래서 이 선택은 드리프트 통제군(D = A 반복) 위에서만 성립한다.** D가 A와 다르면
+# 가운데 조건들을 읽지 않는다 -- 그 경우 이 스크립트는 "쟀지만 못 읽는다"를 남기며,
+# 그것이 조용히 틀린 숫자보다 낫다.
+VACUUM_OPTS=${VACUUM_OPTS:-"ANALYZE, INDEX_CLEANUP OFF"}
 EMBED_WAIT_MAX=${EMBED_WAIT_MAX:-1200}
 HEALTH_WAIT_MAX=${HEALTH_WAIT_MAX:-300}
 COMPOSE_FILES=${COMPOSE_FILES:-"-f compose.yaml -f compose.gc.yaml"}
@@ -141,14 +158,19 @@ echo "seq,label,shared_buffers_req,shared_buffers_applied,mem_req,mem_applied_by
 # 가장 오래된 원본 쪽에 판다. indexAll()이 lastId=0부터 훑으므로 **첫 페이지에서 바로
 # 일거리를 만나고**, 건너뛰기 구간을 기다리는 시간이 조건마다 몇 분씩 사라진다.
 # 구멍은 한 번만 파고, 조건이 끝날 때마다 그 조건이 메운 만큼만 되지운다.
-say "구멍 파기 — 가장 오래된 $HOLE_SOURCES 원본의 청크를 지운다"
-psql_q "DELETE FROM document_chunks WHERE (source_type, source_id) IN (
-          SELECT source_type, source_id FROM document_chunks
-          WHERE source_type = 'WORK_LOG'
-          GROUP BY 1, 2 ORDER BY 2 LIMIT $HOLE_SOURCES);" >/dev/null
-psql_q "VACUUM (ANALYZE) document_chunks;" >/dev/null
-CORPUS_HOLED=$(chunks)
-say "구멍 완료: $CORPUS_FULL → $CORPUS_HOLED 청크 (-$((CORPUS_FULL - CORPUS_HOLED)))"
+if [[ "$DIG_HOLE" == "1" ]]; then
+    say "구멍 파기 — 가장 오래된 $HOLE_SOURCES 원본의 청크를 지운다"
+    psql_q "DELETE FROM document_chunks WHERE (source_type, source_id) IN (
+              SELECT source_type, source_id FROM document_chunks
+              WHERE source_type = 'WORK_LOG'
+              GROUP BY 1, 2 ORDER BY 2 LIMIT $HOLE_SOURCES);" >/dev/null
+    psql_q "VACUUM ($VACUUM_OPTS) document_chunks;" >/dev/null
+    CORPUS_HOLED=$(chunks)
+    say "구멍 완료: $CORPUS_FULL → $CORPUS_HOLED 청크 (-$((CORPUS_FULL - CORPUS_HOLED)))"
+else
+    CORPUS_HOLED=$CORPUS_FULL
+    say "구멍 파기 건너뜀(DIG_HOLE=0) — 이미 파인 구멍을 그대로 쓴다: $CORPUS_HOLED 청크"
+fi
 
 # ─────────────────────────────────────────────────────────── 조건 반복
 SEQ=0
@@ -238,7 +260,7 @@ for COND in $CONDITIONS; do
     #    지우지 않으면 뒤 조건일수록 구멍이 작아져 코퍼스 위치가 조건마다 달라진다.
     dc stop "$SVC_APP" >/dev/null 2>&1 || true
     psql_q "DELETE FROM document_chunks WHERE created_at > '$T0';" >/dev/null
-    psql_q "VACUUM (ANALYZE) document_chunks;" >/dev/null
+    psql_q "VACUUM ($VACUUM_OPTS) document_chunks;" >/dev/null
     say "  되돌림: $(chunks) 청크"
 done
 

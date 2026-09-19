@@ -91,7 +91,17 @@ public abstract class ContainerTestSupport {
                         // P0-7이 CI에 DB를 주지 않기로 한 두 이유 중 하나였고, 여기서 해소된다.
                         "-c", "lock_timeout=5s",
                         "-c", "deadlock_timeout=1s",
-                        "-c", "shared_preload_libraries=pg_stat_statements")
+                        // compose와 같이 둔다. 1초 넘는 락 대기가 컨테이너 로그에 남으므로
+                        // LockTimeoutVerificationTest가 멈추면 누가 쥐고 있었는지 로그로 안다.
+                        "-c", "log_lock_waits=on",
+                        "-c", "shared_preload_libraries=pg_stat_statements",
+                        // 운영(100, 기본값)과 다른 유일한 인자. 테스트는 스프링 컨텍스트가 하나가 아니다 --
+                        // @SpringBootTest/@DataJpaTest 변형마다 컨텍스트가 하나씩 뜨고(2026-09-16 기준 19개)
+                        // 각각 HikariCP 풀 10을 쥔 채 JVM이 끝날 때까지 캐시에 남는다. 19 x 10 > 100이라
+                        // 뒤에 뜨는 컨텍스트가 "FATAL: sorry, too many clients already"로 죽었다(PR #43,
+                        // dev 11e38b4에서 먼저). 운영은 컨텍스트가 하나라 이 문제가 없다 -- 풀 크기를 줄여
+                        // 맞추면 M1처럼 풀 고갈을 보는 테스트가 운영과 다른 조건이 된다.
+                        "-c", "max_connections=300")
                 // 스키마는 Flyway가 만든다. 컨테이너에 초기화 스크립트를 주면
                 // 마이그레이션이 검증되지 않으므로 일부러 비워 둔다.
                 .withReuse(false);

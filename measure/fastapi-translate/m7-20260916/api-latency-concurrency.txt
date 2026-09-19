@@ -1,0 +1,28 @@
+== 문장 길이: [9, 28, 23, 21, 19, 21, 13, 22, 18, 15] 자
+
+ko->en 직접 (순차)                     n=40   p50=   1868  p95=   4330  p99=   5683  max=   5683  mean=   2142 ms
+ko->en->vi 피벗 2호출 (순차)             n=20   p50=   3892  p95=   7155  p99=   7773  max=   7773  mean=   3868 ms
+
+== 동시성 (ko->en, 총 40건)
+동시 1                               n=40   p50=   1303  p95=   2451  p99=   3133  max=   3133  mean=   1429 ms
+                                   처리량 = 0.70 req/s
+동시 2                               n=40   p50=   7773  p95=  23925  p99=  50101  max=  50101  mean=  11118 ms
+                                   처리량 = 0.18 req/s
+동시 4                               n=40   p50=   5343  p95=  10124  p99=  11384  max=  11384  mean=   5830 ms
+                                   처리량 = 0.68 req/s
+동시 8                               n=40   p50=  15709  p95=  26917  p99=  27855  max=  27855  mean=  14974 ms
+                                   처리량 = 0.52 req/s
+
+== 표본 (ko->en->vi)
+  안전모 착용하세요
+    -> Wear your safety helmet.
+    -> Đội mũ bảo hiểm vào.
+  오늘 3번 도크 용접 작업 오전 10시에 시작합니다
+    -> Today's third dock welding starts at 10:00 a.m.
+    -> Hôm nay là chuyến bay thứ ba lúc 10 giờ sáng.
+  크레인 작업 중이니 아래로 지나가지 마세요
+    -> I'm working on the crane. Don't go down there.
+    -> Đừng xuống dưới đó.
+  점심 후에 블록 조립 이어서 하겠습니다
+    -> We'll do the block assembly after lunch.
+    -> Chúng ta sẽ tổ chức hội nghị sau bữa trưa.

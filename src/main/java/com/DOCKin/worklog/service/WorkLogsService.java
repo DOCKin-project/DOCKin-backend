@@ -4,6 +4,7 @@ import com.DOCKin.ai.service.SttService;
 import com.DOCKin.global.file.S3PresignedService;
 import com.DOCKin.worklog.dto.WorkLogsCreateRequestDto;
 import com.DOCKin.worklog.dto.WorkLogsUpdateRequestDto;
+import com.DOCKin.worklog.dto.WorkLogCursor;
 import com.DOCKin.worklog.dto.WorkLogDto;
 import com.DOCKin.global.error.BusinessException;
 import com.DOCKin.global.error.ErrorCode;
@@ -11,17 +12,20 @@ import com.DOCKin.worklog.model.Equipment;
 import com.DOCKin.member.model.Member;
 import com.DOCKin.worklog.model.WorkLogImage;
 import com.DOCKin.worklog.model.WorkLog;
+import com.DOCKin.worklog.model.WorkLogStatus;
 import com.DOCKin.worklog.repository.EquipmentRepository;
 import com.DOCKin.member.repository.MemberRepository;
 import com.DOCKin.worklog.repository.WorkLogRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -72,7 +76,7 @@ public class WorkLogsService {
 
     //stt용게시물 작성
     @Transactional
-    public WorkLogDto createSttWorklog(String userId, WorkLogsCreateRequestDto dto, MultipartFile file,String token, List<MultipartFile> images){
+    public WorkLogDto createSttWorklog(String userId, WorkLogsCreateRequestDto dto, MultipartFile file, List<MultipartFile> images){
         Member member = memberRepository.findByUserId(userId)
                 .orElseThrow(()->new BusinessException(ErrorCode.USER_NOT_FOUND));
 
@@ -84,7 +88,7 @@ public class WorkLogsService {
 
         if(file!=null && !file.isEmpty()){
             try{
-                var sttResponse = sttService.processStt(file,"trace-"+userId,token,"ko").block();
+                var sttResponse = sttService.processStt(file,"trace-"+userId,"ko").block();
 
                 log.info("STT Response 객체: {}", sttResponse);
 
@@ -122,22 +126,38 @@ public class WorkLogsService {
          return WorkLogDto.from(workLogsRepository.save(workLog));
     }
 
+    /**
+     * 세 목록이 공유하는 페이지 규칙 (DB-IMPROVEMENT-PLAN A4·D2).
+     *
+     * <p>정렬은 리포지토리 쿼리가 정한다({@code createdAt DESC, logId DESC}). 여기서 {@code Pageable}의
+     * sort를 떼는 것은 채팅 {@code getChatHistory}와 같은 이유다 — 클라이언트 sort가 커서와 어긋나면
+     * 페이지 경계에서 행이 겹치거나 빠진다. 커서가 있으면 page 번호도 무시한다: 커서가 곧 위치다.
+     */
+    private static Pageable sizeOnly(WorkLogCursor before, Pageable pageable) {
+        int page = before == null ? pageable.getPageNumber() : 0;
+        return PageRequest.of(page, pageable.getPageSize());
+    }
+
+    private static LocalDateTime beforeCreatedAt(WorkLogCursor c) { return c == null ? null : c.createdAt(); }
+    private static Long beforeLogId(WorkLogCursor c) { return c == null ? null : c.logId(); }
+
     //전체 게시물 조회
     @Transactional(readOnly = true)
-    public Page<WorkLogDto> readWorklog(String userId, Pageable pageable){
+    public Slice<WorkLogDto> readWorklog(String userId, WorkLogStatus status, WorkLogCursor before, Pageable pageable){
         Member member = memberRepository.findByUserId(userId)
                 .orElseThrow(()->new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         String area = member.getShipYardArea();
        List<Member> areaMembers= memberRepository.findByShipYardArea(area);
-       Page<WorkLog> logs = workLogsRepository.findByMemberIn(areaMembers,pageable);
+       Slice<WorkLog> logs = workLogsRepository.findByMemberIn(areaMembers, status,
+               beforeCreatedAt(before), beforeLogId(before), sizeOnly(before, pageable));
 
        return logs.map(WorkLogDto::from);
     }
 
     //다른 작업자의 작업일지 조회기능
     @Transactional(readOnly = true)
-    public Page<WorkLogDto> readOtherWorklog(String currentuserId, String targetUserId, Pageable pageable){
+    public Slice<WorkLogDto> readOtherWorklog(String currentuserId, String targetUserId, WorkLogCursor before, Pageable pageable){
         // 내 사원번호
         Member member = memberRepository.findByUserId(currentuserId)
                 .orElseThrow(()->new BusinessException(ErrorCode.USER_NOT_FOUND));
@@ -151,18 +171,20 @@ public class WorkLogsService {
             throw new BusinessException(ErrorCode.ACCESS_DENIED);
         }
 
-        Page<WorkLog> workLogs = workLogsRepository.findAllByMemberUserId(targetUserId,pageable);
+        Slice<WorkLog> workLogs = workLogsRepository.findAllByMemberUserId(targetUserId,
+                beforeCreatedAt(before), beforeLogId(before), sizeOnly(before, pageable));
 
         return workLogs.map(WorkLogDto::from);
     }
 
     //키워드로 게시물 조회 - 목록과 같은 범위(같은 구역)만 (P2-18-10)
     @Transactional(readOnly = true)
-    public Page<WorkLogDto> searchByKeyword(String userId, String keyword, Pageable pageable){
+    public Slice<WorkLogDto> searchByKeyword(String userId, String keyword, WorkLogCursor before, Pageable pageable){
         Member member = memberRepository.findByUserId(userId)
                 .orElseThrow(()->new BusinessException(ErrorCode.USER_NOT_FOUND));
         List<Member> areaMembers = memberRepository.findByShipYardArea(member.getShipYardArea());
-        Page<WorkLog> workLog = workLogsRepository.searchWorkLogs(keyword, areaMembers, pageable);
+        Slice<WorkLog> workLog = workLogsRepository.searchWorkLogs(keyword, areaMembers,
+                beforeCreatedAt(before), beforeLogId(before), sizeOnly(before, pageable));
         return workLog.map(WorkLogDto::from);
     }
 
@@ -179,6 +201,9 @@ public class WorkLogsService {
 
         if(dto.getTitle()!=null) logs.setTitle(dto.getTitle());
         if(dto.getLogText()!=null) logs.setLogText(dto.getLogText());
+        // 승인·반려 뒤에 고쳤으면 그 결정은 다른 내용에 대한 것이다. 검토를 처음부터 (P2-17-1).
+        // 제목·본문·사진·장비 중 무엇을 바꿨든 같다 — 무엇이 "내용"인지 가르기 시작하면 끝이 없다.
+        logs.resetReview();
         if(images !=null && !images.isEmpty()){
             logs.getImages().clear();
 

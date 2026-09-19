@@ -1,0 +1,5 @@
+ application_name |   state   | sync_state |    write_lag    |    flush_lag    |   replay_lag    
+------------------+-----------+------------+-----------------+-----------------+-----------------
+ walreceiver      | streaming | async      | 00:00:00.000316 | 00:00:00.021728 | 00:00:00.021941
+(1 row)
+

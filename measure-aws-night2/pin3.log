@@ -1,0 +1,16 @@
+09:53:43  감시 시작 — 2구간 진입을 기다린다
+09:56:13  밤이 2구간 전에 끝났다 — 할 일이 없다
+10:01:09  감시 시작 — 2구간 진입을 기다린다
+10:03:06  감시 시작 — 2구간 진입을 기다린다
+11:01:59  2구간 진입 감지 — 스윕 승자=2.0
+dockin-embedding
+11:01:59  고정 시도 1 — cgroup cpu.max=200000 100000
+dockin-embedding
+11:02:29  고정 시도 2 — cgroup cpu.max=200000 100000
+dockin-embedding
+11:02:59  고정 시도 3 — cgroup cpu.max=200000 100000
+dockin-embedding
+11:03:29  고정 시도 4 — cgroup cpu.max=200000 100000
+dockin-embedding
+11:03:59  고정 시도 5 — cgroup cpu.max=200000 100000
+11:04:29  기록: /home/ec2-user/DOCKin-spring/measure/night1-20260813T100306/seg2-cpus-override

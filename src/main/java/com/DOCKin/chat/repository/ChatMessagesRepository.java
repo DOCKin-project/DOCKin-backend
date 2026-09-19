@@ -16,34 +16,59 @@ public interface ChatMessagesRepository extends JpaRepository<ChatMessages, Long
     Optional<ChatMessages> findByChatRoomsRoomIdAndClientMsgId(Integer roomId, UUID clientMsgId);
 
 
-    // 1. 내역 조회 및 무한 스크롤
+    /**
+     * 1. 내역 조회 — 위로 스크롤. {@code beforeSeq}보다 <b>작은</b> 것을 최신순으로.
+     *
+     * <p>축이 {@code messageId}에서 {@code roomSeq}로 바뀌었다(ADR-0008 D7, V6). {@code IDENTITY}는 커밋 순서를
+     * 보장하지 않아 커서로 쓰면 뒤늦게 커밋된 작은 ID를 건너뛴다 — {@code MessageIdCommitOrderMeasurementTest}.
+     * 입장 전 메시지는 보이지 않는다({@code sentAt > joinedAt}) — 이것은 순서가 아니라 가시성 규칙이라 그대로다.
+     */
     @Query("SELECT m FROM ChatMessages m " +
             "WHERE m.chatRooms.roomId = :roomId " +
             "AND m.sentAt > :joinedAt " +
-            "AND (:lastMessageId IS NULL OR m.messageId < :lastMessageId) " +
-            "ORDER BY m.messageId DESC")
+            "AND (:beforeSeq IS NULL OR m.roomSeq < :beforeSeq) " +
+            "ORDER BY m.roomSeq DESC")
     Slice<ChatMessages> findChatHistory(
             @Param("roomId") Integer roomId,
             @Param("joinedAt") LocalDateTime joinedAt,
-            @Param("lastMessageId") Long lastMessageId,
+            @Param("beforeSeq") Long beforeSeq,
             Pageable pageable);
+
+    /**
+     * 1-1. 따라잡기 — 끊겼다 붙은 뒤. {@code afterSeq}보다 <b>큰</b> 것을 오래된 순으로 (ADR-0008 11-1).
+     *
+     * <p>내역 조회와 방향이 반대다. 클라이언트는 마지막으로 받은 {@code roomSeq}를 넣고, {@code hasNext}면 이어 부른다.
+     * {@code (room_id, room_seq)} 유니크 인덱스를 타므로 O(log n + k)다.
+     */
+    @Query("SELECT m FROM ChatMessages m " +
+            "WHERE m.chatRooms.roomId = :roomId " +
+            "AND m.sentAt > :joinedAt " +
+            "AND m.roomSeq > :afterSeq " +
+            "ORDER BY m.roomSeq ASC")
+    Slice<ChatMessages> findAfterSeq(
+            @Param("roomId") Integer roomId,
+            @Param("joinedAt") LocalDateTime joinedAt,
+            @Param("afterSeq") long afterSeq,
+            Pageable pageable);
+
+    /**
+     * 옛 커서({@code lastMessageId})를 새 축으로 옮길 때 한 번 쓴다.
+     * 방을 같이 본다 — 다른 방의 messageId가 오면 그 방의 roomSeq가 이 방의 커서가 되어 엉뚱한 자리부터 준다.
+     */
+    @Query("SELECT m.roomSeq FROM ChatMessages m WHERE m.chatRooms.roomId = :roomId AND m.messageId = :messageId")
+    Optional<Long> findRoomSeqByMessageId(@Param("roomId") Integer roomId, @Param("messageId") Long messageId);
 
     // 2. 키워드 검색
     @Query("SELECT m FROM ChatMessages m " +
             "WHERE m.chatRooms.roomId = :roomId " +
             "AND m.sentAt > :joinedAt " +
             "AND m.content LIKE %:keyword% " +
-            "ORDER BY m.messageId DESC")
+            "ORDER BY m.roomSeq DESC")
     Slice<ChatMessages> searchMessageByKeyword(
             @Param("roomId") Integer roomId,
             @Param("joinedAt") LocalDateTime joinedAt,
             @Param("keyword") String keyword,
             Pageable pageable);
 
-    // 3. 특정 방에서 특정 시간 이후에 생성된 메시지 개수 카운트
-    @Query("SELECT COUNT(m) FROM ChatMessages m "+
-    "WHERE m.chatRooms.roomId = :roomId "+
-    "AND m.sentAt > :lastReadTime")
-    long countByChatRoomsRoomIdAndCreatedAtAfter(@Param("roomId") Integer roomId,
-                                                  @Param("lastReadTime") LocalDateTime lastReadTime);
+    // 안읽음 COUNT는 없앴다. last_message_seq − last_read_seq로 뺀다(ChatJdbcRepository.roomsOf).
 }

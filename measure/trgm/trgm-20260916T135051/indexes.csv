@@ -1,0 +1,5 @@
+pass,state,index,build_kind,build_ms,size
+2,B,idx_trgm_work_logs_title,concurrently,23736,24 MB
+2,B,idx_trgm_work_logs_log_text,concurrently,180402,157 MB
+4,B,idx_trgm_work_logs_title,plain,11506,24 MB
+4,B,idx_trgm_work_logs_log_text,plain,89844,157 MB

@@ -27,6 +27,15 @@
         .other-msg { align-self: flex-start; }
         .new-msg-anim { animation: highlight 1.2s ease; }
         @keyframes highlight { 0% { background-color: #fff9c4; } 100% { background-color: white; } }
+        /* 전송 상태. 낙관적으로 그린 말풍선은 서버 전파가 돌아와 clientMsgId가 맞을 때 확정된다 */
+        .msg-pending .msg-bubble { opacity: 0.55; }
+        .msg-failed .msg-bubble { background-color: #ffe3e0 !important; color: #a4261a !important; border: 1px solid #f5b5ae !important; }
+        .msg-caught-up .msg-bubble { outline: 2px dashed #f0ad4e; }
+        .seq-tag { font-size: 0.65rem; color: #999; margin-left: 6px; }
+        #statusBar { font-size: 0.8rem; }
+        #statusBar .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
+        #eventLog { font-family: ui-monospace, Consolas, monospace; font-size: 0.72rem; max-height: 110px; overflow-y: auto; background: #212529; color: #cfd8dc; }
+        #eventLog div { white-space: nowrap; }
     </style>
 
     <script type="text/javascript">
@@ -44,39 +53,160 @@
         //
         // 8080 노출 자체는 compose에 그대로 두었다. 팀 프론트엔드가 그 주소를 쓰고 있어
         // 닫는 것은 별개 결정이다. 다만 이 페이지만은 고친 경로로 보내 실제로 돌게 한다.
-        const API_BASE_URL = "3.34.181.59";
-        const SERVER_URL = `http://${API_BASE_URL}`;
-        const SOCKET_URL = `ws://${API_BASE_URL}/ws`;
+        //
+        // 2026-09-14: 로컬에서도 돌리기 위해 호스트를 입력으로 뺐다. 기본값은 그대로 AWS다.
+        let API_BASE_URL = "3.34.181.59";
+        let SERVER_URL, SOCKET_URL;
 
+        // ------------------------------------------------------------------
+        // 재접속 따라잡기 (ADR-0008 D8, 11-1의 "클라이언트가 지킬 것 셋")
+        //
+        // 서버는 메시지마다 방 안의 순번 roomSeq를 준다. 클라이언트가 할 일은 셋이다.
+        //   1. 방마다 마지막으로 받은 roomSeq를 들고 있다가, 끊겼다 붙으면 GET .../messages/after?seq=
+        //      로 그 뒤를 받는다. hasNext면 이어 부른다. 시각이 아니라 순번이라 시계가 어긋나도 구멍이 없다.
+        //   2. 같은 메시지가 두 번 오면(따라잡기와 실시간 전파가 겹치는 순간) messageId로 걸러낸다.
+        //   3. 보낼 때 clientMsgId를 붙인다. 끊긴 사이 보낸 것은 재접속 뒤 같은 키로 다시 보내고,
+        //      서버는 같은 키를 한 번만 저장한다(D9). 그래서 "보냈나 안 보냈나" 모를 때 다시 보내도 된다.
+        //
+        // lastSeq는 localStorage에도 둔다 -- 새로고침으로도 이어진다. 키는 사용자별이다.
+        // ------------------------------------------------------------------
+        let lastSeq = {};                    // roomId -> 받은 최대 roomSeq
+        let seenMessageIds = new Set();      // 현재 방에서 그린 messageId (중복 제거)
+        let pending = new Map();             // clientMsgId -> { payload, sentAt }  전파가 돌아오지 않은 발신
+        let maxShownSeq = 0;                 // 현재 방에서 화면에 보인 최대 roomSeq (읽음 보고용)
+        let reportedSeq = 0;                 // 서버에 마지막으로 보고한 값
+        let readTimer = null;
+        let reconnectTimer = null;
+        let reconnectDelayMs = 1000;
+        let intentionalDisconnect = false;
+
+        function seqStorageKey() { return `dockin.chat.lastSeq.${API_BASE_URL}.${currentUserId}`; }
+        function loadLastSeq() {
+            try { lastSeq = JSON.parse(localStorage.getItem(seqStorageKey()) || '{}'); } catch (e) { lastSeq = {}; }
+        }
+        function bumpLastSeq(roomId, seq) {
+            if (seq == null) return;
+            if ((lastSeq[roomId] || 0) < seq) {
+                lastSeq[roomId] = seq;
+                try { localStorage.setItem(seqStorageKey(), JSON.stringify(lastSeq)); } catch (e) { /* 저장 못 해도 동작은 한다 */ }
+            }
+        }
+
+        // ---- 상태 표시 ----
+        function setStatus(state, text) {
+            const color = { on: '#28a745', off: '#dc3545', wait: '#ffc107' }[state] || '#adb5bd';
+            $('#statusDot').css('background-color', color);
+            $('#statusText').text(text);
+        }
+        function logEvent(text) {
+            const t = new Date().toLocaleTimeString('ko-KR', { hour12: false }) + '.' + String(Date.now() % 1000).padStart(3, '0');
+            const log = $('#eventLog');
+            log.append(`<div>[${t}] ${text}</div>`);
+            log.scrollTop(log[0].scrollHeight);
+            console.log('[chat]', text);
+        }
+        function refreshSeqLabel() {
+            if (!currentRoomId) return $('#seqLabel').text('');
+            $('#seqLabel').text(`방 ${currentRoomId} · 받은 seq ${lastSeq[currentRoomId] || 0} · 읽음 보고 ${reportedSeq}`);
+        }
+
+        // ------------------------------------------------------------------
+        // 연결
+        // ------------------------------------------------------------------
         function connect() {
             const jwtToken = $('#jwtToken').val();
             const inputUserId = $('#inputUserId').val();
+            const host = ($('#inputHost').val() || '').trim();
 
             if (!jwtToken || !inputUserId) return alert("사번과 토큰을 입력하세요.");
             currentUserId = inputUserId;
+            if (host) API_BASE_URL = host;
+            SERVER_URL = `http://${API_BASE_URL}`;
+            SOCKET_URL = `ws://${API_BASE_URL}/ws`;
+            loadLastSeq();
 
-            if (stompClient) stompClient.disconnect();
-
-            // Axios 기본 헤더에 토큰 설정
             axios.defaults.headers.common['Authorization'] = 'Bearer ' + jwtToken;
 
-            // STOMP 클라이언트 생성 및 연결
+            intentionalDisconnect = false;
+            reconnectDelayMs = 1000;
+            openSocket(false);
+        }
+
+        /**
+         * 소켓을 연다. 첫 연결과 재연결이 같은 함수다 -- 재연결이 "특별한 경로"가 되면 그 경로만 안 테스트된다.
+         * 연결되면 ① 개인 큐(방 목록·발신 실패) 구독 ② 보고 있던 방이 있으면 다시 구독하고 따라잡기
+         * ③ 전파가 안 돌아온 발신을 같은 clientMsgId로 재전송 ④ 방 목록 새로 받기(안읽음은 서버가 계산한다).
+         */
+        function openSocket(isReconnect) {
+            if (stompClient && stompClient.connected) { try { stompClient.disconnect(); } catch (e) {} }
+            subscriptions = {};
+            setStatus('wait', isReconnect ? `재접속 중… (${reconnectDelayMs / 1000}s 뒤 재시도)` : '접속 중…');
+
             stompClient = Stomp.client(SOCKET_URL);
-            stompClient.connect({'token': jwtToken}, () => {
-                alert(currentUserId + '님, AWS 채팅 서버 연결 성공!');
+            stompClient.debug = null; // 프레임 로그는 끈다. 아래 logEvent가 대신한다
+            // heartbeat 10초. 서버(WebSocketConfig)도 10초라 10,10으로 협상된다. Wi-Fi가 조용히 죽으면
+            // 3주기(30초) 안에 stomp.js가 소켓을 닫아 아래 onError로 떨어지고, 그때 재접속·따라잡기가 시작된다.
+            // 이게 없으면 TCP가 살아 있는 척하는 동안 아무 일도 안 일어난다.
+            stompClient.heartbeat.outgoing = 10000;
+            stompClient.heartbeat.incoming = 10000;
+
+            const jwtToken = $('#jwtToken').val();
+            stompClient.connect({ 'token': jwtToken }, (frame) => {
+                reconnectDelayMs = 1000;
+                const hb = frame && frame.headers ? frame.headers['heart-beat'] : '?';
+                setStatus('on', `${currentUserId} 연결됨 (heart-beat ${hb})`);
+                logEvent(isReconnect ? `재접속 성공` : `접속 성공 (heart-beat ${hb})`);
 
                 // 개인 알림 구독 (방 목록 업데이트 등)
-                stompClient.subscribe(`/sub/user/${currentUserId}/rooms`, (data) => {
+                subscriptions['rooms'] = stompClient.subscribe(`/sub/user/${currentUserId}/rooms`, (data) => {
                     handleListUpdate(JSON.parse(data.body));
                 });
+                // 발신 실패는 ERROR 프레임이 아니라 이 큐로 온다 -- 연결을 끊지 않고 그 한 건만 실패시킨다(ADR-0008 3절)
+                subscriptions['errors'] = stompClient.subscribe(`/sub/user/${currentUserId}/errors`, (data) => {
+                    handleSendError(JSON.parse(data.body));
+                });
 
+                if (currentRoomId) {
+                    subscribeRoom(currentRoomId);
+                    catchUp(currentRoomId).then(() => resendPending());
+                } else {
+                    resendPending();
+                }
                 loadMyRooms();
             }, (e) => {
-                console.error(e);
-                alert('연결 실패! AWS 보안그룹이나 토큰을 확인하세요.');
+                // 끊김. stomp.js는 CONNECT 실패도, 연결 중 소켓 종료도 여기로 보낸다.
+                const reason = (e && e.headers && e.headers.message) || (e && e.reason) || (typeof e === 'string' ? e : '소켓 종료');
+                setStatus('off', `끊김: ${reason}`);
+                if (intentionalDisconnect) { logEvent(`연결 종료 (의도)`); return; }
+                logEvent(`끊김 — ${reason}. ${reconnectDelayMs / 1000}s 뒤 재접속`);
+                scheduleReconnect();
             });
         }
 
+        function scheduleReconnect() {
+            clearTimeout(reconnectTimer);
+            reconnectTimer = setTimeout(() => openSocket(true), reconnectDelayMs);
+            reconnectDelayMs = Math.min(reconnectDelayMs * 2, 30000); // 1, 2, 4, … 30초. 서버가 죽었을 때 떼로 두드리지 않는다
+        }
+
+        /** 데모용. 소켓만 끊는다 -- Wi-Fi가 끊긴 것과 클라이언트 입장에서 같다. DISCONNECT 프레임을 보내지 않으므로 서버는 heartbeat로 안다. */
+        function simulateDrop() {
+            if (!stompClient || !stompClient.ws) return alert('연결돼 있지 않습니다.');
+            logEvent(`--- 소켓 강제 종료 (끊김 시뮬레이션). 이 사이에 다른 사용자가 보낸 메시지가 따라잡기 대상이다`);
+            stompClient.ws.close();
+        }
+
+        function disconnectIntentionally() {
+            intentionalDisconnect = true;
+            clearTimeout(reconnectTimer);
+            flushRead();
+            if (stompClient) stompClient.disconnect();
+            setStatus('off', '연결 해제');
+        }
+
+        // ------------------------------------------------------------------
+        // 방
+        // ------------------------------------------------------------------
         function handleListUpdate(msg) {
             const roomId = msg.roomId;
             const content = msg.content;
@@ -128,67 +258,226 @@
                 }).catch(e => console.error("목록 로딩 실패:", e));
         }
 
+        function subscribeRoom(roomId) {
+            if (subscriptions['chat']) { try { subscriptions['chat'].unsubscribe(); } catch (e) {} }
+            subscriptions['chat'] = stompClient.subscribe(`/sub/chat/room/${roomId}`, (data) => {
+                displayMessage(JSON.parse(data.body), { live: true });
+            });
+        }
+
+        /**
+         * 방에 들어간다. 순서가 중요하다 -- 구독을 먼저 걸고 이력을 받는다. 반대로 하면 이력 조회와
+         * 구독 사이에 도착한 메시지가 빠진다. 같은 순서에서 겹치는 것(이력에도 있고 전파로도 온 것)은
+         * messageId 중복 제거가 걸러낸다. 빠지는 것보다 겹치는 것이 다루기 쉽다.
+         */
         function enterRoom(roomId, roomName) {
-            if (subscriptions['chat']) subscriptions['chat'].unsubscribe();
+            if (currentRoomId && currentRoomId !== roomId) flushRead(); // 나가는 방의 읽음을 먼저 보고한다
 
             currentRoomId = roomId;
+            seenMessageIds = new Set();
+            maxShownSeq = 0;
+            reportedSeq = 0;
             $('.room-item').removeClass('active');
             $(`#room-${roomId}`).addClass('active').find('.unread-badge').text('0').hide();
 
             $('#currentRoomTitle').text(roomName);
             $('#messageBox').empty();
+            refreshSeqLabel();
 
+            // 상세 조회는 이제 읽음을 바꾸지 않는다(ADR-0008 11-1). 멤버 확인 겸 방 정보만 받는다.
             axios.get(`${SERVER_URL}/api/chat/room/${roomId}`)
                 .then(() => {
-                    subscriptions['chat'] = stompClient.subscribe(`/sub/chat/room/${roomId}`, (data) => {
-                        displayMessage(JSON.parse(data.body));
-                    });
-                    loadMessages(roomId);
-                });
+                    // A를 누르고 바로 B를 누르면 A의 응답이 늦게 와서 A를 다시 구독한다 -- B의 전파가 끊긴다.
+                    if (currentRoomId !== roomId) return;
+                    subscribeRoom(roomId);
+                    if (stompClient && stompClient.connected) resendPending(); // 이 방 것으로 남아 있던 오프라인 발신
+                    return loadMessages(roomId);
+                })
+                .catch(e => logEvent(`방 ${roomId} 진입 실패: ${e.response ? e.response.status : e.message}`));
         }
 
+        /** 최신 페이지를 받아 그린다. 커서는 beforeSeq(roomSeq DESC). */
         function loadMessages(roomId) {
-            axios.get(`${SERVER_URL}/api/chat/room/${roomId}/messages`)
+            return axios.get(`${SERVER_URL}/api/chat/room/${roomId}/messages`)
                 .then(res => {
                     const history = res.data.content;
-                    if(history) history.reverse().forEach(msg => displayMessage(msg));
+                    if (history) history.reverse().forEach(msg => displayMessage(msg, { live: false }));
+                    // 이력을 받은 시점의 최대 seq가 이 방의 커서가 된다
+                    logEvent(`방 ${roomId} 이력 ${history ? history.length : 0}건, 커서 seq=${lastSeq[roomId] || 0}`);
                 });
         }
 
+        /**
+         * 따라잡기. 마지막으로 받은 roomSeq 뒤를 전부 받는다. 서버는 roomSeq > seq ASC로 최대 limit건과
+         * hasNext를 주고, hasNext면 마지막 seq로 다시 부른다. 그리는 건 displayMessage와 같은 경로라
+         * 실시간 전파와 겹쳐 와도 messageId로 한 번만 그려진다.
+         */
+        function catchUp(roomId) {
+            const from = lastSeq[roomId] || 0;
+            let got = 0, dup = 0, pages = 0;
+            const page = (seq) => axios.get(`${SERVER_URL}/api/chat/room/${roomId}/messages/after`, { params: { seq: seq, limit: 100 } })
+                .then(res => {
+                    pages++;
+                    const rows = res.data.content || [];
+                    rows.forEach(msg => {
+                        const drawn = displayMessage(msg, { live: false, caughtUp: true });
+                        if (drawn) got++; else dup++;
+                    });
+                    const last = rows.length ? rows[rows.length - 1].roomSeq : seq;
+                    // Slice의 JSON에는 hasNext가 없다 — Jackson은 is*/get*만 내보내서 last(= !hasNext)가 온다.
+                    // M6 테스트가 확인했다. hasNext를 보면 이어 부르기가 영원히 안 돈다.
+                    const hasNext = res.data.hasNext === true || res.data.last === false;
+                    if (hasNext && rows.length) return page(last);
+                    logEvent(`따라잡기 완료 — seq ${from} 이후 ${got}건 받음 (중복 걸러냄 ${dup}, 페이지 ${pages}). 이제 seq=${lastSeq[roomId] || 0}`);
+                    refreshSeqLabel();
+                });
+            return page(from).catch(e => logEvent(`따라잡기 실패: ${e.response ? e.response.status : e.message}`));
+        }
+
+        // ------------------------------------------------------------------
+        // 메시지
+        // ------------------------------------------------------------------
         function sendMessage() {
             const content = $('#messageInput').val();
             if (!currentRoomId || !content.trim()) return;
 
+            // 재전송 키. 서버는 같은 방·같은 키를 한 번만 저장한다(D9). 끊긴 사이 보낸 것도 이 키로 다시 보낸다.
+            const clientMsgId = (crypto.randomUUID ? crypto.randomUUID() : fallbackUuid());
             const payload = {
                 roomId: currentRoomId,
-                senderId: currentUserId,
+                senderId: currentUserId,   // 서버가 세션 사용자로 덮어쓴다. 옛 필드라 남겨둔다
                 content: content,
-                messageType: "TEXT"
+                messageType: "TEXT",
+                clientMsgId: clientMsgId
             };
-
-            // 발행 경로 확인: /pub/chat/message
-            stompClient.send("/pub/chat/message", {}, JSON.stringify(payload));
+            pending.set(clientMsgId, { payload: payload, sentAt: Date.now() });
+            renderPending(payload);
             $('#messageInput').val('');
+
+            if (stompClient && stompClient.connected) {
+                stompClient.send("/pub/chat/message", {}, JSON.stringify(payload));
+            } else {
+                logEvent(`오프라인 — ${clientMsgId.slice(0, 8)} 는 재접속 뒤 보낸다`);
+            }
         }
 
-        function displayMessage(data) {
-            const isMe = data.senderId == currentUserId;
-            const containerClass = isMe ? 'my-msg' : 'other-msg';
-            const bubbleClass = isMe ? 'bg-primary text-white' : 'bg-white text-dark border';
+        /** 끊긴 사이 또는 전파가 돌아오지 않은 발신을 같은 키로 다시 보낸다. 서버가 멱등이라 두 번 저장되지 않는다. */
+        function resendPending() {
+            if (!pending.size) return;
+            let n = 0;
+            pending.forEach((p) => {
+                if (p.payload.roomId !== currentRoomId) return; // 다른 방 것은 그 방에 들어갈 때
+                stompClient.send("/pub/chat/message", {}, JSON.stringify(p.payload));
+                n++;
+            });
+            if (n) logEvent(`재전송 ${n}건 (같은 clientMsgId — 서버가 한 번만 저장한다)`);
+        }
 
+        function handleSendError(err) {
+            const key = err.clientMsgId;
+            logEvent(`발신 실패 ${key ? key.slice(0, 8) : '?'} — ${err.code} ${err.message}`);
+            const elem = key ? $(`#pending-${key}`) : $();
+            if (elem.length) {
+                elem.removeClass('msg-pending').addClass('msg-failed');
+                elem.find('.msg-state').html(`실패 · ${err.message} <a href="#" onclick="retry('${key}');return false;">다시 보내기</a>`);
+            }
+        }
+
+        function retry(clientMsgId) {
+            const p = pending.get(clientMsgId);
+            if (!p) return;
+            $(`#pending-${clientMsgId}`).removeClass('msg-failed').addClass('msg-pending').find('.msg-state').text('전송 중…');
+            stompClient.send("/pub/chat/message", {}, JSON.stringify(p.payload));
+        }
+
+        function renderPending(payload) {
             const html = `
-                <div class="msg-container ${containerClass}">
-                    <div class="small text-muted mb-1 px-2">${isMe ? '나' : data.senderId}</div>
-                    <div class="msg-bubble ${bubbleClass} shadow-sm">
-                        ${data.content}
-                    </div>
+                <div class="msg-container my-msg msg-pending" id="pending-${payload.clientMsgId}">
+                    <div class="small text-muted mb-1 px-2">나 <span class="seq-tag msg-state">전송 중…</span></div>
+                    <div class="msg-bubble bg-primary text-white shadow-sm">${escapeHtml(payload.content)}</div>
                 </div>`;
             $('#messageBox').append(html);
             $('#messageBox').scrollTop($('#messageBox')[0].scrollHeight);
         }
 
+        /**
+         * 메시지를 그린다. 이력·따라잡기·실시간 전파가 전부 여기로 온다.
+         * @returns {boolean} 새로 그렸으면 true, 이미 있던 것(중복)이면 false
+         */
+        function displayMessage(data, opts) {
+            opts = opts || {};
+            if (data.roomId !== currentRoomId) return false;
+            if (data.messageId != null) {
+                if (seenMessageIds.has(data.messageId)) return false; // 중복 -- 따라잡기와 전파가 겹친 것
+                seenMessageIds.add(data.messageId);
+            }
+            bumpLastSeq(data.roomId, data.roomSeq);
+
+            const isMe = data.senderId == currentUserId;
+
+            // 내가 보낸 것이 돌아왔다: 낙관적으로 그린 말풍선을 확정한다. 서버가 준 seq를 달아준다.
+            if (isMe && data.clientMsgId && pending.has(data.clientMsgId)) {
+                pending.delete(data.clientMsgId);
+                const elem = $(`#pending-${data.clientMsgId}`);
+                if (elem.length) {
+                    elem.removeClass('msg-pending msg-failed').attr('id', `msg-${data.messageId}`);
+                    elem.find('.msg-state').text(`seq ${data.roomSeq}`);
+                    noteShown(data.roomSeq);
+                    return true;
+                }
+            }
+
+            const containerClass = isMe ? 'my-msg' : 'other-msg';
+            const bubbleClass = isMe ? 'bg-primary text-white' : 'bg-white text-dark border';
+            const extra = opts.caughtUp ? ' msg-caught-up' : '';
+            const tag = data.roomSeq != null ? `<span class="seq-tag">seq ${data.roomSeq}${opts.caughtUp ? ' · 따라잡음' : ''}</span>` : '';
+
+            const html = `
+                <div class="msg-container ${containerClass}${extra}" id="msg-${data.messageId}">
+                    <div class="small text-muted mb-1 px-2">${isMe ? '나' : data.senderId}${tag}</div>
+                    <div class="msg-bubble ${bubbleClass} shadow-sm">
+                        ${escapeHtml(data.content)}
+                    </div>
+                </div>`;
+            $('#messageBox').append(html);
+            $('#messageBox').scrollTop($('#messageBox')[0].scrollHeight);
+            noteShown(data.roomSeq);
+            if (opts.live) refreshSeqLabel();
+            return true;
+        }
+
+        // ------------------------------------------------------------------
+        // 읽음 보고 -- 메시지마다가 아니라 2초 디바운스, 그리고 방을 나갈 때·창을 닫을 때.
+        // 서버는 GREATEST로 올리기만 하므로 늦게 도착한 작은 값이 큰 값을 되돌리지 않는다(11-1).
+        // ------------------------------------------------------------------
+        function noteShown(seq) {
+            if (seq == null || seq <= maxShownSeq) return;
+            maxShownSeq = seq;
+            clearTimeout(readTimer);
+            readTimer = setTimeout(flushRead, 2000);
+        }
+        function flushRead() {
+            clearTimeout(readTimer);
+            if (!currentRoomId || maxShownSeq <= reportedSeq) return;
+            const roomId = currentRoomId, upTo = maxShownSeq;
+            axios.patch(`${SERVER_URL}/api/chat/room/${roomId}/read`, { upToSeq: upTo })
+                .then(() => { if (roomId === currentRoomId) { reportedSeq = upTo; refreshSeqLabel(); } logEvent(`읽음 보고 방 ${roomId} upToSeq=${upTo}`); })
+                .catch(e => logEvent(`읽음 보고 실패: ${e.response ? e.response.status : e.message}`));
+        }
+
+        function escapeHtml(s) {
+            return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+        function fallbackUuid() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+                const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+            });
+        }
+
         $(function() {
             $('#messageInput').keypress(e => { if(e.which == 13) sendMessage(); });
+            $(window).on('beforeunload', flushRead);
+            setStatus('none', '미접속');
         });
     </script>
 </head>
@@ -209,8 +498,15 @@
                         <div class="col-8">
                             <input type="password" id="jwtToken" class="form-control form-control-sm" placeholder="JWT Token">
                         </div>
+                        <div class="col-12">
+                            <input type="text" id="inputHost" class="form-control form-control-sm" placeholder="호스트 (기본 3.34.181.59, 로컬은 localhost:8080)">
+                        </div>
                     </div>
-                    <button class="btn btn-dark btn-sm w-100 mt-2 fw-bold" onclick="connect()">접속</button>
+                    <div class="d-flex gap-2 mt-2">
+                        <button class="btn btn-dark btn-sm flex-grow-1 fw-bold" onclick="connect()">접속</button>
+                        <button class="btn btn-outline-warning btn-sm" title="소켓만 끊는다 — Wi-Fi 끊김과 같다. 자동 재접속 뒤 따라잡기가 도는지 본다" onclick="simulateDrop()"><i class="bi bi-wifi-off"></i> 끊김</button>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="disconnectIntentionally()">해제</button>
+                    </div>
                 </div>
                 <div id="roomList" class="overflow-auto flex-grow-1"></div>
             </div>
@@ -218,8 +514,13 @@
             <div class="col-md-8 d-flex flex-column" style="height: 800px; background: #f1f3f5;">
                 <div class="p-3 border-bottom bg-white shadow-sm d-flex justify-content-between align-items-center">
                     <h6 id="currentRoomTitle" class="mb-0 fw-bold text-dark">채팅방을 선택하세요</h6>
+                    <span id="seqLabel" class="small text-muted"></span>
+                </div>
+                <div id="statusBar" class="px-3 py-1 bg-white border-bottom d-flex align-items-center">
+                    <span class="dot" id="statusDot" style="background:#adb5bd"></span><span id="statusText">미접속</span>
                 </div>
                 <div id="messageBox" class="flex-grow-1 p-4"></div>
+                <div id="eventLog" class="px-3 py-2"></div>
                 <div class="p-3 bg-white border-top">
                     <div class="input-group shadow-sm">
                         <input type="text" id="messageInput" class="form-control border-0 bg-light" placeholder="메시지를 입력하세요..." style="padding: 12px;">

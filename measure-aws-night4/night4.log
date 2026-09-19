@@ -1,0 +1,179 @@
+16:31:34  == 1/2 E1 확인 — 19만 청크 자리의 무릎
+16:31:34  ==   구멍 6,000원본을 판다 (E1은 색인이 진행 중이어야 창을 연다)
+time="2026-08-13T16:31:34Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T16:31:35Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T16:32:44Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+16:32:44  ==   구멍 완료: 190860 청크
+16:32:44  E1 스윕 시작 — run=20260813T163244
+16:32:45  호스트 8 vCPU / TEI 외 컨테이너 상한 합 3.00
+16:32:45  → 포화 경계: TEI 5.0 이상은 스케줄러가 실효 상한을 정한다 (계획 2-1)
+time="2026-08-13T16:32:45Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T16:32:45Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T16:32:45Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T16:32:45Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+16:32:46  환경 기록 → measure/e1-20260813T163244/env.md
+16:32:46  ───── 조건 1: TEI cpus=1.5
+time="2026-08-13T16:32:47Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T16:32:47Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+16:32:48    P = 190860 청크 (마커 2026-08-13 22:44:43.949639)
+16:32:48    적용된 상한(cgroup): 1.50
+time="2026-08-13T16:32:48Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+ Container dockin-db  Waiting
+ Container dockin-db  Healthy
+ Container dockin-app-1  Starting
+ Container dockin-app-1  Started
+16:32:49    건너뛰기 구간 대기 중 (임베딩 시작을 기다린다)
+time="2026-08-13T16:32:49Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T16:32:59Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T16:33:09Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T16:33:19Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T16:33:30Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T16:33:40Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T16:33:50Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+16:33:51    임베딩 시작 확인 (60초 소요) — 창을 연다
+time="2026-08-13T16:33:51Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T16:38:51Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+16:38:52    창 300s — 청크 +1685 / 원본 +1400 → 청크당 178.0ms / 원본당 214.3ms
+16:38:52    스로틀: TEI 69.2% / app 0.2% / db 0.0%
+16:38:52    TEI 내부: 큐 60.9% / 추론 38.9% / 토큰화 0.2% / 추론배치 평균 3.48
+time="2026-08-13T16:38:55Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T16:38:56Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T16:40:07Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+16:40:07    슬라이스 1801행 삭제 → 코퍼스 190860 청크
+16:40:07  ───── 조건 2: TEI cpus=2.0
+time="2026-08-13T16:40:07Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T16:40:07Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+16:40:07    P = 190860 청크 (마커 2026-08-13 22:44:43.949639)
+16:40:07    적용된 상한(cgroup): 2.00
+time="2026-08-13T16:40:07Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+ Container dockin-db  Waiting
+ Container dockin-db  Healthy
+ Container dockin-app-1  Starting
+ Container dockin-app-1  Started
+16:40:08    건너뛰기 구간 대기 중 (임베딩 시작을 기다린다)
+time="2026-08-13T16:40:08Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T16:40:19Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T16:40:29Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T16:40:39Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T16:40:49Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T16:41:01Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+16:41:01    임베딩 시작 확인 (50초 소요) — 창을 연다
+time="2026-08-13T16:41:01Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T16:46:02Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+16:46:03    창 300s — 청크 +1928 / 원본 +1600 → 청크당 155.6ms / 원본당 187.5ms
+16:46:03    스로틀: TEI 11.1% / app 0.4% / db 0.0%
+16:46:03    TEI 내부: 큐 61.0% / 추론 38.8% / 토큰화 0.2% / 추론배치 평균 3.49
+time="2026-08-13T16:46:06Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T16:46:07Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T16:47:24Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+16:47:25    슬라이스 2044행 삭제 → 코퍼스 190860 청크
+16:47:25  ───── 조건 3: TEI cpus=3.0
+time="2026-08-13T16:47:25Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T16:47:25Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+16:47:25    P = 190860 청크 (마커 2026-08-13 22:44:43.949639)
+16:47:25    적용된 상한(cgroup): 3.00
+time="2026-08-13T16:47:25Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+ Container dockin-db  Waiting
+ Container dockin-db  Healthy
+ Container dockin-app-1  Starting
+ Container dockin-app-1  Started
+16:47:26    건너뛰기 구간 대기 중 (임베딩 시작을 기다린다)
+time="2026-08-13T16:47:26Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T16:47:36Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T16:47:46Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T16:47:57Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T16:48:08Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T16:48:19Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+16:48:20    임베딩 시작 확인 (50초 소요) — 창을 연다
+time="2026-08-13T16:48:20Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T16:53:21Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+16:53:21    창 300s — 청크 +1928 / 원본 +1600 → 청크당 155.6ms / 원본당 187.5ms
+16:53:21    스로틀: TEI 0.0% / app 0.2% / db 0.0%
+16:53:21    TEI 내부: 큐 61.2% / 추론 38.6% / 토큰화 0.2% / 추론배치 평균 3.51
+time="2026-08-13T16:53:24Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T16:53:25Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T16:54:40Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+16:54:41    슬라이스 2044행 삭제 → 코퍼스 190860 청크
+16:54:41  ───── 조건 4: TEI cpus=1.5
+time="2026-08-13T16:54:41Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T16:54:41Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+16:54:41    P = 190860 청크 (마커 2026-08-13 22:44:43.949639)
+16:54:41    적용된 상한(cgroup): 1.50
+time="2026-08-13T16:54:41Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+ Container dockin-db  Waiting
+ Container dockin-db  Healthy
+ Container dockin-app-1  Starting
+ Container dockin-app-1  Started
+16:54:42    건너뛰기 구간 대기 중 (임베딩 시작을 기다린다)
+time="2026-08-13T16:54:42Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T16:54:52Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T16:55:03Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T16:55:14Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T16:55:25Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T16:55:36Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T16:55:47Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+16:55:48    임베딩 시작 확인 (60초 소요) — 창을 연다
+time="2026-08-13T16:55:48Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T17:00:48Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+17:00:49    창 300s — 청크 +1685 / 원본 +1400 → 청크당 178.0ms / 원본당 214.3ms
+17:00:49    스로틀: TEI 67.5% / app 0.2% / db 0.0%
+17:00:49    TEI 내부: 큐 60.6% / 추론 39.2% / 토큰화 0.2% / 추론배치 평균 3.51
+time="2026-08-13T17:00:52Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T17:00:52Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T17:02:08Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+17:02:08    슬라이스 1922행 삭제 → 코퍼스 190860 청크
+17:02:08  TEI 상한을 2.0 로 복원 (cgroup: 2.00)
+
+## E1 결과 — 20260813T163244
+
+| # | 요청 | 적용 | 초과 | 청크 | 원본 | 청크당 ms | 원본당 ms | TEI 막힘 | app | db |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | 1.5 | 1.50 | no | 1685 | 1400 | 178.0 | 214.3 | 69.2% | 0.2% | 0.0% |
+| 2 | 2.0 | 2.00 | no | 1928 | 1600 | 155.6 | 187.5 | 11.1% | 0.4% | 0.0% |
+| 3 | 3.0 | 3.00 | no | 1928 | 1600 | 155.6 | 187.5 | 0.0% | 0.2% | 0.0% |
+| 4 | 1.5 | 1.50 | no | 1685 | 1400 | 178.0 | 214.3 | 67.5% | 0.2% | 0.0% |
+
+통제군 — 첫 2.0과 마지막 2.0의 원본당 ms가 다르면 스윕이 드리프트한 것이다.
+17:02:08  완료. CSV=measure/e1-20260813T163244/e1-sweep.csv  환경=measure/e1-20260813T163244/env.md
+17:02:08  == 2/2 E8 후속 2 — 장시간 연속 실행이 원인인가
+time="2026-08-13T17:02:09Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T17:02:09Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+17:02:09  시작 코퍼스 190860 청크 / TEI 상한 2.0 고정
+awk: cmd. line:1: /^Mem:/{print $2\"GB\"}
+awk: cmd. line:1:                 ^ backslash not last character on line
+awk: cmd. line:1: /^Mem:/{print $2\"GB\"}
+awk: cmd. line:1:                 ^ syntax error
+17:02:10  구멍 파기 — 가장 오래된 60000 원본의 청크를 지운다 (몇 분 걸린다)
+time="2026-08-13T17:02:10Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T17:02:12Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T17:03:26Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+17:03:26  ◆ 구멍 완료
+time="2026-08-13T17:03:26Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+17:03:26  구멍: 190860 → 118931 청크
+17:03:26  샘플러 시작 (pid 26279)
+time="2026-08-13T17:03:27Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+17:03:27  ◆ 앱 기동(1회차) — 연속 색인 시작
+time="2026-08-13T17:03:27Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T17:04:28Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T17:05:28Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T17:06:28Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T17:07:29Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T17:08:30Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T17:09:30Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T17:10:31Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T17:11:32Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T17:12:32Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T17:13:33Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T17:14:33Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T17:15:34Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2026-08-13T17:15:35Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+17:15:35  ◆ 구멍이 메워졌다(정체 6분)
+time="2026-08-13T17:15:35Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+17:15:35  최종 코퍼스 120975 청크 (시작 190860)
+17:15:35  샘플러 정지(TERM) — 요약을 찍게 둔다
+17:15:43  완료. 사건 표=measure/e8cause-20260813T170208/marks.csv  표본=measure/e8-20260813T170326/e8-samples.csv
+t_epoch     t_iso                 event                            chunks
+1786640606  2026-08-13T17:03:26Z  구멍 완료                        118931
+1786640607  2026-08-13T17:03:27Z  앱 기동(1회차) — 연속 색인 시작  118931
+1786641335  2026-08-13T17:15:35Z  구멍이 메워졌다(정체 6분)        120975
+17:15:43  == ALL DONE

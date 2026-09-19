@@ -1,0 +1,8 @@
+10:01:09  밤 1 시작 — run=20260813T100109
+10:01:09  앱과 nginx를 뺀 스택을 올린다
+time="2026-08-13T10:01:10Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+10:01:10  work_logs 165016 행
+time="2026-08-13T10:01:10Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+10:01:10  청크 29999 개가 남아 있다 — 비우고 시작한다
+time="2026-08-13T10:01:10Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+ERROR:  canceling statement due to lock timeout

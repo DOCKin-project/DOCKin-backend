@@ -211,4 +211,64 @@ class AttendanceServiceTest {
 
         assertEquals(ErrorCode.ATTENDANCE_ALREADY_CHECKED_OUT, ex.getErrorCode());
     }
+
+    // ── 개인 근태 조회 — 기간 (P2-20-6) ─────────────────────────────────────────
+    // 고정 시계는 2026-07-10. 상한 없이 전부 주던 것을 기간으로 바꿨으므로 "무엇을 기본으로 삼고 무엇을 거부하는가"를 박아 둔다.
+
+    @Test
+    @DisplayName("from·to 없음 - 오늘까지 최근 31일. 전부 주던 예전 동작이 아니다")
+    void records_noRange_defaultsToLast31DaysEndingToday() {
+        AttendanceService service = serviceWithClock(fixedClockAt(9, 0));
+        when(memberRepository.findByUserId(USER_ID)).thenReturn(Optional.of(member()));
+        when(attendanceRepository.findByMemberAndWorkDateBetweenOrderByWorkDateDesc(any(), any(), any()))
+                .thenReturn(java.util.List.of());
+
+        service.getMyAttendanceRecords(USER_ID, null, null);
+
+        verify(attendanceRepository).findByMemberAndWorkDateBetweenOrderByWorkDateDesc(
+                any(), eq(LocalDate.of(2026, 6, 10)), eq(LocalDate.of(2026, 7, 10)));
+        verify(attendanceRepository, never()).findByMemberAndWorkDateBetween(any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("to만 없음 - 오늘까지. from은 그대로")
+    void records_toMissing_endsToday() {
+        AttendanceService service = serviceWithClock(fixedClockAt(9, 0));
+        when(memberRepository.findByUserId(USER_ID)).thenReturn(Optional.of(member()));
+        when(attendanceRepository.findByMemberAndWorkDateBetweenOrderByWorkDateDesc(any(), any(), any()))
+                .thenReturn(java.util.List.of());
+
+        service.getMyAttendanceRecords(USER_ID, LocalDate.of(2026, 7, 1), null);
+
+        verify(attendanceRepository).findByMemberAndWorkDateBetweenOrderByWorkDateDesc(
+                any(), eq(LocalDate.of(2026, 7, 1)), eq(LocalDate.of(2026, 7, 10)));
+    }
+
+    @Test
+    @DisplayName("from > to - INVALID_DATE_RANGE. 회원 조회보다 먼저 거부한다")
+    void records_fromAfterTo_throws() {
+        AttendanceService service = serviceWithClock(fixedClockAt(9, 0));
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> service.getMyAttendanceRecords(USER_ID, LocalDate.of(2026, 7, 11), LocalDate.of(2026, 7, 10)));
+
+        assertEquals(ErrorCode.INVALID_DATE_RANGE, ex.getErrorCode());
+        verify(memberRepository, never()).findByUserId(any());
+    }
+
+    @Test
+    @DisplayName("366일은 되고 367일은 ATTENDANCE_RANGE_TOO_LONG - 상한이 없으면 from=2000-01-01로 전부 다시 열린다")
+    void records_rangeCap_is366DaysInclusive() {
+        AttendanceService service = serviceWithClock(fixedClockAt(9, 0));
+        when(memberRepository.findByUserId(USER_ID)).thenReturn(Optional.of(member()));
+        when(attendanceRepository.findByMemberAndWorkDateBetweenOrderByWorkDateDesc(any(), any(), any()))
+                .thenReturn(java.util.List.of());
+        LocalDate to = LocalDate.of(2026, 7, 10);
+
+        service.getMyAttendanceRecords(USER_ID, to.minusDays(365), to); // 366일 포함 — 통과
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> service.getMyAttendanceRecords(USER_ID, to.minusDays(366), to)); // 367일
+        assertEquals(ErrorCode.ATTENDANCE_RANGE_TOO_LONG, ex.getErrorCode());
+    }
 }
