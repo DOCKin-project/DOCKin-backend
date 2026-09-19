@@ -253,6 +253,7 @@ DOCKin-spring/
 | `GET` | `/api/checklist/user/checklists?equipmentId=&phase=` | [옛 경로] 템플릿 + 내 열린 회차 상태 (`myOpenRunId`) |
 | `PATCH` | `/api/checklist/user/checklists/{checklistId}/items/{itemId}/check` | [옛 경로] 내 열린 회차에 기록, 없으면 연다 |
 | `POST` · `PUT` · `DELETE` | `/api/checklist/admin/checklists...` | 체크리스트 관리 (관리자) |
+| `GET` | `/api/checklist/admin/runs?date=&equipmentId=&userId=&status=` · `/runs/{runId}` | 하루치 점검 회차 목록(장비·점검자·상태 필터) · 상세 (관리자) |
 
 </details>
 

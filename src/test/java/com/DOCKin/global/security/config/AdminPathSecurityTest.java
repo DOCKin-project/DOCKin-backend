@@ -33,6 +33,7 @@ class AdminPathSecurityTest extends ContainerTestSupport {
     /** 서비스에 ADMIN 검사가 없던 읽기 경로. 경로 규칙이 없으면 일반 사용자에게 200이 나간다. */
     private static final String[] PREVIOUSLY_OPEN = {
             "/api/checklist/admin/checklists/1",
+            "/api/checklist/admin/runs/1",
     };
 
     @Autowired

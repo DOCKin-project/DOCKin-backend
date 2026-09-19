@@ -9,6 +9,7 @@ import com.DOCKin.checklist.model.ChecklistItem;
 import com.DOCKin.checklist.model.ChecklistPhase;
 import com.DOCKin.checklist.model.ChecklistResult;
 import com.DOCKin.checklist.model.ChecklistRun;
+import com.DOCKin.checklist.model.ChecklistRunOutcome;
 import com.DOCKin.checklist.repository.ChecklistItemRepository;
 import com.DOCKin.checklist.repository.ChecklistRepository;
 import com.DOCKin.checklist.repository.ChecklistResultRepository;
@@ -16,6 +17,7 @@ import com.DOCKin.checklist.repository.ChecklistRunRepository;
 import com.DOCKin.global.error.BusinessException;
 import com.DOCKin.global.error.ErrorCode;
 import com.DOCKin.member.model.Member;
+import com.DOCKin.member.model.UserRole;
 import com.DOCKin.member.repository.MemberRepository;
 import com.DOCKin.worklog.repository.EquipmentRepository;
 import lombok.RequiredArgsConstructor;
@@ -122,6 +124,28 @@ public class ChecklistRunService {
         return checklistRunRepository
                 .findByMember_UserIdAndStartedAtBetweenOrderByStartedAtDesc(
                         userId, from.atStartOfDay(), to.plusDays(1).atStartOfDay().minusNanos(1), pageable)
+                .map(run -> ChecklistRunResponseDto.of(run, List.of()));
+    }
+
+    /** 관리자 목록의 상태 필터. IN_PROGRESS는 컬럼이 아니라 "닫히지 않음"이라 결말(outcome)과 축이 다르다 — 여기서 둘로 푼다. */
+    public enum RunStatusFilter { IN_PROGRESS, COMPLETED, ABANDONED }
+
+    /**
+     * 관리자 목록 — 하루치. ADMIN 검사는 {@code /api/*}{@code /admin/**} 경로 규칙과 여기, 두 겹(P2-18-6).
+     * 항목은 싣지 않는다 — 회차 하나를 열어 보는 것은 {@link #get}이다.
+     */
+    public Slice<ChecklistRunResponseDto> adminRuns(String adminUserId, LocalDate date, Long equipmentId, String userId,
+                                                    RunStatusFilter status, Pageable pageable) {
+        Member admin = requireMember(adminUserId);
+        if (admin.getRole() != UserRole.ADMIN) {
+            throw new BusinessException(ErrorCode.CHECKLIST_AUTHOR);
+        }
+        boolean openOnly = status == RunStatusFilter.IN_PROGRESS;
+        ChecklistRunOutcome outcome = status == RunStatusFilter.COMPLETED ? ChecklistRunOutcome.COMPLETED
+                : status == RunStatusFilter.ABANDONED ? ChecklistRunOutcome.ABANDONED
+                : null;
+        return checklistRunRepository
+                .findForAdmin(date.atStartOfDay(), date.plusDays(1).atStartOfDay(), equipmentId, userId, openOnly, outcome, pageable)
                 .map(run -> ChecklistRunResponseDto.of(run, List.of()));
     }
 
