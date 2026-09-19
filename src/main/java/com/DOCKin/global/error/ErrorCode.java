@@ -35,6 +35,7 @@ public enum ErrorCode {
     //SafetyCourse
     SAFETYCOURSE_NOT_FOUND(404, "S001", "존재하지 않는 안전교육입니다."),
     SAFETYCOURSE_AUTHOR(403, "S002", "안전교육 수정 권한이 없습니다."),
+    SAFETYCOURSE_HAS_ENROLLMENTS(409, "S003", "이미 수강 기록이 있어 삭제할 수 없습니다."),
 
 
     // Attendance
@@ -42,6 +43,7 @@ public enum ErrorCode {
     ATTENDANCE_NOT_CHECKED_IN(404, "AT002", "오늘 출근 기록이 존재하지 않습니다."),
     ATTENDANCE_ALREADY_CHECKED_OUT(409, "AT003", "이미 오늘 퇴근 처리가 완료되었습니다."),
     ATTENDANCE_RANGE_TOO_LONG(400, "AT004", "근태 조회 기간은 최대 366일입니다."),
+    WORK_CALENDAR_NOT_FOUND(404, "AT005", "캘린더에 등록되지 않은 날짜입니다."),
 
     // Checklist
     CHECKLIST_NOT_FOUND(404, "CK001", "존재하지 않는 체크리스트입니다."),
@@ -58,12 +60,16 @@ public enum ErrorCode {
     ABSENCE_REQUEST_AUTHOR(403, "AB003", "휴가 신청 처리 권한이 없습니다."),
     INSUFFICIENT_LEAVE_DAYS(409, "AB004", "잔여 연차가 부족합니다."),
     INVALID_DATE_RANGE(400, "AB005", "종료일이 시작일보다 빠를 수 없습니다."),
+    ABSENCE_NO_WORKING_DAYS(400, "AB006", "신청 기간에 근무일이 없습니다."),
+    ABSENCE_PERIOD_OVERLAP(409, "AB007", "같은 기간에 이미 신청되었거나 승인된 휴가가 있습니다."),
 
     // Worklog
     LOG_NOT_FOUND(404, "W001", "존재하지 않는 작업 일지입니다."),
     NOT_LOG_AUTHOR(403, "W002", "해당 일지의 작성자가 아닙니다."),
     NOT_COMMENT_AUTHOR(403, "W003", "해당 댓글의 권한이 아닙니다."),
     COMMENT_NOT_FOUND(404, "W004", "존재하지 않는 댓글입니다."),
+    LOG_ALREADY_REVIEWED(409, "W005", "이미 검토된 작업 일지입니다."),
+    NOT_LOG_REVIEWER(403, "W006", "작업 일지 검토 권한이 없습니다."),
 
     // FastApi
     CHATBOT_NOT_WORK(404, "F001", "챗봇이 에러가 발생했습니다."),

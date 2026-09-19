@@ -270,6 +270,29 @@ private float[] embedding;
 - **배치가 `Clock`을 주입받는다.** `LocalDate.now()`를 직접 부르면 "어제"가 실행 시각에 따라 달라져
   테스트가 불가능하다. 근태는 날짜 경계가 곧 비즈니스 규칙이다.
 
+### P2-4-1 — 연차는 근무일만, 겹치는 휴가는 세 겹으로 (#104, 2026-09-19 완료 — 브랜치 `fix/leave-days-working-days`)
+
+P2-4가 "이미 구현돼 있었다"고 적은 차감이 `DAYS.between + 1`이었다 — 월~일 신청이면 7일. P2-6-1로 캘린더 API가 생겨
+`isWorkingDay`가 쓸 만해진 뒤에야 보였다. 그리고 겹침 검사가 없어 같은 기간을 두 번 내고 둘 다 승인되면 근태는
+기존 행을 건너뛰어 조용히 넘어가고 **잔액만 두 번 깎였다.** 결정은 물어서 정했다.
+
+| 결정 | 골랐다 | 버린 것 |
+|---|---|---|
+| 일수 | **기간 중 근무일 수** — `WorkCalendarService.workingDaysBetween`(캘린더는 기간 한 번만 읽음). 결근 배치·하루 집계와 한 기준 | 달력 일수 |
+| 근무일 0(토~일만) | **신청 시점 400** `AB006`. 차감할 게 없는 연차는 실수라 바로 알려야 고친다. 병가는 차감이 없어 안 본다 | 0일 차감으로 승인 |
+| 겹침 | **신청 시**(PENDING·APPROVED와 겹치면 409 `AB007`) + **승인 시**(APPROVED와 재검사 — 겹치는 PENDING 둘 중 하나만 승인) + **DB**(V11 `EXCLUDE USING gist`, APPROVED끼리, btree_gist) | 승인 시만 / 서비스만 |
+| 승인 근태 행 | **근무일만** — 일수와 같은 기준. 주말 VACATION 행은 하루 집계 vacation을 쉬는 날에 부풀린다 | 기간 전체 |
+| 소급 정정 | **안 한다.** 이미 승인된 건의 잔액은 그대로 | 재계산 |
+| PENDING 취소·`CHECK(end >= start)` | **별도 PR** — 주제가 다르다 | 이번에 같이 |
+
+V11이 기존 데이터에 겹치는 APPROVED가 있으면 실패한다 — 잔액이 두 번 깎인 데이터라 조용히 넘기지 않고, DO 블록이 어떤 행인지
+NOTICE로 먼저 찍는다. 시드는 안 겹친다(7/13~15 하나). EXCLUDE 위반은 서비스 검사가 먼저 잡으므로 실제로는 안 닿고,
+닿으면 `DataIntegrityViolationException` → 500(#108의 핸들러 부재).
+
+검증: 단위(`AbsenceRequestServiceTest` +5, `AbsenceApprovedListenerTest` +1, `WorkCalendarServiceTest` +2) +
+컨테이너 `AbsenceWorkingDaysAndOverlapTest` 3 — 월~일 승인이 잔액 15→10·근태 5행, 겹치는 신청 409, 우회해 넣은 PENDING도 승인에서 409,
+토~일 연차 400·병가 OK, V11이 APPROVED 겹침을 `exclusion_violation`으로 거부(REJECTED·PENDING·인접은 통과).
+
 ### P2-6 — 근무일 캘린더
 
 **1단계 완료.** `work_calendar` 테이블 + `WorkCalendarService`로 결근 배치가 근무일을 판단한다.
@@ -285,6 +308,36 @@ private float[] embedding;
 **남은 것 — 등록 수단이 없다.** `WorkCalendarService.register()` / `registerAll()`은 있으나
 **HTTP 엔드포인트가 없어 현재는 SQL로만 넣을 수 있다.** 관리자 컨트롤러가 필요하고,
 공공데이터 API(한국천문연구원 특일 정보) 연동으로 법정공휴일을 연 1회 자동 적재하면 손이 덜 간다.
+
+#### P2-6-1 — 등록 API (2026-09-18 설계, 2026-09-19 구현 — 브랜치 `feat/work-calendar-api`)
+
+P2-17-1·P2-17-4를 닫고 이어서 잡았다. 결정은 물어서 정했다.
+
+| 경로 | 누가 | 동작 |
+|---|---|---|
+| `GET /api/attendance/calendar?year=` | **로그인한 전원** | 등록된 날만 날짜순. `year` 생략은 올해. 근로자 앱도 공휴일을 보여주고 민감한 것이 없다 |
+| `PUT /api/attendance/admin/calendar/{date}` `{dayType, description}` | ADMIN | upsert — 날짜가 PK라 등록과 갱신이 같은 요청. 두 번 보내도 같다. 주말에 `WORKDAY`면 특근일 |
+| `PUT /api/attendance/admin/calendar` `{entries:[{date, dayType, description}]}` | ADMIN | 연초 공휴일 목록 일괄 upsert. 순서대로라 같은 날짜가 두 번이면 뒤가 이긴다. 최대 366 |
+| `DELETE /api/attendance/admin/calendar/{date}` | ADMIN | **넣는다.** 그 날은 기본 규칙으로 돌아간다. 없으면 404(`AT005`). 서비스에 삭제가 없어 새로 만든다 |
+
+| 결정 | 골랐다 | 버린 것 |
+|---|---|---|
+| 조회 범위 | 로그인한 전원 (`/api/attendance/calendar`) | 관리자만 |
+| 삭제 | 넣는다 — `WEEKEND`/`WORKDAY`로 덮어쓴 날은 여전히 "등록된 날"이라 기본 규칙이 바뀌어도(주 4일제 등) 따라가지 않는다. 잘못 등록한 날을 되돌리는 길은 삭제뿐 | 덮어쓰기로 충분 |
+| 공공데이터 API 연동 | **다음 PR.** data.go.kr 인증키가 필요하고 외부 호출·장애 경로가 별개 | 이번에 같이 |
+| 응답 | `WorkCalendarDto {date, dayType, description, workingDay}` — `workingDay`는 `WORKDAY`만 true | — |
+| 검증 | `dayType @NotNull`, `description @Size(100)`(컬럼 길이 — DB 500 전에 400), 일괄은 `@NotEmpty @Size(366) @Valid` | — |
+
+구현 메모: `registerAll`은 `int` 대신 저장된 `List<WorkCalendar>`를 돌려주도록 바꾼다(응답에 쓰려고). `year` 기본값은 컨트롤러에서
+`Year.now(clock)` — 서비스에 `Clock`을 넣으면 `WorkCalendarServiceTest`의 `@InjectMocks`가 null을 넣는다. 컨트롤러는
+`WorkCalendarController`(조회)·`WorkCalendarAdminController`(등록·삭제) 둘로 — #78의 `AttendanceAdminController`와 충돌을 피한다.
+테스트는 단위(삭제 404·삭제 후 `isWorkingDay`가 기본 규칙) + 컨테이너(USER가 GET 200·PUT 403, 일괄 upsert가 행에 반영, 삭제 뒤 기본 규칙 복귀).
+
+구현(2026-09-19): 위 그대로. `WorkCalendarController`(GET)·`WorkCalendarAdminController`(PUT 단건·일괄, DELETE 204),
+DTO 셋(`WorkCalendarDto`·`WorkCalendarUpsertRequestDto`·`WorkCalendarBulkUpsertRequestDto`), `ErrorCode.WORK_CALENDAR_NOT_FOUND`(AT005),
+`WorkCalendarService.delete`. 일괄 upsert의 "뒤가 이긴다"는 첫 `save`가 영속성 컨텍스트에 남아 두 번째 `findById`가 그것을 찾는 데
+기댄다 — 컨테이너 테스트(`WorkCalendarApiTest`, 6개)가 같은 날짜 둘을 보내 행 하나·뒤 값인지 본다. 단위 4개 추가(`WorkCalendarServiceTest`).
+공공데이터 연동은 그대로 다음 PR.
 
 **2·3단계는 P3(근무 정책 엔진)** — 교대조별 휴무 패턴, 개인별 예외.
 이 캘린더는 **전사 공통 휴무일만** 다룬다.
@@ -428,6 +481,22 @@ ADR-0003 3-3은 동기화 방식을 **배치 vs CDC(Debezium)** 둘로 놓고 �
 
 이벤트 방식은 P2-1/P2-2에서 휴가 승인 → 근태 반영에 이미 쓴 패턴이고 인프라가 늘지 않는다.
 CDC의 장점은 "애플리케이션을 우회한 변경도 잡는다"인데, **작업일지는 API로만 들어온다.**
+
+### P2-8-7 — 원본 삭제 시 번역·청크 정리 (#101, 2026-09-19 완료 — 브랜치 `fix/worklog-delete-cascade`)
+
+번역이 한 번이라도 된 작업일지는 `DELETE /api/work-logs/{id}`가 **500**이었다 — `work_log_translations.log_id`가 NO ACTION.
+그리고 V1이 "원본 삭제 시 청크 정리는 IndexingService 책임"이라고 적었는데 코드로는 없어 지운 일지가 RAG 근거로 계속 검색됐다.
+
+| 결정 | 골랐다 | 버린 것 |
+|---|---|---|
+| 번역 | **V12 `ON DELETE CASCADE`** — V6 `chat_message_translations`와 같은 결정. FK 이름이 Hibernate 자동 생성이라 카탈로그에서 찾아 지운다 | 엔티티 cascade(번역을 하나씩 읽어 지울 이유가 없다) |
+| 청크 | **같은 트랜잭션에서**(사용자 결정) — `ChunkIndexWriter.deleteForWorkLog(logId, translationIds)`, 벌크 JPQL. 번역 청크의 `source_id`는 `translation_id`라 번역이 cascade로 사라지기 전에 id를 받아 둔다 | 이벤트·다음 색인 배치가 정리 |
+| S3 이미지 객체 | **안 건드림** — 이슈가 별도라 했다. `deleteObject` 호출이 코드베이스에 없다 | — |
+
+알고 넘어간 것: 새벽 색인 배치와 겹치면(배치가 번역 행을 읽은 뒤 지우고, 배치가 청크를 넣으면) 고아 청크가 남는다. 창이 몇 초고
+재색인은 원본 없는 청크를 정리하지 않으므로, 실제로 남으면 그때 배치에 고아 정리를 넣는다.
+검증은 `WorkLogDeleteCascadeTest` 2 — 번역 2·청크 3·댓글이 있는 일지를 지우면 전부 사라지고 남의 일지·청크·같은 id의 다른 종류(SAFETY_COURSE) 청크는 남는다,
+작성자가 아니면 403이고 청크도 그대로.
 
 ---
 
@@ -658,6 +727,7 @@ P0-9에서 **"값을 에코하면 비밀번호 같은 입력이 응답과 로그
 |---|---|
 | **트랜잭션 경계** | 메시지 저장 트랜잭션 안에서 FCM을 호출하면 **롤백돼도 알림은 이미 나간다.** `@TransactionalEventListener(AFTER_COMMIT)`이 답이다 |
 | 중복 알림 | WebSocket으로 이미 받았는데 FCM도 오면 두 번. 접속 상태는 **`Presence`**(Redis, 2026-09-16)가 든다 — `offlineAmong(방 멤버)`가 푸시 대상이다. 전 `StompHandler` static Map은 DISCONNECT 프레임만 잡아 네트워크가 끊긴 세션이 영원히 "접속 중"이었고, 인스턴스별이라 다중 인스턴스에서 틀렸다. 지금은 `SessionDisconnectEvent`(전송 끊김에도 옴) + TTL 30초 |
+| **커밋됐는데 알림이 안 나가는 쪽 — outbox** (2026-09-19) | 위 줄은 "롤백됐는데 나간다"만 막는다. 반대 — 커밋 직후 앱이 죽거나 FCM이 5xx면 그 알림은 영영 안 간다. 채팅 전파는 같은 AFTER_COMMIT인데도 outbox가 없어도 되는 게, 유실돼도 재접속 따라잡기(`room_seq`, ADR-0008 D7)가 DB에서 다시 읽기 때문이다. **푸시 대상은 앱을 내린 사람이라 그 복구 경로가 없다.** 이 저장소에서 outbox가 처음 값을 내는 자리 — `notification_outbox(id, payload, status, attempts)` + 폴링 재시도 워커를 FCM과 같이 설계한다. 그 전까지는 이 저장소에 outbox가 없는 게 맞다(경계를 넘는 부수효과 셋 중 유실되면 안 되는 게 아직 없다) |
 | 토큰 생명주기 | 기기별 토큰, 만료·갱신, 로그아웃 시 삭제, 다기기 |
 | 도메인 연결 | `WorkShift` → 야간 근무자에게 새벽 알림을 보낼 것인가. `language_code` → 알림 본문 다국어 |
 
@@ -1773,10 +1843,10 @@ Redis에 해당하는 것이 없었다. `application.properties`의 기본값이
 
 | # | 항목 | PPT 근거 | 없는 것 | 서버 규모 | 순위 |
 |---|---|---|---|---|---|
-| P2-17-1 | **작업일지 승인·반려 루프** | 15P 화면에 `승인됨`/`반려됨` 배지, "승인·반려 실시간 반영" | `WorkLog`에 상태 컬럼이 없다. 관리자 코멘트(`worklog/comments`)만 있다 | 컬럼 1개(V6) + `PATCH .../approve`·`reject` 2개. `AbsenceAdminController`의 승인·거절 패턴을 그대로 옮긴다 | ★ |
+| ~~P2-17-1~~ | ~~**작업일지 승인·반려 루프**~~ **완료**(2026-09-18) — 아래 별도 | 15P 화면에 `승인됨`/`반려됨` 배지, "승인·반려 실시간 반영" | `WorkLog`에 상태 컬럼이 없다. 관리자 코멘트(`worklog/comments`)만 있다 | V8 컬럼 4개 + `PATCH /api/work-logs/admin/{id}/approve`·`reject` + `GET /api/work-logs?status=`. `AbsenceAdminController`의 승인·거절 패턴을 옮겼다 | ★ |
 | P2-17-2 | **공지 발송 (일반·긴급)** | 17P "공지발송(FCM) — 일반공지: FCM 전송 / 긴급공지: 강제 팝업" | `notice`·`announce` 코드 0건. 조선소·근무조 단위 대상 지정도 없다 | 테이블 1개 + 관리자 발송 API + 근무자 조회 API. **긴급 공지는 P2-12-6(FCM) 없이는 반쪽**이라 그쪽과 묶는다 | ★ |
 | P2-17-3 | **FCM** | 17P 긴급 팝업, 12P "감시/알림 FCM" | 의존성·코드 모두 없음 | **P2-12-6이 이미 다뤘다.** 채팅과 공지 둘 다 여기에 걸리므로 P2-17-2보다 먼저 결정해야 한다 | ★ |
-| P2-17-4 | **관리자 대시보드 집계** | 17P "출근 124명 / 퇴근 52명 / 휴가 8명 / 병결 2명" | `GET /api/attendance`는 **본인 기록만** 돌려준다. 관리자용 일별 인원 집계가 없다 | 조선소·날짜 기준 COUNT 4개짜리 조회 1개. P3의 "월말 집계"와 다르다 — 이건 오늘 하루의 숫자다 | ★ |
+| ~~P2-17-4~~ | ~~**관리자 대시보드 집계**~~ **완료**(2026-09-18) — 아래 별도 | 17P "출근 124명 / 퇴근 52명 / 휴가 8명 / 병결 2명" | `GET /api/attendance`는 **본인 기록만** 돌려준다. 관리자용 일별 인원 집계가 없다 | `GET /api/attendance/admin/daily-summary?date=&shipYardArea=&workShift=` — 쿼리 하나. P3의 "월말 집계"와 다르다 — 이건 오늘 하루의 숫자다 | ★ |
 | P2-17-5 | 채팅 자동 번역 | 19P "외국어 채팅 시 자동 번역을 지원" | `ChatService`에 번역 호출 없음 | **P2-8-5(`ChatMessages` 언어 컬럼)가 선결.** 메시지 저장 경로에서 FastAPI 번역을 부르면 저장 지연이 번역 지연에 묶이므로, 원문을 먼저 저장하고 번역은 비동기로 붙이는 편이 맞다. **결정은 ADR-0008에 있다.** 2026-09-16 M7(ADR-0008 7-3): 팀원 FastAPI 번역이 로컬 i3 2초, AWS 8 vCPU 0.28초·4.6 req/s, **CTranslate2 int8로 바꾸면 34ms·31 req/s**. 선결은 팀원 서버의 엔진 교체·`title` 선택화·ko↔vi 직접 모델. 그때까지는 수동 번역 | ☆ |
 | P2-17-6 | 안전 서류 전자서명 | 19P 근로자 "안전 서류 서명: 현장 안전 관련 문서 즉시 전자 서명" | 서명 기록 테이블·API 없음 | 서명 이미지는 S3(`S3Processor` 재사용), 기록은 테이블 1개. 법적 효력 요건은 범위 밖 | ☆ |
 | P2-17-7 | 날씨 위젯 | 15P·17P 홈 화면의 조선소별 날씨 | 없음 | 외부 API 프록시 1개. **앱이 직접 호출해도 되는 기능**이라 서버 필요성이 낮다 | P3 |
@@ -1786,6 +1856,47 @@ Redis에 해당하는 것이 없었다. `application.properties`의 기본값이
 > **왜 이 순서인가.** 1~4는 각각 반나절 안쪽이고 기존 패턴(휴가 승인, S3, 페이징)을 옮기면 끝난다.
 > 5·6은 선결 항목이나 범위 밖 문제가 얹힌다. 7~9는 **클라이언트 없이 서버만으로는 완주를 확인할
 > 수 없어** P3다 — 이 백로그의 목표가 "완주"인 이상, 확인할 수 없는 항목을 앞에 둘 이유가 없다.
+
+### P2-17-1 — 휴가 승인 패턴을 옮기되, 한 곳이 다르다 (완료, 2026-09-18)
+
+`V8__work_logs_review_status.sql`이 `status`(기본 `PENDING`)·`reviewed_by`·`reviewed_at`·`review_comment`를 붙인다 —
+`absence_requests`의 넷과 같은 꼴이고 이름만 "처리"가 아니라 "검토"다. 상수 DEFAULT라 PG11+에서 메타데이터만 바뀌어
+100만 행 벤치 테이블에서도 순간이다(`online-ddl.md` 2절). 기존 행은 전부 `PENDING` — 아무도 검토한 적 없으니 그게 사실이다.
+`status` 인덱스는 없다(구역 멤버 → 필터, 느리면 부분 인덱스를 재서). `reviewed_by`는 users FK라 V4 원칙대로 인덱스.
+
+| 결정 | 골랐다 | 버린 것 |
+|---|---|---|
+| **작성자가 수정하면** | **`PENDING`으로 되돌리고 검토 필드 셋을 비운다.** 반려 → 고침 → 재승인이 이 기능의 존재 이유고, 승인된 일지를 고쳤는데 배지가 그대로면 승인이 거짓이 된다. 제목·본문·사진·장비 중 무엇을 바꿨든 같다 — "내용"의 경계를 가르기 시작하면 끝이 없다 | 승인된 일지 수정 금지(409) — 더 센 제품 결정. 필요하면 나중에 |
+| 미승인 큐 | 별도 admin 목록이 아니라 **기존 `GET /api/work-logs`에 `?status=`** — 관리자가 볼 범위도 결국 같은 구역이고, 근로자의 "내 반려 건"도 같은 필터다 | `GET /api/work-logs/admin?status=` — 쿼리 하나를 두 벌로 |
+| 두 번째 결정 | `PENDING`이 아니면 409 `W005` — 휴가의 `AB002`와 같다. 되돌아온 뒤에는 다시 결정할 수 있다 | — |
+| 이벤트 | **안 낸다.** 휴가는 근태가 같은 트랜잭션에서 받아야 했지만 여기는 받을 쪽이 없다. FCM이 오면 `AFTER_COMMIT`으로 붙는 자리(P2-12-6) | — |
+| 관리자 구역 | 안 본다 — 휴가와 같다 | — |
+
+`WorkLogReviewService`(승인·반려)와 `WorkLogsService.updateWorklog`(되돌림)로 갈랐다 — 전자는 관리자 경로, 후자는 작성자 경로.
+`?status=`의 null 바인딩은 `beforeCreatedAt`이 겪은 "could not determine data type"이 enum에서도 나서 `CAST(:status AS String)`.
+`WorkLogReviewServiceTest`(규칙)·`WorkLogReviewFlowTest`(필터 null 바인딩·수정 시 행에서 지워지는지·`/api/*/admin/**` 경로 규칙 403).
+
+> 알고 넘어간 것. `@LastModifiedDate`라 승인만 해도 `updated_at`이 바뀐다 — 색인은 `logId` 커서라 무관하지만, P2-19-1(번역 무효화)이
+> `updated_at`을 신호로 잡으면 승인이 번역을 헛되이 무효화하니 그때 `status` 변경은 제외해야 한다. 승인된 일지를 작성자가 삭제할 수
+> 있는 것, ADMIN이 자기 일지를 승인할 수 있는 것은 휴가와 같은 구멍이라 그대로 뒀다.
+
+### P2-17-4 — 인원부터 세야 "124명 중"이 된다 (완료, 2026-09-18)
+
+`AttendanceRepository.summarizeByAreaAndDate` — **`Member`에서 출발해 그날의 `Attendance`를 왼쪽 조인**한 집계 쿼리 하나.
+`Attendance`에서 출발하면 안 찍은 사람이 사라지고, 인원을 따로 세면 쿼리가 둘이 된다. 조인 조건 `(user_id, work_date)`는
+`uk_attendance_user_workdate`가 그대로 받는다. 응답은 `headcount / clockedIn / clockedOut / late / vacation / sick / absent` —
+PPT의 넷에 인원(분모)·지각·결근을 더했다. `absent`는 자정 배치가 채우므로 오늘은 항상 0이고 어제부터 의미가 있다.
+
+| 결정 | 골랐다 | 버린 것 |
+|---|---|---|
+| 응답 단위 | **구역 하나.** `shipYardArea` 생략은 관리자 자신의 구역, 다른 구역도 볼 수 있다(휴가 승인이 구역을 안 보는 것과 같다) | 전 구역 목록(`GROUP BY`) — 본부 관리자 화면이 생기면 |
+| `headcount` | **구역 전원, ADMIN 포함** — 관리자도 출근을 찍으므로 분모에 든다 | `role = USER`만 |
+| 근무조 | `?workShift=` 선택 필터. 3교대 현장이라 "오전조 출근"이 실제 질문이다 | — |
+| 날짜 | 미래도 막지 않는다 — 휴가 승인이 그 기간의 `VACATION` 행을 미리 만드므로(P2-1) 내일의 휴가 인원은 이미 의미가 있다 | — |
+
+`List<Object[]>`로 받는 이유: `Object[]`로 선언하면 Spring Data가 행을 다시 배열로 감싸 `ClassCastException`이 난다(실측).
+`AttendanceDailySummaryTest`가 6명 표본(출근만 2·출퇴근 1·휴가 1·병결 1·행 없음 1 + 다른 구역·전날)으로 일곱 숫자, 근무조 필터,
+빈 구역의 SUM NULL → 0, 경로 규칙 401/403을 본다.
 
 > **PPT와 실제가 어긋난 곳 (구현 항목이 아니라 문서 수정 항목).** 11P의 DB가 MySQL로 그려져 있으나
 > 실제는 PostgreSQL + pgvector + Redis다(2026-08-04 이관, ADR-0006). 12P·18P의 챗봇은 "FAQ 컨텍스트 주입"
@@ -1816,6 +1927,20 @@ Redis에 해당하는 것이 없었다. `application.properties`의 기본값이
 
 > **괜찮았던 것.** SQL 인젝션(전부 바인딩), CORS(완료), actuator(health만), bcrypt, 시크릿(커밋 이력 없음),
 > 작업일지·댓글·채팅방 REST의 소유자 검사, HTTP JWT 로깅(S4 완료).
+
+### P2-18-10-1 — 단건 logId 경로가 그 경계를 우회했다 (#99, 2026-09-19 완료 — 브랜치 `fix/worklog-visibility-translate-comment`)
+
+P2-18-10이 목록·타인 조회·검색을 "같은 구역"으로 맞췄는데, 단건 `logId`를 받는 경로는 그대로였다 — 번역은 `findById`,
+댓글 조회는 `existsById`, 댓글 작성은 `findById` + ADMIN만. 인증만 있으면 아무 logId로 남의 구역 일지를 번역문으로 받아 보고,
+남의 구역 일지의 관리자 코멘트를 읽고, 다른 구역 관리자가 코멘트를 달 수 있었다. 위 "괜찮았던 것"의 "댓글의 소유자 검사"는
+수정·삭제(작성자 본인)만 맞았다.
+
+가시성 검사를 `WorkLogsService.requireVisible(logId, userId)` 한 곳으로 — 같은 구역이면 그 일지, 아니면 403, 없으면 404.
+ADMIN 예외 없음(목록 경로에도 없다). 번역·댓글 조회·댓글 작성이 이걸 거친다. 자기 트랜잭션인 이유는 #93 —
+`saveTranslateLog`의 `NOT_SUPPORTED` 안에서 `findByUserId`를 바로 부르면 FastAPI 대기 중 커넥션을 쥔다.
+`TranslateTransactionBoundaryTest`가 여전히 0인 것으로 확인. 덤: 번역 요청의 `source`가 "ko" 하드코딩이라 죽은 값이었다 →
+요청 값을 쓰고 비면 ko(사용자 결정). 검증은 `WorkLogVisibilityTest` 3 — 번역은 FastAPI 없이도 403이 먼저(검사가 호출 앞),
+댓글은 다른 구역 관리자 403·같은 구역 OK.
 
 ---
 
@@ -1878,6 +2003,35 @@ chatbot 100은 가정(주 1회)의 500배라 상한 노릇을 못 했다.
 > 검증은 호스트 6379가 다른 프로젝트에 잡혀 있어 포트 매핑만 뺀 override로 `-p aiq-verify`에 띄워서 했고, 끝나고 `down -v`로 지웠다.
 >
 > 장애 정책 셋(락 열림·블랙리스트 닫힘·한도 열림)과 고르는 질문은 **ADR-0009**에 모았다.
+
+### P2-19-1 — 작업일지 번역 캐시 (2026-09-19, 완료 — 브랜치 `feat/worklog-translate-cache`)
+
+위 표가 보인 것 — 같은 일지·같은 언어를 다시 요청해도 FastAPI에 다시 갔다. `work_log_translations`에 저장은 했지만
+읽는 곳이 RAG 색인뿐이었다. 이제 저장된 행의 원문이 지금 원문과 같으면 그 행을 돌려주고, 다르면 재번역해 덮어쓴다.
+결정은 물어서 정했다.
+
+| 결정 | 골랐다 | 버린 것 |
+|---|---|---|
+| 낡은 번역 판단 | **저장된 원문(`original_title`·`original_text`)과 지금 원문 비교** (`TranslateLog.matchesOriginal`). 표에 번역 당시 원문이 그대로 있어 정확하고 마이그레이션이 없다 | `work_logs.updated_at` 비교 — 승인·반려(#76)로 status만 바뀌어도 갱신돼 쓸데없이 재번역된다 |
+| 히트 때 한도 | **안 깎는다.** 한도는 FastAPI 비용을 막는 것이고 히트는 FastAPI에 안 간다. `AiQuota.consume`이 컨트롤러에서 서비스의 FastAPI 호출 직전으로 옮겨 갔다 — "호출 전 INCR, 실패도 1"은 그대로 | 깎는다 — 위 표의 "20명 일지를 매일 다 읽는 근로자=20"이 히트에도 소모돼 상한 유도 근거가 어긋난다 |
+| 히트 응답의 `model` | **V9 `model` 컬럼 추가**, 미스 때와 같은 꼴. 같은 int8 모델이 호스트마다 다른 문장을 낸 기록(밤 13)이 있어 어느 모델의 번역이 굳어 있는지 표만 보고 알아야 한다. V9 이전 행은 null | `"cached"`·null |
+| 캐시 키 | `(log_id, language_code)` — 사용자 무관. 히트 때 `user_id`·`trace_id`는 첫 번역 것이 남는다 | 사용자별 |
+
+**덤으로 잡힌 것 — `NOT_SUPPORTED` 안에서 리포지토리 쿼리 메서드는 스코프 끝까지 커넥션을 쥔다 (이슈 #93).**
+캐시 조회를 `saveTranslateLog`에 바로 넣자 `TranslateTransactionBoundaryTest`가 "FastAPI 대기 중 활성 커넥션 1"로 빨개졌다.
+프로브(`@Transactional(NOT_SUPPORTED)` 메서드 안에서 하나씩 부르고 HikariCP active를 읽음):
+
+```
+findById inScope=0 | count inScope=0 | @Query jpql inScope=1 | derived findBy… inScope=1 | 별도 빈 @Transactional(readOnly) inScope=0
+```
+
+기존 코드는 `findById`만 써서 우연히 안전했다. 캐시 조회는 `TranslateLogReader.findCached`(별도 빈, readOnly, 엔티티가 아니라 값 반환)로
+뺐고 그 테스트가 다시 0이다. `AttendanceService.clockin`도 같은 모양(NOT_SUPPORTED 안에서 `findByUserId`)인데 거긴 스코프 전체가 짧은 DB
+작업이라 실해가 없다 — 이슈에 적어 뒀다.
+
+검증: `WorkLogTranslateCacheTest`(스텁 FastAPI 호출 수·Redis 카운터로 — 히트 0회·0, 다른 언어 미스, `updated_at`만 바뀌면 히트,
+본문 수정은 재번역·덮어쓰기, 상한+1은 FastAPI 0회) + `TranslateTransactionBoundaryTest` 그대로 0 + `AiQuotaWiringTest`는 번역 쪽을
+"서비스가 던진 429가 Retry-After와 나가는가"로 바꿈(한도가 서비스로 들어와 목으로는 못 본다).
 
 ---
 
@@ -1990,6 +2144,23 @@ logout은 두 경로 다 401인 것도 본다: 프리픽스를 더하며 열리�
 `WebMvcConfigurer` + `Ordered.HIGHEST_PRECEDENCE`로 **앞에 하나 더 세웠다.** 순서에 기대는 구조라 `PageableConfigTest`가
 동작(`sort` 무시·`size` 상한)과 함께 **리졸버 목록에 둘 다 있고 우리 것이 먼저**인지를 단언한다. `@WebMvcTest` 슬라이스라 DB 없이 2초.
 설정을 끄고 돌리면 `sort` 테스트와 순서 테스트가 떨어지고 `size` 테스트만 남는다 — 상한은 부트가 기본 리졸버에도 넣기 때문이며, 그래서 키를 부트 것으로 썼다.
+
+## P2-21 — 2026-09-19 이슈 정리에서 나온 것
+
+k6·API 점검이 하루에 이슈 스물을 열었다(#98~#118). 이 절은 그중 이 줄기에서 닫은 것만 — 나머지는 이슈 번호가 곧 추적이다.
+
+### P2-21-1 — 안전교육 삭제: 수강 기록 있으면 409, 권한은 수정과 같은 ADMIN (#107, 완료 — 브랜치 `fix/safety-course-delete`)
+
+삭제만 "작성자 본인"이었다(수정은 ADMIN 누구나) — 작성자가 퇴사하면 그 교육은 못 지웠다. 그리고 `safety_enrollments.course_id`가
+NO ACTION이라 한 명이라도 봤으면 500. `SafetyCourseUpdateRequestDto.materialUrl`은 받기만 하고 안 옮기고 있었다.
+
+| 결정 | 골랐다 | 버린 것 |
+|---|---|---|
+| 수강 기록 있는 교육 | **409 `S003`** — 체크리스트 `CHECKLIST_HAS_RESULTS`와 같은 결정. 수강 기록은 "누가 언제 봤는가"라 교육을 지우면 기록이 가리키는 게 사라진다. 안 보이게 하려면 수정이 다음 | cascade(이력 유실) / soft delete(손댈 곳이 많다) |
+| 권한 | **ADMIN 누구나** — 한 도메인에 기준이 둘이면 어느 쪽이 의도인지 모른다, 넓은 쪽(수정)에 맞춤 | 작성자만 |
+| `UNIQUE(user_id, course_id)`·`course_id NOT NULL` | **별도 — 이슈 #141.** 재현 경로(동시 완료)가 다르고 기존 중복 행 정리가 같이 가야 한다 | V13에 같이 |
+
+검증 `SafetyCourseDeleteTest` 4 — 수강 기록 있으면 409이고 FK 위반이 아니다·교육과 기록 그대로, 작성자 아닌 ADMIN이 지운다, USER 403, `materialUrl` 갱신.
 
 ---
 

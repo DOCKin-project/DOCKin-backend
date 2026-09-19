@@ -1,0 +1,30 @@
+dockin-app-1  | 2026-09-19T15:04:57.866+09:00  WARN [] 1 --- [DOCKin-spring] [MessageBroker-4] c.DOCKin.global.config.HikariPoolWatch   : HikariPool 대기 pending=190 active=10 idle=0 total=10 max=10 — 풀 고갈이면 '누가 잡고 있나'부터 (ADR-0008 7-1)
+dockin-app-1  | 2026-09-19T15:05:07.867+09:00  WARN [] 1 --- [DOCKin-spring] [MessageBroker-3] c.DOCKin.global.config.HikariPoolWatch   : HikariPool 대기 pending=186 active=10 idle=0 total=10 max=10 — 풀 고갈이면 '누가 잡고 있나'부터 (ADR-0008 7-1)
+dockin-app-1  | 2026-09-19T15:05:17.876+09:00  WARN [] 1 --- [DOCKin-spring] [MessageBroker-4] c.DOCKin.global.config.HikariPoolWatch   : HikariPool 대기 pending=190 active=10 idle=0 total=10 max=10 — 풀 고갈이면 '누가 잡고 있나'부터 (ADR-0008 7-1)
+dockin-app-1  | 2026-09-19T15:05:28.165+09:00  WARN [] 1 --- [DOCKin-spring] [MessageBroker-7] c.DOCKin.global.config.HikariPoolWatch   : HikariPool 대기 pending=189 active=10 idle=0 total=10 max=10 — 풀 고갈이면 '누가 잡고 있나'부터 (ADR-0008 7-1)
+dockin-app-1  | 2026-09-19T15:05:34.520+09:00 ERROR [788beb620f4e40b7] 1 --- [DOCKin-spring] [io-8080-exec-69] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T15:05:34.893+09:00 ERROR [a5c8a7a1c2574fd1] 1 --- [DOCKin-spring] [io-8080-exec-15] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T15:05:36.393+09:00 ERROR [4f75f00866464883] 1 --- [DOCKin-spring] [io-8080-exec-48] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T15:05:37.920+09:00 ERROR [8d5dcc84800e4c34] 1 --- [DOCKin-spring] [nio-8080-exec-7] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T15:05:38.307+09:00  WARN [] 1 --- [DOCKin-spring] [MessageBroker-7] c.DOCKin.global.config.HikariPoolWatch   : HikariPool 대기 pending=190 active=10 idle=0 total=10 max=10 — 풀 고갈이면 '누가 잡고 있나'부터 (ADR-0008 7-1)
+dockin-app-1  | 2026-09-19T15:05:38.311+09:00 ERROR [d67579a55d6e426e] 1 --- [DOCKin-spring] [o-8080-exec-142] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T15:05:38.313+09:00 ERROR [e19603707f9e43ae] 1 --- [DOCKin-spring] [o-8080-exec-188] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T15:05:38.327+09:00 ERROR [ce35af26b6d84798] 1 --- [DOCKin-spring] [io-8080-exec-97] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T15:05:39.001+09:00 ERROR [e925f492dc964937] 1 --- [DOCKin-spring] [io-8080-exec-19] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T15:05:39.381+09:00 ERROR [67b0579e64a24464] 1 --- [DOCKin-spring] [o-8080-exec-177] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T15:05:40.962+09:00 ERROR [806ed077686249e8] 1 --- [DOCKin-spring] [io-8080-exec-41] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T15:05:41.344+09:00 ERROR [e158be34bc044247] 1 --- [DOCKin-spring] [nio-8080-exec-5] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T15:05:42.536+09:00 ERROR [25ae11fe39994c9f] 1 --- [DOCKin-spring] [o-8080-exec-129] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T15:05:42.924+09:00 ERROR [562a01b174b8434c] 1 --- [DOCKin-spring] [o-8080-exec-166] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T15:05:42.970+09:00 ERROR [9e1cd24ca26c4861] 1 --- [DOCKin-spring] [o-8080-exec-176] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T15:05:43.675+09:00 ERROR [f5f55d30bfcd4c87] 1 --- [DOCKin-spring] [o-8080-exec-128] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T15:05:44.041+09:00 ERROR [94d7d92b4ccf4af6] 1 --- [DOCKin-spring] [o-8080-exec-124] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T15:05:44.853+09:00 ERROR [41cbdfd19e9d42af] 1 --- [DOCKin-spring] [io-8080-exec-97] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T15:05:44.853+09:00 ERROR [7932d8df63234eeb] 1 --- [DOCKin-spring] [io-8080-exec-25] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T15:05:44.856+09:00 ERROR [d58725febbd34e0b] 1 --- [DOCKin-spring] [o-8080-exec-137] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T15:05:46.078+09:00 ERROR [011f44d04635494b] 1 --- [DOCKin-spring] [io-8080-exec-61] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T15:05:46.448+09:00 ERROR [71bbb7ac25314509] 1 --- [DOCKin-spring] [o-8080-exec-115] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T15:05:47.275+09:00 ERROR [7e661177298546ba] 1 --- [DOCKin-spring] [o-8080-exec-183] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T15:05:47.277+09:00 ERROR [dbecbd0c9a7e4864] 1 --- [DOCKin-spring] [io-8080-exec-55] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T15:05:47.330+09:00 ERROR [dc6901d17e994f95] 1 --- [DOCKin-spring] [io-8080-exec-44] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 2026-09-19T15:05:47.340+09:00 ERROR [6b06cd2064314254] 1 --- [DOCKin-spring] [io-8080-exec-19] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외

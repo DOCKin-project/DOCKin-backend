@@ -10,6 +10,7 @@ import com.DOCKin.member.model.UserRole;
 import com.DOCKin.safetyCourse.model.SafetyCourse;
 import com.DOCKin.member.repository.MemberRepository;
 import com.DOCKin.safetyCourse.repository.SafetyCourseRepository;
+import com.DOCKin.safetyCourse.repository.SafetyEnrollmentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -24,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class SafetyCourseService {
     private final SafetyCourseRepository safetyCourseRepository;
     private final MemberRepository memberRepository;
+    private final SafetyEnrollmentRepository safetyEnrollmentRepository;
 
     //교육 자료 등록
     @Transactional
@@ -75,6 +77,10 @@ public class SafetyCourseService {
         if(dto.getDurationMinutes()!=null){
             logs.setDurationMinutes(dto.getDurationMinutes());
         }
+        // DTO에는 있는데 안 옮기고 있었다(#107). 나머지 필드와 같은 규칙 — null이면 그대로.
+        if(dto.getMaterialUrl()!=null){
+            logs.setMaterialUrl(dto.getMaterialUrl());
+        }
         return SafetyCourseResponseDto.fromEntity(safetyCourseRepository.save(logs));
     }
 
@@ -103,15 +109,28 @@ public class SafetyCourseService {
        return safetyCourses.map(SafetyCourseResponseDto::fromEntity);
     }
 
-    //특정 교육자료 삭제
+    /**
+     * 특정 교육자료 삭제 (#107).
+     *
+     * <p><b>권한은 수정과 같은 ADMIN.</b> 전에는 삭제만 "작성자 본인"이라 작성자가 퇴사하면 그 교육은 아무도 못 지웠다.
+     * 한 도메인에 권한 기준이 둘이면 어느 쪽이 의도인지 아무도 모른다 — 넓은 쪽(수정)에 맞춘다.
+     *
+     * <p><b>수강 기록이 있으면 409.</b> 수강 기록은 "누가 언제 안전교육을 봤는가"라 교육을 지우면 그 기록이 가리키는 게
+     * 사라진다. 체크리스트의 {@code CHECKLIST_HAS_RESULTS}와 같은 결정. 전에는 FK(NO ACTION)에 걸려 500이었다.
+     */
     @Transactional
     public void  deleteSafetyCourse(String userId, Integer courseId){
+        Member member = memberRepository.findByUserId(userId)
+                .orElseThrow(()->new BusinessException(ErrorCode.USER_NOT_FOUND));
+        if(member.getRole()!= UserRole.ADMIN){
+            throw new BusinessException(ErrorCode.SAFETYCOURSE_AUTHOR);
+        }
+
         SafetyCourse safetyCourse =safetyCourseRepository.findById(courseId)
                 .orElseThrow(()->new BusinessException(ErrorCode.SAFETYCOURSE_NOT_FOUND));
 
-
-        if(!safetyCourse.getCreatedBy().equals(userId)){
-            throw new BusinessException(ErrorCode.SAFETYCOURSE_AUTHOR);
+        if(safetyEnrollmentRepository.existsByCourseIdCourseId(courseId)){
+            throw new BusinessException(ErrorCode.SAFETYCOURSE_HAS_ENROLLMENTS);
         }
 
         safetyCourseRepository.delete(safetyCourse);

@@ -1,0 +1,205 @@
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+     execution: local
+        script: journey.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 200 max VUs, 2m0s max duration (incl. graceful stop):
+              * rate: 4.00 iterations/s for 1m30s (maxVUs: 20-200, gracefulStop: 30s)
+
+
+rate   [   1% ] 001/020 VUs  0m01.0s/1m30s  4.00 iters/s
+
+rate   [   2% ] 000/020 VUs  0m02.0s/1m30s  4.00 iters/s
+
+rate   [   3% ] 000/020 VUs  0m03.0s/1m30s  4.00 iters/s
+
+rate   [   4% ] 000/020 VUs  0m04.0s/1m30s  4.00 iters/s
+
+rate   [   6% ] 000/020 VUs  0m05.0s/1m30s  4.00 iters/s
+
+rate   [   7% ] 000/020 VUs  0m06.0s/1m30s  4.00 iters/s
+
+rate   [   8% ] 000/020 VUs  0m07.0s/1m30s  4.00 iters/s
+
+rate   [   9% ] 000/020 VUs  0m08.0s/1m30s  4.00 iters/s
+
+rate   [  10% ] 000/020 VUs  0m09.0s/1m30s  4.00 iters/s
+
+rate   [  11% ] 000/020 VUs  0m10.0s/1m30s  4.00 iters/s
+
+rate   [  12% ] 000/020 VUs  0m11.0s/1m30s  4.00 iters/s
+
+rate   [  13% ] 000/020 VUs  0m12.0s/1m30s  4.00 iters/s
+
+rate   [  14% ] 000/020 VUs  0m13.0s/1m30s  4.00 iters/s
+
+rate   [  16% ] 000/020 VUs  0m14.0s/1m30s  4.00 iters/s
+
+rate   [  17% ] 000/020 VUs  0m15.0s/1m30s  4.00 iters/s
+
+rate   [  18% ] 000/020 VUs  0m16.0s/1m30s  4.00 iters/s
+
+rate   [  19% ] 000/020 VUs  0m17.0s/1m30s  4.00 iters/s
+
+rate   [  20% ] 000/020 VUs  0m18.0s/1m30s  4.00 iters/s
+
+rate   [  21% ] 000/020 VUs  0m19.0s/1m30s  4.00 iters/s
+
+rate   [  22% ] 000/020 VUs  0m20.0s/1m30s  4.00 iters/s
+
+rate   [  23% ] 000/020 VUs  0m21.0s/1m30s  4.00 iters/s
+
+rate   [  24% ] 000/020 VUs  0m22.0s/1m30s  4.00 iters/s
+
+rate   [  26% ] 000/020 VUs  0m23.0s/1m30s  4.00 iters/s
+
+rate   [  27% ] 000/020 VUs  0m24.0s/1m30s  4.00 iters/s
+
+rate   [  28% ] 000/020 VUs  0m25.0s/1m30s  4.00 iters/s
+
+rate   [  29% ] 000/020 VUs  0m26.0s/1m30s  4.00 iters/s
+
+rate   [  30% ] 000/020 VUs  0m27.0s/1m30s  4.00 iters/s
+
+rate   [  31% ] 000/020 VUs  0m28.0s/1m30s  4.00 iters/s
+
+rate   [  32% ] 000/020 VUs  0m29.0s/1m30s  4.00 iters/s
+
+rate   [  33% ] 000/020 VUs  0m30.0s/1m30s  4.00 iters/s
+
+rate   [  34% ] 000/020 VUs  0m31.0s/1m30s  4.00 iters/s
+
+rate   [  36% ] 000/020 VUs  0m32.0s/1m30s  4.00 iters/s
+
+rate   [  37% ] 001/020 VUs  0m33.0s/1m30s  4.00 iters/s
+
+rate   [  38% ] 000/020 VUs  0m34.0s/1m30s  4.00 iters/s
+
+rate   [  39% ] 000/020 VUs  0m35.0s/1m30s  4.00 iters/s
+
+rate   [  40% ] 000/020 VUs  0m36.0s/1m30s  4.00 iters/s
+
+rate   [  41% ] 000/020 VUs  0m37.0s/1m30s  4.00 iters/s
+
+rate   [  42% ] 000/020 VUs  0m38.0s/1m30s  4.00 iters/s
+
+rate   [  43% ] 000/020 VUs  0m39.0s/1m30s  4.00 iters/s
+
+rate   [  44% ] 000/020 VUs  0m40.0s/1m30s  4.00 iters/s
+
+rate   [  46% ] 000/020 VUs  0m41.0s/1m30s  4.00 iters/s
+
+rate   [  47% ] 000/020 VUs  0m42.0s/1m30s  4.00 iters/s
+
+rate   [  48% ] 000/020 VUs  0m43.0s/1m30s  4.00 iters/s
+
+rate   [  49% ] 000/020 VUs  0m44.0s/1m30s  4.00 iters/s
+
+rate   [  50% ] 000/020 VUs  0m45.0s/1m30s  4.00 iters/s
+
+rate   [  51% ] 000/020 VUs  0m46.0s/1m30s  4.00 iters/s
+
+rate   [  52% ] 000/020 VUs  0m47.0s/1m30s  4.00 iters/s
+
+rate   [  53% ] 000/020 VUs  0m48.0s/1m30s  4.00 iters/s
+
+rate   [  54% ] 000/020 VUs  0m49.0s/1m30s  4.00 iters/s
+
+rate   [  56% ] 000/020 VUs  0m50.0s/1m30s  4.00 iters/s
+
+rate   [  57% ] 000/020 VUs  0m51.0s/1m30s  4.00 iters/s
+
+rate   [  58% ] 000/020 VUs  0m52.0s/1m30s  4.00 iters/s
+
+rate   [  59% ] 000/020 VUs  0m53.0s/1m30s  4.00 iters/s
+
+rate   [  60% ] 000/020 VUs  0m54.0s/1m30s  4.00 iters/s
+
+rate   [  61% ] 000/020 VUs  0m55.0s/1m30s  4.00 iters/s
+
+rate   [  62% ] 000/020 VUs  0m56.0s/1m30s  4.00 iters/s
+
+rate   [  63% ] 000/020 VUs  0m57.0s/1m30s  4.00 iters/s
+
+rate   [  64% ] 000/020 VUs  0m58.0s/1m30s  4.00 iters/s
+
+rate   [  66% ] 000/020 VUs  0m59.0s/1m30s  4.00 iters/s
+
+rate   [  67% ] 000/020 VUs  1m00.0s/1m30s  4.00 iters/s
+
+rate   [  68% ] 000/020 VUs  1m01.0s/1m30s  4.00 iters/s
+
+rate   [  69% ] 000/020 VUs  1m02.0s/1m30s  4.00 iters/s
+
+rate   [  70% ] 000/020 VUs  1m03.0s/1m30s  4.00 iters/s
+
+rate   [  71% ] 000/020 VUs  1m04.0s/1m30s  4.00 iters/s
+
+rate   [  72% ] 000/020 VUs  1m05.0s/1m30s  4.00 iters/s
+
+rate   [  73% ] 000/020 VUs  1m06.0s/1m30s  4.00 iters/s
+
+rate   [  74% ] 000/020 VUs  1m07.0s/1m30s  4.00 iters/s
+
+rate   [  76% ] 000/020 VUs  1m08.0s/1m30s  4.00 iters/s
+
+rate   [  77% ] 000/020 VUs  1m09.0s/1m30s  4.00 iters/s
+
+rate   [  78% ] 000/020 VUs  1m10.0s/1m30s  4.00 iters/s
+
+rate   [  79% ] 000/020 VUs  1m11.0s/1m30s  4.00 iters/s
+
+rate   [  80% ] 000/020 VUs  1m12.0s/1m30s  4.00 iters/s
+
+rate   [  81% ] 000/020 VUs  1m13.0s/1m30s  4.00 iters/s
+
+rate   [  82% ] 000/020 VUs  1m14.0s/1m30s  4.00 iters/s
+
+rate   [  83% ] 001/020 VUs  1m15.0s/1m30s  4.00 iters/s
+
+rate   [  84% ] 000/020 VUs  1m16.0s/1m30s  4.00 iters/s
+
+rate   [  86% ] 000/020 VUs  1m17.0s/1m30s  4.00 iters/s
+
+rate   [  87% ] 000/020 VUs  1m18.0s/1m30s  4.00 iters/s
+
+rate   [  88% ] 000/020 VUs  1m19.0s/1m30s  4.00 iters/s
+
+rate   [  89% ] 000/020 VUs  1m20.0s/1m30s  4.00 iters/s
+
+rate   [  90% ] 000/020 VUs  1m21.0s/1m30s  4.00 iters/s
+
+rate   [  91% ] 000/020 VUs  1m22.0s/1m30s  4.00 iters/s
+
+rate   [  92% ] 000/020 VUs  1m23.0s/1m30s  4.00 iters/s
+
+rate   [  93% ] 000/020 VUs  1m24.0s/1m30s  4.00 iters/s
+
+rate   [  94% ] 000/020 VUs  1m25.0s/1m30s  4.00 iters/s
+
+rate   [  96% ] 000/020 VUs  1m26.0s/1m30s  4.00 iters/s
+
+rate   [  97% ] 000/020 VUs  1m27.0s/1m30s  4.00 iters/s
+
+rate   [  98% ] 000/020 VUs  1m28.0s/1m30s  4.00 iters/s
+
+rate   [  99% ] 000/020 VUs  1m29.0s/1m30s  4.00 iters/s
+
+rate   [ 100% ] 000/020 VUs  1m30.0s/1m30s  4.00 iters/s
+
+== rate rate=4/s vus=1000 reqs=2166 rps=24 fail=0% p95=95.6ms dropped=0 maxVUs=20 login_fail=0 dup=0 journey_p95=267ms
+name             n      rps     p50     p95     p99     max   fail%
+login              361       4    78.4   100.3   192.4     245       0
+clockin            361       4    10.3    12.4    13.7      46       0
+attendance_list    361       4     4.8     6.9    19.5      66       0
+worklogs           361       4    84.4   133.2   299.1     348       0
+chat_rooms         361       4     4.7     6.8    11.2      40       0
+safety_courses     361       4     5.2     7.5    28.8      66       0
+
+rate ✓ [ 100% ] 000/020 VUs  1m30s  4.00 iters/s

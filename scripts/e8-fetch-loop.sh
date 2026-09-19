@@ -7,7 +7,7 @@
 #
 # [실행]  HOST=<public ip> INSTANCE=<i-...> ./scripts/e8-fetch-loop.sh   (nohup으로 띄운다)
 #   KEY=~/.ssh/shadowfit-measure.pem  DEST=measure/  EVERY=300  REMOTE_DIR=DOCKin-spring/measure
-#   DONE_FILE=NIGHT15_DONE (원격 $HOME 기준)  TERMINATE=1
+#   DONE_FILE=NIGHT16_DONE (원격 $HOME 기준)  TERMINATE=1
 #
 set -uo pipefail
 cd "$(dirname "$0")/.."
@@ -18,8 +18,8 @@ REGION=${REGION:-ap-northeast-2}
 KEY=${KEY:-$HOME/.ssh/shadowfit-measure.pem}
 USER_=${USER_:-ec2-user}
 REMOTE_DIR=${REMOTE_DIR:-DOCKin-spring/measure}
-REMOTE_LOGS=${REMOTE_LOGS:-'night15*.log'}
-DONE_FILE=${DONE_FILE:-NIGHT15_DONE}
+REMOTE_LOGS=${REMOTE_LOGS:-'night16*.log'}
+DONE_FILE=${DONE_FILE:-NIGHT16_DONE}
 DEST=${DEST:-measure}
 EVERY=${EVERY:-300}
 TERMINATE=${TERMINATE:-1}
@@ -32,9 +32,9 @@ say() { printf '%s  %s\n' "$(date +%F' '%T)" "$*"; }
 fetch() {
     local tmp; tmp=$(mktemp -d)
     $SSH "cd \$HOME && tar czf - --ignore-failed-read $REMOTE_DIR $REMOTE_LOGS $DONE_FILE 2>/dev/null"         | tar xzf - -C "$tmp" 2>/dev/null || { rm -rf "$tmp"; return 1; }
-    mkdir -p "$DEST/night15-logs"
+    mkdir -p "$DEST/night16-logs"
     [[ -d "$tmp/$REMOTE_DIR" ]] && cp -r "$tmp/$REMOTE_DIR/." "$DEST/"
-    cp -f "$tmp"/night15*.log "$tmp/$DONE_FILE" "$DEST/night15-logs/" 2>/dev/null
+    cp -f "$tmp"/night16*.log "$tmp/$DONE_FILE" "$DEST/night16-logs/" 2>/dev/null
     rm -rf "$tmp"
     return 0
 }
@@ -44,8 +44,8 @@ T0=$(date +%s)
 while :; do
     if fetch; then say "받음: $(ls -d "$DEST"/e8cause-* "$DEST"/e8reopen-* 2>/dev/null | xargs -n1 basename 2>/dev/null | tr '\n' ' ')"
     else say "받기 실패 (ssh?)"; fi
-    if [[ -f "$DEST/night15-logs/$DONE_FILE" ]]; then
-        say "DONE 표식 확인: $(cat "$DEST/night15-logs/$DONE_FILE")"
+    if [[ -f "$DEST/night16-logs/$DONE_FILE" ]]; then
+        say "DONE 표식 확인: $(cat "$DEST/night16-logs/$DONE_FILE")"
         sleep 20; fetch; say "마지막으로 한 번 더 받았다"
         if [[ "$TERMINATE" == "1" ]]; then
             aws ec2 terminate-instances --region "$REGION" --instance-ids "$INSTANCE" --query 'TerminatingInstances[0].CurrentState.Name' --output text \

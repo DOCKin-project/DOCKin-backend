@@ -56,7 +56,7 @@
 | ID | 바꾸는 것 | 근거 | 검증 | 상태 |
 |---|---|---|---|---|
 | **B1** | **E8 열화 원인을 가른다** — `scripts/e8-longrun-cause.sh` 실행. 앱 재시작으로 돌아오면 앱, 안 돌아오면 DB. DB 쪽이면 `checkpoint_timeout`·`max_wal_size`·autovacuum 중 무엇인지 `pg_stat_bgwriter`(`checkpoints_timed`/`checkpoints_req`)와 A1 스냅샷으로 좁힌다 | 밤 2 1.8배 열화, 밤 3이 코퍼스 크기 반증. 후보 넷 미결(장애 #6) | 한 시간. 결과가 나오기 전엔 체크포인트 값을 **안 바꾼다** | **측정 완료 → DB 휘발 상태** (2026-09-17, 6절·AWS 밤 14). 앱 재시작 미회복, DB 재시작 즉시 회복. 체크포인트·autovacuum 아님 → **체크포인트 값은 안 바꾼다**(확정). 남은 후보는 컨테이너 512M의 페이지 캐시 `[추측]` #83 |
-| **B2** | **`shared_buffers`는 안 올린다.** 컨테이너 512M도 그대로 | 밤 3: 128MB → 1GB, 컨테이너 4배에도 처리량 불변 | — | **반은 뒤집혔다** (2026-09-19, 밤 15). `shared_buffers`는 여전히 안 올린다 — 밤 15에서도 128MB 그대로 두고 회복했고 미스 수는 앞뒤가 같았다. **"컨테이너 512M 그대로"는 틀렸다**: 상한이 페이지 캐시까지 세서 힙+HNSW의 뜨거운 페이지가 512 − 공유메모리 142 − anon ≈ 330MB에 안 들어가는 자리(≈177k 청크)부터 INSERT가 3 → 26ms, 재시작 없이 `docker update --memory 1g` 한 줄로 다음 표본부터 2.8ms. 처방은 "힙 + HNSW + `shared_buffers` + 여유"가 들어가는 상한 — 지금 코퍼스면 1G. **운영 `compose.yaml`을 얼마로 할지는 사용자 결정**(6절 순서 6-2) |
+| **B2** | **`shared_buffers`는 안 올린다.** 컨테이너 512M도 그대로 | 밤 3: 128MB → 1GB, 컨테이너 4배에도 처리량 불변 | — | **반은 뒤집혔다** (2026-09-19, 밤 16). `shared_buffers`는 여전히 안 올린다 — 밤 16에서도 128MB 그대로 두고 회복했고 미스 수는 앞뒤가 같았다. **"컨테이너 512M 그대로"는 틀렸다**: 상한이 페이지 캐시까지 세서 힙+HNSW의 뜨거운 페이지가 512 − 공유메모리 142 − anon ≈ 330MB에 안 들어가는 자리(≈177k 청크)부터 INSERT가 3 → 26ms, 재시작 없이 `docker update --memory 1g` 한 줄로 다음 표본부터 2.8ms. 처방은 "힙 + HNSW + `shared_buffers` + 여유"가 들어가는 상한 — 지금 코퍼스면 1G. **운영 `compose.yaml`을 얼마로 할지는 사용자 결정**(6절 순서 6-2) |
 | **B3** | **`maintenance_work_mem`은 세션 단위로만.** 전역 인자로 안 올린다. 대신 `autovacuum_work_mem`을 따로 둘지는 실험 ②가 말한다 | HNSW 빌드는 `rebuild-hnsw-index.sql`이 `SET`으로 256MB를 준다. 전역으로 올리면 autovacuum worker 3개가 같은 값을 쓴다 — 512M 컨테이너에서 OOM(장애 #7의 `/dev/shm`과 같은 종류) | — | 결정 |
 | **B4** | **HikariCP `maximum-pool-size`를 명시하고 `hikaricp.connections.pending` 알림(O2)을 건다.** 값은 지금의 기본 10을 그대로 적는다 — 올리지 않는다 | M1: 풀 고갈은 `@Async` 스레드 631개라는 **앱 결함**이었고, 풀 100은 증상을 가렸을 뿐이다. PG는 커넥션 = 백엔드 프로세스라 풀을 올린 만큼 DB 메모리를 낸다(막힘없이 Ch.1) | 알림이 실제 pending에 울리는가. 값 변경은 ADR-0004 3-2 부하 실측 뒤 | **완료** (2026-09-15, 6절) — 명시 + `HikariPoolWatch` WARN. 값은 보류 |
 
@@ -331,9 +331,9 @@ P2-15-5 ⑤가 "B-tree로 안 변한다"고 한 그 비용은 키워드 필터�
 
 **남은 것.** 카드 ③의 관측 스레드(기존 두 테스트에 붙여 산출물 파일로), #83 cgroup 재실험(+창 A·B), #89. 순서표는 다 지웠다 — A2·D1은 2026-09-19에 추천대로 결정했다(4절). 다음은 E1(H1 트리거)과 #91(트리거 대기)뿐이다.
 
-### 2026-09-19 — 순서 6-2: B1 후속 #83 (AWS 밤 15) — 원인 확정
+### 2026-09-19 — 순서 6-2: B1 후속 #83 (AWS 밤 16) — 원인 확정
 
-밤 14와 같은 조건에서 한 번 더, 이번엔 매 분 DB 컨테이너 cgroup(`memory.current`/`max`/`stat` file·anon·shmem/`events` max)을 rate.csv에 적고, 열화가 오면 **재시작 없이 `docker update --memory 1g`**만 했다. 결과 전문: `AWS-MEASUREMENT-RESULTS.md` 밤 15, 산출물 `measure/e8cause-20260919T051340/`.
+밤 14와 같은 조건에서 한 번 더, 이번엔 매 분 DB 컨테이너 cgroup(`memory.current`/`max`/`stat` file·anon·shmem/`events` max)을 rate.csv에 적고, 열화가 오면 **재시작 없이 `docker update --memory 1g`**만 했다. 결과 전문: `AWS-MEASUREMENT-RESULTS.md` 밤 16, 산출물 `measure/e8cause-20260919T051340/`.
 
 | 구간 | 원본당 | INSERT/건 | cgroup file 캐시 | events max |
 |---|---|---|---|---|

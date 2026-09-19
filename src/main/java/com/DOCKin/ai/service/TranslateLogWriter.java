@@ -35,7 +35,7 @@ public class TranslateLogWriter {
     /** 번역 한 건의 입력과 결과. 엔티티가 아니라 값만 넘겨 트랜잭션 밖의 영속 상태에 기대지 않는다. */
     public record Translated(Long logId, String userId, String languageCode, String traceId,
                              String originalTitle, String translatedTitle,
-                             String originalText, String translatedText) {}
+                             String originalText, String translatedText, String model) {}
 
     /**
      * 같은 작업일지·같은 언어가 있으면 갱신, 없으면 삽입.
@@ -49,7 +49,7 @@ public class TranslateLogWriter {
                         existing -> existing.updateTranslation(
                                 t.originalTitle(), t.translatedTitle(),
                                 t.originalText(), t.translatedText(),
-                                t.traceId()),
+                                t.traceId(), t.model()),
                         () -> translateRepository.save(TranslateLog.builder()
                                 .traceId(t.traceId())
                                 .workLogs(workLogRepository.getReferenceById(t.logId()))
@@ -59,6 +59,7 @@ public class TranslateLogWriter {
                                 .originalText(t.originalText())
                                 .translatedText(t.translatedText())
                                 .languageCode(t.languageCode())
+                                .model(t.model())
                                 .build()));
     }
 }

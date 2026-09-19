@@ -8,13 +8,11 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface MemberRepository extends JpaRepository<Member,String> {
     Optional<Member> findByUserId(String userId);
-    List<Member> findByShipYardArea(String shipYardArea);
 
     /**
      * 잔여 연차를 갱신하기 위해 사용자 행에 비관적 쓰기 락({@code SELECT ... FOR UPDATE})을 건다.

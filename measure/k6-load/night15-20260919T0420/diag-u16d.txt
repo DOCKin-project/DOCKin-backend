@@ -1,0 +1,113 @@
+===== 05:18:51
+-- docker stats
+dockin-app-1 63.52% dockin-db 31.52% dockin-spring-dockin-nginx-1 0.63% dockin-redis 0.74% dockin-embedding 0.36% 
+-- tomcat exec threads (state / top frame)
+    193 TIMED_WAITING (parking) | jdk.internal.misc.Unsafe.park | 	- parking to wait for  <0x00000000f24d9900> (a java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject)
+      3 RUNNABLE | java.lang.StringLatin1.toLowerCase | java.lang.String.toLowerCase(java.base@21.0.12.1/String.java:3628)
+      1 RUNNABLE | sun.util.calendar.ZoneInfo.getTransitionIndex | sun.util.calendar.ZoneInfo.getOffsets(java.base@21.0.12.1/ZoneInfo.java:250)
+      1 RUNNABLE | org.springframework.security.crypto.bcrypt.BCrypt.crypt_raw(BCrypt.java:558) | org.springframework.security.crypto.bcrypt.BCrypt.hashpw(BCrypt.java:660)
+      1 RUNNABLE | java.util.GregorianCalendar.computeFields | java.util.Calendar.setTimeInMillis(java.base@21.0.12.1/Calendar.java:1836)
+      1 BLOCKED (on object monitor) | sun.security.provider.NativePRNG$RandomIO.implNextBytes | 	- locked <0x00000000effa84b8> (a java.lang.Object)
+-- app sockets :8080 (state, count, recvq>0)
+01=24(recvq>0:1) 0A=2(recvq>0:0) 06=14(recvq>0:0) 
+-- nginx sockets
+up:06=125(rq:0) in:01=93(rq:1) up:01=11(rq:0) in:0A=1(rq:0) up:0A=1(rq:0) 
+-- redis
+connected_clients:5 blocked_clients:0 instantaneous_ops_per_sec:303 
+-- pg
+active||1 idle|Client|4 idle in transaction|Client|6 
+===== 05:19:04
+-- docker stats
+dockin-app-1 0.96% dockin-db 0.01% dockin-spring-dockin-nginx-1 0.18% dockin-redis 0.46% dockin-embedding 0.37% 
+-- tomcat exec threads (state / top frame)
+    113 TIMED_WAITING (parking) | jdk.internal.misc.Unsafe.park | 	- parking to wait for  <0x00000000f24d98f0> (a java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject)
+     87 TIMED_WAITING (parking) | jdk.internal.misc.Unsafe.park | 	- parking to wait for  <0x00000000f07d4bc0> (a java.util.concurrent.SynchronousQueue$Transferer)
+-- app sockets :8080 (state, count, recvq>0)
+01=102(recvq>0:0) 0A=2(recvq>0:0) 06=14(recvq>0:0) 
+-- nginx sockets
+up:06=860(rq:0) in:01=176(rq:0) up:01=89(rq:0) in:0A=1(rq:0) up:0A=1(rq:0) 
+-- redis
+connected_clients:5 blocked_clients:0 instantaneous_ops_per_sec:1 
+-- pg
+active||1 idle|Client|10 
+===== 05:19:18
+-- docker stats
+dockin-app-1 0.91% dockin-db 0.00% dockin-spring-dockin-nginx-1 0.18% dockin-redis 0.42% dockin-embedding 0.36% 
+-- tomcat exec threads (state / top frame)
+    194 TIMED_WAITING (parking) | jdk.internal.misc.Unsafe.park | 	- parking to wait for  <0x00000000f07d4bc0> (a java.util.concurrent.SynchronousQueue$Transferer)
+      6 TIMED_WAITING (parking) | jdk.internal.misc.Unsafe.park | 	- parking to wait for  <0x00000000f24d98f0> (a java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject)
+-- app sockets :8080 (state, count, recvq>0)
+01=209(recvq>0:0) 0A=2(recvq>0:0) 06=13(recvq>0:0) 
+-- nginx sockets
+up:06=860(rq:0) in:01=283(rq:0) up:01=196(rq:0) in:0A=1(rq:0) up:0A=1(rq:0) 
+-- redis
+connected_clients:3 blocked_clients:0 instantaneous_ops_per_sec:0 
+-- pg
+active||1 idle|Client|10 
+===== 05:19:31
+-- docker stats
+dockin-app-1 0.24% dockin-db 0.01% dockin-spring-dockin-nginx-1 0.00% dockin-redis 0.41% dockin-embedding 0.37% 
+-- tomcat exec threads (state / top frame)
+    194 TIMED_WAITING (parking) | jdk.internal.misc.Unsafe.park | 	- parking to wait for  <0x00000000f07d4bc0> (a java.util.concurrent.SynchronousQueue$Transferer)
+      5 RUNNABLE | org.springframework.security.crypto.bcrypt.BCrypt.crypt_raw(BCrypt.java:559) | org.springframework.security.crypto.bcrypt.BCrypt.hashpw(BCrypt.java:660)
+      1 RUNNABLE | org.springframework.security.crypto.bcrypt.BCrypt.crypt_raw(BCrypt.java:558) | org.springframework.security.crypto.bcrypt.BCrypt.hashpw(BCrypt.java:660)
+-- app sockets :8080 (state, count, recvq>0)
+08=16(recvq>0:16) 01=263(recvq>0:48) 0A=2(recvq>0:0) 06=16(recvq>0:0) 
+-- nginx sockets
+up:05=15(rq:0) up:06=950(rq:0) in:01=317(rq:0) up:01=245(rq:0) in:0A=1(rq:0) up:04=2(rq:0) up:0A=1(rq:0) 
+-- redis
+connected_clients:4 blocked_clients:0 instantaneous_ops_per_sec:172 
+-- pg
+active||1 idle|Client|4 idle in transaction|Client|6 
+===== 05:19:45
+-- docker stats
+dockin-app-1 0.23% dockin-db 0.03% dockin-spring-dockin-nginx-1 0.00% dockin-redis 0.42% dockin-embedding 0.37% 
+-- tomcat exec threads (state / top frame)
+    200 TIMED_WAITING (parking) | jdk.internal.misc.Unsafe.park | 	- parking to wait for  <0x00000000f07d4bc0> (a java.util.concurrent.SynchronousQueue$Transferer)
+-- app sockets :8080 (state, count, recvq>0)
+08=14(recvq>0:14) 01=251(recvq>0:36) 0A=2(recvq>0:0) 06=8(recvq>0:0) 
+-- nginx sockets
+up:05=14(rq:0) up:06=1077(rq:0) in:01=317(rq:0) up:01=234(rq:0) in:0A=1(rq:0) up:0A=1(rq:0) 
+-- redis
+connected_clients:4 blocked_clients:0 instantaneous_ops_per_sec:1 
+-- pg
+active||1 idle|Client|10 
+===== 05:19:58
+-- docker stats
+dockin-app-1 0.26% dockin-db 3.67% dockin-spring-dockin-nginx-1 0.00% dockin-redis 0.41% dockin-embedding 0.37% 
+-- tomcat exec threads (state / top frame)
+    200 TIMED_WAITING (parking) | jdk.internal.misc.Unsafe.park | 	- parking to wait for  <0x00000000f07d4bc0> (a java.util.concurrent.SynchronousQueue$Transferer)
+-- app sockets :8080 (state, count, recvq>0)
+08=14(recvq>0:14) 01=252(recvq>0:37) 0A=2(recvq>0:0) 06=7(recvq>0:0) 
+-- nginx sockets
+up:05=14(rq:0) up:06=684(rq:0) in:01=317(rq:0) up:01=234(rq:0) in:0A=1(rq:0) up:0A=1(rq:0) 
+-- redis
+connected_clients:3 blocked_clients:0 instantaneous_ops_per_sec:0 
+-- pg
+active||1 idle|Client|10 
+===== 05:20:11
+-- docker stats
+dockin-app-1 0.26% dockin-db 0.00% dockin-spring-dockin-nginx-1 0.00% dockin-redis 0.42% dockin-embedding 0.34% 
+-- tomcat exec threads (state / top frame)
+    200 TIMED_WAITING (parking) | jdk.internal.misc.Unsafe.park | 	- parking to wait for  <0x00000000f07d4bc0> (a java.util.concurrent.SynchronousQueue$Transferer)
+-- app sockets :8080 (state, count, recvq>0)
+08=83(recvq>0:83) 01=602(recvq>0:385) 0A=2(recvq>0:0) 06=31(recvq>0:0) 
+-- nginx sockets
+up:05=83(rq:0) in:06=21(rq:0) up:06=307(rq:0) in:01=659(rq:0) up:01=582(rq:0) in:0A=1(rq:0) up:0A=1(rq:0) 
+-- redis
+connected_clients:5 blocked_clients:0 instantaneous_ops_per_sec:0 
+-- pg
+active||1 idle|Client|10 
+===== 05:20:24
+-- docker stats
+dockin-app-1 0.24% dockin-db 4.42% dockin-spring-dockin-nginx-1 0.00% dockin-redis 0.41% dockin-embedding 0.34% 
+-- tomcat exec threads (state / top frame)
+    200 TIMED_WAITING (parking) | jdk.internal.misc.Unsafe.park | 	- parking to wait for  <0x00000000f07d4bc0> (a java.util.concurrent.SynchronousQueue$Transferer)
+-- app sockets :8080 (state, count, recvq>0)
+08=665(recvq>0:665) 01=18(recvq>0:1) 0A=2(recvq>0:0) 06=31(recvq>0:0) 
+-- nginx sockets
+in:06=21(rq:0) up:05=665(rq:0) up:06=307(rq:0) in:0A=1(rq:0) up:0A=1(rq:0) 
+-- redis
+connected_clients:3 blocked_clients:0 instantaneous_ops_per_sec:0 
+-- pg
+active||1 idle|Client|10 

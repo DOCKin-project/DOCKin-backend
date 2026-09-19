@@ -44,7 +44,7 @@
 #     새 앱이 뜨면 "다른 색인이 진행 중"으로 건너뛰고 밤이 조용히 죽는다. stop 뒤 키를 지우고 start.
 #   · 유휴가 측정의 10배였다. 끝나면 정지하고, 그와 별개로 시작할 때 하드 watchdog을 건다.
 #
-# [밤 15(#83)에서 더한 것 -- 컨테이너 메모리]
+# [밤 16(#83)에서 더한 것 -- 컨테이너 메모리]
 #   밤 14가 "DB 재시작으로만 회복"까지 갔는데 rate.csv에 DB 컨테이너의 메모리를 안 적어
 #   "512M 상한이 페이지 캐시까지 센다"가 [추측]으로 남았다. 이제 매 분 DB 컨테이너의 cgroup
 #   (memory.current / memory.max / memory.stat의 anon·file·shmem / memory.events의 max)을 같은 줄에 적는다.
@@ -56,7 +56,7 @@
 #
 # [실행]
 #   ./scripts/e8-longrun-cause.sh                                   # 시드가 들어 있고 청크 0인 DB에서
-#   MEM_RAISE=1g ./scripts/e8-longrun-cause.sh                      # 밤 15: 첫 개입이 상한 올리기
+#   MEM_RAISE=1g ./scripts/e8-longrun-cause.sh                      # 밤 16: 첫 개입이 상한 올리기
 #   HOLE_SOURCES=60000 ./scripts/e8-longrun-cause.sh                # 옛 방식: 구멍을 파고 메운다
 #   MAX_HOURS=0.3 SHUTDOWN_WHEN_DONE=0 ./scripts/e8-longrun-cause.sh   # 연습 주행
 #
