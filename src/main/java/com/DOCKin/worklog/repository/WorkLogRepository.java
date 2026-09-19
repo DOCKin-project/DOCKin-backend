@@ -2,6 +2,7 @@ package com.DOCKin.worklog.repository;
 
 import com.DOCKin.member.model.Member;
 import com.DOCKin.worklog.model.WorkLog;
+import com.DOCKin.worklog.model.WorkLogStatus;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -34,15 +35,23 @@ public interface WorkLogRepository extends JpaRepository<WorkLog, Long> {
      * JPA가 DB를 가려 주는 데도 구멍이 있다. MySQL은 타입 없는 null을 받아 주므로 거기선 안 드러난다.
      */
 
+    /**
+     * {@code status}는 선택 필터다(P2-17-1). null이면 전부. 관리자의 미승인 큐와 근로자의 "내 반려 건"이
+     * 같은 쿼리를 쓴다. {@code CAST(:status AS String)}은 {@code beforeCreatedAt}과 같은 이유 —
+     * null이면 Hibernate가 타입 없는 ?를 보내고 PostgreSQL이 거부한다. enum은 STRING으로 매핑되므로
+     * String으로 캐스팅한다.
+     */
     @Query("""
             SELECT w FROM WorkLog w
             WHERE w.member IN :members
+              AND (CAST(:status AS String) IS NULL OR w.status = :status)
               AND (CAST(:beforeCreatedAt AS Timestamp) IS NULL
                    OR w.createdAt < :beforeCreatedAt
                    OR (w.createdAt = :beforeCreatedAt AND w.logId < :beforeLogId))
             ORDER BY w.createdAt DESC, w.logId DESC
             """)
     Slice<WorkLog> findByMemberIn(@Param("members") List<Member> members,
+                                  @Param("status") WorkLogStatus status,
                                   @Param("beforeCreatedAt") LocalDateTime beforeCreatedAt,
                                   @Param("beforeLogId") Long beforeLogId,
                                   Pageable pageable);
