@@ -149,7 +149,33 @@ class FastApiContractTest {
         assertTrue(sent.get().headers().getContentType().isCompatibleWith(MediaType.MULTIPART_FORM_DATA));
     }
 
+    @Test
+    @DisplayName("STT: 서버 502({detail:{message, traceId, reason}})는 STT_CONVERSION_ERROR로 올라온다 (#117)")
+    void STT_오류_502(@TempDir Path tmp) throws Exception {
+        SttService stt = sttWith(tmp, "error-detail.json", HttpStatus.BAD_GATEWAY);
+
+        BusinessException e = assertThrows(BusinessException.class, () -> stt.processStt(
+                new MockMultipartFile("file", "a.m4a", "audio/mp4", new byte[]{1}), "t", "ko").block());
+        assertEquals(ErrorCode.STT_CONVERSION_ERROR, e.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("STT: 서버 413(파일 너무 큼)은 PAYLOAD_TOO_LARGE로 — 사용자가 할 수 있는 일이 다른 유일한 경우 (#117)")
+    void STT_오류_413(@TempDir Path tmp) throws Exception {
+        SttService stt = sttWith(tmp, "error-detail.json", HttpStatus.PAYLOAD_TOO_LARGE);
+
+        BusinessException e = assertThrows(BusinessException.class, () -> stt.processStt(
+                new MockMultipartFile("file", "a.m4a", "audio/mp4", new byte[]{1}), "t", "ko").block());
+        assertEquals(ErrorCode.PAYLOAD_TOO_LARGE, e.getErrorCode());
+    }
+
     // ---------------------------------------------------------------- helpers
+
+    private static SttService sttWith(Path tmp, String fixture, HttpStatus status) throws Exception {
+        AudioConverter converter = mock(AudioConverter.class);
+        when(converter.convertToWav(any())).thenReturn(Files.createFile(tmp.resolve("speech.wav")).toFile());
+        return new SttService(converter, client(fixture, status, new AtomicReference<>()));
+    }
 
     /** 표본 하나를 돌려주는 WebClient. 보낸 요청은 {@code captured}에 남긴다. */
     private static WebClient client(String fixture, HttpStatus status, AtomicReference<ClientRequest> captured) {

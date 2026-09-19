@@ -87,18 +87,18 @@ public class WorkLogsService {
         String finalAudioUrl = dto.getAudioFileUrl();
 
         if(file!=null && !file.isEmpty()){
-            try{
-                var sttResponse = sttService.processStt(file,"trace-"+userId,"ko").block();
+            // STT가 실패하면 저장하지 않는다(#117). 전에는 catch(Exception)으로 삼키고 dto.logText로 대체해
+            // 저장했다 -- 음성을 올린 사용자는 일지 본문이 자기 음성이 아니라는 걸 알 길이 없었다.
+            // 실패는 SttService가 STT_CONVERSION_ERROR / PAYLOAD_TOO_LARGE로 던지고 그대로 올라간다.
+            var sttResponse = sttService.processStt(file,"trace-"+userId,"ko").block();
 
-                log.info("STT Response 객체: {}", sttResponse);
+            log.info("STT Response 객체: {}", sttResponse);
 
-                if(sttResponse !=null && sttResponse.text()!=null){
-                    finalLogText = sttResponse.text();
-                }
-                finalAudioUrl = "uploaded_"+file.getOriginalFilename();
-            } catch(Exception e){
-                log.error("stt변환 실패:{}"+e.getMessage());
+            if(sttResponse == null || sttResponse.text() == null || sttResponse.text().isBlank()){
+                throw new BusinessException(ErrorCode.STT_CONVERSION_ERROR);
             }
+            finalLogText = sttResponse.text();
+            finalAudioUrl = "uploaded_"+file.getOriginalFilename();
         }
 
         WorkLog workLog = WorkLog.builder()
