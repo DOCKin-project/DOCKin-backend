@@ -6,6 +6,7 @@ import com.DOCKin.absence.model.AbsenceRequest;
 import com.DOCKin.absence.model.AbsenceStatus;
 import com.DOCKin.absence.model.AbsenceType;
 import com.DOCKin.absence.event.AbsenceApprovedEvent;
+import com.DOCKin.absence.event.AbsenceCancelledEvent;
 import com.DOCKin.absence.repository.AbsenceRequestRepository;
 import com.DOCKin.attendance.service.WorkCalendarService;
 import com.DOCKin.global.error.BusinessException;
@@ -22,6 +23,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.Clock;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -44,6 +47,7 @@ public class AbsenceRequestService {
     private final S3PresignedService s3PresignedService;
     private final ApplicationEventPublisher eventPublisher;
     private final WorkCalendarService workCalendarService;
+    private final Clock clock;
 
     /** 신청 시 겹침 상대. REJECTED는 자리를 차지하지 않는다. */
     private static final List<AbsenceStatus> OCCUPYING = List.of(AbsenceStatus.PENDING, AbsenceStatus.APPROVED);
@@ -143,11 +147,13 @@ public class AbsenceRequestService {
                 throw new BusinessException(ErrorCode.INSUFFICIENT_LEAVE_DAYS);
             }
             applicant.useLeaveDays(days);
+            // 취소 때 돌려줄 값. 재계산이 아니라 기록이어야 한다(캘린더가 그 사이 바뀔 수 있다).
+            request.setDeductedDays(days);
         }
 
         request.setStatus(AbsenceStatus.APPROVED);
         request.setProcessedBy(admin);
-        request.setProcessedAt(LocalDateTime.now());
+        request.setProcessedAt(LocalDateTime.now(clock));
         request.setDecisionComment(comment);
 
         AbsenceRequestResponseDto response =
@@ -166,10 +172,14 @@ public class AbsenceRequestService {
     }
 
     /**
-     * 신청자 취소 — PENDING만. 잘못 낸 신청이 관리자가 거절해 줄 때까지 기간을 점유하던 것(겹침 검사가 PENDING도 본다)을
-     * 신청자가 스스로 거둘 수 있게 한다. 행은 남고 CANCELLED가 된다 — 이력은 지우지 않는다.
+     * 신청자 취소. PENDING은 언제나, APPROVED는 <b>시작일 전까지</b>.
      *
-     * <p>남의 신청은 존재 여부와 무관하게 403. APPROVED 취소(연차 환급·근태 행 삭제)는 다음 PR.
+     * <p>PENDING 취소는 기간 점유를 푸는 것뿐이다(겹침 검사가 PENDING도 본다). APPROVED 취소는 승인의 역이다 —
+     * 깎은 연차를 돌려주고({@code deducted_days}, 승인 때 기록한 값) 승인이 만든 근태 행을 지운다
+     * ({@link AbsenceCancelledEvent} → {@code AbsenceCancelledListener}, 승인과 같은 동기·같은 트랜잭션).
+     * 이미 시작한 휴가는 근태가 사실이 됐으므로 409 — 그 뒤는 관리자 근태 수정의 영역(P3).
+     *
+     * <p>남의 신청은 존재 여부와 무관하게 403. 행은 남고 CANCELLED가 된다.
      */
     @Transactional
     public AbsenceRequestResponseDto cancelRequest(String userId, Integer requestId, String comment) {
@@ -178,16 +188,62 @@ public class AbsenceRequestService {
         if (!request.getMember().getUserId().equals(userId)) {
             throw new BusinessException(ErrorCode.ACCESS_DENIED);
         }
-        if (request.getStatus() != AbsenceStatus.PENDING) {
+        if (request.getStatus() != AbsenceStatus.PENDING && request.getStatus() != AbsenceStatus.APPROVED) {
             throw new BusinessException(ErrorCode.ABSENCE_NOT_CANCELLABLE);
+        }
+        return cancel(request, request.getMember(), comment);
+    }
+
+    /**
+     * 관리자 취소 = 승인 철회. APPROVED만(PENDING은 거절이 있다), 시작일 전까지. 부수효과는 신청자 취소와 같다.
+     */
+    @Transactional
+    public AbsenceRequestResponseDto cancelAsAdmin(String adminUserId, Integer requestId, String comment) {
+        Member admin = requireAdmin(adminUserId);
+        AbsenceRequest request = absenceRequestRepository.findById(requestId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ABSENCE_REQUEST_NOT_FOUND));
+        if (request.getStatus() != AbsenceStatus.APPROVED) {
+            throw new BusinessException(ErrorCode.ABSENCE_NOT_CANCELLABLE);
+        }
+        return cancel(request, admin, comment);
+    }
+
+    /** 취소의 본문. PENDING이면 상태만, APPROVED면 환급 + 근태 되돌림. */
+    private AbsenceRequestResponseDto cancel(AbsenceRequest request, Member actor, String comment) {
+        boolean wasApproved = request.getStatus() == AbsenceStatus.APPROVED;
+        if (wasApproved) {
+            if (!request.getStartDate().isAfter(LocalDate.now(clock))) {
+                throw new BusinessException(ErrorCode.ABSENCE_ALREADY_STARTED);
+            }
+            if (request.getType() == AbsenceType.VACATION) {
+                // 차감과 같은 락. 관리자 승인과 본인 취소가 같은 사용자의 잔액을 동시에 만지면 lost update다.
+                Member applicant = memberRepository.findByUserIdForUpdate(request.getMember().getUserId())
+                        .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+                applicant.refundLeaveDays(refundableDays(request));
+            }
         }
 
         request.setStatus(AbsenceStatus.CANCELLED);
-        request.setProcessedBy(request.getMember());
-        request.setProcessedAt(LocalDateTime.now());
+        request.setProcessedBy(actor);
+        request.setProcessedAt(LocalDateTime.now(clock));
         request.setDecisionComment(comment);
+        AbsenceRequestResponseDto response =
+                AbsenceRequestResponseDto.fromEntity(absenceRequestRepository.save(request));
 
-        return AbsenceRequestResponseDto.fromEntity(absenceRequestRepository.save(request));
+        if (wasApproved) {
+            eventPublisher.publishEvent(new AbsenceCancelledEvent(
+                    request.getMember().getUserId(), request.getType(),
+                    request.getStartDate(), request.getEndDate()));
+        }
+        return response;
+    }
+
+    /** 승인 때 기록한 일수. V17 이전에 승인된 건은 기록이 없어 승인 때와 같은 규칙으로 다시 센다. */
+    private int refundableDays(AbsenceRequest request) {
+        if (request.getDeductedDays() != null) {
+            return request.getDeductedDays();
+        }
+        return workCalendarService.workingDaysBetween(request.getStartDate(), request.getEndDate()).size();
     }
 
     @Transactional
@@ -197,7 +253,7 @@ public class AbsenceRequestService {
 
         request.setStatus(AbsenceStatus.REJECTED);
         request.setProcessedBy(admin);
-        request.setProcessedAt(LocalDateTime.now());
+        request.setProcessedAt(LocalDateTime.now(clock));
         request.setDecisionComment(comment);
 
         return AbsenceRequestResponseDto.fromEntity(absenceRequestRepository.save(request));

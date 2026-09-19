@@ -120,6 +120,37 @@ class AbsenceWorkingDaysAndOverlapTest extends ContainerTestSupport {
                 .hasMessageContaining("absence_requests_no_overlap");
     }
 
+    @Test
+    @DisplayName("승인 → 본인 취소 왕복 - 잔액 15→10→15, VACATION 행 5개가 0개. 출근 찍힌 날의 행은 남는다 (#104 잔여)")
+    void 승인_취소_왕복() {
+        AbsenceRequestResponseDto created = service.createRequest(WORKER, vacation(MON, SUN), null);
+        service.approveRequest(ADMIN, created.getRequestId(), "ok");
+        assertThat(balance()).isEqualTo(10);
+        assertThat(vacationRows()).isEqualTo(5);
+
+        // 하루는 휴가인데 출근을 찍었다고 치자(소급 승인의 반대 상황) — 이 행은 취소가 건드리면 안 된다
+        jdbc.sql("UPDATE attendance SET clock_in_time = :t WHERE user_id = :u AND work_date = :d")
+                .param("t", MON.atTime(6, 0)).param("u", WORKER).param("d", MON).update();
+
+        AbsenceRequestResponseDto cancelled = service.cancelRequest(WORKER, created.getRequestId(), "계획 변경");
+
+        assertThat(cancelled.getStatus()).isEqualTo("CANCELLED");
+        assertThat(balance()).isEqualTo(15);
+        assertThat(vacationRows()).isEqualTo(1);
+        assertThat(jdbc.sql("SELECT deducted_days FROM absence_requests WHERE request_id = :id")
+                .param("id", created.getRequestId()).query(Integer.class).single()).isEqualTo(5);
+
+        // 자리를 비웠으니 같은 기간을 다시 낼 수 있고, 다시 승인되면 다시 깎인다
+        AbsenceRequestResponseDto again = service.createRequest(WORKER, vacation(MON, SUN), null);
+        service.approveRequest(ADMIN, again.getRequestId(), "ok");
+        assertThat(balance()).isEqualTo(10);
+    }
+
+    private int vacationRows() {
+        return jdbc.sql("SELECT count(*) FROM attendance WHERE user_id = :u AND status = 'VACATION'")
+                .param("u", WORKER).query(Integer.class).single();
+    }
+
     private void insert(String status, LocalDate start, LocalDate end) {
         jdbc.sql("""
                 INSERT INTO absence_requests (user_id, request_type, start_date, end_date, reason, status, requested_at)

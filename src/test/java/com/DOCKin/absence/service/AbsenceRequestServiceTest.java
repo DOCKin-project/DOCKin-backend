@@ -2,6 +2,7 @@ package com.DOCKin.absence.service;
 
 import com.DOCKin.absence.dto.AbsenceRequestCreateRequestDto;
 import com.DOCKin.absence.dto.AbsenceRequestResponseDto;
+import com.DOCKin.absence.event.AbsenceCancelledEvent;
 import com.DOCKin.absence.model.AbsenceRequest;
 import com.DOCKin.absence.model.AbsenceStatus;
 import com.DOCKin.absence.model.AbsenceType;
@@ -17,12 +18,16 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.mock.web.MockMultipartFile;
 
+import java.time.Clock;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,6 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -51,6 +57,10 @@ class AbsenceRequestServiceTest {
     /** 일수는 근무일 수다(#104). 여기서는 목 — 규칙 자체는 {@code WorkCalendarServiceTest}가 본다. */
     @Mock
     private WorkCalendarService workCalendarService;
+    /** 오늘 = 2026-07-01. 취소 가능 여부(시작일 전)와 처리 시각이 이 시계를 본다. */
+    @Spy
+    private Clock clock = Clock.fixed(LocalDate.of(2026, 7, 1).atStartOfDay(ZoneId.systemDefault()).toInstant(),
+            ZoneId.systemDefault());
 
     @InjectMocks
     private AbsenceRequestService absenceRequestService;
@@ -368,18 +378,140 @@ class AbsenceRequestServiceTest {
     }
 
     @Test
-    @DisplayName("승인·거절된 신청은 이 PR에서는 취소할 수 없다 - 409 ABSENCE_NOT_CANCELLABLE (승인 취소는 환급이 따르므로 별도)")
-    void cancelRequest_notPending_rejected() {
+    @DisplayName("거절·취소된 신청은 취소할 수 없다 - 409 ABSENCE_NOT_CANCELLABLE")
+    void cancelRequest_rejectedOrCancelled_notCancellable() {
         Member applicant = applicant(15);
-        AbsenceRequest approved = pendingRequest(AbsenceType.VACATION, MON, WED, applicant);
-        approved.setStatus(AbsenceStatus.APPROVED);
-        when(absenceRequestRepository.findById(1)).thenReturn(Optional.of(approved));
+        AbsenceRequest rejected = pendingRequest(AbsenceType.VACATION, MON, WED, applicant);
+        rejected.setStatus(AbsenceStatus.REJECTED);
+        when(absenceRequestRepository.findById(1)).thenReturn(Optional.of(rejected));
 
         BusinessException ex = assertThrows(BusinessException.class,
                 () -> absenceRequestService.cancelRequest(USER_ID, 1, null));
 
         assertEquals(ErrorCode.ABSENCE_NOT_CANCELLABLE, ex.getErrorCode());
-        assertEquals(AbsenceStatus.APPROVED, approved.getStatus());
         verify(absenceRequestRepository, never()).save(any());
+    }
+
+    // ── 승인 취소 — 승인의 역 ─────────────────────────────────────────────────
+
+    private AbsenceRequest approvedRequest(AbsenceType type, LocalDate start, LocalDate end, Member member, Integer deducted) {
+        AbsenceRequest request = pendingRequest(type, start, end, member);
+        request.setStatus(AbsenceStatus.APPROVED);
+        request.setDeductedDays(deducted);
+        return request;
+    }
+
+    @Test
+    @DisplayName("승인은 깎은 일수를 deducted_days에 남긴다 - 취소가 돌려줄 값은 재계산이 아니라 기록이다")
+    void approve_recordsDeductedDays() {
+        Member applicant = applicant(15);
+        AbsenceRequest request = pendingRequest(AbsenceType.VACATION, MON, WED, applicant);
+        workingDays(MON, WED, MON, MON.plusDays(1), WED);
+        when(memberRepository.findByUserId(ADMIN_ID)).thenReturn(Optional.of(admin()));
+        when(absenceRequestRepository.findById(1)).thenReturn(Optional.of(request));
+        when(absenceRequestRepository.existsOverlapping(any(), any(), any(), any(), anyInt())).thenReturn(false);
+        when(memberRepository.findByUserIdForUpdate(USER_ID)).thenReturn(Optional.of(applicant));
+        when(absenceRequestRepository.save(any(AbsenceRequest.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        absenceRequestService.approveRequest(ADMIN_ID, 1, null);
+
+        assertEquals(3, request.getDeductedDays());
+        assertEquals(12, applicant.getRemainingLeaveDays());
+    }
+
+    @Test
+    @DisplayName("시작일 전의 승인된 연차를 본인이 취소하면 deducted_days만큼 환급되고(락 안에서) 근태 취소 이벤트가 나간다")
+    void cancelRequest_approvedFuture_refundsAndPublishes() {
+        Member applicant = applicant(12);
+        AbsenceRequest request = approvedRequest(AbsenceType.VACATION, MON, WED, applicant, 3);
+        when(absenceRequestRepository.findById(1)).thenReturn(Optional.of(request));
+        when(memberRepository.findByUserIdForUpdate(USER_ID)).thenReturn(Optional.of(applicant));
+        when(absenceRequestRepository.save(any(AbsenceRequest.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        AbsenceRequestResponseDto response = absenceRequestService.cancelRequest(USER_ID, 1, "계획 변경");
+
+        assertEquals("CANCELLED", response.getStatus());
+        assertEquals(15, applicant.getRemainingLeaveDays());
+        verify(workCalendarService, never()).workingDaysBetween(any(), any());
+        ArgumentCaptor<Object> event = ArgumentCaptor.forClass(Object.class);
+        verify(eventPublisher).publishEvent(event.capture());
+        AbsenceCancelledEvent cancelled = (AbsenceCancelledEvent) event.getValue();
+        assertEquals(USER_ID, cancelled.userId());
+        assertEquals(MON, cancelled.startDate());
+        assertEquals(WED, cancelled.endDate());
+    }
+
+    @Test
+    @DisplayName("V17 이전 승인(deducted_days null)은 승인 때와 같은 규칙으로 다시 세어 환급한다")
+    void cancelRequest_legacyApproved_recomputes() {
+        Member applicant = applicant(12);
+        AbsenceRequest request = approvedRequest(AbsenceType.VACATION, MON, WED, applicant, null);
+        workingDays(MON, WED, MON, MON.plusDays(1), WED);
+        when(absenceRequestRepository.findById(1)).thenReturn(Optional.of(request));
+        when(memberRepository.findByUserIdForUpdate(USER_ID)).thenReturn(Optional.of(applicant));
+        when(absenceRequestRepository.save(any(AbsenceRequest.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        absenceRequestService.cancelRequest(USER_ID, 1, null);
+
+        assertEquals(15, applicant.getRemainingLeaveDays());
+    }
+
+    @Test
+    @DisplayName("오늘 시작하는(또는 이미 시작한) 승인 휴가는 취소할 수 없다 - 409 ABSENCE_ALREADY_STARTED, 잔액 그대로")
+    void cancelRequest_approvedStarted_rejected() {
+        Member applicant = applicant(12);
+        LocalDate today = LocalDate.of(2026, 7, 1);
+        AbsenceRequest request = approvedRequest(AbsenceType.VACATION, today, today.plusDays(2), applicant, 3);
+        when(absenceRequestRepository.findById(1)).thenReturn(Optional.of(request));
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> absenceRequestService.cancelRequest(USER_ID, 1, null));
+
+        assertEquals(ErrorCode.ABSENCE_ALREADY_STARTED, ex.getErrorCode());
+        assertEquals(AbsenceStatus.APPROVED, request.getStatus());
+        assertEquals(12, applicant.getRemainingLeaveDays());
+        verify(memberRepository, never()).findByUserIdForUpdate(any());
+        verify(eventPublisher, never()).publishEvent(any());
+    }
+
+    @Test
+    @DisplayName("승인된 병가 취소는 환급 없이 근태만 되돌린다 - 락도 안 잡는다")
+    void cancelRequest_approvedSick_noRefund() {
+        Member applicant = applicant(12);
+        AbsenceRequest request = approvedRequest(AbsenceType.SICK, MON, WED, applicant, null);
+        when(absenceRequestRepository.findById(1)).thenReturn(Optional.of(request));
+        when(absenceRequestRepository.save(any(AbsenceRequest.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        absenceRequestService.cancelRequest(USER_ID, 1, null);
+
+        assertEquals(12, applicant.getRemainingLeaveDays());
+        verify(memberRepository, never()).findByUserIdForUpdate(any());
+        verify(eventPublisher).publishEvent(any(AbsenceCancelledEvent.class));
+    }
+
+    @Test
+    @DisplayName("관리자 승인 철회 - APPROVED만, 처리자는 관리자. PENDING은 409(거절이 있다), USER는 403")
+    void cancelAsAdmin_rules() {
+        Member applicant = applicant(12);
+        AbsenceRequest approved = approvedRequest(AbsenceType.VACATION, MON, WED, applicant, 3);
+        when(memberRepository.findByUserId(ADMIN_ID)).thenReturn(Optional.of(admin()));
+        when(absenceRequestRepository.findById(1)).thenReturn(Optional.of(approved));
+        when(memberRepository.findByUserIdForUpdate(USER_ID)).thenReturn(Optional.of(applicant));
+        when(absenceRequestRepository.save(any(AbsenceRequest.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        AbsenceRequestResponseDto response = absenceRequestService.cancelAsAdmin(ADMIN_ID, 1, "현장 사정");
+
+        assertEquals("CANCELLED", response.getStatus());
+        assertEquals(ADMIN_ID, approved.getProcessedBy().getUserId());
+        assertEquals(15, applicant.getRemainingLeaveDays());
+
+        AbsenceRequest pending = pendingRequest(AbsenceType.VACATION, MON, WED, applicant);
+        when(absenceRequestRepository.findById(2)).thenReturn(Optional.of(pending));
+        assertEquals(ErrorCode.ABSENCE_NOT_CANCELLABLE,
+                assertThrows(BusinessException.class, () -> absenceRequestService.cancelAsAdmin(ADMIN_ID, 2, null)).getErrorCode());
+
+        when(memberRepository.findByUserId(USER_ID)).thenReturn(Optional.of(applicant));
+        assertEquals(ErrorCode.ABSENCE_REQUEST_AUTHOR,
+                assertThrows(BusinessException.class, () -> absenceRequestService.cancelAsAdmin(USER_ID, 1, null)).getErrorCode());
     }
 }

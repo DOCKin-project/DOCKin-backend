@@ -70,4 +70,9 @@ public class Member {
         this.remainingLeaveDays -= days;
     }
 
+    /** 승인 취소의 환급. 차감과 같은 락({@code findByUserIdForUpdate}) 안에서 부른다. */
+    public void refundLeaveDays(int days) {
+        this.remainingLeaveDays += days;
+    }
+
 }
