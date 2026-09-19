@@ -21,12 +21,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * 검증: {@code findLatestResultsByChecklistId}의 JPQL이 "항목별 최신 한 행"을 준다.
+ * 검증: {@code findLatestResultsByRunId}의 JPQL이 "회차 안에서 항목별 최신 한 행"을 준다.
  *
  * <p>{@code ChecklistStatusServiceTest}는 이 리포지토리를 목킹하므로 쿼리가 실행되지 않는다.
  * 네이티브 SQL에서 JPQL로 옮기면서 뜻이 바뀌지 않았는지는 실제 DB에 물어야 안다 —
  * 특히 <b>같은 항목의 여러 행 중 {@code MAX(result_id)} 하나만</b> 오는지,
- * <b>다른 체크리스트의 결과가 섞이지 않는지</b>.
+ * <b>다른 회차의 결과가 섞이지 않는지</b> — 회차가 없던 때는 템플릿 전역이라 남의 체크가 섞였다(ADR-0011).
  *
  * <p>데이터는 SQL로 넣는다. {@code Member}·{@code Equipment} 엔티티까지 빌더로 세우는 것보다
  * 필요한 컬럼만 채우는 편이 이 테스트가 보려는 것에 가깝다.
@@ -53,6 +53,9 @@ class ChecklistResultRepositoryTest extends ContainerTestSupport {
     private int itemA1;
     private int itemA2;
     private int itemB1;
+    private long runA;
+    private long runA2;
+    private long runB;
 
     @BeforeEach
     void seed() {
@@ -68,17 +71,20 @@ class ChecklistResultRepositoryTest extends ContainerTestSupport {
         itemA1 = item(checklistA, 1);
         itemA2 = item(checklistA, 2);
         itemB1 = item(checklistB, 1);
+        runA = run(checklistA, "u1", "2026-01-01 00:00:00");
+        runA2 = run(checklistA, "u1", "2026-01-02 00:00:00"); // 같은 사람·같은 템플릿의 다음 날 회차
+        runB = run(checklistB, "u1", "2026-01-01 00:00:00");
     }
 
     @Test
     @DisplayName("항목마다 result_id가 가장 큰 행 하나만 온다 - 체크→해제→체크면 마지막 체크")
     void 항목별_최신_한_행() {
-        result(itemA1, true);
-        result(itemA1, false);
-        int latestA1 = result(itemA1, true);
-        int onlyA2 = result(itemA2, false);
+        result(runA, itemA1, true);
+        result(runA, itemA1, false);
+        int latestA1 = result(runA, itemA1, true);
+        int onlyA2 = result(runA, itemA2, false);
 
-        List<ChecklistResult> found = repository.findLatestResultsByChecklistId(checklistA);
+        List<ChecklistResult> found = repository.findLatestResultsByRunId(runA);
 
         Map<Integer, ChecklistResult> byItem = found.stream()
                 .collect(Collectors.toMap(r -> r.getChecklistItem().getItemId(), Function.identity()));
@@ -90,13 +96,27 @@ class ChecklistResultRepositoryTest extends ContainerTestSupport {
     }
 
     @Test
-    @DisplayName("다른 체크리스트의 결과는 섞이지 않고, 이력이 없는 항목은 행이 없다")
-    void 체크리스트_경계() {
-        result(itemB1, true);
+    @DisplayName("다른 회차의 결과는 섞이지 않고, 이력이 없는 항목은 행이 없다")
+    void 회차_경계() {
+        result(runB, itemB1, true);
 
-        assertTrue(repository.findLatestResultsByChecklistId(checklistA).isEmpty(),
-                "A에는 이력이 없는데 B의 결과가 왔다");
-        assertEquals(1, repository.findLatestResultsByChecklistId(checklistB).size());
+        assertTrue(repository.findLatestResultsByRunId(runA).isEmpty(),
+                "A 회차에는 이력이 없는데 B 회차의 결과가 왔다");
+        assertEquals(1, repository.findLatestResultsByRunId(runB).size());
+    }
+
+    @Test
+    @DisplayName("같은 사람·같은 템플릿이라도 회차가 다르면 서로 안 보인다 — 어제 체크가 오늘 회차에 남지 않는다")
+    void 같은_템플릿_다른_회차() {
+        result(runA, itemA1, true);
+        result(runA, itemA2, true);
+        int today = result(runA2, itemA1, false);
+
+        List<ChecklistResult> found = repository.findLatestResultsByRunId(runA2);
+
+        assertEquals(1, found.size(), "오늘 회차에는 오늘 남긴 한 행만 있어야 한다");
+        assertEquals(today, found.get(0).getResultId());
+        assertFalse(found.get(0).getIsChecked());
     }
 
     // ------------------------------------------------------------------ SQL
@@ -113,13 +133,23 @@ class ChecklistResultRepositoryTest extends ContainerTestSupport {
                 .query(Integer.class).single();
     }
 
-    /** checked_at은 전부 같은 시각으로 둔다 - 최신 판정이 시각이 아니라 PK여야 한다는 것을 그대로 시험한다. */
-    private int result(int itemId, boolean checked) {
+    /** 닫힌 회차로 넣는다 — 열린 회차는 (checklist, user)당 하나뿐이라 셋을 만들 수 없다. */
+    private long run(int checklistId, String userId, String startedAt) {
         return jdbc.sql("""
-                INSERT INTO checklist_results (checked_at, is_checked, checklist_item_id, user_id)
-                VALUES (TIMESTAMP '2026-01-01 00:00:00', :checked, :item, 'u1') RETURNING result_id
+                INSERT INTO checklist_runs (checklist_id, user_id, started_at, closed_at, outcome)
+                VALUES (:cl, :user, CAST(:at AS timestamp), CAST(:at AS timestamp), 'COMPLETED') RETURNING run_id
                 """)
-                .param("checked", checked).param("item", itemId)
+                .param("cl", checklistId).param("user", userId).param("at", startedAt)
+                .query(Long.class).single();
+    }
+
+    /** checked_at은 전부 같은 시각으로 둔다 - 최신 판정이 시각이 아니라 PK여야 한다는 것을 그대로 시험한다. */
+    private int result(long runId, int itemId, boolean checked) {
+        return jdbc.sql("""
+                INSERT INTO checklist_results (run_id, checked_at, is_checked, checklist_item_id, user_id)
+                VALUES (:run, TIMESTAMP '2026-01-01 00:00:00', :checked, :item, 'u1') RETURNING result_id
+                """)
+                .param("run", runId).param("checked", checked).param("item", itemId)
                 .query(Integer.class).single();
     }
 }

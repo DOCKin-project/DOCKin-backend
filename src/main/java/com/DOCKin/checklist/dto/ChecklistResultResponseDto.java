@@ -19,6 +19,9 @@ public class ChecklistResultResponseDto {
     @Schema(description = "점검 기록 번호", requiredMode = Schema.RequiredMode.REQUIRED)
     private Integer resultId;
 
+    @Schema(description = "이 기록이 속한 점검 회차", requiredMode = Schema.RequiredMode.REQUIRED)
+    private Long runId;
+
     @Schema(description = "항목 번호", requiredMode = Schema.RequiredMode.REQUIRED)
     private Integer itemId;
 
@@ -34,6 +37,7 @@ public class ChecklistResultResponseDto {
     public static ChecklistResultResponseDto fromEntity(ChecklistResult result) {
         return ChecklistResultResponseDto.builder()
                 .resultId(result.getResultId())
+                .runId(result.getRun().getRunId())
                 .itemId(result.getChecklistItem().getItemId())
                 .userId(result.getMember().getUserId())
                 .isChecked(result.getIsChecked())

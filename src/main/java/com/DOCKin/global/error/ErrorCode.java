@@ -54,6 +54,9 @@ public enum ErrorCode {
     CHECKLIST_ITEM_MISMATCH(400, "CK005", "해당 체크리스트에 속하지 않는 항목입니다."),
     CHECKLIST_HAS_RESULTS(409, "CK006", "이미 점검 기록이 있어 삭제할 수 없습니다."),
     CHECKLIST_ITEM_HAS_RESULTS(409, "CK007", "이미 점검 기록이 있어 항목을 삭제할 수 없습니다."),
+    CHECKLIST_RUN_NOT_FOUND(404, "CK008", "존재하지 않는 점검 회차입니다."),
+    CHECKLIST_RUN_CLOSED(409, "CK009", "이미 닫힌 점검 회차입니다."),
+    CHECKLIST_RUN_INCOMPLETE(409, "CK010", "체크되지 않은 항목이 있어 점검을 완료할 수 없습니다."),
 
     // Absence Request
     ABSENCE_REQUEST_NOT_FOUND(404, "AB001", "존재하지 않는 휴가 신청입니다."),
