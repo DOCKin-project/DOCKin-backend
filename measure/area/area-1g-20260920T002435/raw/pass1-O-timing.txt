@@ -1,0 +1,168 @@
+== L1_A0 run 1
+Time: 527.511 ms
+== L1_A0 run 2
+Time: 788.029 ms
+== L1_A0 run 3
+Time: 530.123 ms
+== L1_A0 run 4
+Time: 805.412 ms
+== L1_A0 run 5
+Time: 394.211 ms
+== L1_A0 run 6
+Time: 302.831 ms
+== L1_A0 run 7
+Time: 308.330 ms
+== L2_A0 run 1
+Time: 285.358 ms
+== L2_A0 run 2
+Time: 249.040 ms
+== L2_A0 run 3
+Time: 383.647 ms
+== L2_A0 run 4
+Time: 195.093 ms
+== L2_A0 run 5
+Time: 218.461 ms
+== L2_A0 run 6
+Time: 215.257 ms
+== L2_A0 run 7
+Time: 249.924 ms
+== S1_A0 run 1
+Time: 266.964 ms
+== S1_A0 run 2
+Time: 362.126 ms
+== S1_A0 run 3
+Time: 335.023 ms
+== S1_A0 run 4
+Time: 283.393 ms
+== S1_A0 run 5
+Time: 293.763 ms
+== S1_A0 run 6
+Time: 285.589 ms
+== S1_A0 run 7
+Time: 289.609 ms
+== S2_A0 run 1
+Time: 435.176 ms
+== S2_A0 run 2
+Time: 568.022 ms
+== S2_A0 run 3
+Time: 342.436 ms
+== S2_A0 run 4
+Time: 520.234 ms
+== S2_A0 run 5
+Time: 490.364 ms
+== S2_A0 run 6
+Time: 561.789 ms
+== S2_A0 run 7
+Time: 523.931 ms
+== L1_A1 run 1
+Time: 381.695 ms
+== L1_A1 run 2
+Time: 459.079 ms
+== L1_A1 run 3
+Time: 375.081 ms
+== L1_A1 run 4
+Time: 411.779 ms
+== L1_A1 run 5
+Time: 478.107 ms
+== L1_A1 run 6
+Time: 359.158 ms
+== L1_A1 run 7
+Time: 260.400 ms
+== L2_A1 run 1
+Time: 232.320 ms
+== L2_A1 run 2
+Time: 254.189 ms
+== L2_A1 run 3
+Time: 272.404 ms
+== L2_A1 run 4
+Time: 207.106 ms
+== L2_A1 run 5
+Time: 219.903 ms
+== L2_A1 run 6
+Time: 221.019 ms
+== L2_A1 run 7
+Time: 258.635 ms
+== S1_A1 run 1
+Time: 563.172 ms
+== S1_A1 run 2
+Time: 1042.233 ms (00:01.042)
+== S1_A1 run 3
+Time: 658.399 ms
+== S1_A1 run 4
+Time: 829.128 ms
+== S1_A1 run 5
+Time: 549.226 ms
+== S1_A1 run 6
+Time: 471.818 ms
+== S1_A1 run 7
+Time: 481.851 ms
+== S2_A1 run 1
+Time: 553.480 ms
+== S2_A1 run 2
+Time: 573.234 ms
+== S2_A1 run 3
+Time: 428.861 ms
+== S2_A1 run 4
+Time: 457.598 ms
+== S2_A1 run 5
+Time: 411.566 ms
+== S2_A1 run 6
+Time: 544.646 ms
+== S2_A1 run 7
+Time: 398.159 ms
+== L1_A5 run 1
+Time: 48.024 ms
+== L1_A5 run 2
+Time: 12.989 ms
+== L1_A5 run 3
+Time: 10.617 ms
+== L1_A5 run 4
+Time: 11.253 ms
+== L1_A5 run 5
+Time: 10.617 ms
+== L1_A5 run 6
+Time: 10.012 ms
+== L1_A5 run 7
+Time: 10.127 ms
+== L2_A5 run 1
+Time: 15.098 ms
+== L2_A5 run 2
+Time: 12.257 ms
+== L2_A5 run 3
+Time: 16.160 ms
+== L2_A5 run 4
+Time: 11.178 ms
+== L2_A5 run 5
+Time: 10.165 ms
+== L2_A5 run 6
+Time: 11.036 ms
+== L2_A5 run 7
+Time: 11.039 ms
+== S1_A5 run 1
+Time: 18.549 ms
+== S1_A5 run 2
+Time: 21.914 ms
+== S1_A5 run 3
+Time: 22.543 ms
+== S1_A5 run 4
+Time: 19.550 ms
+== S1_A5 run 5
+Time: 19.677 ms
+== S1_A5 run 6
+Time: 29.631 ms
+== S1_A5 run 7
+Time: 29.755 ms
+== S2_A5 run 1
+Time: 34.495 ms
+== S2_A5 run 2
+Time: 35.707 ms
+== S2_A5 run 3
+Time: 39.941 ms
+== S2_A5 run 4
+Time: 34.038 ms
+== S2_A5 run 5
+Time: 20.522 ms
+== S2_A5 run 6
+Time: 19.458 ms
+== S2_A5 run 7
+Time: 22.549 ms

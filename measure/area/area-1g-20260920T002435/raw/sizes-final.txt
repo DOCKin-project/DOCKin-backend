@@ -1,0 +1,13 @@
+           index            | pg_size_pretty 
+----------------------------+----------------
+ work_logs_pkey             | 22 MB
+ idx_work_logs_user         | 7168 kB
+ idx_work_logs_created      | 31 MB
+ idx_work_logs_area_created | 40 MB
+(4 rows)
+
+  heap  | indexes | total  
+--------+---------+--------
+ 500 MB | 100 MB  | 600 MB
+(1 row)
+
