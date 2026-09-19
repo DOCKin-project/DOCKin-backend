@@ -1,7 +1,7 @@
 # ADR-0011: 점검은 템플릿의 상태가 아니라 사건이다 — 체크리스트 회차(run)
 
-- 상태: **결정.** 2026-09-19. 코드는 PR #129(`feat/checklist-runs`, V11). 후속은 관리자 회차 목록·항목 퇴역(5절)
-- 대상 코드: `checklist/model/ChecklistRun`·`ChecklistRunOutcome`, `ChecklistResult.run`, `ChecklistRunService`(옛 `ChecklistStatusService` 대체), `ChecklistRunRepository`, `ChecklistResultRepository.findLatestResultsByRunId`, `ChecklistUserController`, `V11__checklist_runs.sql`
+- 상태: **결정.** 2026-09-19. 코드는 PR #129(`feat/checklist-runs`, V14). 후속은 관리자 회차 목록·항목 퇴역(5절)
+- 대상 코드: `checklist/model/ChecklistRun`·`ChecklistRunOutcome`, `ChecklistResult.run`, `ChecklistRunService`(옛 `ChecklistStatusService` 대체), `ChecklistRunRepository`, `ChecklistResultRepository.findLatestResultsByRunId`, `ChecklistUserController`, `V14__checklist_runs.sql`
 - 관련 문서: `docs/2026-07-04-checklist-domain-work-summary.md`(회차 없이 만든 첫 설계), `docs/adr/0010`(같은 꼴의 결정 — 열린 것을 닫는 규칙, 배치 없이 시간으로), `docs/WORK-BACKLOG.md` P2-17(PPT "작업 전/후 점검"), 이슈 #81(앱이 옮길 옛 경로)
 - 작성 목적: 체크리스트 테이블 셋(`checklists`·`checklist_items`·`checklist_results`)에 "누가 언제 한 번 점검했다"가 없었다. 그래서 상태가 전역이었고 완료가 없었다. 테이블 하나가 왜 필요한지, 그 테이블의 열림·닫힘 규칙, 옛 경로를 어떻게 남겼는지를 적는다.
 
@@ -67,16 +67,16 @@ checklists ──< checklist_items                       (템플릿, 그대로)
 | 항목 | 왜 | 자리 |
 |---|---|---|
 | 관리자 회차 목록 | `GET /admin/runs?date&equipmentId&userId&status` — "오늘 크레인 3호 작업 전 점검 누가 했나". #129의 범위가 근무자 흐름이라 뺐다 | **PR #132** |
-| 항목 퇴역(`retired_at`) | 결과가 있는 항목은 삭제·문구 수정 대신 퇴역(새 회차엔 안 나오고 옛 회차는 그대로 참조). 회차의 항목 = 회차가 열릴 때 살아 있던 것(`findActiveAt`). 항목에 `created_at`이 없어 회차 뒤 추가된 항목은 옛 회차 조회에도 보인다 — 실제로 문제 되면 컬럼 하나 | **PR #135**, V12 |
+| 항목 퇴역(`retired_at`) | 결과가 있는 항목은 삭제·문구 수정 대신 퇴역(새 회차엔 안 나오고 옛 회차는 그대로 참조). 회차의 항목 = 회차가 열릴 때 살아 있던 것(`findActiveAt`). 항목에 `created_at`이 없어 회차 뒤 추가된 항목은 옛 회차 조회에도 보인다 — 실제로 문제 되면 컬럼 하나 | **PR #135**, V15 |
 | 작업일지 연결(`runs.work_log_id`) | "어느 작업의 점검인가"가 되지만 작업일지 생성(STT 포함) 흐름을 같이 바꿔야 한다 | 별도 주제 |
 | 미완료 회차 배치 | 12시간 지난 열린 회차를 배치로 닫을 수도 있지만, 다음 열기가 닫는 것으로 충분하다. 목록에서 "열린 채 12시간 지남"을 보여 주려면 파생값으로 | 필요해지면 |
-| 항목 순서 UNIQUE(`checklist_id, sequence`) | 스키마 정리 마이그레이션에 같이 | V12~ |
+| 항목 순서 UNIQUE(`checklist_id, sequence`) | 스키마 정리 마이그레이션에 같이 | V16~ |
 
 ## 6. 검증
 
 - `ChecklistRunServiceTest` 14건 — 열기 4(없음/12h 안/12h 밖/경합), 권한, 체크 3(기록·닫힌 회차·남의 것/다른 템플릿), 완료 3(기록 없음·해제·전부), 옛 경로 3
 - `ChecklistResultRepositoryTest` 3건(실제 DB) — 회차 경계로 다시 씀. "같은 사람·같은 템플릿·다른 회차"는 서로 안 보인다
-- V11은 Testcontainers에서 실제 실행(`@DataJpaTest` + `ddl-auto=validate`). 백필은 시드에 결과 행이 없어 0건 — 데이터 있는 DB에서는 회차를 못 찾는 행이 남으면 RAISE
+- V14는 Testcontainers에서 실제 실행(`@DataJpaTest` + `ddl-auto=validate`). 백필은 시드에 결과 행이 없어 0건 — 데이터 있는 DB에서는 회차를 못 찾는 행이 남으면 RAISE
 
 ## 7. 되돌릴 조건
 
