@@ -8,7 +8,7 @@ import com.DOCKin.ai.repository.ChatLogRepository;
 import com.DOCKin.global.error.BusinessException;
 import com.DOCKin.global.error.ErrorCode;
 import com.DOCKin.global.util.AudioConverter;
-import com.DOCKin.worklog.repository.WorkLogRepository;
+import com.DOCKin.worklog.service.WorkLogsService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -203,7 +203,7 @@ class FastApiContractTest {
         return new FastApiService(
                 mock(ChatLogRepository.class),
                 webClient,
-                mock(WorkLogRepository.class),
+                mock(WorkLogsService.class),
                 mock(SttService.class),
                 mock(TranslateLogWriter.class),
                 mock(TranslateLogReader.class),

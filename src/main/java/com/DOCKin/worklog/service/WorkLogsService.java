@@ -141,6 +141,32 @@ public class WorkLogsService {
     private static LocalDateTime beforeCreatedAt(WorkLogCursor c) { return c == null ? null : c.createdAt(); }
     private static Long beforeLogId(WorkLogCursor c) { return c == null ? null : c.logId(); }
 
+    /**
+     * 이 사용자가 이 일지를 볼 수 있는가 — <b>같은 구역</b>이면 본다 (#99). 목록·타인 조회·검색이 P2-18-10에서
+     * 맞춘 경계와 같다. 본인은 자기 구역에 있으니 따로 보지 않는다. ADMIN 예외도 없다 — 목록 경로에도 없다.
+     *
+     * <p>번역·댓글처럼 단건 {@code logId}를 받는 경로가 전부 이걸 거친다. 전에는 각자 {@code findById}·{@code existsById}만
+     * 해서 인증만 있으면 아무 logId를 넣어 남의 구역 일지를 번역문으로 받아 볼 수 있었다.
+     *
+     * <p>자기 트랜잭션이다. {@code FastApiService.saveTranslateLog}가 {@code NOT_SUPPORTED} 안에서 부르는데,
+     * 그 스코프에서 리포지토리 쿼리 메서드({@code findByUserId})를 바로 부르면 FastAPI를 기다리는 동안
+     * 커넥션을 쥔다(#93). 다른 빈의 짧은 readOnly 트랜잭션이면 돌아간다. 돌려주는 엔티티의 제목·본문은
+     * 즉시 로딩 컬럼이라 트랜잭션 밖에서 읽어도 된다 — {@code member}는 지연 로딩이라 여기서만 본다.
+     *
+     * @return 그 일지. 없으면 404, 다른 구역이면 403
+     */
+    @Transactional(readOnly = true)
+    public WorkLog requireVisible(Long logId, String userId) {
+        WorkLog workLog = workLogsRepository.findById(logId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.LOG_NOT_FOUND));
+        Member viewer = memberRepository.findByUserId(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        if (!workLog.getMember().getShipYardArea().equals(viewer.getShipYardArea())) {
+            throw new BusinessException(ErrorCode.ACCESS_DENIED);
+        }
+        return workLog;
+    }
+
     //전체 게시물 조회
     @Transactional(readOnly = true)
     public Slice<WorkLogDto> readWorklog(String userId, WorkLogStatus status, WorkLogCursor before, Pageable pageable){
