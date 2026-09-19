@@ -1,5 +1,6 @@
 package com.DOCKin.absence.controller;
 
+import com.DOCKin.absence.dto.AbsenceDecisionRequestDto;
 import com.DOCKin.absence.dto.AbsenceRequestCreateRequestDto;
 import com.DOCKin.absence.dto.AbsenceRequestResponseDto;
 import com.DOCKin.absence.service.AbsenceRequestService;
@@ -38,6 +39,17 @@ public class AbsenceRequestController {
         String userId = customUserDetails.getMember().getUserId();
         AbsenceRequestResponseDto response = absenceRequestService.createRequest(userId, requestDto, document);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @Operation(summary = "휴가 신청 취소", description = "대기 중(PENDING)인 내 신청을 취소함. 승인·거절·취소된 건은 409. 사유는 선택")
+    @PatchMapping("/requests/{requestId}/cancel")
+    public ResponseEntity<AbsenceRequestResponseDto> cancelRequest(
+            @AuthenticationPrincipal CustomUserDetails customUserDetails,
+            @PathVariable Integer requestId,
+            @RequestBody(required = false) AbsenceDecisionRequestDto dto) {
+        String userId = customUserDetails.getMember().getUserId();
+        String comment = dto != null ? dto.getComment() : null;
+        return ResponseEntity.ok(absenceRequestService.cancelRequest(userId, requestId, comment));
     }
 
     @Operation(summary = "내 휴가 신청 목록 조회", description = "본인이 신청한 휴가 목록을 조회함")
