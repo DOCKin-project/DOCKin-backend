@@ -57,7 +57,7 @@ public class Attendance {
     private LocalDate workDate;
 
     /**
-     * 이 행을 판정한 교대(V10). {@code users.work_shift}는 바뀔 수 있으므로 여기 스냅샷으로 남긴다 —
+     * 이 행을 판정한 교대(V13). {@code users.work_shift}는 바뀔 수 있으므로 여기 스냅샷으로 남긴다 —
      * 석 달 전 지각 기록이 "어느 교대 기준으로 지각인가"에 답하려면 그때의 교대가 필요하다.
      * 관리자 집계(P2-17-4)가 교대별로 나눌 때도 사용자의 현재 교대가 아니라 이 컬럼을 봐야 한다.
      */
@@ -77,7 +77,7 @@ public class Attendance {
 
     /**
      * 근무 시간(초). 퇴근 전에는 null. 예전 {@code total_work_time}은 {@code "HH:mm:ss"} 문자열이라 합계도 평균도
-     * 낼 수 없었다(V10이 초로 바꿨다). 응답의 {@code totalWorkTime} 문자열은 {@code AttendanceDto}가 여기서 만든다.
+     * 낼 수 없었다(V13이 초로 바꿨다). 응답의 {@code totalWorkTime} 문자열은 {@code AttendanceDto}가 여기서 만든다.
      */
     @Column(name = "work_seconds")
     private Integer workSeconds;

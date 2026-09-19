@@ -23,7 +23,7 @@ public interface AttendanceRepository extends JpaRepository<Attendance,Long> {
      *
      * <p>날짜로 찾지 않는다. 야간조는 출근한 날과 퇴근하는 날이 다르고, 근무일({@code WorkDay})로 다시 계산해 찾아도
      * 되지만 "무엇을 닫는가"는 결국 열린 기록 하나이므로 그걸 직접 묻는 편이 규칙에 덜 묶인다.
-     * {@code clockInTime IS NOT NULL}은 휴가·결근 행(둘 다 null)을 빼기 위해서다. V10의 부분 인덱스
+     * {@code clockInTime IS NOT NULL}은 휴가·결근 행(둘 다 null)을 빼기 위해서다. V13의 부분 인덱스
      * {@code idx_attendance_open}이 이 조건 그대로라 사용자당 0~1행만 본다.
      */
     Optional<Attendance> findFirstByMemberAndClockInTimeIsNotNullAndClockOutTimeIsNullOrderByClockInTimeDesc(Member member);

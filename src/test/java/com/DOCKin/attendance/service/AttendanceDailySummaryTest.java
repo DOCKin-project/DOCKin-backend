@@ -159,7 +159,7 @@ class AttendanceDailySummaryTest extends ContainerTestSupport {
 
     private void insertAttendance(String userId, LocalDate day, String status,
                                   LocalDateTime in, LocalDateTime out) {
-        // work_shift(V10)는 판정 교대의 스냅샷 — 여기서는 사용자의 현재 교대를 그대로 복사한다
+        // work_shift(V13)는 판정 교대의 스냅샷 — 여기서는 사용자의 현재 교대를 그대로 복사한다
         jdbc.update("""
                 INSERT INTO attendance (id, user_id, work_date, work_shift, status, clock_in_time, clock_out_time)
                 SELECT nextval('attendance_seq'), user_id, ?, COALESCE(work_shift, 'MORNING'), ?, ?, ?

@@ -251,7 +251,7 @@ ON CONFLICT DO NOTHING;
 -- 2026-07-13(월)의 worker03은 일부러 비워 뒀다 -- 결근 배치가 무엇을 대상으로
 -- 삼는지 보려면 "기록이 없는 근무일"이 하나는 있어야 한다.
 -- ---------------------------------------------------------------------------
--- work_shift는 판정 교대의 스냅샷(V10), work_seconds는 출퇴근 차(초). worker03은 야간조라
+-- work_shift는 판정 교대의 스냅샷(V13), work_seconds는 출퇴근 차(초). worker03은 야간조라
 -- 근무일(work_date)이 출근 날짜다 — 22:00 출근은 정오 이후라 그날이다(ADR-0010). 퇴근은 다음날 07시.
 INSERT INTO attendance (id, user_id, work_date, work_shift, clock_in_time, clock_out_time,
                         in_location, out_location, status, work_seconds) VALUES
