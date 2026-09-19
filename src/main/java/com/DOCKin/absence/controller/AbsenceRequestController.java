@@ -41,7 +41,7 @@ public class AbsenceRequestController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @Operation(summary = "휴가 신청 취소", description = "대기 중(PENDING)인 내 신청을 취소함. 승인·거절·취소된 건은 409. 사유는 선택")
+    @Operation(summary = "휴가 신청 취소", description = "내 신청을 취소함. PENDING은 언제나, APPROVED는 시작일 전까지(연차 환급·휴가 근태 행 삭제). 시작한 휴가·거절·취소된 건은 409. 사유는 선택")
     @PatchMapping("/requests/{requestId}/cancel")
     public ResponseEntity<AbsenceRequestResponseDto> cancelRequest(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,

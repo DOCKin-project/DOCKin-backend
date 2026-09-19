@@ -57,7 +57,14 @@ public class AbsenceRequest {
     @Column(name = "processed_at")
     private LocalDateTime processedAt;
 
-    // 구 last_message_content. 승인/거절 사유 코멘트로 재활용 (last_message_at은 processed_at과 중복이라 제거)
+    // 승인/거절/취소 사유 코멘트
     @Column(name = "decision_comment")
     private String decisionComment;
+
+    /**
+     * 승인 때 실제로 깎은 연차 일수(V17). 취소 때 <b>이 값을</b> 돌려준다 — 그 사이 캘린더가 바뀌어 근무일 수를
+     * 다시 세면 다른 값이 나올 수 있는데, 환급은 재계산이 아니라 기록이어야 한다. 병가·V17 이전 승인은 null.
+     */
+    @Column(name = "deducted_days")
+    private Integer deductedDays;
 }

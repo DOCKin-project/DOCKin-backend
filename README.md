@@ -180,9 +180,10 @@ DOCKin-spring/
 | `GET` | `/api/attendance/admin/daily-summary?date=&shipYardArea=&workShift=` | 구역·날짜 인원 집계 (관리자) — 인원/출근/퇴근/지각/휴가/병결/결근 |
 | `POST` | `/api/absence/requests` | 휴가 신청 (증빙 파일 첨부) |
 | `GET` | `/api/absence/requests` | 내 휴가 신청 목록 |
-| `PATCH` | `/api/absence/requests/{requestId}/cancel` | 내 신청 취소 (PENDING만, 승인 뒤 취소는 별도) |
+| `PATCH` | `/api/absence/requests/{requestId}/cancel` | 내 신청 취소 — PENDING은 언제나, APPROVED는 시작일 전까지(연차 환급·휴가 근태 행 삭제) |
 | `GET` | `/api/absence/admin/requests` | 전체 신청 목록 (관리자) |
 | `PATCH` | `/api/absence/admin/requests/{requestId}/approve` | 승인 → **근태 자동 반영** |
+| `PATCH` | `/api/absence/admin/requests/{requestId}/cancel` | 승인 철회 (시작일 전까지) → 환급·근태 되돌림 |
 | `PATCH` | `/api/absence/admin/requests/{requestId}/reject` | 반려 |
 
 </details>

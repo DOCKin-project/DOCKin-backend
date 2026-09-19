@@ -47,6 +47,17 @@ public class AbsenceAdminController {
         return ResponseEntity.ok(absenceRequestService.approveRequest(adminUserId, requestId, comment));
     }
 
+    @Operation(summary = "승인 철회", description = "승인된 휴가를 시작일 전까지 취소함 — 연차 환급, 휴가 근태 행 삭제. 대기 중 신청은 거절을 쓴다")
+    @PatchMapping("/requests/{requestId}/cancel")
+    public ResponseEntity<AbsenceRequestResponseDto> cancelRequest(
+            @AuthenticationPrincipal CustomUserDetails customUserDetails,
+            @PathVariable Integer requestId,
+            @RequestBody(required = false) AbsenceDecisionRequestDto dto) {
+        String adminUserId = customUserDetails.getMember().getUserId();
+        String comment = dto != null ? dto.getComment() : null;
+        return ResponseEntity.ok(absenceRequestService.cancelAsAdmin(adminUserId, requestId, comment));
+    }
+
     @Operation(summary = "휴가 신청 거절", description = "휴가 신청을 거절함")
     @PatchMapping("/requests/{requestId}/reject")
     public ResponseEntity<AbsenceRequestResponseDto> rejectRequest(

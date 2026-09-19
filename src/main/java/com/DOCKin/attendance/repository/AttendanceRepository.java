@@ -1,14 +1,17 @@
 package com.DOCKin.attendance.repository;
 
 import com.DOCKin.attendance.model.Attendance;
+import com.DOCKin.attendance.model.AttendanceStatus;
 import com.DOCKin.member.model.Member;
 import com.DOCKin.member.model.WorkShift;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,6 +36,24 @@ public interface AttendanceRepository extends JpaRepository<Attendance,Long> {
      * 날짜마다 개별 조회하면 기간이 길수록 쿼리가 그만큼 늘어난다.
      */
     List<Attendance> findByMemberAndWorkDateBetween(Member member, LocalDate startDate, LocalDate endDate);
+
+    /**
+     * 승인 취소가 지우는 휴가 근태 행 — 기간 안, 휴가 상태, <b>출근 시각 없음</b>. 세 조건이 전부 맞는 행만이라
+     * 사람이 실제로 출근한 날은 어떤 경로로도 지워지지 않는다({@code AbsenceCancelledListener}).
+     * 벌크 JPQL이다 — 행을 올려서 하나씩 지울 이유가 없고, 영속성 컨텍스트에 이 행들이 올라와 있지도 않다.
+     */
+    @Modifying
+    @Query("""
+            DELETE FROM Attendance a
+            WHERE a.member.userId = :userId
+              AND a.workDate BETWEEN :startDate AND :endDate
+              AND a.status IN :statuses
+              AND a.clockInTime IS NULL
+            """)
+    int deleteAbsenceRows(@Param("userId") String userId,
+                          @Param("startDate") LocalDate startDate,
+                          @Param("endDate") LocalDate endDate,
+                          @Param("statuses") Collection<AttendanceStatus> statuses);
 
     /**
      * 자정 결근 배치용. 해당 날짜에 기록이 <b>있는</b> 사번 목록을 가져온다.
