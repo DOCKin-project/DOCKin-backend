@@ -1,0 +1,21 @@
+-- #118 — 작업일지 목록·검색이 ORDER BY (created_at DESC, log_id DESC) LIMIT 21 을 인덱스 순서로 걷게 한다.
+--
+-- P2-15-8 은 (user_id, created_at DESC, log_id DESC) 를 재고 "만들지 않는다"고 했다 -- 구역 IN 필터의
+-- 선택도가 16%라 플래너가 84개 구간을 모으는 대신 병렬 순차 스캔 + top-N 정렬을 골랐다. 그 판단은
+-- 그대로 맞다. 이 인덱스는 축이 다르다: 필터가 아니라 **정렬 키가 앞**이라, 플래너가 인덱스를 최신부터
+-- 걷다가 구역 조건에 맞는 행 21개가 모이면 멈춘다(정렬이 사라진다). 선택도가 낮을수록(구역이 클수록)
+-- 오히려 일찍 멈춘다 -- 선택도가 P2-15-8 을 막았던 바로 그 성질이 여기서는 이득이다.
+--
+-- 실측 (2026-09-19, PG17, 계정 4만·구역당 1.3만·작업일지 12만, EXPLAIN ANALYZE, cold):
+--   현재 (user_id IN 1.3만개, 정렬)                 77.8ms   read=5,394 블록, 병렬 순차 스캔 + Sort
+--   구역 조인만 (인덱스 없음)                       191.2ms   해시 조인 -- 조인만으로는 더 느리다
+--   구역 조인 + 이 인덱스, 첫 페이지                  1.2ms   Index Scan 67행 읽고 21행 반환
+--   구역 조인 + 이 인덱스, 커서 페이지(중간)           3.5ms   Index Cond: created_at <= :c  (커서 형태를 같이 바꿨다, WorkLogRepository)
+--   같은 인덱스로 현재 IN 쿼리                        1.4ms   인덱스는 IN 쪽도 살리지만 1.3만 바인드와 엔티티 로딩은 그대로다
+-- 드문 키워드의 LIKE 검색은 인덱스를 끝까지 걷는다(없는 키워드 310ms) -- LIKE %kw% 자체의 한계이고
+-- 이 변경 전에도 같았다(P2-15-5 ⑤). 그쪽은 pg_trgm(DB-IMPROVEMENT-PLAN D1)의 몫이다.
+--
+-- CONCURRENTLY 는 Flyway 트랜잭션 안에서 못 쓴다(V3·V4 와 같은 선택). 100만 행 기준 B-tree 빌드는
+-- 초 단위이고 그동안 쓰기가 막힌다 -- 배포 창에 넣는다(docs/db/online-ddl.md).
+CREATE INDEX IF NOT EXISTS idx_work_logs_created
+    ON work_logs (created_at DESC, log_id DESC);
