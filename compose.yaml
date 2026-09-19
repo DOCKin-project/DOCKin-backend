@@ -9,6 +9,8 @@ services:
       - TZ=Asia/Seoul
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d
+      # 메인 설정도 준다 — worker_processes 를 컨테이너 쿼터에 맞추려고 (#144, 파일 머리 주석).
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - /etc/localtime:/etc/localtime:ro
     # 재부팅 뒤 앱이 살아나도 이게 없으면 80번이 죽어 있다. 이유는 dockin-redis 주석.
     # 앱보다 먼저 뜨면 upstream 이름을 못 찾아 exit 1로 죽는데, 그때는 이 정책이 앱이 뜰 때까지
@@ -25,7 +27,11 @@ services:
       resources:
         limits:
           memory: 100M
-          cpus: '0.25' # 리버스 프록시. 실측에서 유의미하게 잡힌 적이 없다
+          # 0.25 → 1.0 (#144). "실측에서 유의미하게 잡힌 적이 없다"는 색인 측정(E1·E8)의 관찰이었고,
+          # HTTP 부하가 처음 들어온 AWS 밤 16에서 틀렸다: 사이클 48/s·동접 500에서 nginx 하나가
+          # 0.7~0.8 코어를 썼고, 0.25에 붙어 있는 동안 p95 2.5초·11.8초 → 상한을 걷으니 76ms·16ms.
+          # 1.0은 그 실측치에 25% 여유다. 워커 수는 nginx/nginx.conf 에서 이 쿼터에 맞춰 2로 고정한다.
+          cpus: '1.0'
 
   dockin-app:
     # build를 되살렸다 (P2-15-9, 2026-08-08).
