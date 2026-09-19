@@ -5,9 +5,11 @@ import com.DOCKin.rag.model.SourceType;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 
 @Repository
@@ -25,6 +27,15 @@ public interface DocumentChunkRepository extends JpaRepository<DocumentChunk, Lo
             SourceType sourceType, Long sourceId, String embeddingModel);
 
     long countByEmbeddingModel(String embeddingModel);
+
+    /**
+     * 원본이 지워질 때 그 원본의 청크 전부(모델 불문). FK가 없으니 원본을 지우는 쪽이 같은 트랜잭션에서 부른다(#101).
+     * 벌크 JPQL — 청크를 엔티티로 올려 하나씩 지울 이유가 없다. {@code clearAutomatically}는 같은 영속성 컨텍스트에
+     * 그 청크가 올라와 있을 일이 없어 안 건다.
+     */
+    @Modifying
+    @Query("DELETE FROM DocumentChunk c WHERE c.sourceType = :sourceType AND c.sourceId IN :sourceIds")
+    int deleteBySource(@Param("sourceType") SourceType sourceType, @Param("sourceIds") Collection<Long> sourceIds);
 
     /*
      * 최근접 검색(pgvector <=>)은 여기 없다. 엔티티를 다루지 않는 순수 SQL이라
