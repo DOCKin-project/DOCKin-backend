@@ -1,0 +1,23 @@
+# k6 부하 테스트(measure/k6-load)용 대조군 — 앱 컨테이너 메모리 상한만 512M → 1G.
+#
+#   docker compose -f compose.yaml -f compose.gc.yaml -f compose.k6mem.yaml up -d dockin-app
+#
+# [왜 있는가]
+# 운영 compose.yaml 그대로(512M, -Xmx400M)는 유휴 RSS가 이미 463MiB라, 초당 2명이 로그인하는
+# 순간(동시 20) OOM kill(exit 137)이 났다 — 2026-09-19 밤 15, docs/AWS-MEASUREMENT-RESULTS.md.
+# 그 아래 병목을 보려면 컨테이너가 죽지 않아야 하므로 상한만 올린다. 힙(-Xmx400M)은 그대로 —
+# 바꾸는 변수는 컨테이너 상한 하나다. 운영 값을 고치는 결정은 이 파일이 아니라 이슈에서 한다.
+services:
+  dockin-app:
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+    environment:
+      # compose.gc.yaml 이 켜는 기동 직후 색인을 끈다. 계정 풀과 함께 넣은 작업일지 12만 건을 색인하기
+      # 시작하면 (1) app 1.0 vCPU 를 색인이 나눠 먹고 (2) ApplicationRunner 가 끝날 때까지
+      # readinessState 가 OUT_OF_SERVICE 라 healthcheck 가 503 이다. E3 는 "색인과 같은 시간에 돌리지 않는다".
+      - RAG_INDEXING_ON_STARTUP=false
+      - RAG_INDEXING_ENABLED=false
+      # 풀 고갈 진단: 5초 넘게 잡고 있는 커넥션의 보유자 스택을 WARN으로 찍는다(밤 15 u16 진단). 운영 기본값은 0(끔).
+      - SPRING_DATASOURCE_HIKARI_LEAK_DETECTION_THRESHOLD=5000
