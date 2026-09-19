@@ -1,7 +1,7 @@
 # ADR-0010: 근무일은 벽시계 날짜가 아니라 교대 기준일이다
 
 - 상태: **결정.** 2026-09-19. 코드는 PR #119(`fix/attendance-work-day`, #98). 결정은 규칙 한 줄이고, 나머지는 그 규칙이 닿는 자리다
-- 대상 코드: `attendance/model/WorkDay`(규칙), `member/model/WorkShift`(`dayBoundary`), `Attendance.clockIn`·`clockOut`, `AttendanceService.clockin`·`clockout`, `AttendanceRepository`(열린 기록 조회), `V10__attendance_work_shift_and_seconds.sql`
+- 대상 코드: `attendance/model/WorkDay`(규칙), `member/model/WorkShift`(`dayBoundary`), `Attendance.clockIn`·`clockOut`, `AttendanceService.clockin`·`clockout`, `AttendanceRepository`(열린 기록 조회), `V13__attendance_work_shift_and_seconds.sql`
 - 관련 문서: `docs/adr/0001`(출근 락 — 키의 날짜는 그대로다, 4절), `docs/adr/0005` 2-1(근무 정책 엔진 — 이 ADR은 그것을 대신하지 않는다), `docs/WORK-BACKLOG.md` P2-17-4(교대별 집계), 이슈 #98·#105
 - 작성 목적: "근무일"은 급여·지각·결근·집계가 전부 매달리는 축인데, 정의가 없었다 — `LocalDate.now()`가 정의였다. 3교대 중 하나가 그 정의로는 퇴근을 못 찍었다. 규칙을 한 곳에 적어 두고, 하지 않은 것과 되돌릴 조건을 남긴다.
 
@@ -49,7 +49,7 @@ work_date = (now.time < shift.dayBoundary) ? now.date − 1 : now.date
 
 열린 행이 없을 때는 둘을 가른다 — 오늘 근무일의 행이 있고 퇴근 시각이 있으면 `ALREADY_CHECKED_OUT`, 아니면 `NOT_CHECKED_IN`. 앱 메시지가 다르다.
 
-## 4. 행에 남기는 것 — V10
+## 4. 행에 남기는 것 — V13
 
 | 컬럼 | 왜 |
 |---|---|
@@ -77,7 +77,7 @@ work_date = (now.time < shift.dayBoundary) ? now.date − 1 : now.date
 
 - `WorkDayTest` 20건 — 야간조의 하루를 9개 시각으로(21:30 → 12:00 경계 → 다음 21:50), 주간·오후는 "안 바뀐다" 5개, 지각 경계, 16시간 경계, `endTime`.
 - `AttendanceServiceTest` — 야간 00:30 출근 = 전날 근무일 + LATE, 다음날 06:10 퇴근이 전날 행을 닫고 날짜 조회를 안 함, 33시간 전 출근에 퇴근 = 409. 기존 13건은 그대로 통과(주간 동작 불변).
-- V10은 Testcontainers에서 실제로 돌았다(`AttendanceDailySummaryTest`가 `ddl-auto=validate`로 뜬다). 야간 재배정은 빈 테이블이라 0건 — 데이터 있는 DB에서의 첫 실행은 RAISE 조건을 본다.
+- V13은 Testcontainers에서 실제로 돌았다(`AttendanceDailySummaryTest`가 `ddl-auto=validate`로 뜬다). 야간 재배정은 빈 테이블이라 0건 — 데이터 있는 DB에서의 첫 실행은 RAISE 조건을 본다.
 
 ## 7. 되돌릴 조건
 
