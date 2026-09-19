@@ -1,6 +1,8 @@
 package com.DOCKin.worklog.service;
 
+import com.DOCKin.ai.repository.TranslateRepository;
 import com.DOCKin.ai.service.SttService;
+import com.DOCKin.rag.service.ChunkIndexWriter;
 import com.DOCKin.global.file.S3PresignedService;
 import com.DOCKin.worklog.dto.WorkLogsCreateRequestDto;
 import com.DOCKin.worklog.dto.WorkLogsUpdateRequestDto;
@@ -39,6 +41,8 @@ public class WorkLogsService {
     private final EquipmentRepository equipmentRepository;
     private final SttService sttService;
     private final S3PresignedService s3PresignedService;
+    private final TranslateRepository translateRepository;
+    private final ChunkIndexWriter chunkIndexWriter;
 
     //게시물 작성
     @Transactional
@@ -87,18 +91,18 @@ public class WorkLogsService {
         String finalAudioUrl = dto.getAudioFileUrl();
 
         if(file!=null && !file.isEmpty()){
-            try{
-                var sttResponse = sttService.processStt(file,"trace-"+userId,"ko").block();
+            // STT가 실패하면 저장하지 않는다(#117). 전에는 catch(Exception)으로 삼키고 dto.logText로 대체해
+            // 저장했다 -- 음성을 올린 사용자는 일지 본문이 자기 음성이 아니라는 걸 알 길이 없었다.
+            // 실패는 SttService가 STT_CONVERSION_ERROR / PAYLOAD_TOO_LARGE로 던지고 그대로 올라간다.
+            var sttResponse = sttService.processStt(file,"trace-"+userId,"ko").block();
 
-                log.info("STT Response 객체: {}", sttResponse);
+            log.info("STT Response 객체: {}", sttResponse);
 
-                if(sttResponse !=null && sttResponse.text()!=null){
-                    finalLogText = sttResponse.text();
-                }
-                finalAudioUrl = "uploaded_"+file.getOriginalFilename();
-            } catch(Exception e){
-                log.error("stt변환 실패:{}"+e.getMessage());
+            if(sttResponse == null || sttResponse.text() == null || sttResponse.text().isBlank()){
+                throw new BusinessException(ErrorCode.STT_CONVERSION_ERROR);
             }
+            finalLogText = sttResponse.text();
+            finalAudioUrl = "uploaded_"+file.getOriginalFilename();
         }
 
         WorkLog workLog = WorkLog.builder()
@@ -141,16 +145,41 @@ public class WorkLogsService {
     private static LocalDateTime beforeCreatedAt(WorkLogCursor c) { return c == null ? null : c.createdAt(); }
     private static Long beforeLogId(WorkLogCursor c) { return c == null ? null : c.logId(); }
 
+    /**
+     * 이 사용자가 이 일지를 볼 수 있는가 — <b>같은 구역</b>이면 본다 (#99). 목록·타인 조회·검색이 P2-18-10에서
+     * 맞춘 경계와 같다. 본인은 자기 구역에 있으니 따로 보지 않는다. ADMIN 예외도 없다 — 목록 경로에도 없다.
+     *
+     * <p>번역·댓글처럼 단건 {@code logId}를 받는 경로가 전부 이걸 거친다. 전에는 각자 {@code findById}·{@code existsById}만
+     * 해서 인증만 있으면 아무 logId를 넣어 남의 구역 일지를 번역문으로 받아 볼 수 있었다.
+     *
+     * <p>자기 트랜잭션이다. {@code FastApiService.saveTranslateLog}가 {@code NOT_SUPPORTED} 안에서 부르는데,
+     * 그 스코프에서 리포지토리 쿼리 메서드({@code findByUserId})를 바로 부르면 FastAPI를 기다리는 동안
+     * 커넥션을 쥔다(#93). 다른 빈의 짧은 readOnly 트랜잭션이면 돌아간다. 돌려주는 엔티티의 제목·본문은
+     * 즉시 로딩 컬럼이라 트랜잭션 밖에서 읽어도 된다 — {@code member}는 지연 로딩이라 여기서만 본다.
+     *
+     * @return 그 일지. 없으면 404, 다른 구역이면 403
+     */
+    @Transactional(readOnly = true)
+    public WorkLog requireVisible(Long logId, String userId) {
+        WorkLog workLog = workLogsRepository.findById(logId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.LOG_NOT_FOUND));
+        Member viewer = memberRepository.findByUserId(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        if (!workLog.getMember().getShipYardArea().equals(viewer.getShipYardArea())) {
+            throw new BusinessException(ErrorCode.ACCESS_DENIED);
+        }
+        return workLog;
+    }
+
     //전체 게시물 조회
     @Transactional(readOnly = true)
     public Slice<WorkLogDto> readWorklog(String userId, WorkLogStatus status, WorkLogCursor before, Pageable pageable){
         Member member = memberRepository.findByUserId(userId)
                 .orElseThrow(()->new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        String area = member.getShipYardArea();
-       List<Member> areaMembers= memberRepository.findByShipYardArea(area);
-       Slice<WorkLog> logs = workLogsRepository.findByMemberIn(areaMembers, status,
-               beforeCreatedAt(before), beforeLogId(before), sizeOnly(before, pageable));
+        // 구역은 쿼리 안에서 조인으로 거른다. 구역 사용자를 전부 올려 IN에 넣던 방식은 #118.
+        Slice<WorkLog> logs = workLogsRepository.findByArea(member.getShipYardArea(), status,
+                beforeCreatedAt(before), beforeLogId(before), sizeOnly(before, pageable));
 
        return logs.map(WorkLogDto::from);
     }
@@ -182,8 +211,7 @@ public class WorkLogsService {
     public Slice<WorkLogDto> searchByKeyword(String userId, String keyword, WorkLogCursor before, Pageable pageable){
         Member member = memberRepository.findByUserId(userId)
                 .orElseThrow(()->new BusinessException(ErrorCode.USER_NOT_FOUND));
-        List<Member> areaMembers = memberRepository.findByShipYardArea(member.getShipYardArea());
-        Slice<WorkLog> workLog = workLogsRepository.searchWorkLogs(keyword, areaMembers,
+        Slice<WorkLog> workLog = workLogsRepository.searchWorkLogs(keyword, member.getShipYardArea(),
                 beforeCreatedAt(before), beforeLogId(before), sizeOnly(before, pageable));
         return workLog.map(WorkLogDto::from);
     }
@@ -239,6 +267,12 @@ public class WorkLogsService {
             throw new BusinessException(ErrorCode.NOT_LOG_AUTHOR);
         }
 
-      workLogsRepository.delete(log);
+        // RAG 청크 먼저 — FK가 없어 DB가 따라 지우지 않는다(#101). 번역 청크는 translation_id로 걸려 있어
+        // 번역이 cascade로 사라지기 전에 id를 받아 둔다. 같은 트랜잭션이라 일지 삭제가 실패하면 청크도 돌아온다.
+        List<Long> translationIds = translateRepository.findIdsByLogId(logId);
+        chunkIndexWriter.deleteForWorkLog(logId, translationIds);
+
+        // 댓글·이미지는 엔티티 cascade, 번역은 DB cascade(V12). 전에는 번역이 NO ACTION이라 번역된 일지는 삭제가 500이었다.
+        workLogsRepository.delete(log);
     }
 }

@@ -44,8 +44,19 @@
 #     새 앱이 뜨면 "다른 색인이 진행 중"으로 건너뛰고 밤이 조용히 죽는다. stop 뒤 키를 지우고 start.
 #   · 유휴가 측정의 10배였다. 끝나면 정지하고, 그와 별개로 시작할 때 하드 watchdog을 건다.
 #
+# [밤 16(#83)에서 더한 것 -- 컨테이너 메모리]
+#   밤 14가 "DB 재시작으로만 회복"까지 갔는데 rate.csv에 DB 컨테이너의 메모리를 안 적어
+#   "512M 상한이 페이지 캐시까지 센다"가 [추측]으로 남았다. 이제 매 분 DB 컨테이너의 cgroup
+#   (memory.current / memory.max / memory.stat의 anon·file·shmem / memory.events의 max)을 같은 줄에 적는다.
+#   file이 상한 근처에서 멈추고 events max가 늘면 페이지 캐시가 상한을 나눠 쓰는 것이다.
+#
+#   그리고 MEM_RAISE(예: 1g)를 주면 첫 개입이 "재시작 없이 상한만 올리기"가 된다 --
+#   `docker update --memory`는 cgroup 값만 바꾸므로 프로세스·버퍼·캐시가 그대로다. 이것으로
+#   회복하면 원인은 상한이고(밤 14의 재시작 회복도 새 cgroup 때문), 안 되면 앱 → DB 재시작 → REINDEX로 잇는다.
+#
 # [실행]
 #   ./scripts/e8-longrun-cause.sh                                   # 시드가 들어 있고 청크 0인 DB에서
+#   MEM_RAISE=1g ./scripts/e8-longrun-cause.sh                      # 밤 16: 첫 개입이 상한 올리기
 #   HOLE_SOURCES=60000 ./scripts/e8-longrun-cause.sh                # 옛 방식: 구멍을 파고 메운다
 #   MAX_HOURS=0.3 SHUTDOWN_WHEN_DONE=0 ./scripts/e8-longrun-cause.sh   # 연습 주행
 #
@@ -70,6 +81,7 @@ VACUUM_OPTS=${VACUUM_OPTS:-"ANALYZE, INDEX_CLEANUP OFF"}
 OUT_ROOT=${OUT_ROOT:-measure}
 HNSW_INDEX=${HNSW_INDEX:-idx_chunk_embedding_hnsw}
 LOCK_KEY=${LOCK_KEY:-rag:indexing:lock}
+MEM_RAISE=${MEM_RAISE:-}                   # 비우면 밤 14와 같은 개입 순서. 주면(예: 1g) 첫 개입이 DB 컨테이너 상한 올리기
 # 끝나면 인스턴스를 정지한다(EBS는 남는다). 밤 4가 "유휴가 측정의 10배"였다.
 # 로컬·연습 주행에서는 SHUTDOWN_WHEN_DONE=0. EC2 메타데이터가 없는 곳에서는 스스로 끈다.
 SHUTDOWN_WHEN_DONE=${SHUTDOWN_WHEN_DONE:-1}
@@ -82,6 +94,12 @@ SVC_TEI=dockin-embedding
 SVC_REDIS=dockin-redis
 DB_USER=${DB_USER:-root}
 DB_NAME=${DB_NAME:-dockindb}
+
+# 개입 순서. 이름으로 부르고 STAGE는 이 배열의 1-based 인덱스다.
+STAGES=(); [[ -n "$MEM_RAISE" ]] && STAGES+=(memup); STAGES+=(app db reindex)
+stage_name() { echo "${STAGES[$(( $1 - 1 ))]}"; }
+stage_what() { case "$1" in memup) echo "컨테이너 메모리 상한(페이지 캐시가 상한을 나눠 쓰는 것)";; app) echo "앱(JVM·풀·세션)";; db) echo "DB 휘발 상태(버퍼·WAL 백로그·진행 중 autovacuum)";; reindex) echo "HNSW 인덱스 상태";; esac; }
+stage_order_text() { local t=""; for n in "${STAGES[@]}"; do case "$n" in memup) t+="DB 상한 ${MEM_RAISE}로(재시작 없이) → ";; app) t+="앱 재시작 → ";; db) t+="DB 재시작 → ";; reindex) t+="REINDEX $HNSW_INDEX";; esac; done; echo "$t"; }
 
 RUN_ID=$(date +%Y%m%dT%H%M%S)
 OUT="$OUT_ROOT/e8cause-$RUN_ID"
@@ -98,6 +116,17 @@ on_ec2() { curl -sf --max-time 2 -X PUT -H 'X-aws-ec2-metadata-token-ttl-seconds
 median() { sort -n | awk '{a[NR]=$1} END{if(NR==0){print ""; exit} if(NR%2){print a[(NR+1)/2]} else {printf "%.1f\n",(a[NR/2]+a[NR/2+1])/2}}'; }
 
 app_id()      { dc ps -qa "$SVC_APP" 2>/dev/null | head -1; }
+db_id()       { dc ps -q "$SVC_DB" 2>/dev/null | head -1; }
+# DB 컨테이너의 cgroup v2 메모리. 컨테이너 안의 /sys/fs/cgroup이 그 컨테이너의 cgroup이다.
+# 출력: current_mb|max_mb|file_mb|anon_mb|shmem_mb|events_max  (max가 무제한이면 'max')
+db_cgroup() {
+    docker exec "$(db_id)" sh -c '
+        c=$(cat /sys/fs/cgroup/memory.current); m=$(cat /sys/fs/cgroup/memory.max)
+        f=$(awk "/^file /{print \$2}" /sys/fs/cgroup/memory.stat); a=$(awk "/^anon /{print \$2}" /sys/fs/cgroup/memory.stat)
+        s=$(awk "/^shmem /{print \$2}" /sys/fs/cgroup/memory.stat); e=$(awk "/^max /{print \$2}" /sys/fs/cgroup/memory.events)
+        mb() { [ "$1" = max ] && echo max || echo $(( $1 / 1048576 )); }
+        echo "$(mb $c)|$(mb $m)|$(mb ${f:-0})|$(mb ${a:-0})|$(mb ${s:-0})|${e:-0}"' 2>/dev/null | tr -d '\r'
+}
 app_running() { [[ "$(docker inspect -f '{{.State.Running}}' "$(app_id)" 2>/dev/null)" == "true" ]]; }
 # 이번 기동 이후의 앱 로그에서 색인의 끝을 찾는다. 완주·중단·건너뜀은 서로 다른 줄이다(IndexingService).
 app_index_end() {
@@ -139,6 +168,10 @@ WHERE name IN ('shared_buffers','checkpoint_timeout','max_wal_size','checkpoint_
                'autovacuum_vacuum_insert_threshold','autovacuum_vacuum_insert_scale_factor',
                'autovacuum_vacuum_cost_delay','autovacuum_naptime','maintenance_work_mem','autovacuum_work_mem');
 SQL
+        echo "-- db container cgroup (memory.current|memory.max|file|anon|shmem|events.max, MB)"
+        db_cgroup
+        echo "-- db container memory.stat"
+        docker exec "$(db_id)" cat /sys/fs/cgroup/memory.stat 2>/dev/null
     } > "$f" 2>&1
     OUT_DIR="$RAW" TAG="$tag" ./scripts/db/bloat-snapshot.sh >/dev/null 2>&1 || true
 }
@@ -162,7 +195,7 @@ app_start() {
 app_stop() { dc stop -t 20 "$SVC_APP" >/dev/null 2>&1; }
 
 echo "t_epoch,t_iso,event,chunks" > "$MARKS"
-echo "t_epoch,t_iso,elapsed_s,phase,chunks,sources,d_chunks,d_sources,ms_per_source,app,ins_calls,ins_ms,d_ins_calls,d_ins_ms,ins_ms_per_call,all_calls,all_ms,ckpt_timed,ckpt_req,ckpt_buffers,wal_mb,n_dead,n_ins_since_vac,autovac_count,last_autovac,vac_running,heap_mb,hnsw_mb,backends,lock_waits,cpu_app,cpu_db,cpu_tei,mem_app" > "$RATE"
+echo "t_epoch,t_iso,elapsed_s,phase,chunks,sources,d_chunks,d_sources,ms_per_source,app,ins_calls,ins_ms,d_ins_calls,d_ins_ms,ins_ms_per_call,all_calls,all_ms,ckpt_timed,ckpt_req,ckpt_buffers,wal_mb,n_dead,n_ins_since_vac,autovac_count,last_autovac,vac_running,heap_mb,hnsw_mb,backends,lock_waits,cpu_app,cpu_db,cpu_tei,mem_app,mem_db_cur_mb,mem_db_max_mb,mem_db_file_mb,mem_db_anon_mb,mem_db_shmem_mb,mem_db_events_max" > "$RATE"
 
 # ── 전제 확인 ────────────────────────────────────────────────────────────────
 for s in "$SVC_DB" "$SVC_TEI" "$SVC_REDIS"; do
@@ -208,7 +241,8 @@ say "시작 코퍼스 $CORPUS_START 청크 / 원본 $SOURCES_TOTAL / TEI 상한 
     echo "| TEI 상한 | $TEI_CPUS 고정 |"
     echo "| 열화 판정 | 기준선(유효 표본 $((BASELINE_SKIP+1))~$((BASELINE_SKIP+BASELINE_N)) 중앙값)×$DEGRADE_FACTOR 이상 $DEGRADE_N표본 연속 |"
     echo "| 회복 판정 | 개입 뒤 유효 표본 $OBSERVE_SKIP개 버리고 $OBSERVE_N개 중앙값 < 기준선×$RECOVER_FACTOR |"
-    echo "| 개입 순서 | 앱 재시작 → DB 재시작 → REINDEX $HNSW_INDEX |"
+    echo "| 개입 순서 | $(stage_order_text) |"
+    echo "| DB 컨테이너 메모리 | $(db_cgroup | awk -F'|' '{print "상한 "$2"MB, 시작 시 current "$1"MB (file "$3" anon "$4" shmem "$5")"}') |"
 } > "$OUT/env.md"
 
 # ── (선택) 구멍 파기 ─────────────────────────────────────────────────────────
@@ -261,20 +295,31 @@ DEGRADE_RUN=0; STALL=0; CRASHES=0; VALID_SKIP=0
 PREV_C=$(chunks); PREV_S=$(psql_q "SELECT count(DISTINCT (source_type, source_id)) FROM document_chunks;")
 PREV_INS_CALLS=0; PREV_INS_MS=0; PREV_T=$(date +%s)
 
-intervene() {   # $1 = 1|2|3
+intervene() {   # $1 = STAGE 번호(1-based). 무엇을 하는지는 STAGES[$1-1]
     STAGE=$1
+    local name; name=$(stage_name "$1")
     app_logs_save "before-stage$1"; gc_log_save "before-stage$1"
-    case "$1" in
-        1)  mark "개입 1: 앱 재시작 직전" before-app-restart
+    case "$name" in
+        memup)
+            # 재시작 없이 cgroup 상한만 올린다. 프로세스·shared_buffers·이미 올라 있는 페이지 캐시가 전부 그대로라
+            # 이것으로 회복하면 "상한이 원인"이 재시작 회복보다 한 겹 더 좁혀진다.
+            mark "개입 $1: DB 컨테이너 상한 → $MEM_RAISE (재시작 없이) 직전 [$(db_cgroup)]" before-memup
+            docker update --memory "$MEM_RAISE" --memory-swap "$MEM_RAISE" "$(db_id)" >/dev/null 2>&1 \
+                || say "!! docker update 실패 — 상한이 안 바뀌었다"
+            mark "개입 $1: 상한 변경 완료 [$(db_cgroup)] — 앱은 그대로" ;;
+        app)
+            mark "개입 $1: 앱 재시작 직전" before-app-restart
             app_stop; app_start
-            mark "개입 1: 앱 재시작 완료 — 2회차" ;;
-        2)  mark "개입 2: DB 재시작 직전" before-db-restart
+            mark "개입 $1: 앱 재시작 완료" ;;
+        db)
+            mark "개입 $1: DB 재시작 직전" before-db-restart
             app_stop
             dc restart "$SVC_DB" >/dev/null 2>&1
             for _ in $(seq 1 60); do psql_q "SELECT 1;" >/dev/null 2>&1 && break; sleep 2; done
             app_start
-            mark "개입 2: DB 재시작 완료 — 3회차" ;;
-        3)  mark "개입 3: REINDEX 직전" before-reindex
+            mark "개입 $1: DB 재시작 완료 [$(db_cgroup)]" ;;
+        reindex)
+            mark "개입 $1: REINDEX 직전" before-reindex
             app_stop
             local t0=$(date +%s)
             dc exec -T "$SVC_DB" psql -U "$DB_USER" -d "$DB_NAME" -X -q \
@@ -282,7 +327,7 @@ intervene() {   # $1 = 1|2|3
                 > "$RAW/reindex.log" 2>&1
             say "REINDEX $(( $(date +%s) - t0 ))초"
             app_start
-            mark "개입 3: REINDEX 완료($(( $(date +%s) - t0 ))s) — 4회차" after-reindex ;;
+            mark "개입 $1: REINDEX 완료($(( $(date +%s) - t0 ))s)" after-reindex ;;
     esac
     PHASE="observe-$1"; OBS_SAMPLES=(); VALID_SKIP=0; STALL=0
 }
@@ -320,6 +365,7 @@ while :; do
     STATS=$(docker stats --no-stream --format '{{.Name}} {{.CPUPerc}} {{.MemUsage}}' 2>/dev/null)
     CPU_APP=$(awk '/dockin-app/{print $2}' <<< "$STATS"); CPU_DB=$(awk '/dockin-db/{print $2}' <<< "$STATS")
     CPU_TEI=$(awk '/dockin-embedding/{print $2}' <<< "$STATS"); MEM_APP=$(awk '/dockin-app/{print $3}' <<< "$STATS")
+    IFS='|' read -r MDB_CUR MDB_MAX MDB_FILE MDB_ANON MDB_SHM MDB_EVMAX <<< "$(db_cgroup)"
 
     GAP=$(( NOW - PREV_T )); DC=$(( CH - PREV_C )); DS=$(( SR - PREV_S ))
     D_INS_CALLS=$(( INS_CALLS - PREV_INS_CALLS )); D_INS_MS=$(awk -v a="$INS_MS" -v b="$PREV_INS_MS" 'BEGIN{printf "%.1f", a-b}')
@@ -327,12 +373,13 @@ while :; do
     INS_PER=""; (( D_INS_CALLS > 0 )) && INS_PER=$(awk -v m="$D_INS_MS" -v n="$D_INS_CALLS" 'BEGIN{printf "%.3f", m/n}')
     APP=$(app_running && echo up || echo down)
 
-    printf '%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n' \
+    printf '%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n' \
         "$NOW" "$(date -u +%FT%TZ)" "$ELAPSED" "$PHASE" "$CH" "$SR" "$DC" "$DS" "$MSS" "$APP" \
         "$INS_CALLS" "$INS_MS" "$D_INS_CALLS" "$D_INS_MS" "$INS_PER" "$ALL_CALLS" "$ALL_MS" \
         "$CK_T" "$CK_R" "$CK_B" "$WAL_MB" "$N_DEAD" "$N_INS_VAC" "$AV_CNT" "$LAST_AV" "$VAC_RUN" "$HEAP_MB" "$HNSW_MB" \
-        "$BACKENDS" "$LOCKW" "$CPU_APP" "$CPU_DB" "$CPU_TEI" "$MEM_APP" >> "$RATE"
-    say "[$PHASE] 청크 $CH (+$DC) 원본당 ${MSS:-—}ms | INSERT ${INS_PER:-—}ms/건 | ckpt $CK_T/$CK_R wal ${WAL_MB}MB | dead $N_DEAD vac $AV_CNT${VAC_RUN:+ run=$VAC_RUN} | hnsw ${HNSW_MB}MB | cpu app $CPU_APP db $CPU_DB tei $CPU_TEI | base ${BASELINE:-—}"
+        "$BACKENDS" "$LOCKW" "$CPU_APP" "$CPU_DB" "$CPU_TEI" "$MEM_APP" \
+        "$MDB_CUR" "$MDB_MAX" "$MDB_FILE" "$MDB_ANON" "$MDB_SHM" "$MDB_EVMAX" >> "$RATE"
+    say "[$PHASE] 청크 $CH (+$DC) 원본당 ${MSS:-—}ms | INSERT ${INS_PER:-—}ms/건 | ckpt $CK_T/$CK_R wal ${WAL_MB}MB | dead $N_DEAD vac $AV_CNT${VAC_RUN:+ run=$VAC_RUN} | hnsw ${HNSW_MB}MB | cpu app $CPU_APP db $CPU_DB tei $CPU_TEI | dbmem ${MDB_CUR:-?}/${MDB_MAX:-?}MB file ${MDB_FILE:-?} anon ${MDB_ANON:-?} evmax ${MDB_EVMAX:-?} | base ${BASELINE:-—}"
     PREV_C=$CH; PREV_S=$SR; PREV_T=$NOW; PREV_INS_CALLS=$INS_CALLS; PREV_INS_MS=$INS_MS
 
     # ── 끝·이상 판정: 앱 로그가 말하게 한다 ─────────────────────────────────
@@ -391,14 +438,14 @@ while :; do
             OBS_SAMPLES+=("$MSS")
             if (( ${#OBS_SAMPLES[@]} >= OBSERVE_N )); then
                 MED=$(printf '%s\n' "${OBS_SAMPLES[@]}" | median)
-                case "$STAGE" in 1) WHAT="앱(JVM·풀·세션)";; 2) WHAT="DB 휘발 상태(버퍼·WAL 백로그·진행 중 autovacuum)";; 3) WHAT="HNSW 인덱스 상태";; esac
+                WHAT=$(stage_what "$(stage_name "$STAGE")")
                 if awk -v m="$MED" -v b="$BASELINE" -v f="$RECOVER_FACTOR" 'BEGIN{exit !(m < b*f)}'; then
                     mark "회복 — 개입 $STAGE 뒤 중앙값 ${MED}ms (기준선 $BASELINE) → 원인은 $WHAT" "recovered-stage$STAGE"
                     PHASE=settled
                 else
                     mark "미회복 — 개입 $STAGE 뒤 중앙값 ${MED}ms (기준선 $BASELINE) → $WHAT 은 아니다" "not-recovered-stage$STAGE"
-                    if (( STAGE >= 3 )); then
-                        mark "셋 다 아님 — 앱·DB 재시작·REINDEX로 안 돌아온다. rate.csv의 INSERT ms/건과 TEI cpu를 본다"
+                    if (( STAGE >= ${#STAGES[@]} )); then
+                        mark "전부 아님 — $(stage_order_text) 로 안 돌아온다. rate.csv의 INSERT ms/건과 TEI cpu를 본다"
                         PHASE=settled
                     else
                         intervene $(( STAGE + 1 ))

@@ -1,0 +1,124 @@
+# final  2026-09-19T10:10:24Z
+time="2026-09-19T10:10:24Z" level=warning msg="/home/ec2-user/DOCKin-spring/compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+-- pg_stat_checkpointer
+ num_timed | num_requested | restartpoints_timed | restartpoints_req | restartpoints_done | write_time | sync_time | buffers_written |          stats_reset          
+-----------+---------------+---------------------+-------------------+--------------------+------------+-----------+-----------------+-------------------------------
+         4 |             0 |                   0 |                 0 |                  0 |     307819 |       121 |            4463 | 2026-09-19 18:52:54.885098+09
+(1 row)
+
+-- pg_stat_wal
+ wal_records | wal_fpi | wal_bytes | wal_buffers_full | wal_write | wal_sync | wal_write_time | wal_sync_time |          stats_reset          
+-------------+---------+-----------+------------------+-----------+----------+----------------+---------------+-------------------------------
+      169738 |   18406 | 150709657 |             3770 |      4632 |      845 |              0 |             0 | 2026-09-19 18:52:54.885115+09
+(1 row)
+
+-- pg_stat_bgwriter
+ buffers_clean | maxwritten_clean | buffers_alloc |          stats_reset          
+---------------+------------------+---------------+-------------------------------
+         17906 |               39 |       7816392 | 2026-09-19 18:52:54.885121+09
+(1 row)
+
+-- document_chunks
+ n_live_tup | n_dead_tup | n_tup_ins | n_mod_since_analyze | n_ins_since_vacuum | autovacuum_count |        last_autovacuum        | autoanalyze_count |       last_autoanalyze        |  heap  |  hnsw  
+------------+------------+-----------+---------------------+--------------------+------------------+-------------------------------+-------------------+-------------------------------+--------+--------
+     240099 |      28742 |    281649 |               14371 |              14371 |               21 | 2026-09-19 18:03:12.308759+09 |                44 | 2026-09-19 18:15:30.880465+09 | 184 MB | 407 MB
+(1 row)
+
+-- pg_stat_progress_vacuum
+ pid | datid | datname | relid | phase | heap_blks_total | heap_blks_scanned | heap_blks_vacuumed | index_vacuum_count | max_dead_tuple_bytes | dead_tuple_bytes | num_dead_item_ids | indexes_total | indexes_processed 
+-----+-------+---------+-------+-------+-----------------+-------------------+--------------------+--------------------+----------------------+------------------+-------------------+---------------+-------------------
+(0 rows)
+
+-- pg_stat_statements top 8 by total_exec_time
+ calls  | total_ms |  mean_ms  |  rows  | shared_blks_hit | shared_blks_read | shared_blks_dirtied | shared_blks_written |                                             q                                              
+--------+----------+-----------+--------+-----------------+------------------+---------------------+---------------------+--------------------------------------------------------------------------------------------
+      1 |    75112 | 75112.233 |      0 |           10988 |            22093 |                  25 |                   0 | VACUUM (ANALYZE, INDEX_CLEANUP OFF) document_chunks
+  14371 |    30813 |     2.144 |  14371 |         6589167 |          7650195 |               26707 |               22481 | insert into document_chunks (chunk_index,content,content_hash,created_at,embedding,embeddi
+ 200021 |     4374 |     0.022 | 225728 |         1626004 |            68689 |                   0 |                   0 | select dc1_0.chunk_id,dc1_0.chunk_index,dc1_0.content,dc1_0.content_hash,dc1_0.created_at,
+     16 |     3892 |   243.257 |     16 |            4042 |            28366 |                 842 |                   9 | SELECT count(*), count(DISTINCT (source_type, source_id)) FROM document_chunks
+     15 |     3812 |   254.155 |     15 |           16515 |            30905 |                 369 |                  12 | SELECT (SELECT count(*) FROM document_chunks), (SELECT count(DISTINCT (source_type, source
+   2002 |      875 |     0.437 | 200016 |          558558 |            21526 |                   0 |                   9 | select wl1_0.log_id,wl1_0.audio_file_url,wl1_0.created_at,wl1_0.equipment_id,wl1_0.log_tex
+      1 |      775 |   774.669 |  14371 |           86259 |            25060 |                4296 |                2294 | DELETE FROM document_chunks WHERE (source_type, source_id) IN ( SELECT source_type, source
+      1 |      226 |   226.190 |      1 |            1223 |                0 |                   0 |                   0 | SELECT count(DISTINCT (source_type, source_id)) FROM document_chunks
+(8 rows)
+
+-- pg_stat_activity
+  pid  | state  | wait_event_type |     wait_event      |         backend_type         |                              q                               
+-------+--------+-----------------+---------------------+------------------------------+--------------------------------------------------------------
+ 38069 | active |                 |                     | client backend               | SELECT pid, state, wait_event_type, wait_event, backend_type
+    31 |        | Activity        | AutovacuumMain      | autovacuum launcher          | 
+    32 |        | Activity        | LogicalLauncherMain | logical replication launcher | 
+    27 |        | Activity        | CheckpointerMain    | checkpointer                 | 
+    28 |        | Activity        | BgwriterHibernate   | background writer            | 
+    30 |        | Activity        | WalWriterMain       | walwriter                    | 
+(6 rows)
+
+-- settings
+                 name                  | setting | unit 
+---------------------------------------+---------+------
+ autovacuum_naptime                    | 60      | s
+ autovacuum_vacuum_cost_delay          | 2       | ms
+ autovacuum_vacuum_insert_scale_factor | 0.2     | 
+ autovacuum_vacuum_insert_threshold    | 1000    | 
+ autovacuum_work_mem                   | -1      | kB
+ checkpoint_completion_target          | 0.9     | 
+ checkpoint_timeout                    | 300     | s
+ maintenance_work_mem                  | 65536   | kB
+ max_wal_size                          | 1024    | MB
+ shared_buffers                        | 16384   | 8kB
+(10 rows)
+
+-- db container cgroup (memory.current|memory.max|file|anon|shmem|events.max, MB)
+992|1024|963|19|143|89238
+-- db container memory.stat
+anon 20283392
+file 1010122752
+kernel 10235904
+kernel_stack 262144
+pagetables 3698688
+sec_pagetables 0
+percpu 3680
+sock 0
+vmalloc 24576
+shmem 150568960
+zswap 0
+zswapped 0
+file_mapped 148418560
+file_dirty 0
+file_writeback 0
+swapcached 0
+anon_thp 0
+file_thp 0
+shmem_thp 0
+inactive_anon 27168768
+active_anon 143667200
+inactive_file 421289984
+active_file 438263808
+unevictable 0
+slab_reclaimable 4315536
+slab_unreclaimable 1632264
+slab 5947800
+workingset_refault_anon 0
+workingset_refault_file 2283889
+workingset_activate_anon 0
+workingset_activate_file 1507077
+workingset_restore_anon 0
+workingset_restore_file 1334216
+workingset_nodereclaim 0
+pgscan 4234148
+pgsteal 4185566
+pgscan_kswapd 0
+pgscan_direct 4234148
+pgsteal_kswapd 0
+pgsteal_direct 4185566
+pgfault 21369049
+pgmajfault 0
+pgrefill 8480358
+pgactivate 7151188
+pgdeactivate 8480358
+pglazyfree 0
+pglazyfreed 0
+zswpin 0
+zswpout 0
+thp_fault_alloc 0
+thp_collapse_alloc 0

@@ -1,0 +1,7 @@
+{
+  "detail": {
+    "message": "STT provider failed",
+    "traceId": "trace-err-1",
+    "reason": "stt failed"
+  }
+}

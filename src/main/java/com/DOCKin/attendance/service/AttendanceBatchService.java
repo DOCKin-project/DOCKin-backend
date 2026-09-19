@@ -3,6 +3,7 @@ package com.DOCKin.attendance.service;
 import com.DOCKin.attendance.model.Attendance;
 import com.DOCKin.attendance.repository.AttendanceRepository;
 import com.DOCKin.member.model.Member;
+import com.DOCKin.member.model.UserRole;
 import com.DOCKin.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -85,7 +86,9 @@ public class AttendanceBatchService {
         // 기록이 "있는" 사번만 사번 문자열로 투영해 가져온다. 엔티티를 전부 적재할 이유가 없다.
         Set<String> recorded = new HashSet<>(attendanceRepository.findUserIdsByWorkDate(workDate));
 
-        List<Attendance> absentees = memberRepository.findAll().stream()
+        // 대상은 근무자(USER)다. findAll()이었을 때는 관리자 계정이 매일 결근 행을 얻었다(#105) —
+        // 관리자는 출근을 찍지 않으므로 "기록 없음"이 곧 결근이 아니다.
+        List<Attendance> absentees = memberRepository.findByRole(UserRole.USER).stream()
                 .filter(member -> !recorded.contains(member.getUserId()))
                 .map(member -> Attendance.ofAbsent(member, workDate))
                 .toList();

@@ -1,0 +1,267 @@
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+     execution: local
+        script: journey.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 600 max VUs, 2m0s max duration (incl. graceful stop):
+              * rate: 32.00 iterations/s for 1m30s (maxVUs: 64-600, gracefulStop: 30s)
+
+
+rate   [   1% ] 024/064 VUs  0m01.0s/1m30s  32.00 iters/s
+
+rate   [   2% ] 046/064 VUs  0m02.0s/1m30s  32.00 iters/s
+
+rate   [   3% ] 066/067 VUs  0m03.0s/1m30s  32.00 iters/s
+
+rate   [   4% ] 077/077 VUs  0m04.0s/1m30s  32.00 iters/s
+
+rate   [   6% ] 091/091 VUs  0m05.0s/1m30s  32.00 iters/s
+
+rate   [   7% ] 103/104 VUs  0m06.0s/1m30s  32.00 iters/s
+
+rate   [   8% ] 116/117 VUs  0m07.0s/1m30s  32.00 iters/s
+
+rate   [   9% ] 122/125 VUs  0m08.0s/1m30s  32.00 iters/s
+
+rate   [  10% ] 136/136 VUs  0m09.0s/1m30s  32.00 iters/s
+
+rate   [  11% ] 146/146 VUs  0m10.0s/1m30s  32.00 iters/s
+
+rate   [  12% ] 152/155 VUs  0m11.0s/1m30s  32.00 iters/s
+
+rate   [  13% ] 167/167 VUs  0m12.0s/1m30s  32.00 iters/s
+
+rate   [  14% ] 179/179 VUs  0m13.0s/1m30s  32.00 iters/s
+
+rate   [  16% ] 185/189 VUs  0m14.0s/1m30s  32.00 iters/s
+
+rate   [  17% ] 196/197 VUs  0m15.0s/1m30s  32.00 iters/s
+
+rate   [  18% ] 208/208 VUs  0m16.0s/1m30s  32.00 iters/s
+
+rate   [  19% ] 218/219 VUs  0m17.0s/1m30s  32.00 iters/s
+
+rate   [  20% ] 227/228 VUs  0m18.0s/1m30s  32.00 iters/s
+
+rate   [  21% ] 239/240 VUs  0m19.0s/1m30s  32.00 iters/s
+
+rate   [  22% ] 245/247 VUs  0m20.0s/1m30s  32.00 iters/s
+
+rate   [  23% ] 258/259 VUs  0m21.0s/1m30s  32.00 iters/s
+
+rate   [  24% ] 269/269 VUs  0m22.0s/1m30s  32.00 iters/s
+
+rate   [  26% ] 277/281 VUs  0m23.0s/1m30s  32.00 iters/s
+
+rate   [  27% ] 291/291 VUs  0m24.0s/1m30s  32.00 iters/s
+
+rate   [  28% ] 300/302 VUs  0m25.0s/1m30s  32.00 iters/s
+
+rate   [  29% ] 307/308 VUs  0m26.0s/1m30s  32.00 iters/s
+
+rate   [  30% ] 320/320 VUs  0m27.0s/1m30s  32.00 iters/s
+
+rate   [  31% ] 327/330 VUs  0m28.0s/1m30s  32.00 iters/s
+
+rate   [  32% ] 338/342 VUs  0m29.0s/1m30s  32.00 iters/s
+
+rate   [  33% ] 347/351 VUs  0m30.0s/1m30s  32.00 iters/s
+
+rate   [  34% ] 359/359 VUs  0m31.0s/1m30s  32.00 iters/s
+
+rate   [  36% ] 371/372 VUs  0m32.0s/1m30s  32.00 iters/s
+
+rate   [  37% ] 381/382 VUs  0m33.0s/1m30s  32.00 iters/s
+
+rate   [  38% ] 389/390 VUs  0m34.0s/1m30s  32.00 iters/s
+
+rate   [  39% ] 399/400 VUs  0m35.0s/1m30s  32.00 iters/s
+
+rate   [  40% ] 407/409 VUs  0m36.0s/1m30s  32.00 iters/s
+
+rate   [  41% ] 419/420 VUs  0m37.0s/1m30s  32.00 iters/s
+
+rate   [  42% ] 430/430 VUs  0m38.0s/1m30s  32.00 iters/s
+
+rate   [  43% ] 441/441 VUs  0m39.0s/1m30s  32.00 iters/s
+
+rate   [  44% ] 452/453 VUs  0m40.0s/1m30s  32.00 iters/s
+
+rate   [  46% ] 459/461 VUs  0m41.0s/1m30s  32.00 iters/s
+
+rate   [  47% ] 471/472 VUs  0m42.0s/1m30s  32.00 iters/s
+
+rate   [  48% ] 481/483 VUs  0m43.0s/1m30s  32.00 iters/s
+
+rate   [  49% ] 492/493 VUs  0m44.0s/1m30s  32.00 iters/s
+
+rate   [  50% ] 503/503 VUs  0m45.0s/1m30s  32.00 iters/s
+
+rate   [  51% ] 513/513 VUs  0m46.0s/1m30s  32.00 iters/s
+
+rate   [  52% ] 527/528 VUs  0m47.0s/1m30s  32.00 iters/s
+
+rate   [  53% ] 534/536 VUs  0m48.0s/1m30s  32.00 iters/s
+
+rate   [  54% ] 548/548 VUs  0m49.0s/1m30s  32.00 iters/s
+
+rate   [  56% ] 559/559 VUs  0m50.0s/1m30s  32.00 iters/s
+
+rate   [  57% ] 571/572 VUs  0m51.0s/1m30s  32.00 iters/s
+
+rate   [  58% ] 580/584 VUs  0m52.0s/1m30s  32.00 iters/s
+
+rate   [  59% ] 590/591 VUs  0m53.0s/1m30s  32.00 iters/s
+time="2026-09-19T05:45:15Z" level=warning msg="Insufficient VUs, reached 600 active VUs and cannot initialize more" executor=constant-arrival-rate scenario=rate
+
+rate   [  60% ] 600/600 VUs  0m54.0s/1m30s  32.00 iters/s
+
+rate   [  61% ] 600/600 VUs  0m55.0s/1m30s  32.00 iters/s
+
+rate   [  62% ] 600/600 VUs  0m56.0s/1m30s  32.00 iters/s
+
+rate   [  63% ] 599/600 VUs  0m57.0s/1m30s  32.00 iters/s
+
+rate   [  64% ] 600/600 VUs  0m58.0s/1m30s  32.00 iters/s
+
+rate   [  66% ] 600/600 VUs  0m59.0s/1m30s  32.00 iters/s
+
+rate   [  67% ] 598/600 VUs  1m00.0s/1m30s  32.00 iters/s
+
+rate   [  68% ] 599/600 VUs  1m01.0s/1m30s  32.00 iters/s
+
+rate   [  69% ] 600/600 VUs  1m02.0s/1m30s  32.00 iters/s
+
+rate   [  70% ] 600/600 VUs  1m03.0s/1m30s  32.00 iters/s
+
+rate   [  71% ] 598/600 VUs  1m04.0s/1m30s  32.00 iters/s
+
+rate   [  72% ] 600/600 VUs  1m05.0s/1m30s  32.00 iters/s
+
+rate   [  73% ] 600/600 VUs  1m06.0s/1m30s  32.00 iters/s
+
+rate   [  74% ] 600/600 VUs  1m07.0s/1m30s  32.00 iters/s
+
+rate   [  76% ] 599/600 VUs  1m08.0s/1m30s  32.00 iters/s
+
+rate   [  77% ] 598/600 VUs  1m09.0s/1m30s  32.00 iters/s
+
+rate   [  78% ] 600/600 VUs  1m10.0s/1m30s  32.00 iters/s
+
+rate   [  79% ] 599/600 VUs  1m11.0s/1m30s  32.00 iters/s
+
+rate   [  80% ] 600/600 VUs  1m12.0s/1m30s  32.00 iters/s
+
+rate   [  81% ] 598/600 VUs  1m13.0s/1m30s  32.00 iters/s
+
+rate   [  82% ] 599/600 VUs  1m14.0s/1m30s  32.00 iters/s
+
+rate   [  83% ] 600/600 VUs  1m15.0s/1m30s  32.00 iters/s
+
+rate   [  84% ] 600/600 VUs  1m16.0s/1m30s  32.00 iters/s
+
+rate   [  86% ] 600/600 VUs  1m17.0s/1m30s  32.00 iters/s
+
+rate   [  87% ] 599/600 VUs  1m18.0s/1m30s  32.00 iters/s
+
+rate   [  88% ] 600/600 VUs  1m19.0s/1m30s  32.00 iters/s
+
+rate   [  89% ] 599/600 VUs  1m20.0s/1m30s  32.00 iters/s
+
+rate   [  90% ] 600/600 VUs  1m21.0s/1m30s  32.00 iters/s
+
+rate   [  91% ] 600/600 VUs  1m22.0s/1m30s  32.00 iters/s
+
+rate   [  92% ] 600/600 VUs  1m23.0s/1m30s  32.00 iters/s
+
+rate   [  93% ] 599/600 VUs  1m24.0s/1m30s  32.00 iters/s
+
+rate   [  94% ] 600/600 VUs  1m25.0s/1m30s  32.00 iters/s
+
+rate   [  96% ] 599/600 VUs  1m26.0s/1m30s  32.00 iters/s
+
+rate   [  97% ] 600/600 VUs  1m27.0s/1m30s  32.00 iters/s
+
+rate   [  98% ] 599/600 VUs  1m28.0s/1m30s  32.00 iters/s
+
+rate   [  99% ] 600/600 VUs  1m29.0s/1m30s  32.00 iters/s
+
+rate   [ 100% ] 600/600 VUs  1m30.0s/1m30s  32.00 iters/s
+
+rate ↓ [ 100% ] 600/600 VUs  1m30s  32.00 iters/s
+
+rate ↓ [ 100% ] 600/600 VUs  1m30s  32.00 iters/s
+
+rate ↓ [ 100% ] 600/600 VUs  1m30s  32.00 iters/s
+
+rate ↓ [ 100% ] 600/600 VUs  1m30s  32.00 iters/s
+
+rate ↓ [ 100% ] 600/600 VUs  1m30s  32.00 iters/s
+
+rate ↓ [ 100% ] 600/600 VUs  1m30s  32.00 iters/s
+
+rate ↓ [ 100% ] 600/600 VUs  1m30s  32.00 iters/s
+
+rate ↓ [ 100% ] 600/600 VUs  1m30s  32.00 iters/s
+
+rate ↓ [ 100% ] 600/600 VUs  1m30s  32.00 iters/s
+
+rate ↓ [ 100% ] 600/600 VUs  1m30s  32.00 iters/s
+
+rate ↓ [ 100% ] 600/600 VUs  1m30s  32.00 iters/s
+
+rate ↓ [ 100% ] 600/600 VUs  1m30s  32.00 iters/s
+
+rate ↓ [ 100% ] 600/600 VUs  1m30s  32.00 iters/s
+
+rate ↓ [ 100% ] 600/600 VUs  1m30s  32.00 iters/s
+
+rate ↓ [ 100% ] 600/600 VUs  1m30s  32.00 iters/s
+
+rate ↓ [ 100% ] 600/600 VUs  1m30s  32.00 iters/s
+
+rate ↓ [ 100% ] 600/600 VUs  1m30s  32.00 iters/s
+
+rate ↓ [ 100% ] 600/600 VUs  1m30s  32.00 iters/s
+
+rate ↓ [ 100% ] 600/600 VUs  1m30s  32.00 iters/s
+
+rate ↓ [ 100% ] 600/600 VUs  1m30s  32.00 iters/s
+
+rate ↓ [ 100% ] 600/600 VUs  1m30s  32.00 iters/s
+
+rate ↓ [ 100% ] 600/600 VUs  1m30s  32.00 iters/s
+
+rate ↓ [ 100% ] 600/600 VUs  1m30s  32.00 iters/s
+
+rate ↓ [ 100% ] 600/600 VUs  1m30s  32.00 iters/s
+
+rate ↓ [ 100% ] 600/600 VUs  1m30s  32.00 iters/s
+
+rate ↓ [ 100% ] 600/600 VUs  1m30s  32.00 iters/s
+
+rate ↓ [ 100% ] 600/600 VUs  1m30s  32.00 iters/s
+
+rate ↓ [ 100% ] 600/600 VUs  1m30s  32.00 iters/s
+
+rate ↓ [ 100% ] 600/600 VUs  1m30s  32.00 iters/s
+
+rate ↓ [ 100% ] 600/600 VUs  1m30s  32.00 iters/s
+
+== rate rate=32/s vus=1000 reqs=8103 rps=67.5 fail=0% p95=25464ms dropped=1313 maxVUs=600 login_fail=0 dup=0 journey_p95=58584ms
+name             n      rps     p50     p95     p99     max   fail%
+login             1568    13.1  7510.8 22827.4 27108.5   34733       0
+clockin           1431    11.9 10981.9 25500.6 28802.3   32652       0
+attendance_list   1285    10.7 12592.9 25472.6 28611.4   32406       0
+worklogs          1267    10.6 12798.9 26380.1 29828.9   33733       0
+chat_rooms        1274    10.6 12239.5 25488.6 30082.8   32739       0
+safety_courses    1278    10.6   12546 25472.3 29337.8   33007       0
+
+rate ✓ [ 100% ] 322/600 VUs  1m30s  32.00 iters/s
+time="2026-09-19T05:46:22Z" level=error msg="thresholds on metrics 'http_req_duration{name:attendance_list}, http_req_duration{name:chat_rooms}, http_req_duration{name:clockin}, http_req_duration{name:login}, http_req_duration{name:safety_courses}, http_req_duration{name:worklogs}' have been crossed"

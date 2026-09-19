@@ -100,6 +100,7 @@ JWT_SECRET=$(openssl rand -hex 48)
 JWT_EXPIRATION=3600000
 JWT_REFRESH_EXPIRATION=604800000
 AI_SERVER_URL=http://localhost:9999
+AI_SERVER_SERVICE_TOKEN=unused-in-measurement
 S3_BUCKET_NAME=unused-in-measurement
 AWS_ACCESS_KEY=unused
 AWS_SECRET_KEY=unused

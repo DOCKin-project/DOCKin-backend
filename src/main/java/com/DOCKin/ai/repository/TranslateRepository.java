@@ -19,6 +19,10 @@ public interface TranslateRepository extends JpaRepository<TranslateLog,Long> {
      */
     Optional<TranslateLog> findByWorkLogsLogIdAndLanguageCode(Long logId, String languageCode);
 
+    /** 일지 삭제 시 그 번역들의 색인 청크를 지우려고(#101) — 청크의 source_id가 log_id가 아니라 translation_id다. */
+    @Query("SELECT t.id FROM TranslateLog t WHERE t.workLogs.logId = :logId")
+    List<Long> findIdsByLogId(@Param("logId") Long logId);
+
     /**
      * RAG 교차언어 색인 전용 커서(keyset) 조회.
      *

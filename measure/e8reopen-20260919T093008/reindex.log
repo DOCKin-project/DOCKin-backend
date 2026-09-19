@@ -1,0 +1,5 @@
+NOTICE:  hnsw graph no longer fits into maintenance_work_mem after 119173 tuples
+DETAIL:  Building will take significantly more time.
+HINT:  Increase maintenance_work_mem to speed up builds.
+INFO:  index "idx_chunk_embedding_hnsw" was reindexed
+DETAIL:  CPU: user: 190.70 s, system: 106.05 s, elapsed: 302.81 s

@@ -19,6 +19,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.SimpleTransactionStatus;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.Clock;
 import java.time.LocalDate;
@@ -59,7 +62,15 @@ class AttendanceServiceTest {
     }
 
     private AttendanceService serviceWithClock(Clock clock) {
-        return new AttendanceService(attendanceRepository, memberRepository, redissonClient, clock);
+        return new AttendanceService(attendanceRepository, memberRepository, redissonClient, clock, passThroughTx());
+    }
+
+    // 트랜잭션 경계는 통과시키고 콜백만 실행한다. 리포지토리가 목이라 실제 트랜잭션은 없다.
+    // save()가 던지는 DataIntegrityViolationException은 그대로 execute 밖으로 나가야 409 경로 테스트가 성립한다.
+    private static TransactionTemplate passThroughTx() {
+        PlatformTransactionManager tm = mock(PlatformTransactionManager.class);
+        lenient().when(tm.getTransaction(any())).thenReturn(new SimpleTransactionStatus()); // 퇴근·조회 테스트에서는 안 쓴다
+        return new TransactionTemplate(tm);
     }
 
     private Member member() {

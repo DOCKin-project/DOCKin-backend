@@ -270,6 +270,29 @@ private float[] embedding;
 - **배치가 `Clock`을 주입받는다.** `LocalDate.now()`를 직접 부르면 "어제"가 실행 시각에 따라 달라져
   테스트가 불가능하다. 근태는 날짜 경계가 곧 비즈니스 규칙이다.
 
+### P2-4-1 — 연차는 근무일만, 겹치는 휴가는 세 겹으로 (#104, 2026-09-19 완료 — 브랜치 `fix/leave-days-working-days`)
+
+P2-4가 "이미 구현돼 있었다"고 적은 차감이 `DAYS.between + 1`이었다 — 월~일 신청이면 7일. P2-6-1로 캘린더 API가 생겨
+`isWorkingDay`가 쓸 만해진 뒤에야 보였다. 그리고 겹침 검사가 없어 같은 기간을 두 번 내고 둘 다 승인되면 근태는
+기존 행을 건너뛰어 조용히 넘어가고 **잔액만 두 번 깎였다.** 결정은 물어서 정했다.
+
+| 결정 | 골랐다 | 버린 것 |
+|---|---|---|
+| 일수 | **기간 중 근무일 수** — `WorkCalendarService.workingDaysBetween`(캘린더는 기간 한 번만 읽음). 결근 배치·하루 집계와 한 기준 | 달력 일수 |
+| 근무일 0(토~일만) | **신청 시점 400** `AB006`. 차감할 게 없는 연차는 실수라 바로 알려야 고친다. 병가는 차감이 없어 안 본다 | 0일 차감으로 승인 |
+| 겹침 | **신청 시**(PENDING·APPROVED와 겹치면 409 `AB007`) + **승인 시**(APPROVED와 재검사 — 겹치는 PENDING 둘 중 하나만 승인) + **DB**(V11 `EXCLUDE USING gist`, APPROVED끼리, btree_gist) | 승인 시만 / 서비스만 |
+| 승인 근태 행 | **근무일만** — 일수와 같은 기준. 주말 VACATION 행은 하루 집계 vacation을 쉬는 날에 부풀린다 | 기간 전체 |
+| 소급 정정 | **안 한다.** 이미 승인된 건의 잔액은 그대로 | 재계산 |
+| PENDING 취소·`CHECK(end >= start)` | **별도 PR** — 주제가 다르다 | 이번에 같이 |
+
+V11이 기존 데이터에 겹치는 APPROVED가 있으면 실패한다 — 잔액이 두 번 깎인 데이터라 조용히 넘기지 않고, DO 블록이 어떤 행인지
+NOTICE로 먼저 찍는다. 시드는 안 겹친다(7/13~15 하나). EXCLUDE 위반은 서비스 검사가 먼저 잡으므로 실제로는 안 닿고,
+닿으면 `DataIntegrityViolationException` → 500(#108의 핸들러 부재).
+
+검증: 단위(`AbsenceRequestServiceTest` +5, `AbsenceApprovedListenerTest` +1, `WorkCalendarServiceTest` +2) +
+컨테이너 `AbsenceWorkingDaysAndOverlapTest` 3 — 월~일 승인이 잔액 15→10·근태 5행, 겹치는 신청 409, 우회해 넣은 PENDING도 승인에서 409,
+토~일 연차 400·병가 OK, V11이 APPROVED 겹침을 `exclusion_violation`으로 거부(REJECTED·PENDING·인접은 통과).
+
 ### P2-6 — 근무일 캘린더
 
 **1단계 완료.** `work_calendar` 테이블 + `WorkCalendarService`로 결근 배치가 근무일을 판단한다.
@@ -458,6 +481,22 @@ ADR-0003 3-3은 동기화 방식을 **배치 vs CDC(Debezium)** 둘로 놓고 �
 
 이벤트 방식은 P2-1/P2-2에서 휴가 승인 → 근태 반영에 이미 쓴 패턴이고 인프라가 늘지 않는다.
 CDC의 장점은 "애플리케이션을 우회한 변경도 잡는다"인데, **작업일지는 API로만 들어온다.**
+
+### P2-8-7 — 원본 삭제 시 번역·청크 정리 (#101, 2026-09-19 완료 — 브랜치 `fix/worklog-delete-cascade`)
+
+번역이 한 번이라도 된 작업일지는 `DELETE /api/work-logs/{id}`가 **500**이었다 — `work_log_translations.log_id`가 NO ACTION.
+그리고 V1이 "원본 삭제 시 청크 정리는 IndexingService 책임"이라고 적었는데 코드로는 없어 지운 일지가 RAG 근거로 계속 검색됐다.
+
+| 결정 | 골랐다 | 버린 것 |
+|---|---|---|
+| 번역 | **V12 `ON DELETE CASCADE`** — V6 `chat_message_translations`와 같은 결정. FK 이름이 Hibernate 자동 생성이라 카탈로그에서 찾아 지운다 | 엔티티 cascade(번역을 하나씩 읽어 지울 이유가 없다) |
+| 청크 | **같은 트랜잭션에서**(사용자 결정) — `ChunkIndexWriter.deleteForWorkLog(logId, translationIds)`, 벌크 JPQL. 번역 청크의 `source_id`는 `translation_id`라 번역이 cascade로 사라지기 전에 id를 받아 둔다 | 이벤트·다음 색인 배치가 정리 |
+| S3 이미지 객체 | **안 건드림** — 이슈가 별도라 했다. `deleteObject` 호출이 코드베이스에 없다 | — |
+
+알고 넘어간 것: 새벽 색인 배치와 겹치면(배치가 번역 행을 읽은 뒤 지우고, 배치가 청크를 넣으면) 고아 청크가 남는다. 창이 몇 초고
+재색인은 원본 없는 청크를 정리하지 않으므로, 실제로 남으면 그때 배치에 고아 정리를 넣는다.
+검증은 `WorkLogDeleteCascadeTest` 2 — 번역 2·청크 3·댓글이 있는 일지를 지우면 전부 사라지고 남의 일지·청크·같은 id의 다른 종류(SAFETY_COURSE) 청크는 남는다,
+작성자가 아니면 403이고 청크도 그대로.
 
 ---
 
@@ -1889,6 +1928,20 @@ PPT의 넷에 인원(분모)·지각·결근을 더했다. `absent`는 자정 �
 > **괜찮았던 것.** SQL 인젝션(전부 바인딩), CORS(완료), actuator(health만), bcrypt, 시크릿(커밋 이력 없음),
 > 작업일지·댓글·채팅방 REST의 소유자 검사, HTTP JWT 로깅(S4 완료).
 
+### P2-18-10-1 — 단건 logId 경로가 그 경계를 우회했다 (#99, 2026-09-19 완료 — 브랜치 `fix/worklog-visibility-translate-comment`)
+
+P2-18-10이 목록·타인 조회·검색을 "같은 구역"으로 맞췄는데, 단건 `logId`를 받는 경로는 그대로였다 — 번역은 `findById`,
+댓글 조회는 `existsById`, 댓글 작성은 `findById` + ADMIN만. 인증만 있으면 아무 logId로 남의 구역 일지를 번역문으로 받아 보고,
+남의 구역 일지의 관리자 코멘트를 읽고, 다른 구역 관리자가 코멘트를 달 수 있었다. 위 "괜찮았던 것"의 "댓글의 소유자 검사"는
+수정·삭제(작성자 본인)만 맞았다.
+
+가시성 검사를 `WorkLogsService.requireVisible(logId, userId)` 한 곳으로 — 같은 구역이면 그 일지, 아니면 403, 없으면 404.
+ADMIN 예외 없음(목록 경로에도 없다). 번역·댓글 조회·댓글 작성이 이걸 거친다. 자기 트랜잭션인 이유는 #93 —
+`saveTranslateLog`의 `NOT_SUPPORTED` 안에서 `findByUserId`를 바로 부르면 FastAPI 대기 중 커넥션을 쥔다.
+`TranslateTransactionBoundaryTest`가 여전히 0인 것으로 확인. 덤: 번역 요청의 `source`가 "ko" 하드코딩이라 죽은 값이었다 →
+요청 값을 쓰고 비면 ko(사용자 결정). 검증은 `WorkLogVisibilityTest` 3 — 번역은 FastAPI 없이도 403이 먼저(검사가 호출 앞),
+댓글은 다른 구역 관리자 403·같은 구역 OK.
+
 ---
 
 ## P2-19 — AI 호출 한도 (2026-09-16, 완료)
@@ -2091,6 +2144,110 @@ logout은 두 경로 다 401인 것도 본다: 프리픽스를 더하며 열리�
 `WebMvcConfigurer` + `Ordered.HIGHEST_PRECEDENCE`로 **앞에 하나 더 세웠다.** 순서에 기대는 구조라 `PageableConfigTest`가
 동작(`sort` 무시·`size` 상한)과 함께 **리졸버 목록에 둘 다 있고 우리 것이 먼저**인지를 단언한다. `@WebMvcTest` 슬라이스라 DB 없이 2초.
 설정을 끄고 돌리면 `sort` 테스트와 순서 테스트가 떨어지고 `size` 테스트만 남는다 — 상한은 부트가 기본 리졸버에도 넣기 때문이며, 그래서 키를 부트 것으로 썼다.
+
+## P2-21 — 2026-09-19 이슈 정리에서 나온 것
+
+k6·API 점검이 하루에 이슈 스물을 열었다(#98~#118). #98~#109는 P2-21-2의 전수 점검에서, #110~#118은 k6(밤 15)에서.
+이 절은 그중 닫은 것과 설계로 넘어간 것 — 나머지는 이슈 번호가 곧 추적이다.
+
+### P2-21-1 — 안전교육 삭제: 수강 기록 있으면 409, 권한은 수정과 같은 ADMIN (#107, 완료 — 브랜치 `fix/safety-course-delete`)
+
+삭제만 "작성자 본인"이었다(수정은 ADMIN 누구나) — 작성자가 퇴사하면 그 교육은 못 지웠다. 그리고 `safety_enrollments.course_id`가
+NO ACTION이라 한 명이라도 봤으면 500. `SafetyCourseUpdateRequestDto.materialUrl`은 받기만 하고 안 옮기고 있었다.
+
+| 결정 | 골랐다 | 버린 것 |
+|---|---|---|
+| 수강 기록 있는 교육 | **409 `S003`** — 체크리스트 `CHECKLIST_HAS_RESULTS`와 같은 결정. 수강 기록은 "누가 언제 봤는가"라 교육을 지우면 기록이 가리키는 게 사라진다. 안 보이게 하려면 수정이 다음 | cascade(이력 유실) / soft delete(손댈 곳이 많다) |
+| 권한 | **ADMIN 누구나** — 한 도메인에 기준이 둘이면 어느 쪽이 의도인지 모른다, 넓은 쪽(수정)에 맞춤 | 작성자만 |
+| `UNIQUE(user_id, course_id)`·`course_id NOT NULL` | **별도 — 이슈 #141.** 재현 경로(동시 완료)가 다르고 기존 중복 행 정리가 같이 가야 한다 | V13에 같이 |
+
+검증 `SafetyCourseDeleteTest` 4 — 수강 기록 있으면 409이고 FK 위반이 아니다·교육과 기록 그대로, 작성자 아닌 ADMIN이 지운다, USER 403, `materialUrl` 갱신.
+
+### P2-21-2 — 전수 점검: 무엇을 봤고 무엇이 이슈가 됐나 (2026-09-19)
+
+이슈 #98~#109의 출처. 엔티티 30·마이그레이션 V1~V9·컨트롤러 16·서비스 전부를 한 번에 훑었다(P2-15·18·20에서 잡은 것은 뺐다).
+**확정된 버그만 이슈로** 만들고, 설계가 필요한 것은 결정 뒤에 이슈로 하기로 했다 — 스무 개를 한 번에 열면 이슈가 백로그가 된다.
+
+세 층으로 나뉘었다.
+
+| 층 | 무엇 | 어디로 |
+|---|---|---|
+| ① 도메인 모델이 틀린 것 | A 체크리스트에 "점검 회차"가 없음 · B 야간조 근무일 · C 연차 일수·겹침·취소 + 회원탈퇴 정책 · D 장비 API 없음 · E 회원 설정 API 없음 · F 번역·댓글 가시성 | A→P2-21-4, B→P2-21-3, C→P2-21-5, F→#99(PR #133 완료), **D·E 남음** |
+| ② 스키마 제약·타입 | 아래 표 | 이슈 없음 — 정리 마이그레이션 하나로 묶을 것 |
+| ③ API 계약·500 경로 | 회원탈퇴 500(#100), 번역된 일지 삭제 500(#101→#136), 채팅 `IllegalArgumentException`(#102), STT(#103, #117이 삼킴은 고침·오디오 미업로드 남음), 결근 배치 ADMIN(#105→#121), 채팅방 나가기(#106), 안전교육 삭제(#107→#142), `@Size` 없음·`DataIntegrityViolation` 핸들러 없음(#108), 상태 코드 어긋남(#109) | 이슈 번호가 추적 |
+
+**② 스키마 — 아직 이슈도 PR도 없는 것.** 결정 없이 고칠 수 있어 마이그레이션 하나로 묶는다(다음 빈 번호).
+
+| 무엇 | 왜 |
+|---|---|
+| `chat_members` UNIQUE(room_id, user_id), room_id 인덱스 | 초대 경합 시 중복 멤버, 방 멤버 조회·방 삭제가 스캔 |
+| `checklist_items` UNIQUE(checklist_id, sequence) | 순서 중복 (인덱스는 #135 V15가 만들었다) |
+| `safety_enrollments` UNIQUE(user_id, course_id), `course_id NOT NULL`, course_id 인덱스 | 동시 완료가 중복 행 → 이후 `Optional` 조회 500. #141 |
+| `work_logs.equipment_id`·`checklists.equipment_id` 인덱스 | V3·V4가 users·work_logs 자식만 했고 equipment 자식은 빠짐. 장비 삭제 시 work_logs 100만 행 스캔 |
+| FK 없는 사용자 참조 6개 — `chat_messages.sender_id`, `chat_rooms.creator_id`, `safety_courses.created_by`, `chat_history.user_id`, `refresh_token.user_id`, `work_log_translations.user_id` | 전부 varchar(255) vs `users.user_id` varchar(50). 탈퇴 정책(#100)과 같이 결정 |
+| `users.name varchar(10)` | 베트남어 로마자 이름은 흔히 넘는다. DTO에 `@Size`도 없어 500(#108) |
+| `language_code` 길이 — users 255 / chat_messages 8 / translations 10 / document_chunks 10 | 넷이 다르다 |
+| `users.ship_yard_area` 자유 텍스트가 가시성 경계 | 오타 하나면 격리·유출. #91 비정규화와 같이 결정 |
+| 죽은 것 — `authority` 테이블·엔티티(참조 0, `@Enumerated` 없이 ORDINAL), `chat_rooms.is_group`(true 넣는 곳 없음), `AttendanceStatus.LEFT_EARLY`, `CompletedLabel.WATCHING`, DTO `imageUrls`/`audioFileUrl`, `ChatMessageRequestDto.senderId` | 선언과 실제의 불일치 |
+| PK Integer(absence·chat·checklist·safety) / Long(나머지) 혼용 | 규모 문제는 아니고 일관성 |
+
+**괜찮았던 것.** SQL 바인딩·CORS·bcrypt·소유자 검사(작업일지·댓글·채팅 REST)·JWT 로깅 — P2-18이 본 그대로였고, 이번에 새로 나온 보안 구멍은 F(번역·댓글 가시성) 하나였다.
+
+### P2-21-3 — 야간조는 퇴근을 못 찍었다: 근무일 = 교대 기준일 (#98, PR #119·#120·#121, ADR-0010)
+
+`work_date = LocalDate.now()`였다. 야간(22:00~06:00)은 D일 22:00 출근 행을 D+1일 06:00에 못 찾아 퇴근이 항상 404, 00:30 출근은 `00:30 > 22:00 = false`라 NORMAL. 3교대 중 하나가 **퇴근 기록도 지각 기록도 없는 채로** 운영됐을 것이다. 시드의 야간조 퇴근 시각은 손으로 넣은 것이다.
+
+| 결정 | 골랐다 | 버린 것 |
+|---|---|---|
+| 근무일 | **`now.time < shift.dayBoundary ? date−1 : date`.** MORNING·AFTERNOON 경계 자정(불변), NIGHT 정오 — 22:00 앞뒤 10~14시간이 한 근무일 | 교대 시작 − N시간(교대마다 계산) |
+| 퇴근 | **열린 기록(출근 있고 퇴근 없는) 최신 1건을 닫는다** — 날짜로 찾지 않아 근무일 규칙에 묶이지 않음 | 근무일 재계산해 조회 |
+| 잊힌 출근 | 출근 뒤 16시간 지난 행은 **409 `ATTENDANCE_CLOCK_IN_STALE`** — 30시간 근무 행을 만들지 않는다 | 그냥 닫기 |
+| 행에 남기는 것 | `work_shift` 판정 교대 스냅샷(사용자 교대는 바뀐다), `total_work_time varchar`("HH:mm:ss"와 "9h12m"이 섞여 있었다) → `work_seconds integer`(출퇴근 차로 백필) | 문자열 파싱 |
+| 야간 기존 행 | 정오 이전 출근 행 `work_date−1`, 겹치면 RAISE, **한 행씩 오름차순**(유니크는 행마다 즉시 검사) | 한 문장 UPDATE |
+| 출근 락 키의 날짜 | **벽시계 그대로** — 락은 DB(교대)를 보기 전에 잡는다(ADR-0001). 자정을 걸친 둘은 DB 유니크가 받는다 | 근무일로 |
+| 조퇴·지각 유예·정책 테이블·미퇴근 배치 | **안 함** — 자리만(`endTime`, `LATE_GRACE = 0`) | — |
+
+응답에 `workDate`·`workShift`·`workSeconds` 추가(기존 유지). 앱이 "어느 날 기록"을 `clockInTime` 날짜로 짐작하면 야간조에서 하루 어긋난다 — #81에 얹을 것.
+V10→**V13**으로 옮겼다(#128의 V11이 먼저 main에 들어옴, 절차는 #138·#139). #126(출근 트랜잭션)과 `AttendanceService`가 겹쳐 #126 뒤에 리베이스.
+결근 배치 대상 ADMIN 제외는 #121(#105).
+
+### P2-21-4 — 체크리스트 결과가 템플릿 전역이었다: 점검 회차(run) (PR #129·#130·#132·#135, ADR-0011)
+
+`checklist_results`에 묶는 키가 없어 "현재 상태"가 항목별 `MAX(result_id)` 전역 — A가 월요일 체크한 작업 전 점검이 화요일 B에게 체크된 채로 보였고, "이 작업 전에 점검했는가"에 답할 수 없었다. 점검은 템플릿의 상태가 아니라 **한 사람이 한 번 수행한 사건**이다.
+
+| 결정 | 골랐다 | 버린 것 |
+|---|---|---|
+| 모델 | `checklist_runs(run_id, checklist_id, user_id, started_at, closed_at, outcome)`, `results.run_id NOT NULL`(기존 행은 템플릿·사용자·날짜로 묶어 COMPLETED 회차로 백필) | results에 날짜 컬럼만 |
+| 상태 | 컬럼은 `closed_at`·`outcome` 한 쌍(CHECK) — IN_PROGRESS는 "닫히지 않음" | status 컬럼 셋 |
+| 열린 회차 | **한 사람·같은 템플릿에 하나** — 부분 UNIQUE. 열기는 멱등(12h 안이면 200, 새로 열면 201), 경합은 트랜잭션 밖에서 재조회(`ChatService.saveMessage` 꼴) | 서비스 검사만 |
+| 12시간 | 지난 열린 회차는 **다시 열 때** ABANDONED로 닫고 새로 — 배치 없음(ADR-0010과 같은 방식) | 배치 |
+| 완료 | **전 항목 체크여야** — 아니면 409 `CHECKLIST_RUN_INCOMPLETE`. 미체크 목록은 응답 계약을 안 바꿔 회차 조회로 | 미체크 허용 + 기록 |
+| 옛 경로 | **별칭 유지** — `GET /checklists`는 템플릿 + 내 열린 회차(`myOpenRunId`), `PATCH …/check`는 내 열린 회차에 기록(없으면 열기). 앱이 옮기면 삭제(#81) | 410 |
+| 항목 수정 | 기록 있는 항목은 **삭제 → 퇴역(`retired_at`)**, 문구 수정 409 `CHECKLIST_ITEM_IN_USE`, 순서는 됨. 회차의 항목 = 열릴 때 살아 있던 것(`findActiveAt`) | 템플릿 불변 |
+| 작업일지 연결(`runs.work_log_id`) | **안 함** — 작업일지 생성 흐름(STT)을 같이 바꿔야 함 | — |
+
+관리자 목록 `GET /api/checklist/admin/runs?date&equipmentId&userId&status`(#132). 스택 #129(V14) → #132 → #135(V15). 남는 구멍: 항목에 `created_at`이 없어 회차 뒤 추가된 항목이 옛 회차 조회에도 보인다 — 실제로 문제 되면 컬럼 하나.
+
+### P2-21-5 — 휴가 취소 + 회원탈퇴 정책 (#104 잔여·#100, PR #140 →)
+
+#128이 근무일 차감·겹침 3겹을 했고, 남은 것은 신청자가 되돌릴 길(취소)과 탈퇴 500이었다.
+
+| 결정 | 골랐다 | 버린 것 |
+|---|---|---|
+| 취소 상태 | `CANCELLED` — 행은 남고 REJECTED와 같은 급. 겹침에서 자리를 차지하지 않음 | 행 삭제 |
+| PENDING 취소 | **#140** — 본인, `PATCH /requests/{id}/cancel`, 처리자·시각·사유는 기존 컬럼. V16: status CHECK에 CANCELLED, `CHECK(end >= start)` | — |
+| APPROVED 취소 | **본인 + ADMIN, 시작일 전까지** — 연차 환급(FOR UPDATE) + 근태 행 중 VACATION/SICK이고 출근 없는 날만 삭제(`AbsenceCancelledEvent`, 승인 이벤트와 같은 동기). 시작한 휴가는 409 | 부분 취소(기간 쪼개기) |
+| 회원탈퇴(#100) | **soft delete `users.deleted_at`** — 근태·휴가·점검은 노무 기록이라 남는다. 로그인은 틀린 비밀번호와 같은 응답, 매 요청 DB를 보므로 즉시 401, 배치·집계 제외, 재가입은 `USERID_DUPLICATION`. 본인 DELETE는 soft로 유지, 관리자 퇴사 처리는 E | cascade(3년치 근태 유실) / 익명화(PK가 사원번호) |
+| 연차 원장 | **안 함**(P3) — 환급은 정수 되돌리기 | 부여·소멸·환급 이력 테이블 |
+
+다음 PR: `feat/absence-cancel-approved`(#140 위), `feat/member-soft-delete`, `fix/data-integrity-handler`(#108, 독립), ADR-0012.
+
+### 남은 설계 — D 장비 API, E 회원 설정 API
+
+- **D** — `EquipmentRepository`가 빈 인터페이스, 컨트롤러 없음. 장비는 시드로만 생긴다. 앱이 QR/NFC를 찍으면 `equipment_id`를 얻을 길이 없다 → `GET /api/equipment?nfcTag=`·`?qrCode=`, 관리자 CRUD, `qr_code` UNIQUE(지금은 `nfc_tag`만).
+- **E** — `MemberController`가 login/refresh/logout/signup/delete만. **언어·TTS·비밀번호를 바꿀 길이 없고** `GET /me`도 없다. ADMIN 승격은 DB 직접. 관리자용 사용자 목록·구역/교대 변경·퇴사 처리(P2-21-5의 soft delete와 같이).
+
+둘 다 결정이 거의 없어 설계 없이 코드로 간다.
 
 ---
 
