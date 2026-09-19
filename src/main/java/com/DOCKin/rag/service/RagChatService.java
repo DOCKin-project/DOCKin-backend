@@ -4,6 +4,7 @@ import com.DOCKin.ai.dto.ChatDomain;
 import com.DOCKin.ai.service.FastApiService;
 import com.DOCKin.rag.dto.RetrievalResult;
 import com.DOCKin.rag.dto.RetrievedChunk;
+import com.DOCKin.rag.generation.ChatGenerator;
 import com.DOCKin.rag.model.SourceType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +17,8 @@ import java.util.List;
 /**
  * RAG 오케스트레이션. 질문을 받아 근거를 찾고, 프롬프트를 조립해 챗봇을 호출하고, 출처를 남긴다.
  *
- * <p>RAG의 R(Retrieval)과 프롬프트 조립이 여기 있고, G(Generation)는 팀원 FastAPI가 담당한다.
+ * <p>RAG의 R(Retrieval)과 프롬프트 조립이 여기 있고, G(Generation)는 {@link ChatGenerator}가 담당한다 --
+ * 기본은 팀원 FastAPI, {@code ai.chatbot.stub=true}면 모델 없는 스텁(#95).
  *
  * <h3>팀원 API 계약을 바꾸지 않는다</h3>
  * 근거를 별도 필드로 보내려면 FastAPI를 수정해야 하는데 그쪽은 담당 범위 밖이다.
@@ -26,6 +28,11 @@ import java.util.List;
  * <h3>근거가 없어도 답변은 나간다</h3>
  * 검색 결과가 없거나 임베딩 서버가 죽어도 챗봇 자체는 동작해야 한다.
  * 그 경우 원본 질문을 그대로 전달하고 {@code retrieval_mode}에 상태를 남긴다.
+ *
+ * <h3>응답에 근거를 싣는다</h3>
+ * {@code chat_history}에만 남기던 근거(모드·청크 ID·유사도)를 응답 {@code retrieval}에도 싣는다.
+ * "권한 없는 사용자에게는 같은 질문에 근거가 0건"이라는 선필터의 동작이 DB를 열어보지 않아도 보이게 하기 위해서다.
+ * 청크 본문은 싣지 않는다 -- 답변 안에 이미 녹아 있고, 출처만 있으면 원본 API로 확인할 수 있다.
  */
 @Slf4j
 @Service
@@ -34,6 +41,7 @@ public class RagChatService {
 
     private final RetrievalService retrievalService;
     private final FastApiService fastApiService;
+    private final ChatGenerator chatGenerator;
 
     @Value("${rag.search.top-k:5}")
     private int topK;
@@ -55,11 +63,19 @@ public class RagChatService {
 
         ChatDomain.Request augmented = augment(request, question, retrieval);
 
-        // 컨트롤러에서 넘어온 인증 컨텍스트를 유지하기 위해 현재 스레드에서 block한다.
-        ChatDomain.Response response = fastApiService.chatBotFromSpringToFastApi(augmented, userId).block();
+        ChatDomain.Response.Result result = chatGenerator.generate(augmented, retrieval, userId);
+        ChatDomain.Response response = new ChatDomain.Response(request.traceId(), result, describe(retrieval));
 
         fastApiService.saveChatLog(question, response, userId, request.traceId(), retrieval);
         return response;
+    }
+
+    /** 응답에 실을 근거 요약. {@code chat_history.retrieval_mode}·{@code source_chunk_ids}와 같은 내용이다. */
+    static ChatDomain.Response.Retrieval describe(RetrievalResult retrieval) {
+        List<ChatDomain.Response.Source> sources = retrieval.chunks().stream()
+                .map(c -> new ChatDomain.Response.Source(c.chunkId(), c.sourceType().name(), c.sourceId(), c.score()))
+                .toList();
+        return new ChatDomain.Response.Retrieval(retrieval.mode().name(), sources);
     }
 
     /** 마지막 메시지를 현재 질문으로 본다. 앞의 메시지들은 대화 맥락이다. */
