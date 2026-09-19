@@ -221,10 +221,11 @@ set_tei_cpus() {
 
 # healthy가 아니라 running을 기다린다.
 #
-# 실측에서 뒤집혔다 -- 색인 중인 앱은 unhealthy로 보고된다. /actuator/health가 db·redis·
-# diskSpace를 다 확인하는데, 앱 컨테이너 상한이 1.0 cpus인 상태에서 청킹과 임베딩 호출이
-# 그것을 채우면 헬스체크(timeout 5s)가 시간 안에 안 돌아온다. 앱은 멀쩡히 색인하고 있는데
-# 컨테이너는 unhealthy다.
+# 실측에서 뒤집혔다 -- 색인 중인 앱은 unhealthy로 보고된다. 처음엔 "앱 상한 1.0 cpus를 색인이
+# 채워 헬스체크(timeout 5s)가 늦는다"로 읽었는데, 밤 15(#113)에서 진짜 이유가 나왔다:
+# SeedIndexingRunner가 ApplicationRunner라 색인이 끝날 때까지 readiness가 OUT_OF_SERVICE(503)였다.
+# 지금은 러너가 준비 완료 뒤 별도 스레드에서 돌아 색인 중에도 healthy다. 그래도 아래를 running
+# 대기로 남긴다 -- 이 스크립트가 기다려야 하는 것은 건강이 아니라 "청크가 늘기 시작했는가"다.
 #
 # healthy를 기다리면 조건마다 HEALTH_WAIT_MAX만큼 서 있다가 죽는다. 그리고 이 스크립트가
 # 실제로 기다려야 하는 것은 "건강한가"가 아니라 "청크가 늘기 시작했는가"이고, 그 판정은
