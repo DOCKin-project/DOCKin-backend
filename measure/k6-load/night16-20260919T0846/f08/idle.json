@@ -1,0 +1,77 @@
+{
+ "scenario": "rate",
+ "rate": 1,
+ "target_vus": 1000,
+ "duration": "10s",
+ "reqs": 60,
+ "rps": 6,
+ "fail_pct": 0,
+ "p95_all": 83.5,
+ "dropped": 0,
+ "max_vus": 20,
+ "login_fail": 0,
+ "clockin_dup": 0,
+ "journey_p95": 186,
+ "by_name": [
+  {
+   "name": "login",
+   "n": 10,
+   "rps": 1,
+   "p50": 82.9,
+   "p95": 98.4,
+   "p99": 101.7,
+   "max": 103,
+   "fail": 0
+  },
+  {
+   "name": "clockin",
+   "n": 10,
+   "rps": 1,
+   "p50": 20.4,
+   "p95": 44.3,
+   "p99": 58.4,
+   "max": 62,
+   "fail": 0
+  },
+  {
+   "name": "attendance_list",
+   "n": 10,
+   "rps": 1,
+   "p50": 12.5,
+   "p95": 23.7,
+   "p99": 28.4,
+   "max": 30,
+   "fail": 0
+  },
+  {
+   "name": "worklogs",
+   "n": 10,
+   "rps": 1,
+   "p50": 22.6,
+   "p95": 46.6,
+   "p99": 61.2,
+   "max": 65,
+   "fail": 0
+  },
+  {
+   "name": "chat_rooms",
+   "n": 10,
+   "rps": 1,
+   "p50": 11.7,
+   "p95": 30.3,
+   "p99": 40.1,
+   "max": 43,
+   "fail": 0
+  },
+  {
+   "name": "safety_courses",
+   "n": 10,
+   "rps": 1,
+   "p50": 11.9,
+   "p95": 30.5,
+   "p99": 40.1,
+   "max": 42,
+   "fail": 0
+  }
+ ]
+}

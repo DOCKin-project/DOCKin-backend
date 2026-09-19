@@ -1,0 +1,20 @@
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+     execution: local
+        script: journey.js
+        output: -
+     scenarios: (100.00%) 1 scenario, 800 max VUs, 2m0s max duration (incl. graceful stop):
+              * rate: 48.00 iterations/s for 1m30s (maxVUs: 96-800, gracefulStop: 30s)
+== rate rate=48/s vus=1000 reqs=24474 rps=271.7 fail=0% p95=2521.5ms dropped=241 maxVUs=337 login_fail=0 dup=0 journey_p95=8604ms
+name             n      rps     p50     p95     p99     max   fail%
+login             4079    45.3    75.3  3298.7  5905.5    8134       0
+clockin           4079    45.3     4.5  2203.4  3196.8    4400       0
+attendance_list   4079    45.3     3.3    2200  3299.6    8172       0
+worklogs          4079    45.3     4.8  2695.5  5840.8    9098       0
+chat_rooms        4079    45.3     3.1  2595.3  5942.5    8353       0
+safety_courses    4079    45.3     3.2  2589.6  6122.5    7913       0
+rate ✓ [ 100% ] 000/337 VUs  1m30s  48.00 iters/s
+time="2026-09-19T09:06:41Z" level=error msg="thresholds on metrics 'http_req_duration{name:attendance_list}, http_req_duration{name:chat_rooms}, http_req_duration{name:clockin}, http_req_duration{name:login}, http_req_duration{name:safety_courses}, http_req_duration{name:worklogs}' have been crossed"

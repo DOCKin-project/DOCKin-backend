@@ -1,0 +1,19 @@
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+     execution: local
+        script: journey.js
+        output: -
+     scenarios: (100.00%) 1 scenario, 800 max VUs, 2m0s max duration (incl. graceful stop):
+              * rate: 40.00 iterations/s for 1m30s (maxVUs: 80-800, gracefulStop: 30s)
+== rate rate=40/s vus=1000 reqs=21396 rps=237.6 fail=0% p95=398.9ms dropped=34 maxVUs=114 login_fail=0 dup=0 journey_p95=1882ms
+name             n      rps     p50     p95     p99     max   fail%
+login             3566    39.6    74.2   649.9  1469.9    2295       0
+clockin           3566    39.6     4.8   493.3  1340.8    1999       0
+attendance_list   3566    39.6     3.3     298  1101.1    2199       0
+worklogs          3566    39.6     5.2   299.9    1106    1805       0
+chat_rooms        3566    39.6     3.3   299.9  1280.7    2100       0
+safety_courses    3566    39.6     3.4   301.1  1107.7    2297       0
+rate ✓ [ 100% ] 000/114 VUs  1m30s  40.00 iters/s
