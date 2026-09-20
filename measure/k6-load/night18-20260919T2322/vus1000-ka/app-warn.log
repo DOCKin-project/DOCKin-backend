@@ -1,0 +1,11 @@
+dockin-app-1  | 2026-09-20T08:56:45.873+09:00  WARN [c905563923744870] 1 --- [DOCKin-spring] [o-8080-exec-212] c.D.global.error.GlobalExceptionHandler  : BusinessException: AT001 - 이미 오늘 출근 처리가 완료되었습니다.
+dockin-app-1  | 2026-09-20T08:56:46.871+09:00  WARN [3041a88f97a64caf] 1 --- [DOCKin-spring] [o-8080-exec-285] c.D.global.error.GlobalExceptionHandler  : BusinessException: AT001 - 이미 오늘 출근 처리가 완료되었습니다.
+dockin-app-1  | 2026-09-20T08:56:47.873+09:00  WARN [d7e23846318449c9] 1 --- [DOCKin-spring] [o-8080-exec-136] c.D.global.error.GlobalExceptionHandler  : BusinessException: AT001 - 이미 오늘 출근 처리가 완료되었습니다.
+dockin-app-1  | 2026-09-20T08:56:48.872+09:00  WARN [b9f0ff61722649b9] 1 --- [DOCKin-spring] [o-8080-exec-198] c.D.global.error.GlobalExceptionHandler  : BusinessException: AT001 - 이미 오늘 출근 처리가 완료되었습니다.
+dockin-app-1  | 2026-09-20T08:56:49.872+09:00  WARN [8502729307d04a30] 1 --- [DOCKin-spring] [o-8080-exec-287] c.D.global.error.GlobalExceptionHandler  : BusinessException: AT001 - 이미 오늘 출근 처리가 완료되었습니다.
+dockin-app-1  | 2026-09-20T08:56:50.871+09:00  WARN [77f713d9aa2245ec] 1 --- [DOCKin-spring] [io-8080-exec-23] c.D.global.error.GlobalExceptionHandler  : BusinessException: AT001 - 이미 오늘 출근 처리가 완료되었습니다.
+dockin-app-1  | 2026-09-20T08:56:51.871+09:00  WARN [32b7c2efbc074f91] 1 --- [DOCKin-spring] [o-8080-exec-121] c.D.global.error.GlobalExceptionHandler  : BusinessException: AT001 - 이미 오늘 출근 처리가 완료되었습니다.
+dockin-app-1  | 2026-09-20T08:56:52.873+09:00  WARN [bb294b9e1cab4a21] 1 --- [DOCKin-spring] [io-8080-exec-46] c.D.global.error.GlobalExceptionHandler  : BusinessException: AT001 - 이미 오늘 출근 처리가 완료되었습니다.
+dockin-app-1  | 2026-09-20T08:56:53.871+09:00  WARN [2b1bdc4e692c4fce] 1 --- [DOCKin-spring] [o-8080-exec-252] c.D.global.error.GlobalExceptionHandler  : BusinessException: AT001 - 이미 오늘 출근 처리가 완료되었습니다.
+dockin-app-1  | 2026-09-20T08:56:54.872+09:00  WARN [24071aaf8924468c] 1 --- [DOCKin-spring] [io-8080-exec-26] c.D.global.error.GlobalExceptionHandler  : BusinessException: AT001 - 이미 오늘 출근 처리가 완료되었습니다.
+dockin-app-1  | 2026-09-20T08:56:55.873+09:00  WARN [741a26e44b6343a7] 1 --- [DOCKin-spring] [nio-8080-exec-5] c.D.global.error.GlobalExceptionHandler  : BusinessException: AT001 - 이미 오늘 출근 처리가 완료되었습니다.

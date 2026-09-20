@@ -28,15 +28,18 @@ SELECT 'k6u' || lpad(g::text, 5, '0'),
 FROM generate_series(1, 40000) g
 ON CONFLICT (user_id) DO NOTHING;
 
+-- created_at 은 90일 안에서 무작위다. 밤 15의 시드는 (g % 15) 로 날짜를 정했는데 g % 3 이 구역이라
+-- 날짜와 구역이 상관돼 있었고, 그 분포에서는 V10 (created_at, log_id) 인덱스를 순서대로 걷는 목록 쿼리가
+-- 실제보다 나쁘게 나온다. 밤 17부터 무작위로 흩는다(그 밤은 서버에서 손으로 바꿨고 여기 반영한 건 밤 18).
 INSERT INTO work_logs (title, log_text, audio_file_url, created_at, updated_at, user_id, equipment_id)
 SELECT '부하 테스트 작업일지 ' || i,
        repeat('용접 와이어 송급 상태를 확인하고 롤러 압력을 재조정했다. ', 6),
        NULL,
-       TIMESTAMP '2026-09-01 08:00:00' + (g % 15) * INTERVAL '1 day' + i * INTERVAL '1 hour',
-       TIMESTAMP '2026-09-01 08:00:00' + (g % 15) * INTERVAL '1 day' + i * INTERVAL '1 hour',
+       ts, ts,
        'k6u' || lpad(g::text, 5, '0'),
        1 + (g % 3)
-FROM generate_series(1, 40000) g, generate_series(1, 3) i
+FROM generate_series(1, 40000) g, generate_series(1, 3) i,
+     LATERAL (SELECT TIMESTAMP '2026-06-20 00:00:00' + random() * INTERVAL '90 days') t(ts)
 WHERE NOT EXISTS (SELECT 1 FROM work_logs w WHERE w.user_id = 'k6u' || lpad(g::text, 5, '0'));
 
 ANALYZE users; ANALYZE work_logs;
