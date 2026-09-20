@@ -11,10 +11,13 @@
 //   도착률   PATTERN=random(기본): STEP(15s)마다 목표를 RATE×[1-JITTER, 1+JITTER](기본 ±50%) 에서 뽑아
 //            ramping-arrival-rate 로 잇는다 — 평균은 RATE, 모양은 매번 다르다(SEED 로 고정 가능). flat 이면 일정.
 //   엔드포인트 MIX 표의 가중치로 뽑는다. 근로자 앱이 실제로 치는 비율을 흉내 냈다 — 목록 조회가 대부분, 쓰기는
-//            출퇴근뿐, 로그인은 2%(bcrypt 가 건당 수십 ms 라 1,000/s 를 전부 로그인으로 채우면 서버 CPU 가
-//            로그인만 하다 끝난다). AI 엔드포인트(/api/ai/**)는 외부 모델을 부르고 한도(#43~#57)가 있어 뺐다.
-//   계정     VU 마다 풀(k6u00001..USERS 또는 USER_IDS)에서 무작위로 골라 로그인한 세션을 들고 있다가, 'login'
-//            이 뽑히면 다른 계정으로 갈아탄다. 401 이면 그 자리에서 다시 로그인한다.
+//            출퇴근뿐, 로그인은 0.5%. bcrypt 가 건당 ~65ms CPU 라 앱 1 vCPU 에서는 로그인 ~14/s 가 천장이다 —
+//            1,000/s 의 2% 만 돼도 20/s 라 로그인 큐가 Tomcat 스레드 200 개를 다 잡고 health 까지 5초가 된다
+//            (밤 20 sanity, 아래). AI 엔드포인트(/api/ai/**)는 외부 모델을 부르고 한도(#43~#57)가 있어 뺐다.
+//   계정     setup() 이 풀(k6u00001..USERS 또는 USER_IDS)에서 SESSIONS 개를 골라 4개씩 미리 로그인해 두고, VU 는
+//            자기 번호로 하나를 받는다. 'login' 이 뽑히면 다른 계정으로 갈아타고, 401 이면 그 자리에서 다시 로그인.
+//            VU 가 생길 때 로그인하게 두면 서버가 느려질수록 k6 가 VU 를 더 띄우고 → 로그인이 더 늘어 → 더 느려지는
+//            되먹임이 된다(밤 20 sanity: 100/s 인데 VU 200 이 로그인 288 건, 전 요청 p50 5초). 그래서 미리 한다.
 //   파라미터 검색어·기간·페이지 크기도 목록에서 뽑는다. 검색어는 시드에 *있는* 낱말만 쓴다 — 구역에 없는 키워드는
 //            정렬 인덱스를 끝까지 걷는 경로라(#154) 1,000/s 에 섞으면 그것만 재게 된다.
 //
@@ -25,6 +28,7 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Counter } from 'k6/metrics';
+import exec from 'k6/execution';
 
 const BASE = __ENV.BASE_URL || 'http://127.0.0.1';
 const RATE = Number(__ENV.RATE || 1000);            // req/s 평균
@@ -36,7 +40,8 @@ const SEED = Number(__ENV.SEED || Date.now());
 const USERS = Number(__ENV.USERS || 40000);          // k6u00001..k6uUSERS (seed-users.sql)
 const USER_IDS = (__ENV.USER_IDS || '').split(',').map((s) => s.trim()).filter(Boolean);
 const PASSWORD = __ENV.PASSWORD || 'dockin1234';
-const LOGIN_PCT = Number(__ENV.LOGIN_PCT || 2);      // 요청 중 로그인 비율(%)
+const LOGIN_PCT = Number(__ENV.LOGIN_PCT || 0.5);    // 요청 중 로그인 비율(%). 1,000/s 면 5/s
+const SESSIONS = Number(__ENV.SESSIONS || 300);      // setup() 이 미리 로그인해 두는 세션 수
 const CHAT_CREATE_ROOMS = __ENV.CHAT_CREATE_ROOMS !== '0';
 const MAX_VUS = Number(__ENV.MAX_VUS || Math.max(200, RATE * 2));
 
@@ -47,7 +52,7 @@ const MIX = [
   ['safety_uncompleted', 3], ['calendar', 4], ['absence_list', 4], ['health', 3],
   ['clockin', 2], ['clockout', 1], ['refresh', 1], ['login', LOGIN_PCT],
 ];
-const NAMES = MIX.map(([n]) => n).concat(['chat_room_create']);
+const NAMES = MIX.map(([n]) => n).concat(['chat_room_create', 'setup_login']);
 const WORKLOG_KEYWORDS = ['용접', '와이어', '롤러', '압력', '송급', '확인', '작업일지', '부하'];
 const SAFETY_KEYWORDS = ['안전', '밀폐', '용접', '추락', '크레인', '도장', '화기', '중량물'];
 const LOCATIONS = ['1도크 게이트', '2도크 게이트', '3도크 게이트', '본관 정문'];
@@ -94,6 +99,7 @@ export const options = {
     ])),
   summaryTrendStats: ['avg', 'med', 'p(95)', 'p(99)', 'max'],
   discardResponseBodies: false,
+  setupTimeout: '5m',                                // SESSIONS=300 을 4개씩이면 ~6초. 서버가 느리면 더
 };
 
 const loginFail = new Counter('login_fail');
@@ -109,9 +115,22 @@ let session = null;
 let chatSession = null;
 const ATTENDANCE_OK = http.expectedStatuses(200, 404, 409);  // AT001·AT003(이미 처리)·AT002(출근 전 퇴근)
 
+function poolId(n) { return 'k6u' + String(n).padStart(5, '0'); }
 function randomUserId() {
   if (USER_IDS.length) return pick(USER_IDS);
-  return 'k6u' + String(1 + Math.floor(Math.random() * USERS)).padStart(5, '0');
+  return poolId(1 + Math.floor(Math.random() * USERS));
+}
+// 같은 구역의 다른 사용자. seed-users.sql 이 구역을 g % 3 으로 주므로 번호가 3 의 배수만큼 떨어진 계정이다 —
+// 다른 구역 사람의 작업일지는 403(A002) 이라 목록이 아니라 거부를 재게 된다.
+function sameAreaUserId(uid) {
+  const m = /^k6u(\d+)$/.exec(uid); if (!m || USER_IDS.length) return randomUserId();
+  const n = Number(m[1]);                          // n ± 3k, 풀 끝에서 감기지 않게(USERS % 3 != 0 이면 감길 때 구역이 어긋난다)
+  const lo = -Math.floor((n - 1) / 3), hi = Math.floor((USERS - n) / 3);
+  let k = lo + Math.floor(Math.random() * (hi - lo + 1)); if (k === 0) k = hi > 0 ? hi : lo;
+  return poolId(n + 3 * k);
+}
+function newSession(uid, r) {
+  return { userId: uid, access: r.json('accessToken'), refresh: r.json('refreshToken'), roomId: null, logIds: [], cursor: null, triedRoom: false };
 }
 function jsonHeaders(token) {
   const h = { 'Content-Type': 'application/json' };
@@ -128,11 +147,35 @@ function login(name, uid) {
   uid = uid || randomUserId();
   const r = classify(http.post(`${BASE}/api/member/login`, JSON.stringify({ userId: uid, password: PASSWORD }), tag(name || 'login')));
   if (!check(r, { 'login 200': (x) => x.status === 200 })) { loginFail.add(1); return null; }
-  return { userId: uid, access: r.json('accessToken'), refresh: r.json('refreshToken'), roomId: null, logIds: [], cursor: null, triedRoom: false };
+  return newSession(uid, r);
 }
 function ensureSession() {
-  if (!session) session = login('login');
+  if (!session) session = login('login');            // setup 풀이 비었을 때만 온다(전부 로그인 실패)
   return session;
+}
+
+// 세션 풀. 4개씩 묶어 친다 — 1 vCPU 에서 bcrypt 는 그 이상 동시에 돌려도 빨라지지 않고 큐만 는다.
+export function setup() {
+  const n = USER_IDS.length ? Math.min(SESSIONS, USER_IDS.length) : Math.min(SESSIONS, USERS);
+  const ids = []; for (let i = 0; i < n; i++) ids.push(USER_IDS.length ? USER_IDS[i] : poolId(1 + Math.floor(Math.random() * USERS)));
+  const sessions = [];
+  for (let i = 0; i < ids.length; i += 4) {
+    const chunk = ids.slice(i, i + 4);
+    const rs = http.batch(chunk.map((uid) => ['POST', `${BASE}/api/member/login`, JSON.stringify({ userId: uid, password: PASSWORD }), tag('setup_login')]));
+    rs.forEach((r, j) => { if (r.status === 200) sessions.push(newSession(chunk[j], r)); else loginFail.add(1); });
+  }
+  if (!sessions.length) throw new Error(`setup: ${ids.length}개 로그인이 전부 실패 — BASE_URL·계정 풀을 확인`);
+  console.log(`setup: 세션 ${sessions.length}/${ids.length} 준비`);
+  return { sessions };
+}
+function takeFromPool(data) {
+  if (session || !data || !data.sessions || !data.sessions.length) return;
+  const s = data.sessions[(exec.vu.idInTest - 1) % data.sessions.length];
+  // shared: 풀 세션은 VU 여럿이 같은 계정을 들 수 있다(VU > SESSIONS). 그 세션으로 refresh 를 하면 한쪽이 토큰을
+  // 돌리는 순간 다른 쪽의 옛 토큰이 "재사용 감지"로 폐기된다(밤 20 r1000: refresh 40% 401, A004 596건). 그래서
+  // refresh 는 VU 가 직접 로그인한 세션에만 한다.
+  session = Object.assign({}, s, { logIds: [], cursor: null, shared: true });
+  chatSession = Object.assign({}, s, { logIds: [], cursor: null, roomId: null, triedRoom: false });
 }
 
 // 401 이면 세션이 죽은 것(만료·다른 VU 가 같은 계정으로 로그인해 refresh 를 덮음 등) — 다시 로그인하고 한 번 더.
@@ -188,6 +231,7 @@ const ACTIONS = {
   login() { const s = login('login'); if (s) session = s; },
   refresh() {
     const s = ensureSession(); if (!s) return;
+    if (s.shared) return ACTIONS.chat_rooms();       // 공유 세션은 refresh 하지 않는다(위 takeFromPool)
     const r = classify(http.post(`${BASE}/api/member/refresh`, JSON.stringify({ refreshToken: s.refresh }), tag('refresh')));
     if (r.status === 200) { s.access = r.json('accessToken'); s.refresh = r.json('refreshToken') || s.refresh; }
     else { refreshFail.add(1); session = login('login'); }
@@ -214,7 +258,7 @@ const ACTIONS = {
     ok200('worklogs_page2', r);
   },
   worklog_search() { ok200('worklog_search', withAuth('worklog_search', (s) => http.get(`${BASE}/api/work-logs/search?keyword=${encodeURIComponent(pick(WORKLOG_KEYWORDS))}&size=20`, tag('worklog_search', s.access)))); },
-  worklogs_others() { ok200('worklogs_others', withAuth('worklogs_others', (s) => http.get(`${BASE}/api/work-logs/others/${randomUserId()}?size=20`, tag('worklogs_others', s.access)))); },
+  worklogs_others() { ok200('worklogs_others', withAuth('worklogs_others', (s) => http.get(`${BASE}/api/work-logs/others/${sameAreaUserId(s.userId)}?size=20`, tag('worklogs_others', s.access)))); },
   worklog_comments() {
     const s = ensureSession(); if (!s) return;
     if (!s.logIds.length) return ACTIONS.worklogs();  // 아직 목록을 안 봤으면 목록부터
@@ -238,7 +282,8 @@ const ACTIONS = {
   absence_list() { ok200('absence_list', withAuth('absence_list', (s) => http.get(`${BASE}/api/absence/requests?size=20`, tag('absence_list', s.access)))); },
 };
 
-export default function () {
+export default function (data) {
+  takeFromPool(data);
   sleep(Math.random() * 0.2);                        // 도착 시각을 k6 의 등간격 스케줄에서 살짝 흩는다
   ACTIONS[weighted(MIX)]();
 }

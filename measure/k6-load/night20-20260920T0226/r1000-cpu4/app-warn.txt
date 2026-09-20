@@ -1,0 +1,6 @@
+   9586 BusinessException: AT001
+   3128 BusinessException: AT003
+   1213 BusinessException: AT002
+      9 BusinessException: A004
+      1 WARN 리프레시 토큰 재사용 감지 - 사용자의 토큰을 폐기합니다. userId=k6u28320
+      1 WARN 리프레시 토큰 재사용 감지 - 사용자의 토큰을 폐기합니다. userId=k6u27873

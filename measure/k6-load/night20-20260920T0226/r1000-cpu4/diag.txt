@@ -1,0 +1,29 @@
+===== 02:58:49
+-- docker stats
+dockin-app-1 85.16% dockin-spring-dockin-nginx-1 6.86% dockin-embedding 0.17% dockin-db 32.73% dockin-redis 2.91% 
+-- tomcat exec threads (state / top frame)
+    198 TIMED_WAITING (parking) | jdk.internal.misc.Unsafe.park | 	- parking to wait for  <0x00000000f3059cd0> (a java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject)
+      1 RUNNABLE | org.springframework.web.util.pattern.PathPattern.matchAndExtract(PathPattern.java:233) | org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher.matcher(PathPatternRequestMatcher.java:143)
+      1 RUNNABLE | org.springframework.security.crypto.bcrypt.BCrypt.crypt_raw(BCrypt.java:559) | org.springframework.security.crypto.bcrypt.BCrypt.hashpw(BCrypt.java:660)
+-- app sockets :8080 (state, count, recvq>0)
+01=25(recvq>0:0) 0A=2(recvq>0:0) 06=1254(recvq>0:0) 
+-- nginx sockets
+in:06=4(rq:0) up:06=234(rq:0) in:01=250(rq:0) up:01=8(rq:0) in:0A=1(rq:0) up:0A=1(rq:0) 
+-- redis
+connected_clients:8 blocked_clients:0 instantaneous_ops_per_sec:879 
+-- pg
+active||1 idle|Client|10 
+===== 02:59:01
+-- docker stats
+dockin-app-1 135.10% dockin-spring-dockin-nginx-1 9.25% dockin-embedding 0.15% dockin-db 45.01% dockin-redis 3.33% 
+-- tomcat exec threads (state / top frame)
+    199 TIMED_WAITING (parking) | jdk.internal.misc.Unsafe.park | 	- parking to wait for  <0x00000000f3059cd0> (a java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject)
+      1 RUNNABLE | jakarta.servlet.ServletResponseWrapper.getContentType(ServletResponseWrapper.java:156) | jakarta.servlet.ServletResponseWrapper.getContentType(ServletResponseWrapper.java:156)
+-- app sockets :8080 (state, count, recvq>0)
+01=29(recvq>0:0) 0A=2(recvq>0:0) 06=1161(recvq>0:0) 
+-- nginx sockets
+up:06=227(rq:0) in:01=250(rq:0) up:01=12(rq:0) in:0A=1(rq:0) up:0A=1(rq:0) 
+-- redis
+connected_clients:8 blocked_clients:0 instantaneous_ops_per_sec:1215 
+-- pg
+active||2 idle|Client|8 idle in transaction||1 

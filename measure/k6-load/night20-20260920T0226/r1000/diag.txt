@@ -1,0 +1,54 @@
+===== 02:28:01
+-- docker stats
+dockin-spring-dockin-nginx-1 4.90% dockin-app-1 104.08% dockin-embedding 0.19% dockin-db 18.30% dockin-redis 1.54% 
+-- tomcat exec threads (state / top frame)
+     76 TIMED_WAITING (parking) | jdk.internal.misc.Unsafe.park | 	- parking to wait for  <0x00000000f0dcbc48> (a java.util.concurrent.SynchronousQueue$Transferer)
+     38 BLOCKED (on object monitor) | org.springframework.boot.loader.net.protocol.jar.UrlJarFiles$Cache.get(UrlJarFiles.java:158) | 	- waiting to lock <0x00000000ef66fd10> (a org.springframework.boot.loader.net.protocol.jar.UrlJarFiles$Cache)
+     29 BLOCKED (on object monitor) | java.util.Hashtable.get | 	- waiting to lock <0x00000000ef67cd78> (a java.util.Hashtable)
+     11 BLOCKED (on object monitor) | org.springframework.boot.tomcat.TomcatEmbeddedWebappClassLoader.loadClass(TomcatEmbeddedWebappClassLoader.java:69) | 	- waiting to lock <0x00000000f312b4b0> (a java.lang.Object)
+      9 BLOCKED (on object monitor) | org.springframework.boot.loader.net.protocol.jar.UrlJarFiles$Cache.putIfAbsent(UrlJarFiles.java:184) | 	- waiting to lock <0x00000000ef66fd10> (a org.springframework.boot.loader.net.protocol.jar.UrlJarFiles$Cache)
+      5 BLOCKED (on object monitor) | org.springframework.boot.loader.net.protocol.jar.UrlJarFiles$Cache.remove(UrlJarFiles.java:200) | 	- waiting to lock <0x00000000ef66fd10> (a org.springframework.boot.loader.net.protocol.jar.UrlJarFiles$Cache)
+-- app sockets :8080 (state, count, recvq>0)
+08=2(recvq>0:1) 01=2015(recvq>0:1797) 0A=2(recvq>0:0) 06=5(recvq>0:0) 
+-- nginx sockets
+in:06=4(rq:0) in:01=2000(rq:0) up:01=1999(rq:0) in:0A=1(rq:0) up:0A=1(rq:0) 
+-- redis
+connected_clients:7 blocked_clients:0 instantaneous_ops_per_sec:260 
+-- pg
+active||1 idle|Client|2 idle in transaction|Client|8 
+===== 02:28:17
+-- docker stats
+dockin-spring-dockin-nginx-1 5.06% dockin-app-1 107.34% dockin-embedding 0.16% dockin-db 19.25% dockin-redis 1.52% 
+-- tomcat exec threads (state / top frame)
+    179 TIMED_WAITING (parking) | jdk.internal.misc.Unsafe.park | 	- parking to wait for  <0x00000000f0dcbc48> (a java.util.concurrent.SynchronousQueue$Transferer)
+      3 RUNNABLE | org.springframework.security.crypto.bcrypt.BCrypt.crypt_raw(BCrypt.java:558) | org.springframework.security.crypto.bcrypt.BCrypt.hashpw(BCrypt.java:660)
+      3 BLOCKED (on object monitor) | org.springframework.boot.loader.net.protocol.jar.UrlJarFiles$Cache.get(UrlJarFiles.java:158) | 	- waiting to lock <0x00000000ef66fd10> (a org.springframework.boot.loader.net.protocol.jar.UrlJarFiles$Cache)
+      2 RUNNABLE | sun.nio.ch.Net.poll | sun.nio.ch.NioSocketImpl.park(java.base@21.0.12.1/NioSocketImpl.java:191)
+      2 BLOCKED (on object monitor) | org.springframework.boot.loader.zip.FileDataBlock$FileAccess.ensureOpen(FileDataBlock.java:282) | 	- waiting to lock <0x00000000ef6ca298> (a java.lang.Object)
+      1 WAITING (parking) | jdk.internal.misc.Unsafe.park | 	- parking to wait for  <0x00000000e87bb398> (a java.util.concurrent.CompletableFuture$Signaller)
+-- app sockets :8080 (state, count, recvq>0)
+01=2015(recvq>0:1795) 0A=2(recvq>0:0) 06=6(recvq>0:0) 
+-- nginx sockets
+in:06=4(rq:0) up:06=2(rq:0) in:01=2000(rq:0) up:01=1999(rq:0) in:0A=1(rq:0) up:0A=1(rq:0) 
+-- redis
+connected_clients:6 blocked_clients:0 instantaneous_ops_per_sec:235 
+-- pg
+active||1 idle|Client|5 idle in transaction|Client|5 
+===== 02:28:33
+-- docker stats
+dockin-spring-dockin-nginx-1 4.50% dockin-app-1 104.45% dockin-embedding 0.17% dockin-db 14.30% dockin-redis 1.35% 
+-- tomcat exec threads (state / top frame)
+     94 BLOCKED (on object monitor) | java.util.zip.ZipFile$CleanableResource.run | 	- waiting to lock <0x00000000ef6e6358> (a java.util.zip.ZipFile$Source)
+     50 BLOCKED (on object monitor) | jdk.internal.loader.URLClassPath.getLoader | 	- waiting to lock <0x00000000ef66fe88> (a jdk.internal.loader.URLClassPath)
+     10 BLOCKED (on object monitor) | org.springframework.boot.loader.zip.FileDataBlock$FileAccess.close(FileDataBlock.java:258) | 	- waiting to lock <0x00000000ef6ca298> (a java.lang.Object)
+      9 BLOCKED (on object monitor) | org.springframework.boot.loader.zip.FileDataBlock$FileAccess.ensureOpen(FileDataBlock.java:282) | 	- waiting to lock <0x00000000ef6ca298> (a java.lang.Object)
+      5 TIMED_WAITING (parking) | jdk.internal.misc.Unsafe.park | java.util.concurrent.locks.LockSupport.parkNanos(java.base@21.0.12.1/LockSupport.java:410)
+      5 BLOCKED (on object monitor) | org.springframework.boot.loader.zip.FileDataBlock$FileAccess.open(FileDataBlock.java:245) | 	- waiting to lock <0x00000000ef6ca298> (a java.lang.Object)
+-- app sockets :8080 (state, count, recvq>0)
+08=2(recvq>0:2) 01=2015(recvq>0:1787) 0A=2(recvq>0:0) 06=5(recvq>0:0) 
+-- nginx sockets
+in:06=4(rq:0) up:06=2(rq:0) in:01=2000(rq:0) up:01=2000(rq:0) in:0A=1(rq:0) up:0A=1(rq:0) 
+-- redis
+connected_clients:6 blocked_clients:0 instantaneous_ops_per_sec:234 
+-- pg
+active||1 idle|Client|5 idle in transaction|Client|5 
