@@ -1,0 +1,1 @@
+== chat sessions=1000 every=3.3s sent=35464 room/msg=10 rooms/msg=10 fanout p50=3ms p95=6ms p99=10ms max=34ms connect p95=7285.5999999999985ms ws_error=0 recv_error=0

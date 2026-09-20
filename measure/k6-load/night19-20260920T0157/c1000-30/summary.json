@@ -1,0 +1,1 @@
+{"sessions":1000,"send_every_s":33,"ramp":"1m","hold":"2m","msg_sent":3572,"recv_room":35720,"recv_rooms":35720,"recv_error":0,"ws_error":0,"room_per_msg":10,"rooms_per_msg":10,"fanout":{"p50":5,"p95":7,"p99":8,"max":13},"connect":{"p50":217,"p95":7830.4,"max":8853}}

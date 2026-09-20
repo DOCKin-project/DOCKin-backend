@@ -1,0 +1,1 @@
+{"sessions":2000,"send_every_s":6.7,"ramp":"2m","hold":"2m","msg_sent":34924,"recv_room":349240,"recv_rooms":349240,"recv_error":0,"ws_error":0,"room_per_msg":10,"rooms_per_msg":10,"fanout":{"p50":5,"p95":19,"p99":102,"max":347},"connect":{"p50":4,"p95":5,"max":70},"handshake":{"p50":2,"p95":2,"max":67},"stomp_connect":{"p50":2,"p95":3,"max":19}}

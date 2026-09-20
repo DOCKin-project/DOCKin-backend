@@ -1,0 +1,1 @@
+{"sessions":4000,"send_every_s":0,"ramp":"3m","hold":"2m","msg_sent":0,"recv_room":0,"recv_rooms":0,"recv_error":0,"ws_error":195943,"room_per_msg":null,"rooms_per_msg":null,"fanout":{"p50":0,"p95":0,"p99":0,"max":0},"connect":{},"handshake":{},"stomp_connect":{}}

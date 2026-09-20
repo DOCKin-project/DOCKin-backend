@@ -53,16 +53,21 @@ done
 
 say "부하기: k6"
 $SSH ec2-user@$GEN 'sudo dnf install -y -q https://dl.k6.io/rpm/repo.rpm >/dev/null 2>&1 || true; sudo dnf install -y -q k6 >/dev/null; mkdir -p out; k6 version; echo "* soft nofile 1048576" | sudo tee -a /etc/security/limits.conf >/dev/null; echo "* hard nofile 1048576" | sudo tee -a /etc/security/limits.conf >/dev/null; sudo sysctl -q -w net.ipv4.ip_local_port_range="1024 65535" net.ipv4.tcp_tw_reuse=1' &
-scp -q -i "$KEY" -o StrictHostKeyChecking=no "$HERE/journey.js" ec2-user@$GEN:~/ &
+scp -q -i "$KEY" -o StrictHostKeyChecking=no "$HERE"/*.js ec2-user@$GEN:~/ &
 
 say "서버: 부트스트랩 (클론·빌드·DB·스키마) — 10분쯤"
 $SSH ec2-user@$SERVER "sudo dnf install -y -q git >/dev/null; git clone -q --depth 50 -b $BRANCH $REPO_URL DOCKin-spring && cd DOCKin-spring && REPO_URL=$REPO_URL bash scripts/aws-bootstrap.sh 2>&1 | tail -25"
 
-say "서버: 계정 4만 + 작업일지 12만, 앱 기동 (compose.k6mem.yaml — 기동 색인 끔)"
+# 서버는 main을 클론했다. 워킹트리에만 있는 측정 파일(밤 18에 nginx-keepalive.conf가 없어 한 단계를 버렸다)을 덮어쓴다.
+say "서버: measure/k6-load 워킹트리 사본 덮어쓰기"
+scp -q -i "$KEY" -o StrictHostKeyChecking=no "$HERE"/*.sh "$HERE"/*.sql "$HERE"/*.js "$HERE"/*.conf ec2-user@$SERVER:DOCKin-spring/measure/k6-load/
+
+say "서버: 계정 4만 + 작업일지 12만 + 채팅방 400, 앱 기동 (compose.k6mem.yaml — 기동 색인 끔)"
 $SSH ec2-user@$SERVER 'cd DOCKin-spring && C="docker compose -f compose.yaml -f compose.gc.yaml -f compose.k6mem.yaml"; $C up -d dockin-app dockin-nginx >/dev/null 2>&1;
   for i in $(seq 1 90); do [[ "$(docker inspect -f "{{.State.Health.Status}}" dockin-app-1 2>/dev/null)" == healthy ]] && break; sleep 3; done;
   docker inspect -f "app {{.State.Health.Status}}" dockin-app-1;
   $C exec -T DOCKin-DB psql -U root -d dockindb -qtAX < measure/k6-load/seed-users.sql 2>&1 | tail -2;
+  $C exec -T DOCKin-DB psql -U root -d dockindb -qtAX < measure/k6-load/seed-chat-rooms.sql 2>&1 | tail -1;
   chmod +x measure/k6-load/*.sh; docker ps --format "{{.Names}} {{.Status}}"'
 wait
 
