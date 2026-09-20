@@ -1,0 +1,2 @@
+dockin-app-1  | 2026-09-20T08:21:32.513+09:00  WARN [] 1 --- [DOCKin-spring] [MessageBroker-1] c.DOCKin.global.config.HikariPoolWatch   : HikariPool 대기 pending=10 active=10 idle=0 total=10 max=10 — 풀 고갈이면 '누가 잡고 있나'부터 (ADR-0008 7-1)
+dockin-app-1  | 2026-09-20T08:22:16.481+09:00 ERROR [decccf6206ea442f] 1 --- [DOCKin-spring] [o-8080-exec-121] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외

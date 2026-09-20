@@ -1,0 +1,117 @@
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+
+     execution: local
+        script: journey.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 200 max VUs, 1m0s max duration (incl. graceful stop):
+              * rate: 2.00 iterations/s for 30s (maxVUs: 20-200, gracefulStop: 30s)
+
+
+running (0m01.0s), 000/020 VUs, 2 complete and 0 interrupted iterations
+rate   [   3% ] 000/020 VUs  01.0s/30s  2.00 iters/s
+
+running (0m02.0s), 000/020 VUs, 4 complete and 0 interrupted iterations
+rate   [   7% ] 000/020 VUs  02.0s/30s  2.00 iters/s
+
+running (0m03.0s), 000/020 VUs, 6 complete and 0 interrupted iterations
+rate   [  10% ] 000/020 VUs  03.0s/30s  2.00 iters/s
+
+running (0m04.0s), 000/020 VUs, 8 complete and 0 interrupted iterations
+rate   [  13% ] 000/020 VUs  04.0s/30s  2.00 iters/s
+
+running (0m05.0s), 000/020 VUs, 10 complete and 0 interrupted iterations
+rate   [  17% ] 000/020 VUs  05.0s/30s  2.00 iters/s
+
+running (0m06.0s), 000/020 VUs, 12 complete and 0 interrupted iterations
+rate   [  20% ] 000/020 VUs  06.0s/30s  2.00 iters/s
+
+running (0m07.0s), 000/020 VUs, 14 complete and 0 interrupted iterations
+rate   [  23% ] 000/020 VUs  07.0s/30s  2.00 iters/s
+
+running (0m08.0s), 000/020 VUs, 16 complete and 0 interrupted iterations
+rate   [  27% ] 000/020 VUs  08.0s/30s  2.00 iters/s
+
+running (0m09.0s), 000/020 VUs, 18 complete and 0 interrupted iterations
+rate   [  30% ] 000/020 VUs  09.0s/30s  2.00 iters/s
+
+running (0m10.0s), 000/020 VUs, 20 complete and 0 interrupted iterations
+rate   [  33% ] 000/020 VUs  10.0s/30s  2.00 iters/s
+
+running (0m11.0s), 000/020 VUs, 22 complete and 0 interrupted iterations
+rate   [  37% ] 000/020 VUs  11.0s/30s  2.00 iters/s
+
+running (0m12.0s), 000/020 VUs, 24 complete and 0 interrupted iterations
+rate   [  40% ] 000/020 VUs  12.0s/30s  2.00 iters/s
+
+running (0m13.0s), 000/020 VUs, 26 complete and 0 interrupted iterations
+rate   [  43% ] 000/020 VUs  13.0s/30s  2.00 iters/s
+
+running (0m14.0s), 000/020 VUs, 28 complete and 0 interrupted iterations
+rate   [  47% ] 000/020 VUs  14.0s/30s  2.00 iters/s
+
+running (0m15.0s), 000/020 VUs, 30 complete and 0 interrupted iterations
+rate   [  50% ] 000/020 VUs  15.0s/30s  2.00 iters/s
+
+running (0m16.0s), 000/020 VUs, 32 complete and 0 interrupted iterations
+rate   [  53% ] 000/020 VUs  16.0s/30s  2.00 iters/s
+
+running (0m17.0s), 000/020 VUs, 34 complete and 0 interrupted iterations
+rate   [  57% ] 000/020 VUs  17.0s/30s  2.00 iters/s
+
+running (0m18.0s), 000/020 VUs, 36 complete and 0 interrupted iterations
+rate   [  60% ] 000/020 VUs  18.0s/30s  2.00 iters/s
+
+running (0m19.0s), 000/020 VUs, 38 complete and 0 interrupted iterations
+rate   [  63% ] 000/020 VUs  19.0s/30s  2.00 iters/s
+
+running (0m20.0s), 000/020 VUs, 40 complete and 0 interrupted iterations
+rate   [  67% ] 000/020 VUs  20.0s/30s  2.00 iters/s
+
+running (0m21.0s), 000/020 VUs, 42 complete and 0 interrupted iterations
+rate   [  70% ] 000/020 VUs  21.0s/30s  2.00 iters/s
+
+running (0m22.0s), 000/020 VUs, 44 complete and 0 interrupted iterations
+rate   [  73% ] 000/020 VUs  22.0s/30s  2.00 iters/s
+
+running (0m23.0s), 000/020 VUs, 46 complete and 0 interrupted iterations
+rate   [  77% ] 000/020 VUs  23.0s/30s  2.00 iters/s
+
+running (0m24.0s), 000/020 VUs, 48 complete and 0 interrupted iterations
+rate   [  80% ] 000/020 VUs  24.0s/30s  2.00 iters/s
+
+running (0m25.0s), 000/020 VUs, 50 complete and 0 interrupted iterations
+rate   [  83% ] 000/020 VUs  25.0s/30s  2.00 iters/s
+
+running (0m26.0s), 000/020 VUs, 52 complete and 0 interrupted iterations
+rate   [  87% ] 000/020 VUs  26.0s/30s  2.00 iters/s
+
+running (0m27.0s), 000/020 VUs, 54 complete and 0 interrupted iterations
+rate   [  90% ] 000/020 VUs  27.0s/30s  2.00 iters/s
+
+running (0m28.0s), 000/020 VUs, 56 complete and 0 interrupted iterations
+rate   [  93% ] 000/020 VUs  28.0s/30s  2.00 iters/s
+
+running (0m29.0s), 000/020 VUs, 58 complete and 0 interrupted iterations
+rate   [  97% ] 000/020 VUs  29.0s/30s  2.00 iters/s
+
+running (0m30.0s), 000/020 VUs, 60 complete and 0 interrupted iterations
+rate   [ 100% ] 000/020 VUs  30.0s/30s  2.00 iters/s
+
+== rate rate=2/s vus=1000 reqs=360 rps=12 fail=0% p95=68.9ms dropped=0 maxVUs=20 login_fail=0 dup=0 journey_p95=90ms
+name             n      rps     p50     p95     p99     max   fail%
+login               60       2    68.4    69.6      70      70       0
+clockin             60       2     7.8    10.4      11      11       0
+attendance_list     60       2     4.3     8.6     9.4      10       0
+worklogs            60       2     6.7    10.7    10.8      11       0
+chat_rooms          60       2     4.1     7.6     9.7      11       0
+safety_courses      60       2     4.4     8.7     9.5      10       0
+
+running (0m30.0s), 000/020 VUs, 60 complete and 0 interrupted iterations
+rate ✓ [ 100% ] 000/020 VUs  30s  2.00 iters/s

@@ -1,0 +1,3 @@
+# k6 "Request Failed" 경고 68,893건의 오류 문자열 분포 (k6.log에서 걷어냈다 — 원본 10MB). 분류 안 된 나머지는 같은 EOF가 다른 URL 꼴로 잡힌 것.
+  44909 ": EOF"
+     10 ": http: server closed idle connection"
