@@ -16,6 +16,14 @@ import java.util.Date;
 @Component
 public class JwtUtil {
     private final Key key;
+    /**
+     * 파서는 한 번만 만든다. {@code Jwts.parserBuilder().build()}는 JJWT가 {@code ServiceLoader}로 역직렬화
+     * 구현을 찾는 일이고, 그건 classpath의 {@code META-INF/services}를 읽는 일이라 fat jar에서는 중첩 jar를 열고
+     * 닫으며 JDK {@code ZipFile} 락을 잡는다. 요청마다 두 번(검증 + subject) 하니 스레드가 몰리면 그 락 대기가
+     * 응답 시간이 됐다 — 밤 20, 1,000 req/s에서 Tomcat 스레드 94개가 {@code ZipFile$Source}에 BLOCKED (#162).
+     * {@link JwtParser}는 스레드 안전하다.
+     */
+    private final JwtParser parser;
     private final long accessTokenExpTime;
     private final long refreshTokenExpTime;
 
@@ -26,6 +34,7 @@ public class JwtUtil {
     {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         this.key = Keys.hmacShaKeyFor(keyBytes);
+        this.parser = Jwts.parserBuilder().setSigningKey(key).build();
         this.accessTokenExpTime = accessTokenExpTime;
         this.refreshTokenExpTime = refreshTokenExpTime;
     }
@@ -66,7 +75,7 @@ public class JwtUtil {
     // JWT 검증
     public boolean isValidToken(String token){
         try{
-            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+            parser.parseClaimsJws(token);
             return true;
         } catch (SecurityException | MalformedJwtException e) {
             log.info("Invalid JWT signature.", e);
@@ -87,11 +96,7 @@ public class JwtUtil {
     // Claims 추출
     public Claims parseClaims(String accessToken){
         try{
-            return Jwts.parserBuilder()
-                    .setSigningKey(key)
-                    .build()
-                    .parseClaimsJws(accessToken)
-                    .getBody();
+            return parser.parseClaimsJws(accessToken).getBody();
         } catch(ExpiredJwtException e){
             return e.getClaims();
         }
