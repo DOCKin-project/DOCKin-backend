@@ -1,0 +1,222 @@
+{
+ "base": "http://172.31.5.164",
+ "pattern": "random",
+ "rate": 100,
+ "jitter": 0.5,
+ "seed": 1789871158254,
+ "duration_s": 30,
+ "reqs": 3271,
+ "rps": 62.4,
+ "fail_pct": 0,
+ "p95_all": 284.5,
+ "dropped": 0,
+ "max_vus": 50,
+ "status_4xx": 59,
+ "status_5xx": 0,
+ "login_fail": 0,
+ "refresh_fail": 0,
+ "relogin_401": 0,
+ "attendance_dup": 33,
+ "by_name": [
+  {
+   "name": "worklogs",
+   "n": 476,
+   "rps": 9.1,
+   "p50": 6,
+   "p95": 8.8,
+   "p99": 11.8,
+   "max": 44,
+   "fail": 0
+  },
+  {
+   "name": "attendance_list",
+   "n": 408,
+   "rps": 7.8,
+   "p50": 4,
+   "p95": 5.5,
+   "p99": 7,
+   "max": 48,
+   "fail": 0
+  },
+  {
+   "name": "chat_rooms",
+   "n": 382,
+   "rps": 7.3,
+   "p50": 3.9,
+   "p95": 5.6,
+   "p99": 8,
+   "max": 37,
+   "fail": 0
+  },
+  {
+   "name": "setup_login",
+   "n": 300,
+   "rps": 5.7,
+   "p50": 287.2,
+   "p95": 304.4,
+   "p99": 319.7,
+   "max": 377,
+   "fail": 0
+  },
+  {
+   "name": "chat_messages",
+   "n": 273,
+   "rps": 5.2,
+   "p50": 3.9,
+   "p95": 5.5,
+   "p99": 6.9,
+   "max": 9,
+   "fail": 0
+  },
+  {
+   "name": "worklog_search",
+   "n": 226,
+   "rps": 4.3,
+   "p50": 6.1,
+   "p95": 9.4,
+   "p99": 12.7,
+   "max": 40,
+   "fail": 0
+  },
+  {
+   "name": "safety_courses",
+   "n": 163,
+   "rps": 3.1,
+   "p50": 4,
+   "p95": 5.2,
+   "p99": 6.4,
+   "max": 32,
+   "fail": 0
+  },
+  {
+   "name": "worklog_comments",
+   "n": 136,
+   "rps": 2.6,
+   "p50": 4.3,
+   "p95": 6,
+   "p99": 7.1,
+   "max": 8,
+   "fail": 0
+  },
+  {
+   "name": "worklogs_page2",
+   "n": 123,
+   "rps": 2.3,
+   "p50": 5.9,
+   "p95": 9.1,
+   "p99": 9.4,
+   "max": 10,
+   "fail": 0
+  },
+  {
+   "name": "worklogs_others",
+   "n": 121,
+   "rps": 2.3,
+   "p50": 4.4,
+   "p95": 6.5,
+   "p99": 7.6,
+   "max": 8,
+   "fail": 0
+  },
+  {
+   "name": "safety_uncompleted",
+   "n": 109,
+   "rps": 2.1,
+   "p50": 4,
+   "p95": 5.8,
+   "p99": 7.3,
+   "max": 54,
+   "fail": 0
+  },
+  {
+   "name": "calendar",
+   "n": 100,
+   "rps": 1.9,
+   "p50": 3.7,
+   "p95": 4.8,
+   "p99": 4.9,
+   "max": 5,
+   "fail": 0
+  },
+  {
+   "name": "absence_list",
+   "n": 98,
+   "rps": 1.9,
+   "p50": 3.6,
+   "p95": 4.8,
+   "p99": 8,
+   "max": 51,
+   "fail": 0
+  },
+  {
+   "name": "safety_search",
+   "n": 81,
+   "rps": 1.5,
+   "p50": 4.2,
+   "p95": 5.1,
+   "p99": 5.4,
+   "max": 5,
+   "fail": 0
+  },
+  {
+   "name": "health",
+   "n": 81,
+   "rps": 1.5,
+   "p50": 3.2,
+   "p95": 4.6,
+   "p99": 5.3,
+   "max": 6,
+   "fail": 0
+  },
+  {
+   "name": "clockin",
+   "n": 65,
+   "rps": 1.2,
+   "p50": 6.8,
+   "p95": 8.7,
+   "p99": 9.2,
+   "max": 9,
+   "fail": 0
+  },
+  {
+   "name": "chat_room_create",
+   "n": 49,
+   "rps": 0.9,
+   "p50": 6.3,
+   "p95": 8.9,
+   "p99": 9.9,
+   "max": 10,
+   "fail": 0
+  },
+  {
+   "name": "clockout",
+   "n": 40,
+   "rps": 0.8,
+   "p50": 4.9,
+   "p95": 7.6,
+   "p99": 21.3,
+   "max": 29,
+   "fail": 0
+  },
+  {
+   "name": "refresh",
+   "n": 31,
+   "rps": 0.6,
+   "p50": 5.1,
+   "p95": 6.1,
+   "p99": 18.4,
+   "max": 24,
+   "fail": 0
+  },
+  {
+   "name": "login",
+   "n": 9,
+   "rps": 0.2,
+   "p50": 72.8,
+   "p95": 104.9,
+   "p99": 120.8,
+   "max": 125,
+   "fail": 0
+  }
+ ]
+}

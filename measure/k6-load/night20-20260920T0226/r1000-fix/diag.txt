@@ -1,0 +1,36 @@
+===== 02:47:47
+-- docker stats
+dockin-app-1 107.18% dockin-spring-dockin-nginx-1 8.98% dockin-embedding 0.17% dockin-db 35.99% dockin-redis 2.32% 
+-- tomcat exec threads (state / top frame)
+    184 TIMED_WAITING (parking) | jdk.internal.misc.Unsafe.park | 	- parking to wait for  <0x00000000f0dbb130> (a java.util.concurrent.SynchronousQueue$Transferer)
+      7 RUNNABLE | sun.nio.ch.Net.poll | sun.nio.ch.NioSocketImpl.park(java.base@21.0.12.1/NioSocketImpl.java:191)
+      1 WAITING (parking) | jdk.internal.misc.Unsafe.park | 	- parking to wait for  <0x00000000e8daaac0> (a java.util.concurrent.CompletableFuture$Signaller)
+      1 WAITING (parking) | jdk.internal.misc.Unsafe.park | 	- parking to wait for  <0x00000000e8d9a6e0> (a java.util.concurrent.CompletableFuture$Signaller)
+      1 WAITING (parking) | jdk.internal.misc.Unsafe.park | 	- parking to wait for  <0x00000000e8d32e78> (a java.util.concurrent.CompletableFuture$Signaller)
+      1 WAITING (parking) | jdk.internal.misc.Unsafe.park | 	- parking to wait for  <0x00000000e8d024c0> (a java.util.concurrent.CompletableFuture$Signaller)
+-- app sockets :8080 (state, count, recvq>0)
+01=2014(recvq>0:1720) 0A=2(recvq>0:0) 06=13(recvq>0:0) 
+-- nginx sockets
+up:06=23(rq:0) in:01=2000(rq:0) up:01=1997(rq:0) in:0A=1(rq:0) up:0A=1(rq:0) 
+-- redis
+connected_clients:8 blocked_clients:0 instantaneous_ops_per_sec:561 
+-- pg
+active||3 idle|Client|3 idle in transaction|Client|5 
+===== 02:48:04
+-- docker stats
+dockin-app-1 104.93% dockin-spring-dockin-nginx-1 6.96% dockin-embedding 0.17% dockin-db 38.62% dockin-redis 2.73% 
+-- tomcat exec threads (state / top frame)
+    188 TIMED_WAITING (parking) | jdk.internal.misc.Unsafe.park | 	- parking to wait for  <0x00000000f0dbb130> (a java.util.concurrent.SynchronousQueue$Transferer)
+      4 RUNNABLE | sun.nio.ch.SocketDispatcher.write0 | sun.nio.ch.SocketDispatcher.write(java.base@21.0.12.1/SocketDispatcher.java:65)
+      2 RUNNABLE | sun.nio.ch.Net.poll | sun.nio.ch.NioSocketImpl.park(java.base@21.0.12.1/NioSocketImpl.java:191)
+      1 WAITING (parking) | jdk.internal.misc.Unsafe.park | 	- parking to wait for  <0x00000000e7581790> (a java.util.concurrent.CompletableFuture$Signaller)
+      1 RUNNABLE | org.springframework.security.crypto.bcrypt.BCrypt.crypt_raw(BCrypt.java:558) | org.springframework.security.crypto.bcrypt.BCrypt.hashpw(BCrypt.java:660)
+      1 RUNNABLE | org.springframework.data.core.ClassTypeInformation.from(ClassTypeInformation.java:87) | org.springframework.data.core.ClassTypeInformation.from(ClassTypeInformation.java:70)
+-- app sockets :8080 (state, count, recvq>0)
+08=1(recvq>0:1) 01=2015(recvq>0:1764) 0A=2(recvq>0:0) 06=14(recvq>0:0) 
+-- nginx sockets
+up:06=29(rq:0) in:01=2000(rq:0) up:01=1997(rq:0) in:0A=1(rq:0) up:0A=1(rq:0) 
+-- redis
+connected_clients:8 blocked_clients:0 instantaneous_ops_per_sec:572 
+-- pg
+active||1 idle|Client|2 idle in transaction|Client|8 

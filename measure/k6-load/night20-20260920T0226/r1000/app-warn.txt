@@ -1,0 +1,10 @@
+   2255 BusinessException: AT001
+    715 BusinessException: AT003
+    596 BusinessException: A004
+    494 BusinessException: AT002
+    167 BusinessException: A002
+      6 WARN 리프레시 토큰 재사용 감지 - 사용자의 토큰을 폐기합니다. userId=k6u20975
+      5 WARN 리프레시 토큰 재사용 감지 - 사용자의 토큰을 폐기합니다. userId=k6u17916
+      5 WARN 리프레시 토큰 재사용 감지 - 사용자의 토큰을 폐기합니다. userId=k6u15523
+      5 WARN 리프레시 토큰 재사용 감지 - 사용자의 토큰을 폐기합니다. userId=k6u03882
+      5 WARN 리프레시 토큰 재사용 감지 - 사용자의 토큰을 폐기합니다. userId=k6u03054
