@@ -1,0 +1,18 @@
+00:25:05  컨테이너 기동. 시드 1000000행
+00:28:26  시드 110s, VACUUM 2s, ANALYZE 83s, 힙 477 MB, 희귀 행 100건
+00:28:33  패스 1 [O] ANALYZE 0s, prewarm 64766블록, 힙 477 MB, 쿼리 12개 × 7회
+00:29:32  패스 1 [O] 쓰기 10000행 × 3: 1481 2787 2030 ms
+00:29:33  패스 2 [A] V10 인덱스 생성
+00:29:39    V10 create index (created_at DESC · log_id DESC): 4.413s 크기 30 MB
+00:29:44  패스 2 [A] ANALYZE 2s, prewarm 68696블록, 힙 477 MB, 쿼리 12개 × 7회
+00:30:25  패스 2 [A] 쓰기 10000행 × 3: 1564 1579 2104 ms
+00:30:25  패스 3 [B] 비정규화 컬럼 + 백필 + 인덱스
+00:30:26    add column ship_yard_area: 0.473s 
+00:32:03    backfill UPDATE from users: 96.946s 
+00:32:30    set not null: 27.109s 
+00:32:30    힙(백필 직후) 972 MB
+00:33:15    vacuum full after backfill: 43.784s 크기 495 MB
+00:33:23    create index (ship_yard_area · created_at DESC · log_id DESC): 7.444s 크기 39 MB
+00:33:24  패스 3 [B] ANALYZE 0s, prewarm 75802블록, 힙 495 MB, 쿼리 12개 × 7회
+00:34:09  패스 3 [B] 쓰기 10000행 × 3: 2558 10541 4195 ms
+00:34:10  산출물: /c/DOCKin-area/measure/area/area-1g-20260920T002435

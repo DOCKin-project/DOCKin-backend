@@ -1,0 +1,12 @@
+pass,state,step,ms,size
+2,A,V10 create index (created_at DESC · log_id DESC),4892,30 MB
+3,B,add column ship_yard_area,575,
+3,B,backfill UPDATE from users,111736,
+3,B,set not null,31536,
+3,B,vacuum full after backfill,69910,495 MB
+3,B,create index (ship_yard_area · created_at DESC · log_id DESC),7553,39 MB
+5,B,add column ship_yard_area,517,
+5,B,backfill UPDATE from users,107164,
+5,B,set not null,28664,
+5,B,vacuum full after backfill,53980,495 MB
+5,B,create index (ship_yard_area · created_at DESC · log_id DESC),8403,39 MB

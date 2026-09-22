@@ -1,0 +1,346 @@
+-- L1_A0
+                                                                          QUERY PLAN                                                                          
+--------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=0.71..39.56 rows=21 width=460) (actual time=0.229..1.093 rows=21 loops=1)
+   Buffers: shared hit=472
+   ->  Nested Loop  (cost=0.71..310813.33 rows=168013 width=460) (actual time=0.228..1.089 rows=21 loops=1)
+         Buffers: shared hit=472
+         ->  Index Scan using idx_work_logs_created on work_logs w  (cost=0.42..285694.17 rows=1000077 width=460) (actual time=0.028..0.488 rows=117 loops=1)
+               Buffers: shared hit=121
+         ->  Memoize  (cost=0.28..0.30 rows=1 width=8) (actual time=0.005..0.005 rows=0 loops=117)
+               Cache Key: w.user_id
+               Cache Mode: logical
+               Hits: 0  Misses: 117  Evictions: 0  Overflows: 0  Memory Usage: 10kB
+               Buffers: shared hit=351
+               ->  Index Scan using users_pkey on users u  (cost=0.27..0.29 rows=1 width=8) (actual time=0.003..0.003 rows=0 loops=117)
+                     Index Cond: ((user_id)::text = (w.user_id)::text)
+                     Filter: ((ship_yard_area)::text = 'A0'::text)
+                     Rows Removed by Filter: 1
+                     Buffers: shared hit=351
+ Planning:
+   Buffers: shared hit=296 read=37
+ Planning Time: 19.338 ms
+ Execution Time: 1.166 ms
+(20 rows)
+
+
+-- L2_A0
+                                                                         QUERY PLAN                                                                          
+-------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=0.71..103.77 rows=21 width=460) (actual time=1.077..8.901 rows=21 loops=1)
+   Buffers: shared hit=389 read=104
+   ->  Nested Loop  (cost=0.71..281799.55 rows=57421 width=460) (actual time=1.075..8.892 rows=21 loops=1)
+         Buffers: shared hit=389 read=104
+         ->  Index Scan using idx_work_logs_created on work_logs w  (cost=0.42..273118.22 rows=341791 width=460) (actual time=1.021..8.111 rows=122 loops=1)
+               Index Cond: (created_at <= '2025-07-14 11:20:00'::timestamp without time zone)
+               Filter: ((created_at < '2025-07-14 11:20:00'::timestamp without time zone) OR (log_id < 381571))
+               Rows Removed by Filter: 1
+               Buffers: shared hit=23 read=104
+         ->  Memoize  (cost=0.28..0.30 rows=1 width=8) (actual time=0.006..0.006 rows=0 loops=122)
+               Cache Key: w.user_id
+               Cache Mode: logical
+               Hits: 0  Misses: 122  Evictions: 0  Overflows: 0  Memory Usage: 10kB
+               Buffers: shared hit=366
+               ->  Index Scan using users_pkey on users u  (cost=0.27..0.29 rows=1 width=8) (actual time=0.004..0.004 rows=0 loops=122)
+                     Index Cond: ((user_id)::text = (w.user_id)::text)
+                     Filter: ((ship_yard_area)::text = 'A0'::text)
+                     Rows Removed by Filter: 1
+                     Buffers: shared hit=366
+ Planning:
+   Buffers: shared hit=358
+ Planning Time: 1.100 ms
+ Execution Time: 8.954 ms
+(23 rows)
+
+
+-- S1_A0
+                                                                   QUERY PLAN                                                                    
+-------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=70612.29..70614.74 rows=21 width=460) (actual time=1045.747..1057.743 rows=21 loops=1)
+   Buffers: shared hit=16173 read=47377
+   ->  Gather Merge  (cost=70612.29..70615.55 rows=28 width=460) (actual time=1045.746..1057.737 rows=21 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=16173 read=47377
+         ->  Sort  (cost=69612.26..69612.30 rows=14 width=460) (actual time=1017.901..1017.907 rows=17 loops=3)
+               Sort Key: w.created_at DESC, w.log_id DESC
+               Sort Method: top-N heapsort  Memory: 48kB
+               Buffers: shared hit=16173 read=47377
+               Worker 0:  Sort Method: quicksort  Memory: 55kB
+               Worker 1:  Sort Method: quicksort  Memory: 46kB
+               ->  Hash Join  (cost=11.30..69612.00 rows=14 width=460) (actual time=1.930..1017.503 rows=33 loops=3)
+                     Hash Cond: ((w.user_id)::text = (u.user_id)::text)
+                     Buffers: shared hit=16087 read=47377
+                     ->  Parallel Seq Scan on work_logs w  (cost=0.00..69600.48 rows=82 width=460) (actual time=1.613..1016.931 rows=33 loops=3)
+                           Filter: (((title)::text ~~ '%크랭크축%'::text) OR (log_text ~~ '%크랭크축%'::text))
+                           Rows Removed by Filter: 333300
+                           Buffers: shared hit=15973 read=47377
+                     ->  Hash  (cost=10.25..10.25 rows=84 width=8) (actual time=0.166..0.167 rows=84 loops=3)
+                           Buckets: 1024  Batches: 1  Memory Usage: 12kB
+                           Buffers: shared hit=12
+                           ->  Seq Scan on users u  (cost=0.00..10.25 rows=84 width=8) (actual time=0.121..0.138 rows=84 loops=3)
+                                 Filter: ((ship_yard_area)::text = 'A0'::text)
+                                 Rows Removed by Filter: 416
+                                 Buffers: shared hit=12
+ Planning:
+   Buffers: shared hit=333
+ Planning Time: 1.272 ms
+ Execution Time: 1057.834 ms
+(30 rows)
+
+
+-- S2_A0
+                                                                         QUERY PLAN                                                                          
+-------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=0.71..91.66 rows=21 width=460) (actual time=0.112..4.043 rows=21 loops=1)
+   Buffers: shared hit=944
+   ->  Nested Loop  (cost=0.71..301177.46 rows=69542 width=460) (actual time=0.111..4.035 rows=21 loops=1)
+         Buffers: shared hit=944
+         ->  Index Scan using idx_work_logs_created on work_logs w  (cost=0.42..290694.55 rows=413939 width=460) (actual time=0.066..3.067 rows=142 loops=1)
+               Filter: (((title)::text ~~ '%베어링%'::text) OR (log_text ~~ '%베어링%'::text))
+               Rows Removed by Filter: 391
+               Buffers: shared hit=539
+         ->  Memoize  (cost=0.28..0.30 rows=1 width=8) (actual time=0.006..0.006 rows=0 loops=142)
+               Cache Key: w.user_id
+               Cache Mode: logical
+               Hits: 7  Misses: 135  Evictions: 0  Overflows: 0  Memory Usage: 11kB
+               Buffers: shared hit=405
+               ->  Index Scan using users_pkey on users u  (cost=0.27..0.29 rows=1 width=8) (actual time=0.005..0.005 rows=0 loops=135)
+                     Index Cond: ((user_id)::text = (w.user_id)::text)
+                     Filter: ((ship_yard_area)::text = 'A0'::text)
+                     Rows Removed by Filter: 1
+                     Buffers: shared hit=405
+ Planning:
+   Buffers: shared hit=333
+ Planning Time: 2.600 ms
+ Execution Time: 4.140 ms
+(22 rows)
+
+
+-- L1_A1
+                                                                          QUERY PLAN                                                                          
+--------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=0.71..13.76 rows=21 width=460) (actual time=1.333..1.476 rows=21 loops=1)
+   Buffers: shared hit=908
+   ->  Nested Loop  (cost=0.71..310812.87 rows=500038 width=460) (actual time=1.332..1.473 rows=21 loops=1)
+         Buffers: shared hit=908
+         ->  Index Scan using idx_work_logs_created on work_logs w  (cost=0.42..285694.17 rows=1000077 width=460) (actual time=0.021..0.737 rows=226 loops=1)
+               Buffers: shared hit=230
+         ->  Memoize  (cost=0.28..0.30 rows=1 width=8) (actual time=0.003..0.003 rows=0 loops=226)
+               Cache Key: w.user_id
+               Cache Mode: logical
+               Hits: 0  Misses: 226  Evictions: 0  Overflows: 0  Memory Usage: 17kB
+               Buffers: shared hit=678
+               ->  Index Scan using users_pkey on users u  (cost=0.27..0.29 rows=1 width=8) (actual time=0.003..0.003 rows=0 loops=226)
+                     Index Cond: ((user_id)::text = (w.user_id)::text)
+                     Filter: ((ship_yard_area)::text = 'A1'::text)
+                     Rows Removed by Filter: 1
+                     Buffers: shared hit=678
+ Planning:
+   Buffers: shared hit=333
+ Planning Time: 0.999 ms
+ Execution Time: 1.521 ms
+(20 rows)
+
+
+-- L2_A1
+                                                                         QUERY PLAN                                                                          
+-------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=0.71..35.34 rows=21 width=460) (actual time=5.362..5.829 rows=21 loops=1)
+   Buffers: shared hit=827 read=78
+   ->  Nested Loop  (cost=0.71..281799.39 rows=170896 width=460) (actual time=5.361..5.826 rows=21 loops=1)
+         Buffers: shared hit=827 read=78
+         ->  Index Scan using idx_work_logs_created on work_logs w  (cost=0.42..273118.22 rows=341791 width=460) (actual time=0.069..4.771 rows=225 loops=1)
+               Index Cond: (created_at <= '2025-07-14 11:20:00'::timestamp without time zone)
+               Filter: ((created_at < '2025-07-14 11:20:00'::timestamp without time zone) OR (log_id < 381571))
+               Rows Removed by Filter: 1
+               Buffers: shared hit=152 read=78
+         ->  Memoize  (cost=0.28..0.30 rows=1 width=8) (actual time=0.004..0.004 rows=0 loops=225)
+               Cache Key: w.user_id
+               Cache Mode: logical
+               Hits: 0  Misses: 225  Evictions: 0  Overflows: 0  Memory Usage: 17kB
+               Buffers: shared hit=675
+               ->  Index Scan using users_pkey on users u  (cost=0.27..0.29 rows=1 width=8) (actual time=0.003..0.003 rows=0 loops=225)
+                     Index Cond: ((user_id)::text = (w.user_id)::text)
+                     Filter: ((ship_yard_area)::text = 'A1'::text)
+                     Rows Removed by Filter: 1
+                     Buffers: shared hit=675
+ Planning:
+   Buffers: shared hit=358
+ Planning Time: 1.433 ms
+ Execution Time: 5.881 ms
+(23 rows)
+
+
+-- S1_A1
+                                                                                 QUERY PLAN                                                                                 
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=1000.45..60971.29 rows=21 width=460) (actual time=26086.617..26196.869 rows=0 loops=1)
+   Buffers: shared hit=761377 read=242462
+   ->  Nested Loop  (cost=1000.45..283720.13 rows=99 width=460) (actual time=26086.616..26196.868 rows=0 loops=1)
+         Join Filter: ((w.user_id)::text = (u.user_id)::text)
+         Rows Removed by Join Filter: 25000
+         Buffers: shared hit=761377 read=242462
+         ->  Gather Merge  (cost=1000.45..282966.75 rows=198 width=460) (actual time=14907.289..26106.545 rows=100 loops=1)
+               Workers Planned: 2
+               Workers Launched: 2
+               Buffers: shared hit=761377 read=242458
+               ->  Parallel Index Scan using idx_work_logs_created on work_logs w  (cost=0.42..281943.88 rows=82 width=460) (actual time=49.947..17931.519 rows=33 loops=3)
+                     Filter: (((title)::text ~~ '%크랭크축%'::text) OR (log_text ~~ '%크랭크축%'::text))
+                     Rows Removed by Filter: 333300
+                     Buffers: shared hit=761377 read=242458
+         ->  Materialize  (cost=0.00..11.50 rows=250 width=8) (actual time=0.400..0.500 rows=250 loops=100)
+               Buffers: shared read=4
+               ->  Seq Scan on users u  (cost=0.00..10.25 rows=250 width=8) (actual time=12.920..13.030 rows=250 loops=1)
+                     Filter: ((ship_yard_area)::text = 'A1'::text)
+                     Rows Removed by Filter: 250
+                     Buffers: shared read=4
+ Planning:
+   Buffers: shared hit=333
+ Planning Time: 1.412 ms
+ Execution Time: 26198.768 ms
+(24 rows)
+
+
+-- S2_A1
+                                                                          QUERY PLAN                                                                           
+---------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=0.71..31.27 rows=21 width=460) (actual time=159.716..174.066 rows=21 loops=1)
+   Buffers: shared hit=293 read=233
+   ->  Nested Loop  (cost=0.71..301177.27 rows=206970 width=460) (actual time=159.715..174.055 rows=21 loops=1)
+         Buffers: shared hit=293 read=233
+         ->  Index Scan using idx_work_logs_created on work_logs w  (cost=0.42..290694.55 rows=413939 width=460) (actual time=20.826..171.483 rows=77 loops=1)
+               Filter: (((title)::text ~~ '%베어링%'::text) OR (log_text ~~ '%베어링%'::text))
+               Rows Removed by Filter: 213
+               Buffers: shared hit=65 read=230
+         ->  Memoize  (cost=0.28..0.30 rows=1 width=8) (actual time=0.030..0.030 rows=0 loops=77)
+               Cache Key: w.user_id
+               Cache Mode: logical
+               Hits: 0  Misses: 77  Evictions: 0  Overflows: 0  Memory Usage: 7kB
+               Buffers: shared hit=228 read=3
+               ->  Index Scan using users_pkey on users u  (cost=0.27..0.29 rows=1 width=8) (actual time=0.025..0.025 rows=0 loops=77)
+                     Index Cond: ((user_id)::text = (w.user_id)::text)
+                     Filter: ((ship_yard_area)::text = 'A1'::text)
+                     Rows Removed by Filter: 1
+                     Buffers: shared hit=228 read=3
+ Planning:
+   Buffers: shared hit=285 read=48
+ Planning Time: 43.236 ms
+ Execution Time: 174.185 ms
+(22 rows)
+
+
+-- L1_A5
+                                                                           QUERY PLAN                                                                            
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=0.71..653.37 rows=21 width=460) (actual time=0.143..328.528 rows=21 loops=1)
+   Buffers: shared hit=2771 read=742
+   ->  Nested Loop  (cost=0.71..310822.63 rows=10001 width=460) (actual time=0.142..328.520 rows=21 loops=1)
+         Buffers: shared hit=2771 read=742
+         ->  Index Scan using idx_work_logs_created on work_logs w  (cost=0.42..285694.17 rows=1000077 width=460) (actual time=0.036..319.690 rows=2002 loops=1)
+               Buffers: shared hit=1272 read=741
+         ->  Memoize  (cost=0.28..0.30 rows=1 width=8) (actual time=0.003..0.003 rows=0 loops=2002)
+               Cache Key: w.user_id
+               Cache Mode: logical
+               Hits: 1502  Misses: 500  Evictions: 0  Overflows: 0  Memory Usage: 36kB
+               Buffers: shared hit=1499 read=1
+               ->  Index Scan using users_pkey on users u  (cost=0.27..0.29 rows=1 width=8) (actual time=0.008..0.008 rows=0 loops=500)
+                     Index Cond: ((user_id)::text = (w.user_id)::text)
+                     Filter: ((ship_yard_area)::text = 'A5'::text)
+                     Rows Removed by Filter: 1
+                     Buffers: shared hit=1499 read=1
+ Planning:
+   Buffers: shared hit=333
+ Planning Time: 2.232 ms
+ Execution Time: 328.656 ms
+(20 rows)
+
+
+-- L2_A5
+                                                                           QUERY PLAN                                                                           
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=0.71..1732.08 rows=21 width=460) (actual time=3.369..891.722 rows=21 loops=1)
+   Buffers: shared hit=1950 read=1563
+   ->  Nested Loop  (cost=0.71..281802.73 rows=3418 width=460) (actual time=3.368..891.712 rows=21 loops=1)
+         Buffers: shared hit=1950 read=1563
+         ->  Index Scan using idx_work_logs_created on work_logs w  (cost=0.42..273118.22 rows=341791 width=460) (actual time=3.266..854.149 rows=2001 loops=1)
+               Index Cond: (created_at <= '2025-07-14 11:20:00'::timestamp without time zone)
+               Filter: ((created_at < '2025-07-14 11:20:00'::timestamp without time zone) OR (log_id < 381571))
+               Rows Removed by Filter: 1
+               Buffers: shared hit=450 read=1563
+         ->  Memoize  (cost=0.28..0.30 rows=1 width=8) (actual time=0.012..0.012 rows=0 loops=2001)
+               Cache Key: w.user_id
+               Cache Mode: logical
+               Hits: 1501  Misses: 500  Evictions: 0  Overflows: 0  Memory Usage: 36kB
+               Buffers: shared hit=1500
+               ->  Index Scan using users_pkey on users u  (cost=0.27..0.29 rows=1 width=8) (actual time=0.031..0.031 rows=0 loops=500)
+                     Index Cond: ((user_id)::text = (w.user_id)::text)
+                     Filter: ((ship_yard_area)::text = 'A5'::text)
+                     Rows Removed by Filter: 1
+                     Buffers: shared hit=1500
+ Planning:
+   Buffers: shared hit=358
+ Planning Time: 14.823 ms
+ Execution Time: 891.818 ms
+(23 rows)
+
+
+-- S1_A5
+                                                                     QUERY PLAN                                                                     
+----------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=32624.90..32624.90 rows=2 width=460) (actual time=1533.560..1533.562 rows=0 loops=1)
+   Buffers: shared hit=1557 read=6209
+   ->  Sort  (cost=32624.90..32624.90 rows=2 width=460) (actual time=1533.559..1533.561 rows=0 loops=1)
+         Sort Key: w.created_at DESC, w.log_id DESC
+         Sort Method: quicksort  Memory: 25kB
+         Buffers: shared hit=1557 read=6209
+         ->  Nested Loop  (cost=23.43..32624.89 rows=2 width=460) (actual time=1529.348..1529.350 rows=0 loops=1)
+               Buffers: shared hit=1551 read=6209
+               ->  Seq Scan on users u  (cost=0.00..10.25 rows=5 width=8) (actual time=0.513..0.542 rows=5 loops=1)
+                     Filter: ((ship_yard_area)::text = 'A5'::text)
+                     Rows Removed by Filter: 495
+                     Buffers: shared hit=4
+               ->  Bitmap Heap Scan on work_logs w  (cost=23.43..6522.92 rows=1 width=460) (actual time=305.659..305.659 rows=0 loops=5)
+                     Recheck Cond: ((user_id)::text = (u.user_id)::text)
+                     Filter: (((title)::text ~~ '%크랭크축%'::text) OR (log_text ~~ '%크랭크축%'::text))
+                     Rows Removed by Filter: 2000
+                     Heap Blocks: exact=7733
+                     Buffers: shared hit=1547 read=6209
+                     ->  Bitmap Index Scan on idx_work_logs_user  (cost=0.00..23.43 rows=2000 width=0) (actual time=1.188..1.188 rows=2000 loops=5)
+                           Index Cond: ((user_id)::text = (u.user_id)::text)
+                           Buffers: shared hit=14 read=9
+ Planning:
+   Buffers: shared hit=333
+ Planning Time: 2.594 ms
+ Execution Time: 1533.870 ms
+(25 rows)
+
+
+-- S2_A5
+                                                                           QUERY PLAN                                                                            
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=0.71..1528.80 rows=21 width=460) (actual time=23.759..1870.617 rows=21 loops=1)
+   Buffers: shared hit=21328 read=10401
+   ->  Nested Loop  (cost=0.71..301181.31 rows=4139 width=460) (actual time=23.758..1870.578 rows=21 loops=1)
+         Buffers: shared hit=21328 read=10401
+         ->  Index Scan using idx_work_logs_created on work_logs w  (cost=0.42..290694.55 rows=413939 width=460) (actual time=0.051..1851.856 rows=8268 loops=1)
+               Filter: (((title)::text ~~ '%베어링%'::text) OR (log_text ~~ '%베어링%'::text))
+               Rows Removed by Filter: 22739
+               Buffers: shared hit=20728 read=10401
+         ->  Memoize  (cost=0.28..0.30 rows=1 width=8) (actual time=0.001..0.001 rows=0 loops=8268)
+               Cache Key: w.user_id
+               Cache Mode: logical
+               Hits: 8068  Misses: 200  Evictions: 0  Overflows: 0  Memory Usage: 15kB
+               Buffers: shared hit=600
+               ->  Index Scan using users_pkey on users u  (cost=0.27..0.29 rows=1 width=8) (actual time=0.007..0.007 rows=0 loops=200)
+                     Index Cond: ((user_id)::text = (w.user_id)::text)
+                     Filter: ((ship_yard_area)::text = 'A5'::text)
+                     Rows Removed by Filter: 1
+                     Buffers: shared hit=600
+ Planning:
+   Buffers: shared hit=333
+ Planning Time: 1.913 ms
+ Execution Time: 1870.710 ms
+(22 rows)
+
+
