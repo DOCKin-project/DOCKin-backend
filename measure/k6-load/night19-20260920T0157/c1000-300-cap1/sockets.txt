@@ -1,0 +1,3 @@
+TCP: inuse 680 orphan 0 tw 8 alloc 2510 mem 130
+278
+TCP: inuse 1772 orphan 0 tw 890 alloc 2508 mem 0

@@ -1,0 +1,45 @@
+dockin-app-1  | 2026-09-20T11:15:36.107+09:00  WARN [] 1 --- [DOCKin-spring] [l-1:housekeeper] com.zaxxer.hikari.pool.ProxyLeakTask     : Connection leak detection triggered for org.postgresql.jdbc.PgConnection@2ee8ca3f on thread http-nio-8080-exec-42, stack trace follows
+dockin-app-1  | 
+dockin-app-1  | java.lang.Exception: Apparent connection leak detected
+dockin-app-1  | 	at com.zaxxer.hikari.HikariDataSource.getConnection(HikariDataSource.java:127) ~[HikariCP-7.0.2.jar!/:na]
+dockin-app-1  | 	at org.hibernate.engine.jdbc.connections.internal.DataSourceConnectionProvider.getConnection(DataSourceConnectionProvider.java:137) ~[hibernate-core-7.2.0.Final.jar!/:7.2.0.Final]
+dockin-app-1  | 	at org.hibernate.internal.NonContextualJdbcConnectionAccess.obtainConnection(NonContextualJdbcConnectionAccess.java:47) ~[hibernate-core-7.2.0.Final.jar!/:7.2.0.Final]
+--
+dockin-app-1  | 2026-09-20T11:15:40.449+09:00  WARN [] 1 --- [DOCKin-spring] [l-1:housekeeper] com.zaxxer.hikari.pool.ProxyLeakTask     : Connection leak detection triggered for org.postgresql.jdbc.PgConnection@622d0a81 on thread http-nio-8080-exec-195, stack trace follows
+dockin-app-1  | 
+dockin-app-1  | java.lang.Exception: Apparent connection leak detected
+dockin-app-1  | 	at com.zaxxer.hikari.HikariDataSource.getConnection(HikariDataSource.java:127) ~[HikariCP-7.0.2.jar!/:na]
+dockin-app-1  | 	at org.hibernate.engine.jdbc.connections.internal.DataSourceConnectionProvider.getConnection(DataSourceConnectionProvider.java:137) ~[hibernate-core-7.2.0.Final.jar!/:7.2.0.Final]
+dockin-app-1  | 	at org.hibernate.internal.NonContextualJdbcConnectionAccess.obtainConnection(NonContextualJdbcConnectionAccess.java:47) ~[hibernate-core-7.2.0.Final.jar!/:7.2.0.Final]
+--
+dockin-app-1  | 2026-09-20T11:15:42.099+09:00  WARN [] 1 --- [DOCKin-spring] [l-1:housekeeper] com.zaxxer.hikari.pool.ProxyLeakTask     : Connection leak detection triggered for org.postgresql.jdbc.PgConnection@3eebb5dc on thread http-nio-8080-exec-66, stack trace follows
+dockin-app-1  | 
+dockin-app-1  | java.lang.Exception: Apparent connection leak detected
+dockin-app-1  | 	at com.zaxxer.hikari.HikariDataSource.getConnection(HikariDataSource.java:127) ~[HikariCP-7.0.2.jar!/:na]
+dockin-app-1  | 	at org.hibernate.engine.jdbc.connections.internal.DataSourceConnectionProvider.getConnection(DataSourceConnectionProvider.java:137) ~[hibernate-core-7.2.0.Final.jar!/:7.2.0.Final]
+dockin-app-1  | 	at org.hibernate.internal.NonContextualJdbcConnectionAccess.obtainConnection(NonContextualJdbcConnectionAccess.java:47) ~[hibernate-core-7.2.0.Final.jar!/:7.2.0.Final]
+--
+dockin-app-1  | 2026-09-20T11:15:42.105+09:00  WARN [] 1 --- [DOCKin-spring] [l-1:housekeeper] com.zaxxer.hikari.pool.ProxyLeakTask     : Connection leak detection triggered for org.postgresql.jdbc.PgConnection@66a65299 on thread http-nio-8080-exec-49, stack trace follows
+dockin-app-1  | 
+dockin-app-1  | java.lang.Exception: Apparent connection leak detected
+dockin-app-1  | 	at com.zaxxer.hikari.HikariDataSource.getConnection(HikariDataSource.java:127) ~[HikariCP-7.0.2.jar!/:na]
+dockin-app-1  | 	at org.hibernate.engine.jdbc.connections.internal.DataSourceConnectionProvider.getConnection(DataSourceConnectionProvider.java:137) ~[hibernate-core-7.2.0.Final.jar!/:7.2.0.Final]
+dockin-app-1  | 	at org.hibernate.internal.NonContextualJdbcConnectionAccess.obtainConnection(NonContextualJdbcConnectionAccess.java:47) ~[hibernate-core-7.2.0.Final.jar!/:7.2.0.Final]
+--
+dockin-app-1  | 2026-09-20T11:15:42.138+09:00  WARN [] 1 --- [DOCKin-spring] [l-1:housekeeper] com.zaxxer.hikari.pool.ProxyLeakTask     : Connection leak detection triggered for org.postgresql.jdbc.PgConnection@110c8dbf on thread http-nio-8080-exec-171, stack trace follows
+dockin-app-1  | 
+dockin-app-1  | java.lang.Exception: Apparent connection leak detected
+dockin-app-1  | 	at com.zaxxer.hikari.HikariDataSource.getConnection(HikariDataSource.java:127) ~[HikariCP-7.0.2.jar!/:na]
+dockin-app-1  | 	at org.hibernate.engine.jdbc.connections.internal.DataSourceConnectionProvider.getConnection(DataSourceConnectionProvider.java:137) ~[hibernate-core-7.2.0.Final.jar!/:7.2.0.Final]
+dockin-app-1  | 	at org.hibernate.internal.NonContextualJdbcConnectionAccess.obtainConnection(NonContextualJdbcConnectionAccess.java:47) ~[hibernate-core-7.2.0.Final.jar!/:7.2.0.Final]
+--
+dockin-app-1  | 2026-09-20T11:15:42.143+09:00  WARN [] 1 --- [DOCKin-spring] [l-1:housekeeper] com.zaxxer.hikari.pool.ProxyLeakTask     : Connection leak detection triggered for org.postgresql.jdbc.PgConnection@758f0c6a on thread http-nio-8080-exec-168, stack trace follows
+dockin-app-1  | 
+dockin-app-1  | java.lang.Exception: Apparent connection leak detected
+dockin-app-1  | 	at com.zaxxer.hikari.HikariDataSource.getConnection(HikariDataSource.java:127) ~[HikariCP-7.0.2.jar!/:na]
+dockin-app-1  | 	at org.hibernate.engine.jdbc.connections.internal.DataSourceConnectionProvider.getConnection(DataSourceConnectionProvider.java:137) ~[hibernate-core-7.2.0.Final.jar!/:7.2.0.Final]
+dockin-app-1  | 	at org.hibernate.internal.NonContextualJdbcConnectionAccess.obtainConnection(NonContextualJdbcConnectionAccess.java:47) ~[hibernate-core-7.2.0.Final.jar!/:7.2.0.Final]
+--
+dockin-app-1  | 2026-09-20T11:15:42.586+09:00  WARN [] 1 --- [DOCKin-spring] [MessageBroker-1] c.DOCKin.global.config.HikariPoolWatch   : HikariPool 대기 pending=188 active=10 idle=0 total=10 max=10 — 풀 고갈이면 '누가 잡고 있나'부터 (ADR-0008 7-1)
+dockin-app-1  | 2026-09-20T11:15:42.586+09:00  INFO [] 1 --- [DOCKin-spring] [o-8080-exec-132] com.DOCKin.chat.presence.Presence        : WebSocket 연결 종료 - userId: k6u01904
+dockin-app-1  | 2026-09-20T11:15:42.589+09:00  INFO [] 1 --- [DOCKin-spring] [o-8080-exec-107] com.DOCKin.chat.presence.Presence        : WebSocket 연결 종료 - userId: k6u02890

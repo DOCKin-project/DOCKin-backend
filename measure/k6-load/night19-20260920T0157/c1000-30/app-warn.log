@@ -1,0 +1,80 @@
+dockin-app-1  | 	at org.springframework.messaging.simp.stomp.StompDecoder.decodeMessage(StompDecoder.java:151) ~[spring-messaging-7.0.2.jar!/:7.0.2]
+dockin-app-1  | 	at org.springframework.messaging.simp.stomp.StompDecoder.decode(StompDecoder.java:112) ~[spring-messaging-7.0.2.jar!/:7.0.2]
+dockin-app-1  | 	at org.springframework.messaging.simp.stomp.BufferingStompDecoder.decode(BufferingStompDecoder.java:112) ~[spring-messaging-7.0.2.jar!/:7.0.2]
+--
+dockin-app-1  | 2026-09-20T11:01:03.766+09:00 ERROR [] 1 --- [DOCKin-spring] [nio-8080-exec-7] o.s.w.s.m.StompSubProtocolHandler        : Failed to parse TextMessage payload=[DISCONNECT..], byteCount=14, last=true] in session 1ff0b80e-4165-5f4d-2ab6-70b083d2ada6. Sending STOMP ERROR to client.
+dockin-app-1  | 
+dockin-app-1  | org.springframework.messaging.simp.stomp.StompConversionException: DISCONNECT shouldn't have a payload: length=1, headers={}
+dockin-app-1  | 	at org.springframework.messaging.simp.stomp.StompDecoder.decodeMessage(StompDecoder.java:151) ~[spring-messaging-7.0.2.jar!/:7.0.2]
+dockin-app-1  | 	at org.springframework.messaging.simp.stomp.StompDecoder.decode(StompDecoder.java:112) ~[spring-messaging-7.0.2.jar!/:7.0.2]
+dockin-app-1  | 	at org.springframework.messaging.simp.stomp.BufferingStompDecoder.decode(BufferingStompDecoder.java:112) ~[spring-messaging-7.0.2.jar!/:7.0.2]
+--
+dockin-app-1  | 2026-09-20T11:01:03.766+09:00 ERROR [] 1 --- [DOCKin-spring] [o-8080-exec-156] o.s.w.s.m.StompSubProtocolHandler        : Failed to parse TextMessage payload=[DISCONNECT..], byteCount=14, last=true] in session 0a76efbc-36e9-5a84-f020-0802e031ed97. Sending STOMP ERROR to client.
+dockin-app-1  | 
+dockin-app-1  | org.springframework.messaging.simp.stomp.StompConversionException: DISCONNECT shouldn't have a payload: length=1, headers={}
+dockin-app-1  | 	at org.springframework.messaging.simp.stomp.StompDecoder.decodeMessage(StompDecoder.java:151) ~[spring-messaging-7.0.2.jar!/:7.0.2]
+dockin-app-1  | 	at org.springframework.messaging.simp.stomp.StompDecoder.decode(StompDecoder.java:112) ~[spring-messaging-7.0.2.jar!/:7.0.2]
+dockin-app-1  | 	at org.springframework.messaging.simp.stomp.BufferingStompDecoder.decode(BufferingStompDecoder.java:112) ~[spring-messaging-7.0.2.jar!/:7.0.2]
+--
+dockin-app-1  | 2026-09-20T11:01:03.766+09:00 ERROR [] 1 --- [DOCKin-spring] [o-8080-exec-163] o.s.w.s.m.StompSubProtocolHandler        : Failed to parse TextMessage payload=[DISCONNECT..], byteCount=14, last=true] in session 4943c5a5-1920-eeb8-4b6f-cc904ce52d94. Sending STOMP ERROR to client.
+dockin-app-1  | 
+dockin-app-1  | org.springframework.messaging.simp.stomp.StompConversionException: DISCONNECT shouldn't have a payload: length=1, headers={}
+dockin-app-1  | 	at org.springframework.messaging.simp.stomp.StompDecoder.decodeMessage(StompDecoder.java:151) ~[spring-messaging-7.0.2.jar!/:7.0.2]
+dockin-app-1  | 	at org.springframework.messaging.simp.stomp.StompDecoder.decode(StompDecoder.java:112) ~[spring-messaging-7.0.2.jar!/:7.0.2]
+dockin-app-1  | 	at org.springframework.messaging.simp.stomp.BufferingStompDecoder.decode(BufferingStompDecoder.java:112) ~[spring-messaging-7.0.2.jar!/:7.0.2]
+--
+dockin-app-1  | 2026-09-20T11:01:03.766+09:00 ERROR [] 1 --- [DOCKin-spring] [o-8080-exec-149] o.s.w.s.m.StompSubProtocolHandler        : Failed to parse TextMessage payload=[DISCONNECT..], byteCount=14, last=true] in session 0819273a-56ab-416a-5767-99f9dc975e72. Sending STOMP ERROR to client.
+dockin-app-1  | 
+dockin-app-1  | org.springframework.messaging.simp.stomp.StompConversionException: DISCONNECT shouldn't have a payload: length=1, headers={}
+dockin-app-1  | 	at org.springframework.messaging.simp.stomp.StompDecoder.decodeMessage(StompDecoder.java:151) ~[spring-messaging-7.0.2.jar!/:7.0.2]
+dockin-app-1  | 	at org.springframework.messaging.simp.stomp.StompDecoder.decode(StompDecoder.java:112) ~[spring-messaging-7.0.2.jar!/:7.0.2]
+dockin-app-1  | 	at org.springframework.messaging.simp.stomp.BufferingStompDecoder.decode(BufferingStompDecoder.java:112) ~[spring-messaging-7.0.2.jar!/:7.0.2]
+--
+dockin-app-1  | 2026-09-20T11:01:03.766+09:00 ERROR [] 1 --- [DOCKin-spring] [o-8080-exec-100] o.s.w.s.m.StompSubProtocolHandler        : Failed to parse TextMessage payload=[DISCONNECT..], byteCount=14, last=true] in session 98a3a318-a2ed-3bdc-3a53-17a511b7fd00. Sending STOMP ERROR to client.
+dockin-app-1  | 
+dockin-app-1  | org.springframework.messaging.simp.stomp.StompConversionException: DISCONNECT shouldn't have a payload: length=1, headers={}
+dockin-app-1  | 	at org.springframework.messaging.simp.stomp.StompDecoder.decodeMessage(StompDecoder.java:151) ~[spring-messaging-7.0.2.jar!/:7.0.2]
+dockin-app-1  | 	at org.springframework.messaging.simp.stomp.StompDecoder.decode(StompDecoder.java:112) ~[spring-messaging-7.0.2.jar!/:7.0.2]
+dockin-app-1  | 	at org.springframework.messaging.simp.stomp.BufferingStompDecoder.decode(BufferingStompDecoder.java:112) ~[spring-messaging-7.0.2.jar!/:7.0.2]
+--
+dockin-app-1  | 2026-09-20T11:01:03.766+09:00 ERROR [] 1 --- [DOCKin-spring] [nio-8080-exec-5] o.s.w.s.m.StompSubProtocolHandler        : Failed to parse TextMessage payload=[DISCONNECT..], byteCount=14, last=true] in session 25c557a3-88ec-5daa-4566-f8bc32011339. Sending STOMP ERROR to client.
+dockin-app-1  | 
+dockin-app-1  | org.springframework.messaging.simp.stomp.StompConversionException: DISCONNECT shouldn't have a payload: length=1, headers={}
+dockin-app-1  | 	at org.springframework.messaging.simp.stomp.StompDecoder.decodeMessage(StompDecoder.java:151) ~[spring-messaging-7.0.2.jar!/:7.0.2]
+dockin-app-1  | 	at org.springframework.messaging.simp.stomp.StompDecoder.decode(StompDecoder.java:112) ~[spring-messaging-7.0.2.jar!/:7.0.2]
+dockin-app-1  | 	at org.springframework.messaging.simp.stomp.BufferingStompDecoder.decode(BufferingStompDecoder.java:112) ~[spring-messaging-7.0.2.jar!/:7.0.2]
+--
+dockin-app-1  | 2026-09-20T11:01:03.766+09:00 ERROR [] 1 --- [DOCKin-spring] [io-8080-exec-36] o.s.w.s.m.StompSubProtocolHandler        : Failed to parse TextMessage payload=[DISCONNECT..], byteCount=14, last=true] in session 798c1637-b995-77f4-2bc4-e959b537cc35. Sending STOMP ERROR to client.
+dockin-app-1  | 
+dockin-app-1  | org.springframework.messaging.simp.stomp.StompConversionException: DISCONNECT shouldn't have a payload: length=1, headers={}
+dockin-app-1  | 	at org.springframework.messaging.simp.stomp.StompDecoder.decodeMessage(StompDecoder.java:151) ~[spring-messaging-7.0.2.jar!/:7.0.2]
+dockin-app-1  | 	at org.springframework.messaging.simp.stomp.StompDecoder.decode(StompDecoder.java:112) ~[spring-messaging-7.0.2.jar!/:7.0.2]
+dockin-app-1  | 	at org.springframework.messaging.simp.stomp.BufferingStompDecoder.decode(BufferingStompDecoder.java:112) ~[spring-messaging-7.0.2.jar!/:7.0.2]
+--
+dockin-app-1  | 2026-09-20T11:01:03.767+09:00 ERROR [] 1 --- [DOCKin-spring] [nio-8080-exec-5] o.s.w.s.m.StompSubProtocolHandler        : Failed to parse TextMessage payload=[DISCONNECT..], byteCount=14, last=true] in session f158dfe2-8881-718d-099d-1f8d811d52b2. Sending STOMP ERROR to client.
+dockin-app-1  | 
+dockin-app-1  | org.springframework.messaging.simp.stomp.StompConversionException: DISCONNECT shouldn't have a payload: length=1, headers={}
+dockin-app-1  | 	at org.springframework.messaging.simp.stomp.StompDecoder.decodeMessage(StompDecoder.java:151) ~[spring-messaging-7.0.2.jar!/:7.0.2]
+dockin-app-1  | 	at org.springframework.messaging.simp.stomp.StompDecoder.decode(StompDecoder.java:112) ~[spring-messaging-7.0.2.jar!/:7.0.2]
+dockin-app-1  | 	at org.springframework.messaging.simp.stomp.BufferingStompDecoder.decode(BufferingStompDecoder.java:112) ~[spring-messaging-7.0.2.jar!/:7.0.2]
+--
+dockin-app-1  | 2026-09-20T11:01:03.767+09:00 ERROR [] 1 --- [DOCKin-spring] [io-8080-exec-36] o.s.w.s.m.StompSubProtocolHandler        : Failed to parse TextMessage payload=[DISCONNECT..], byteCount=14, last=true] in session f431ff70-8b0e-0555-073d-4e8c08bb9659. Sending STOMP ERROR to client.
+dockin-app-1  | 
+dockin-app-1  | org.springframework.messaging.simp.stomp.StompConversionException: DISCONNECT shouldn't have a payload: length=1, headers={}
+dockin-app-1  | 	at org.springframework.messaging.simp.stomp.StompDecoder.decodeMessage(StompDecoder.java:151) ~[spring-messaging-7.0.2.jar!/:7.0.2]
+dockin-app-1  | 	at org.springframework.messaging.simp.stomp.StompDecoder.decode(StompDecoder.java:112) ~[spring-messaging-7.0.2.jar!/:7.0.2]
+dockin-app-1  | 	at org.springframework.messaging.simp.stomp.BufferingStompDecoder.decode(BufferingStompDecoder.java:112) ~[spring-messaging-7.0.2.jar!/:7.0.2]
+--
+dockin-app-1  | 2026-09-20T11:01:03.767+09:00 ERROR [] 1 --- [DOCKin-spring] [io-8080-exec-19] o.s.w.s.m.StompSubProtocolHandler        : Failed to parse TextMessage payload=[DISCONNECT..], byteCount=14, last=true] in session b344d03d-dda2-46a8-3156-f1f98d263cf9. Sending STOMP ERROR to client.
+dockin-app-1  | 
+dockin-app-1  | org.springframework.messaging.simp.stomp.StompConversionException: DISCONNECT shouldn't have a payload: length=1, headers={}
+dockin-app-1  | 	at org.springframework.messaging.simp.stomp.StompDecoder.decodeMessage(StompDecoder.java:151) ~[spring-messaging-7.0.2.jar!/:7.0.2]
+dockin-app-1  | 	at org.springframework.messaging.simp.stomp.StompDecoder.decode(StompDecoder.java:112) ~[spring-messaging-7.0.2.jar!/:7.0.2]
+dockin-app-1  | 	at org.springframework.messaging.simp.stomp.BufferingStompDecoder.decode(BufferingStompDecoder.java:112) ~[spring-messaging-7.0.2.jar!/:7.0.2]
+--
+dockin-app-1  | 2026-09-20T11:01:03.767+09:00 ERROR [] 1 --- [DOCKin-spring] [o-8080-exec-130] o.s.w.s.m.StompSubProtocolHandler        : Failed to parse TextMessage payload=[DISCONNECT..], byteCount=14, last=true] in session ac8be8bd-0b65-83dc-3383-3d19cc30e3d8. Sending STOMP ERROR to client.
+dockin-app-1  | 
+dockin-app-1  | org.springframework.messaging.simp.stomp.StompConversionException: DISCONNECT shouldn't have a payload: length=1, headers={}
+dockin-app-1  | 	at org.springframework.messaging.simp.stomp.StompDecoder.decodeMessage(StompDecoder.java:151) ~[spring-messaging-7.0.2.jar!/:7.0.2]
+dockin-app-1  | 	at org.springframework.messaging.simp.stomp.StompDecoder.decode(StompDecoder.java:112) ~[spring-messaging-7.0.2.jar!/:7.0.2]
+dockin-app-1  | 	at org.springframework.messaging.simp.stomp.BufferingStompDecoder.decode(BufferingStompDecoder.java:112) ~[spring-messaging-7.0.2.jar!/:7.0.2]

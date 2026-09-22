@@ -1,0 +1,80 @@
+dockin-app-1  | 	at org.springframework.orm.jpa.JpaTransactionManager.doBegin(JpaTransactionManager.java:457) ~[spring-orm-7.0.2.jar!/:7.0.2]
+dockin-app-1  | 	at org.springframework.transaction.support.AbstractPlatformTransactionManager.startTransaction(AbstractPlatformTransactionManager.java:532) ~[spring-tx-7.0.2.jar!/:7.0.2]
+dockin-app-1  | 	at org.springframework.transaction.support.AbstractPlatformTransactionManager.getTransaction(AbstractPlatformTransactionManager.java:405) ~[spring-tx-7.0.2.jar!/:7.0.2]
+--
+dockin-app-1  | 2026-09-20T11:40:12.183+09:00  WARN [] 1 --- [DOCKin-spring] [io-8080-exec-96] org.hibernate.orm.jdbc.error             : HHH000247: ErrorCode: 0, SQLState: null
+dockin-app-1  | 2026-09-20T11:40:12.183+09:00  WARN [] 1 --- [DOCKin-spring] [io-8080-exec-96] org.hibernate.orm.jdbc.error             : HikariPool-1 - Connection is not available, request timed out after 30089ms (total=10, active=10, idle=0, waiting=187)
+dockin-app-1  | 2026-09-20T11:40:12.183+09:00  INFO [c6a948c68dd847c8] 1 --- [DOCKin-spring] [o-8080-exec-101] com.DOCKin.global.security.jwt.JwtUtil   : @@@ Generating Token for User: k6u00579
+dockin-app-1  | 2026-09-20T11:40:12.184+09:00  INFO [] 1 --- [DOCKin-spring] [io-8080-exec-96] com.DOCKin.chat.presence.Presence        : WebSocket 연결 종료 - userId: k6u00307
+dockin-app-1  | 2026-09-20T11:40:12.283+09:00  INFO [807358f2174843da] 1 --- [DOCKin-spring] [o-8080-exec-185] com.DOCKin.global.security.jwt.JwtUtil   : @@@ Generating Token for User: k6u00719
+dockin-app-1  | 2026-09-20T11:40:12.283+09:00  INFO [807358f2174843da] 1 --- [DOCKin-spring] [o-8080-exec-185] com.DOCKin.global.security.jwt.JwtUtil   : @@@ Generating Token for User: k6u00719
+--
+dockin-app-1  | 2026-09-20T11:40:12.782+09:00  WARN [f1f4b8665cd84715] 1 --- [DOCKin-spring] [o-8080-exec-171] org.hibernate.orm.jdbc.error             : HHH000247: ErrorCode: 0, SQLState: null
+dockin-app-1  | 2026-09-20T11:40:12.783+09:00  WARN [f1f4b8665cd84715] 1 --- [DOCKin-spring] [o-8080-exec-171] org.hibernate.orm.jdbc.error             : HikariPool-1 - Connection is not available, request timed out after 30091ms (total=10, active=10, idle=0, waiting=188)
+dockin-app-1  | 2026-09-20T11:40:12.784+09:00  INFO [68b877f4d8a2417b] 1 --- [DOCKin-spring] [o-8080-exec-200] com.DOCKin.global.security.jwt.JwtUtil   : @@@ Generating Token for User: k6u00586
+dockin-app-1  | 2026-09-20T11:40:12.784+09:00  INFO [68b877f4d8a2417b] 1 --- [DOCKin-spring] [o-8080-exec-200] com.DOCKin.global.security.jwt.JwtUtil   : @@@ Generating Token for User: k6u00586
+dockin-app-1  | 2026-09-20T11:40:12.783+09:00 ERROR [f1f4b8665cd84715] 1 --- [DOCKin-spring] [o-8080-exec-171] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 
+dockin-app-1  | org.springframework.transaction.CannotCreateTransactionException: Could not open JPA EntityManager for transaction
+dockin-app-1  | 	at org.springframework.orm.jpa.JpaTransactionManager.doBegin(JpaTransactionManager.java:457) ~[spring-orm-7.0.2.jar!/:7.0.2]
+dockin-app-1  | 	at org.springframework.transaction.support.AbstractPlatformTransactionManager.startTransaction(AbstractPlatformTransactionManager.java:532) ~[spring-tx-7.0.2.jar!/:7.0.2]
+dockin-app-1  | 	at org.springframework.transaction.support.AbstractPlatformTransactionManager.getTransaction(AbstractPlatformTransactionManager.java:405) ~[spring-tx-7.0.2.jar!/:7.0.2]
+--
+dockin-app-1  | 2026-09-20T11:40:14.989+09:00  WARN [] 1 --- [DOCKin-spring] [MessageBroker-1] c.DOCKin.global.config.HikariPoolWatch   : HikariPool 대기 pending=189 active=10 idle=0 total=10 max=10 — 풀 고갈이면 '누가 잡고 있나'부터 (ADR-0008 7-1)
+--
+dockin-app-1  | 2026-09-20T11:40:20.885+09:00  WARN [456ee38d38384ccb] 1 --- [DOCKin-spring] [o-8080-exec-146] org.hibernate.orm.jdbc.error             : HHH000247: ErrorCode: 0, SQLState: null
+dockin-app-1  | 2026-09-20T11:40:20.885+09:00  WARN [456ee38d38384ccb] 1 --- [DOCKin-spring] [o-8080-exec-146] org.hibernate.orm.jdbc.error             : HikariPool-1 - Connection is not available, request timed out after 30000ms (total=10, active=10, idle=0, waiting=191)
+dockin-app-1  | 2026-09-20T11:40:20.885+09:00 ERROR [456ee38d38384ccb] 1 --- [DOCKin-spring] [o-8080-exec-146] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 
+dockin-app-1  | org.springframework.transaction.CannotCreateTransactionException: Could not open JPA EntityManager for transaction
+dockin-app-1  | 	at org.springframework.orm.jpa.JpaTransactionManager.doBegin(JpaTransactionManager.java:457) ~[spring-orm-7.0.2.jar!/:7.0.2]
+dockin-app-1  | 	at org.springframework.transaction.support.AbstractPlatformTransactionManager.startTransaction(AbstractPlatformTransactionManager.java:532) ~[spring-tx-7.0.2.jar!/:7.0.2]
+dockin-app-1  | 	at org.springframework.transaction.support.AbstractPlatformTransactionManager.getTransaction(AbstractPlatformTransactionManager.java:405) ~[spring-tx-7.0.2.jar!/:7.0.2]
+--
+dockin-app-1  | 2026-09-20T11:40:24.488+09:00  WARN [874260e709a24a1b] 1 --- [DOCKin-spring] [o-8080-exec-162] org.hibernate.orm.jdbc.error             : HHH000247: ErrorCode: 0, SQLState: null
+dockin-app-1  | 2026-09-20T11:40:24.488+09:00  WARN [874260e709a24a1b] 1 --- [DOCKin-spring] [o-8080-exec-162] org.hibernate.orm.jdbc.error             : HikariPool-1 - Connection is not available, request timed out after 30000ms (total=10, active=10, idle=0, waiting=190)
+dockin-app-1  | 2026-09-20T11:40:24.489+09:00 ERROR [874260e709a24a1b] 1 --- [DOCKin-spring] [o-8080-exec-162] c.D.global.error.GlobalExceptionHandler  : 처리되지 않은 예외
+dockin-app-1  | 
+dockin-app-1  | org.springframework.transaction.CannotCreateTransactionException: Could not open JPA EntityManager for transaction
+dockin-app-1  | 	at org.springframework.orm.jpa.JpaTransactionManager.doBegin(JpaTransactionManager.java:457) ~[spring-orm-7.0.2.jar!/:7.0.2]
+dockin-app-1  | 	at org.springframework.transaction.support.AbstractPlatformTransactionManager.startTransaction(AbstractPlatformTransactionManager.java:532) ~[spring-tx-7.0.2.jar!/:7.0.2]
+dockin-app-1  | 	at org.springframework.transaction.support.AbstractPlatformTransactionManager.getTransaction(AbstractPlatformTransactionManager.java:405) ~[spring-tx-7.0.2.jar!/:7.0.2]
+--
+dockin-app-1  | 2026-09-20T11:40:25.184+09:00  WARN [] 1 --- [DOCKin-spring] [MessageBroker-1] c.DOCKin.global.config.HikariPoolWatch   : HikariPool 대기 pending=191 active=10 idle=0 total=10 max=10 — 풀 고갈이면 '누가 잡고 있나'부터 (ADR-0008 7-1)
+dockin-app-1  | 2026-09-20T11:40:25.284+09:00  INFO [eab9f176d1994bfc] 1 --- [DOCKin-spring] [o-8080-exec-162] com.DOCKin.global.security.jwt.JwtUtil   : @@@ Generating Token for User: k6u00863
+dockin-app-1  | 2026-09-20T11:40:25.285+09:00  INFO [eab9f176d1994bfc] 1 --- [DOCKin-spring] [o-8080-exec-162] com.DOCKin.global.security.jwt.JwtUtil   : @@@ Generating Token for User: k6u00863
+dockin-app-1  | 2026-09-20T11:40:25.285+09:00  INFO [3dfeaa3e9b4f4543] 1 --- [DOCKin-spring] [io-8080-exec-95] com.DOCKin.global.security.jwt.JwtUtil   : @@@ Generating Token for User: k6u00715
+dockin-app-1  | 2026-09-20T11:40:25.285+09:00  INFO [3dfeaa3e9b4f4543] 1 --- [DOCKin-spring] [io-8080-exec-95] com.DOCKin.global.security.jwt.JwtUtil   : @@@ Generating Token for User: k6u00715
+dockin-app-1  | 2026-09-20T11:40:25.391+09:00  INFO [2197a65ceab84303] 1 --- [DOCKin-spring] [o-8080-exec-113] com.DOCKin.global.security.jwt.JwtUtil   : @@@ Generating Token for User: k6u00718
+--
+dockin-app-1  | 2026-09-20T11:40:32.687+09:00  WARN [ec23271dfc234c42] 1 --- [DOCKin-spring] [o-8080-exec-188] org.hibernate.orm.jdbc.error             : HHH000247: ErrorCode: 0, SQLState: null
+dockin-app-1  | 2026-09-20T11:40:32.687+09:00  WARN [ec23271dfc234c42] 1 --- [DOCKin-spring] [o-8080-exec-188] org.hibernate.orm.jdbc.error             : HikariPool-1 - Connection is not available, request timed out after 30000ms (total=10, active=10, idle=0, waiting=190)
+dockin-app-1  | 2026-09-20T11:40:32.687+09:00  INFO [e08302851f8449af] 1 --- [DOCKin-spring] [io-8080-exec-84] com.DOCKin.global.security.jwt.JwtUtil   : @@@ Generating Token for User: k6u00794
+dockin-app-1  | 2026-09-20T11:40:32.689+09:00 ERROR [ec23271dfc234c42] 1 --- [DOCKin-spring] [o-8080-exec-188] c.D.global.security.jwt.JwtAuthFilter    : JWT 인증 에러: Unable to acquire JDBC Connection [HikariPool-1 - Connection is not available, request timed out after 30000ms (total=10, active=10, idle=0, waiting=190)] [n/a]
+dockin-app-1  | 2026-09-20T11:40:32.782+09:00  WARN [] 1 --- [DOCKin-spring] [io-8080-exec-67] org.hibernate.orm.jdbc.error             : HHH000247: ErrorCode: 0, SQLState: null
+dockin-app-1  | 2026-09-20T11:40:32.783+09:00  WARN [] 1 --- [DOCKin-spring] [io-8080-exec-67] org.hibernate.orm.jdbc.error             : HikariPool-1 - Connection is not available, request timed out after 30087ms (total=10, active=10, idle=0, waiting=189)
+dockin-app-1  | 보안 에러 발생 경로: /actuator/metrics/hikaricp.connections.idle
+dockin-app-1  | 에러 메시지: Full authentication is required to access this resource
+dockin-app-1  | 2026-09-20T11:40:32.886+09:00  INFO [42362fdc5c3340d8] 1 --- [DOCKin-spring] [io-8080-exec-79] com.DOCKin.global.security.jwt.JwtUtil   : @@@ Generating Token for User: k6u00795
+dockin-app-1  | 2026-09-20T11:40:32.887+09:00  INFO [42362fdc5c3340d8] 1 --- [DOCKin-spring] [io-8080-exec-79] com.DOCKin.global.security.jwt.JwtUtil   : @@@ Generating Token for User: k6u00795
+--
+dockin-app-1  | 2026-09-20T11:40:35.282+09:00  WARN [] 1 --- [DOCKin-spring] [MessageBroker-1] c.DOCKin.global.config.HikariPoolWatch   : HikariPool 대기 pending=191 active=10 idle=0 total=10 max=10 — 풀 고갈이면 '누가 잡고 있나'부터 (ADR-0008 7-1)
+dockin-app-1  | 2026-09-20T11:40:35.383+09:00  INFO [2747532da94e48e5] 1 --- [DOCKin-spring] [o-8080-exec-154] com.DOCKin.global.security.jwt.JwtUtil   : @@@ Generating Token for User: k6u00816
+dockin-app-1  | 2026-09-20T11:40:35.383+09:00  INFO [2747532da94e48e5] 1 --- [DOCKin-spring] [o-8080-exec-154] com.DOCKin.global.security.jwt.JwtUtil   : @@@ Generating Token for User: k6u00816
+dockin-app-1  | 2026-09-20T11:40:35.484+09:00  INFO [202d77a144224bc7] 1 --- [DOCKin-spring] [io-8080-exec-35] com.DOCKin.global.security.jwt.JwtUtil   : @@@ Generating Token for User: k6u00819
+--
+dockin-app-1  | 2026-09-20T11:40:45.385+09:00  WARN [] 1 --- [DOCKin-spring] [MessageBroker-1] c.DOCKin.global.config.HikariPoolWatch   : HikariPool 대기 pending=119 active=10 idle=0 total=10 max=10 — 풀 고갈이면 '누가 잡고 있나'부터 (ADR-0008 7-1)
+dockin-app-1  | 2026-09-20T11:40:45.385+09:00  INFO [] 1 --- [DOCKin-spring] [tboundChannel-1] com.DOCKin.chat.presence.Presence        : WebSocket 연결 종료 - userId: k6u00089
+dockin-app-1  | 2026-09-20T11:40:45.388+09:00  INFO [] 1 --- [DOCKin-spring] [tboundChannel-2] com.DOCKin.chat.presence.Presence        : WebSocket 연결 종료 - userId: k6u00214
+dockin-app-1  | 2026-09-20T11:40:45.389+09:00  INFO [] 1 --- [DOCKin-spring] [tboundChannel-2] com.DOCKin.chat.presence.Presence        : WebSocket 연결 종료 - userId: k6u00084
+dockin-app-1  | 2026-09-20T11:40:45.389+09:00  INFO [] 1 --- [DOCKin-spring] [tboundChannel-2] com.DOCKin.chat.presence.Presence        : WebSocket 연결 종료 - userId: k6u00071
+--
+dockin-app-1  | 2026-09-20T11:40:47.487+09:00  WARN [07ddf1d789154807] 1 --- [DOCKin-spring] [o-8080-exec-123] o.s.b.h.a.e.HealthEndpointSupport        : Health contributor org.springframework.boot.jdbc.health.DataSourceHealthIndicator (db) took 14296ms to respond
+dockin-app-1  | 2026-09-20T11:40:47.682+09:00  INFO [e4e04a8607794fbd] 1 --- [DOCKin-spring] [o-8080-exec-109] com.DOCKin.global.security.jwt.JwtUtil   : @@@ Generating Token for User: k6u00940
+dockin-app-1  | 2026-09-20T11:40:47.683+09:00  INFO [e4e04a8607794fbd] 1 --- [DOCKin-spring] [o-8080-exec-109] com.DOCKin.global.security.jwt.JwtUtil   : @@@ Generating Token for User: k6u00940
+--
+dockin-app-1  | 2026-09-20T11:40:50.187+09:00  WARN [d769d4f148d34617] 1 --- [DOCKin-spring] [io-8080-exec-99] o.s.b.h.a.e.HealthEndpointSupport        : Health contributor org.springframework.boot.jdbc.health.DataSourceHealthIndicator (db) took 41700ms to respond
+dockin-app-1  | 2026-09-20T11:40:50.283+09:00  INFO [137845bd21b343cb] 1 --- [DOCKin-spring] [io-8080-exec-35] com.DOCKin.global.security.jwt.JwtUtil   : @@@ Generating Token for User: k6u00972
+dockin-app-1  | 2026-09-20T11:40:50.283+09:00  INFO [137845bd21b343cb] 1 --- [DOCKin-spring] [io-8080-exec-35] com.DOCKin.global.security.jwt.JwtUtil   : @@@ Generating Token for User: k6u00972
+--
+dockin-app-1  | 2026-09-20T11:40:52.388+09:00  WARN [0f002ae716534b63] 1 --- [DOCKin-spring] [io-8080-exec-71] o.s.b.h.a.e.HealthEndpointSupport        : Health contributor org.springframework.boot.jdbc.health.DataSourceHealthIndicator (db) took 12503ms to respond

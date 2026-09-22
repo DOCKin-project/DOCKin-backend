@@ -1,0 +1,80 @@
+dockin-app-1  | 2026-09-20T11:51:28.983+09:00  INFO [] 1 --- [DOCKin-spring] [nboundChannel-3] com.DOCKin.chat.service.ChatService      : ### [1] 방 시퀀스 발급 6768
+dockin-app-1  | 2026-09-20T11:51:28.983+09:00  INFO [] 1 --- [DOCKin-spring] [boundChannel-10] com.DOCKin.chat.service.ChatService      : ### [2] 메시지 저장 완료 id=692942
+dockin-app-1  | 2026-09-20T11:51:28.983+09:00  INFO [] 1 --- [DOCKin-spring] [nboundChannel-6] com.DOCKin.chat.service.ChatService      : ### [1] 방 시퀀스 발급 6800
+--
+dockin-app-1  | 2026-09-20T11:51:38.941+09:00  WARN [] 1 --- [DOCKin-spring] [MessageBroker-8] c.DOCKin.global.config.HikariPoolWatch   : HikariPool 대기 pending=6 active=10 idle=0 total=10 max=10 — 풀 고갈이면 '누가 잡고 있나'부터 (ADR-0008 7-1)
+dockin-app-1  | 2026-09-20T11:51:38.941+09:00  INFO [] 1 --- [DOCKin-spring] [nboundChannel-7] com.DOCKin.chat.service.ChatService      : ### [3] 발신자 읽음 위치 6867 (JDBC) 완료
+dockin-app-1  | 2026-09-20T11:51:38.942+09:00  INFO [] 1 --- [DOCKin-spring] [boundChannel-15] com.DOCKin.chat.service.ChatService      : ### [1] 방 시퀀스 발급 6431
+dockin-app-1  | 2026-09-20T11:51:38.942+09:00  INFO [] 1 --- [DOCKin-spring] [boundChannel-14] com.DOCKin.chat.service.ChatService      : ### [2] 메시지 저장 완료 id=707723
+dockin-app-1  | 2026-09-20T11:51:38.942+09:00  INFO [] 1 --- [DOCKin-spring] [boundChannel-14] com.DOCKin.chat.service.ChatService      : ### [3] 발신자 읽음 위치 6890 (JDBC) 완료
+dockin-app-1  | 2026-09-20T11:51:38.942+09:00  INFO [] 1 --- [DOCKin-spring] [boundChannel-11] c.DOCKin.chat.controller.ChatController  : 메시지 수신: 방번호=1074, 보낸이=k6u00740, 내용=ts=1789872688330 팬아웃 측정
+--
+dockin-app-1  | 2026-09-20T11:51:48.942+09:00  WARN [] 1 --- [DOCKin-spring] [MessageBroker-2] c.DOCKin.global.config.HikariPoolWatch   : HikariPool 대기 pending=6 active=10 idle=0 total=10 max=10 — 풀 고갈이면 '누가 잡고 있나'부터 (ADR-0008 7-1)
+dockin-app-1  | 2026-09-20T11:51:48.942+09:00  INFO [] 1 --- [DOCKin-spring] [boundChannel-12] c.DOCKin.chat.controller.ChatController  : 메시지 수신: 방번호=1026, 보낸이=k6u00253, 내용=ts=1789872695194 팬아웃 측정
+dockin-app-1  | 2026-09-20T11:51:48.942+09:00  INFO [] 1 --- [DOCKin-spring] [nboundChannel-8] com.DOCKin.chat.service.ChatService      : ### [2] 메시지 저장 완료 id=721577
+dockin-app-1  | 2026-09-20T11:51:48.942+09:00  INFO [] 1 --- [DOCKin-spring] [boundChannel-11] com.DOCKin.chat.service.ChatService      : ### [1] 방 시퀀스 발급 6621
+dockin-app-1  | 2026-09-20T11:51:48.942+09:00  INFO [] 1 --- [DOCKin-spring] [nboundChannel-8] com.DOCKin.chat.service.ChatService      : ### [3] 발신자 읽음 위치 7083 (JDBC) 완료
+dockin-app-1  | 2026-09-20T11:51:48.942+09:00  INFO [] 1 --- [DOCKin-spring] [nboundChannel-5] c.DOCKin.chat.controller.ChatController  : 메시지 수신: 방번호=1019, 보낸이=k6u00181, 내용=ts=1789872695194 팬아웃 측정
+--
+dockin-app-1  | 2026-09-20T11:51:58.942+09:00  WARN [] 1 --- [DOCKin-spring] [MessageBroker-7] c.DOCKin.global.config.HikariPoolWatch   : HikariPool 대기 pending=5 active=10 idle=0 total=10 max=10 — 풀 고갈이면 '누가 잡고 있나'부터 (ADR-0008 7-1)
+dockin-app-1  | 2026-09-20T11:51:58.943+09:00  INFO [] 1 --- [DOCKin-spring] [boundChannel-12] com.DOCKin.chat.service.ChatService      : ### [1] 방 시퀀스 발급 6840
+dockin-app-1  | 2026-09-20T11:51:58.943+09:00  INFO [] 1 --- [DOCKin-spring] [boundChannel-15] c.DOCKin.chat.controller.ChatController  : 메시지 수신: 방번호=1092, 보낸이=k6u00911, 내용=ts=1789872702636 팬아웃 측정
+dockin-app-1  | 2026-09-20T11:51:58.943+09:00  INFO [] 1 --- [DOCKin-spring] [nboundChannel-3] com.DOCKin.chat.service.ChatService      : ### [1] 방 시퀀스 발급 7124
+dockin-app-1  | 2026-09-20T11:51:58.943+09:00  INFO [] 1 --- [DOCKin-spring] [nboundChannel-5] com.DOCKin.chat.service.ChatService      : ### [1] 방 시퀀스 발급 7178
+dockin-app-1  | 2026-09-20T11:51:58.944+09:00  INFO [] 1 --- [DOCKin-spring] [boundChannel-16] com.DOCKin.chat.service.ChatService      : ### [1] 방 시퀀스 발급 6707
+--
+dockin-app-1  | 2026-09-20T11:52:08.943+09:00  WARN [] 1 --- [DOCKin-spring] [MessageBroker-3] c.DOCKin.global.config.HikariPoolWatch   : HikariPool 대기 pending=6 active=10 idle=0 total=10 max=10 — 풀 고갈이면 '누가 잡고 있나'부터 (ADR-0008 7-1)
+dockin-app-1  | 2026-09-20T11:52:08.943+09:00  INFO [] 1 --- [DOCKin-spring] [nboundChannel-7] com.DOCKin.chat.service.ChatService      : ### [3] 발신자 읽음 위치 6972 (JDBC) 완료
+dockin-app-1  | 2026-09-20T11:52:08.943+09:00  INFO [] 1 --- [DOCKin-spring] [boundChannel-11] com.DOCKin.chat.service.ChatService      : ### [1] 방 시퀀스 발급 6714
+dockin-app-1  | 2026-09-20T11:52:08.943+09:00  INFO [] 1 --- [DOCKin-spring] [boundChannel-10] com.DOCKin.chat.service.ChatService      : ### [2] 메시지 저장 완료 id=751034
+dockin-app-1  | 2026-09-20T11:52:08.943+09:00  INFO [] 1 --- [DOCKin-spring] [boundChannel-14] c.DOCKin.chat.controller.ChatController  : 메시지 수신: 방번호=1087, 보낸이=k6u00868, 내용=ts=1789872709925 팬아웃 측정
+dockin-app-1  | 2026-09-20T11:52:08.944+09:00  INFO [] 1 --- [DOCKin-spring] [boundChannel-10] com.DOCKin.chat.service.ChatService      : ### [3] 발신자 읽음 위치 7376 (JDBC) 완료
+--
+dockin-app-1  | 2026-09-20T11:52:18.943+09:00  WARN [] 1 --- [DOCKin-spring] [MessageBroker-5] c.DOCKin.global.config.HikariPoolWatch   : HikariPool 대기 pending=6 active=10 idle=0 total=10 max=10 — 풀 고갈이면 '누가 잡고 있나'부터 (ADR-0008 7-1)
+dockin-app-1  | 2026-09-20T11:52:18.944+09:00  INFO [] 1 --- [DOCKin-spring] [boundChannel-10] com.DOCKin.chat.service.ChatService      : ### [1] 방 시퀀스 발급 7503
+dockin-app-1  | 2026-09-20T11:52:18.944+09:00  INFO [] 1 --- [DOCKin-spring] [nboundChannel-9] c.DOCKin.chat.controller.ChatController  : 메시지 수신: 방번호=1031, 보낸이=k6u00306, 내용=ts=1789872717177 팬아웃 측정
+dockin-app-1  | 2026-09-20T11:52:18.944+09:00  INFO [] 1 --- [DOCKin-spring] [boundChannel-14] c.DOCKin.chat.controller.ChatController  : 메시지 수신: 방번호=1007, 보낸이=k6u00061, 내용=ts=1789872717177 팬아웃 측정
+dockin-app-1  | 2026-09-20T11:52:18.944+09:00  INFO [] 1 --- [DOCKin-spring] [nboundChannel-6] com.DOCKin.chat.service.ChatService      : ### [1] 방 시퀀스 발급 7032
+dockin-app-1  | 2026-09-20T11:52:18.944+09:00  INFO [] 1 --- [DOCKin-spring] [nboundChannel-5] com.DOCKin.chat.service.ChatService      : ### [1] 방 시퀀스 발급 7455
+--
+dockin-app-1  | 2026-09-20T11:52:28.944+09:00  WARN [] 1 --- [DOCKin-spring] [MessageBroker-4] c.DOCKin.global.config.HikariPoolWatch   : HikariPool 대기 pending=6 active=9 idle=1 total=10 max=10 — 풀 고갈이면 '누가 잡고 있나'부터 (ADR-0008 7-1)
+dockin-app-1  | 2026-09-20T11:52:28.944+09:00  INFO [] 1 --- [DOCKin-spring] [nboundChannel-5] com.DOCKin.chat.service.ChatService      : ### [3] 발신자 읽음 위치 7329 (JDBC) 완료
+dockin-app-1  | 2026-09-20T11:52:28.944+09:00  INFO [] 1 --- [DOCKin-spring] [boundChannel-12] com.DOCKin.chat.service.ChatService      : ### [2] 메시지 저장 완료 id=780180
+dockin-app-1  | 2026-09-20T11:52:28.944+09:00  INFO [] 1 --- [DOCKin-spring] [nboundChannel-9] c.DOCKin.chat.controller.ChatController  : 메시지 수신: 방번호=1014, 보낸이=k6u00131, 내용=ts=1789872724580 팬아웃 측정
+dockin-app-1  | 2026-09-20T11:52:28.944+09:00  INFO [] 1 --- [DOCKin-spring] [boundChannel-12] com.DOCKin.chat.service.ChatService      : ### [3] 발신자 읽음 위치 7600 (JDBC) 완료
+dockin-app-1  | 2026-09-20T11:52:28.944+09:00  INFO [] 1 --- [DOCKin-spring] [nboundChannel-2] com.DOCKin.chat.service.ChatService      : ### [1] 방 시퀀스 발급 7701
+--
+dockin-app-1  | 2026-09-20T11:52:38.944+09:00  WARN [] 1 --- [DOCKin-spring] [MessageBroker-1] c.DOCKin.global.config.HikariPoolWatch   : HikariPool 대기 pending=5 active=10 idle=0 total=10 max=10 — 풀 고갈이면 '누가 잡고 있나'부터 (ADR-0008 7-1)
+dockin-app-1  | 2026-09-20T11:52:38.945+09:00  INFO [] 1 --- [DOCKin-spring] [nboundChannel-7] com.DOCKin.chat.service.ChatService      : ### [1] 방 시퀀스 발급 7781
+dockin-app-1  | 2026-09-20T11:52:38.945+09:00  INFO [] 1 --- [DOCKin-spring] [boundChannel-15] com.DOCKin.chat.service.ChatService      : ### [1] 방 시퀀스 발급 7053
+dockin-app-1  | 2026-09-20T11:52:38.945+09:00  INFO [] 1 --- [DOCKin-spring] [boundChannel-16] com.DOCKin.chat.service.ChatService      : ### [1] 방 시퀀스 발급 7305
+dockin-app-1  | 2026-09-20T11:52:38.945+09:00  INFO [] 1 --- [DOCKin-spring] [nboundChannel-7] com.DOCKin.chat.service.ChatService      : ### [2] 메시지 저장 완료 id=794459
+dockin-app-1  | 2026-09-20T11:52:38.945+09:00  INFO [] 1 --- [DOCKin-spring] [nboundChannel-6] com.DOCKin.chat.service.ChatService      : ### [2] 메시지 저장 완료 id=794460
+--
+dockin-app-1  | 2026-09-20T11:52:48.945+09:00  WARN [] 1 --- [DOCKin-spring] [MessageBroker-6] c.DOCKin.global.config.HikariPoolWatch   : HikariPool 대기 pending=6 active=8 idle=2 total=10 max=10 — 풀 고갈이면 '누가 잡고 있나'부터 (ADR-0008 7-1)
+dockin-app-1  | 2026-09-20T11:52:48.945+09:00  INFO [] 1 --- [DOCKin-spring] [nboundChannel-9] com.DOCKin.chat.service.ChatService      : ### [3] 발신자 읽음 위치 7835 (JDBC) 완료
+dockin-app-1  | 2026-09-20T11:52:48.945+09:00  INFO [] 1 --- [DOCKin-spring] [nboundChannel-1] c.DOCKin.chat.controller.ChatController  : 메시지 수신: 방번호=1038, 보낸이=k6u00376, 내용=ts=1789872738573 팬아웃 측정
+dockin-app-1  | 2026-09-20T11:52:48.945+09:00  INFO [] 1 --- [DOCKin-spring] [nboundChannel-3] c.DOCKin.chat.controller.ChatController  : 메시지 수신: 방번호=1040, 보낸이=k6u00392, 내용=ts=1789872738575 팬아웃 측정
+dockin-app-1  | 2026-09-20T11:52:48.945+09:00  INFO [] 1 --- [DOCKin-spring] [nboundChannel-4] com.DOCKin.chat.service.ChatService      : ### [1] 방 시퀀스 발급 7885
+dockin-app-1  | 2026-09-20T11:52:48.946+09:00  INFO [] 1 --- [DOCKin-spring] [boundChannel-15] com.DOCKin.chat.service.ChatService      : ### [1] 방 시퀀스 발급 7193
+--
+dockin-app-1  | 2026-09-20T11:52:58.195+09:00 ERROR [] 1 --- [DOCKin-spring] [io-8080-exec-69] o.s.w.s.m.StompSubProtocolHandler        : Failed to send message to MessageChannel in session 7c0373b1-a6ce-475b-4bee-e36f26e72297:Unknown session: 7c0373b1-a6ce-475b-4bee-e36f26e72297
+dockin-app-1  | 2026-09-20T11:52:58.170+09:00  INFO [] 1 --- [DOCKin-spring] [boundChannel-12] com.DOCKin.chat.service.ChatService      : ### [1] 방 시퀀스 발급 8071
+dockin-app-1  | 2026-09-20T11:52:58.170+09:00  INFO [] 1 --- [DOCKin-spring] [tboundChannel-1] com.DOCKin.chat.presence.Presence        : WebSocket 연결 종료 - userId: k6u00636
+dockin-app-1  | 2026-09-20T11:52:58.195+09:00  INFO [] 1 --- [DOCKin-spring] [o-8080-exec-124] com.DOCKin.chat.presence.Presence        : WebSocket 연결 종료 - userId: k6u00327
+dockin-app-1  | 2026-09-20T11:52:58.170+09:00  INFO [] 1 --- [DOCKin-spring] [io-8080-exec-66] com.DOCKin.chat.presence.Presence        : WebSocket 연결 종료 - userId: k6u00658
+dockin-app-1  | 2026-09-20T11:52:58.195+09:00  INFO [] 1 --- [DOCKin-spring] [io-8080-exec-78] com.DOCKin.chat.presence.Presence        : WebSocket 연결 종료 - userId: k6u00535
+--
+dockin-app-1  | 2026-09-20T11:52:58.945+09:00  WARN [] 1 --- [DOCKin-spring] [MessageBroker-8] c.DOCKin.global.config.HikariPoolWatch   : HikariPool 대기 pending=6 active=10 idle=0 total=10 max=10 — 풀 고갈이면 '누가 잡고 있나'부터 (ADR-0008 7-1)
+dockin-app-1  | 2026-09-20T11:52:58.982+09:00  INFO [] 1 --- [DOCKin-spring] [nboundChannel-8] com.DOCKin.chat.service.ChatService      : ### [3] 발신자 읽음 위치 7373 (JDBC) 완료
+dockin-app-1  | 2026-09-20T11:52:58.982+09:00  INFO [] 1 --- [DOCKin-spring] [nboundChannel-9] com.DOCKin.chat.service.ChatService      : ### [1] 방 시퀀스 발급 8128
+dockin-app-1  | 2026-09-20T11:52:58.982+09:00  INFO [] 1 --- [DOCKin-spring] [nboundChannel-6] com.DOCKin.chat.service.ChatService      : ### [1] 방 시퀀스 발급 8056
+dockin-app-1  | 2026-09-20T11:52:58.983+09:00  INFO [] 1 --- [DOCKin-spring] [boundChannel-13] com.DOCKin.chat.service.ChatService      : ### [2] 메시지 저장 완료 id=822888
+dockin-app-1  | 2026-09-20T11:52:58.983+09:00  INFO [] 1 --- [DOCKin-spring] [nboundChannel-4] com.DOCKin.chat.service.ChatService      : ### [1] 방 시퀀스 발급 7715
+--
+dockin-app-1  | 2026-09-20T11:53:08.945+09:00  WARN [] 1 --- [DOCKin-spring] [MessageBroker-2] c.DOCKin.global.config.HikariPoolWatch   : HikariPool 대기 pending=6 active=10 idle=0 total=10 max=10 — 풀 고갈이면 '누가 잡고 있나'부터 (ADR-0008 7-1)
+dockin-app-1  | 2026-09-20T11:53:08.982+09:00  INFO [] 1 --- [DOCKin-spring] [boundChannel-15] com.DOCKin.chat.service.ChatService      : ### [1] 방 시퀀스 발급 7812
+dockin-app-1  | 2026-09-20T11:53:08.982+09:00  INFO [] 1 --- [DOCKin-spring] [boundChannel-16] com.DOCKin.chat.service.ChatService      : ### [1] 방 시퀀스 발급 7894
+dockin-app-1  | 2026-09-20T11:53:08.982+09:00  INFO [] 1 --- [DOCKin-spring] [nboundChannel-1] com.DOCKin.chat.service.ChatService      : ### [1] 방 시퀀스 발급 8194
+dockin-app-1  | 2026-09-20T11:53:08.983+09:00  INFO [] 1 --- [DOCKin-spring] [nboundChannel-2] com.DOCKin.chat.service.ChatService      : ### [2] 메시지 저장 완료 id=839146
+dockin-app-1  | 2026-09-20T11:53:08.983+09:00  INFO [] 1 --- [DOCKin-spring] [boundChannel-12] com.DOCKin.chat.service.ChatService      : ### [2] 메시지 저장 완료 id=839147

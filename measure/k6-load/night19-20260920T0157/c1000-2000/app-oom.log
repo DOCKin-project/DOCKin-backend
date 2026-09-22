@@ -1,0 +1,60 @@
+378718:Exception: java.lang.OutOfMemoryError thrown from the UncaughtExceptionHandler in thread "java-sdk-http-connection-reaper"
+378720:Exception in thread "http-nio-8080-Acceptor" 
+378721:Exception: java.lang.OutOfMemoryError thrown from the UncaughtExceptionHandler in thread "http-nio-8080-exec-45"
+378722:java.lang.OutOfMemoryError: Java heap space
+378724:Exception: java.lang.OutOfMemoryError thrown from the UncaughtExceptionHandler in thread "http-nio-8080-exec-105"
+378725:Exception in thread "http-nio-8080-exec-26" Exception in thread "http-nio-8080-exec-128" java.lang.OutOfMemoryError: Java heap space
+378726:java.lang.OutOfMemoryError: Java heap space
+378727:2026-09-20T11:28:59.888+09:00 ERROR [] 1 --- [DOCKin-spring] [MessageBroker-1] o.s.s.s.TaskUtils$LoggingErrorHandler    : Unexpected error occurred in scheduled task
+378729:java.lang.OutOfMemoryError: Java heap space
+378731:2026-09-20T11:32:38.854+09:00 ERROR [] 1 --- [DOCKin-spring] [io-8080-exec-65] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+378733:java.lang.OutOfMemoryError: Java heap space
+378735:2026-09-20T11:27:35.270+09:00 ERROR [] 1 --- [DOCKin-spring] [io-8080-exec-36] o.s.w.s.m.StompSubProtocolHandler        : Failed to parse TextMessage payload=[SEND
+378736:desti..], byteCount=171, last=true] in session 435dc6ff-08b0-c81e-42b7-32fe6198da47. Sending STOMP ERROR to client.
+378738:java.lang.OutOfMemoryError: Java heap space
+378740:Exception in thread "http-nio-8080-exec-143" java.lang.OutOfMemoryError: Java heap space
+378741:2026-09-20T11:25:20.901+09:00 ERROR [] 1 --- [DOCKin-spring] [o-8080-exec-136] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+378743:java.lang.OutOfMemoryError: Java heap space
+378745:2026-09-20T11:32:38.854+09:00 ERROR [] 1 --- [DOCKin-spring] [io-8080-exec-67] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+378747:java.lang.OutOfMemoryError: Java heap space
+378749:2026-09-20T11:22:32.737+09:00 ERROR [] 1 --- [DOCKin-spring] [o-8080-exec-157] o.s.w.s.m.StompSubProtocolHandler        : Failed to parse TextMessage payload=[SEND
+378750:desti..], byteCount=171, last=true] in session 700df33f-88bc-bed2-c2fb-8b7109298519. Sending STOMP ERROR to client.
+378752:java.lang.OutOfMemoryError: Java heap space
+378754:2026-09-20T11:27:40.658+09:00 ERROR [] 1 --- [DOCKin-spring] [io-8080-exec-31] o.s.w.s.m.StompSubProtocolHandler        : Failed to parse TextMessage payload=[SEND
+378755:desti..], byteCount=171, last=true] in session e9ee6468-7e42-2357-8de2-156c972f6112. Sending STOMP ERROR to client.
+378757:java.lang.OutOfMemoryError: Java heap space
+378759:2026-09-20T11:30:27.904+09:00 ERROR [] 1 --- [DOCKin-spring] [o-8080-exec-191] o.s.w.s.m.StompSubProtocolHandler        : Failed to parse TextMessage payload=[SEND
+378760:desti..], byteCount=171, last=true] in session 01c7354e-ad23-84a4-4d20-12203ff99a73. Sending STOMP ERROR to client.
+378762:java.lang.OutOfMemoryError: Java heap space
+378764:2026-09-20T11:32:43.588+09:00 ERROR [] 1 --- [DOCKin-spring] [o-8080-exec-203] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+378766:java.lang.OutOfMemoryError: Java heap space
+378770:java.lang.OutOfMemoryError: Java heap space
+378772:2026-09-20T11:32:32.899+09:00 ERROR [] 1 --- [DOCKin-spring] [io-8080-exec-16] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+378774:java.lang.OutOfMemoryError: Java heap space
+378776:2026-09-20T11:32:48.890+09:00 ERROR [] 1 --- [DOCKin-spring] [o-8080-exec-183] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+378778:java.lang.OutOfMemoryError: Java heap space
+378780:2026-09-20T11:32:33.796+09:00 ERROR [] 1 --- [DOCKin-spring] [o-8080-exec-137] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+378782:java.lang.OutOfMemoryError: Java heap space
+378784:2026-09-20T11:28:14.246+09:00 ERROR [] 1 --- [DOCKin-spring] [io-8080-exec-38] o.s.w.s.m.StompSubProtocolHandler        : Failed to parse TextMessage payload=[SEND
+378785:desti..], byteCount=171, last=true] in session e04fa04c-d1af-f4e3-de05-a84c690b7a5b. Sending STOMP ERROR to client.
+378787:java.lang.OutOfMemoryError: Java heap space
+378789:2026-09-20T11:32:02.532+09:00 ERROR [] 1 --- [DOCKin-spring] [io-8080-exec-70] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+378791:java.lang.OutOfMemoryError: Java heap space
+378793:2026-09-20T11:32:39.777+09:00 ERROR [] 1 --- [DOCKin-spring] [o-8080-exec-186] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+378795:java.lang.OutOfMemoryError: Java heap space
+378798:2026-09-20T11:27:34.835+09:00 ERROR [] 1 --- [DOCKin-spring] [io-8080-exec-63] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+378800:java.lang.OutOfMemoryError: Java heap space
+378802:Exception in thread "http-nio-8080-exec-87" Exception in thread "http-nio-8080-exec-179" java.lang.OutOfMemoryError: Java heap space
+378803:Exception in thread "http-nio-8080-exec-172" java.lang.OutOfMemoryError: Java heap space
+378804:2026-09-20T11:32:42.675+09:00 ERROR [] 1 --- [DOCKin-spring] [io-8080-exec-30] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+378806:java.lang.OutOfMemoryError: Java heap space
+378808:2026-09-20T11:27:01.456+09:00 ERROR [] 1 --- [DOCKin-spring] [o-8080-exec-192] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+378810:java.lang.OutOfMemoryError: Java heap space
+378812:2026-09-20T11:26:11.036+09:00 ERROR [] 1 --- [DOCKin-spring] [io-8080-exec-73] o.s.w.s.m.StompSubProtocolHandler        : Failed to parse TextMessage payload=[SEND
+378813:desti..], byteCount=171, last=true] in session 58f6d101-04e1-844b-41f4-52596dd8dfe7. Sending STOMP ERROR to client.
+378815:java.lang.OutOfMemoryError: Java heap space
+378817:2026-09-20T11:30:14.218+09:00 ERROR [] 1 --- [DOCKin-spring] [o-8080-exec-108] o.s.w.s.m.StompSubProtocolHandler        : Failed to parse TextMessage payload=[SEND
+378818:desti..], byteCount=171, last=true] in session 80f1dd14-7578-9e70-bfd3-8b9597c2c4a7. Sending STOMP ERROR to client.
+378820:java.lang.OutOfMemoryError: Java heap space
+378822:2026-09-20T11:28:59.450+09:00 ERROR [] 1 --- [DOCKin-spring] [o-8080-exec-171] o.s.w.s.m.StompSubProtocolHandler        : Failed to parse TextMessage payload=[SEND
+378823:desti..], byteCount=171, last=true] in session b4e35f41-c295-b36d-7986-a37884d4c548. Sending STOMP ERROR to client.

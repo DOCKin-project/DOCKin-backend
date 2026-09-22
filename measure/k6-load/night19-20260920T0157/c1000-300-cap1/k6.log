@@ -1,0 +1,2 @@
+== chat sessions=1000 every=3.3s sent=16984 room/msg=7.68 rooms/msg=7.68 fanout p50=3ms p95=2124ms p99=4488ms max=47488ms connect p95=58626.5ms (handshake 21598 / stomp 45211.15) ws_error=698 recv_error=0
+time="2026-09-20T02:42:30Z" level=error msg="thresholds on metrics 'fanout_ms, ws_error' have been crossed"
