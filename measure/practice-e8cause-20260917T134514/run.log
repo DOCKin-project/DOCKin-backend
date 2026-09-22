@@ -1,0 +1,34 @@
+13:45:16  시작 코퍼스 0 청크 / 원본 3016 / TEI 상한 2.0 고정
+13:45:19  ◆ 앱 기동 — 연속 색인 시작(1회차)
+13:45:42  [baseline] 청크 0 (+0) 원본당 —ms | INSERT —ms/건 | ckpt 0/0 wal 0.0MB | dead 0 vac 0 run=0 | hnsw 0MB | cpu app 11.55% db 0.14% tei 190.87% | base —
+13:46:05  [baseline] 청크 360 (+360) 원본당 76.7ms | INSERT 0.594ms/건 | ckpt 1/0 wal 2.1MB | dead 0 vac 0 run=0 | hnsw 1MB | cpu app 3.28% db 9.31% tei 197.01% | base —
+13:46:28  [baseline] 청크 834 (+474) 원본당 57.5ms | INSERT 0.744ms/건 | ckpt 1/0 wal 4.9MB | dead 0 vac 0 run=0 | hnsw 2MB | cpu app 13.53% db 0.10% tei 173.74% | base —
+13:46:51  [baseline] 청크 1322 (+488) 원본당 57.5ms | INSERT 0.795ms/건 | ckpt 1/0 wal 7.8MB | dead 0 vac 0 run=0 | hnsw 3MB | cpu app 0.93% db 0.07% tei 201.25% | base —
+13:46:51  ◆ 기준선 확정 57.5ms/원본 (유효 2표본 중앙값)
+13:47:14  [watch] 청크 1801 (+479) 원본당 57.5ms | INSERT 0.836ms/건 | ckpt 1/0 wal 10.6MB | dead 0 vac 1 run=0 | hnsw 3MB | cpu app 0.49% db 7.20% tei 201.60% | base 57.5
+13:47:37  [watch] 청크 2164 (+363) 원본당 76.7ms | INSERT 0.839ms/건 | ckpt 1/0 wal 12.8MB | dead 0 vac 1 run=0 | hnsw 4MB | cpu app 34.85% db 0.01% tei 174.32% | base 57.5
+13:47:37  ◆ 열화 감지 — 2표본 연속 ≥ 57.5×0.1 (마지막 76.7ms)
+13:47:38  ◆ 개입 1: 앱 재시작 직전
+13:47:42  ◆ 개입 1: 앱 재시작 완료 — 2회차
+13:48:05  [observe-1] 청크 2283 (+119) 원본당 280.0ms | INSERT 0.859ms/건 | ckpt 1/0 wal 13.5MB | dead 0 vac 1 run=0 | hnsw 4MB | cpu app 98.01% db 3.61% tei 0.35% | base 57.5
+13:48:28  [observe-1] 청크 2649 (+366) 원본당 76.7ms | INSERT 0.876ms/건 | ckpt 1/0 wal 15.6MB | dead 0 vac 1 run=0 | hnsw 5MB | cpu app 0.26% db 0.01% tei 200.12% | base 57.5
+13:48:51  [observe-1] 청크 3027 (+378) 원본당 76.7ms | INSERT 0.885ms/건 | ckpt 1/0 wal 17.8MB | dead 0 vac 1 run=0 | hnsw 6MB | cpu app 0.67% db 0.00% tei 199.64% | base 57.5
+13:48:51  ◆ 미회복 — 개입 1 뒤 중앙값 76.7ms (기준선 57.5) → 앱(JVM·풀·세션) 은 아니다
+13:48:52  ◆ 개입 2: DB 재시작 직전
+13:49:02  ◆ 개입 2: DB 재시작 완료 — 3회차
+13:49:25  [observe-2] 청크 3158 (+131) 원본당 340.0ms | INSERT 0.891ms/건 | ckpt 1/1 wal 18.5MB | dead 0 vac 1 run=0 | hnsw 6MB | cpu app 98.65% db 7.36% tei 0.35% | base 57.5
+13:49:48  [observe-2] 청크 3505 (+347) 원본당 76.7ms | INSERT 0.908ms/건 | ckpt 1/1 wal 26.1MB | dead 0 vac 2 run=0 | hnsw 7MB | cpu app 1.11% db 1.09% tei 201.25% | base 57.5
+13:50:11  [observe-2] 청크 3652 (+147) 원본당 190.1ms | INSERT 0.914ms/건 | ckpt 1/1 wal 27.0MB | dead 0 vac 2 run=0 | hnsw 7MB | cpu app 0.39% db 0.03% tei 0.17% | base 57.5
+13:50:11  ◆ 색인 완주 (앱 로그) — 남은 원본 없음
+13:50:12  최종 코퍼스 3652 청크 (시작 0) / 개입 2단계까지 / 재기동 0회
+13:50:23  완료. 사건 표=measure/e8cause-20260917T134514/marks.csv  본체=measure/e8cause-20260917T134514/rate.csv
+t_epoch     t_iso                 event                                                                       chunks
+1789652718  2026-09-17T13:45:18Z  앱 기동 — 연속 색인 시작(1회차)                                             0
+1789652811  2026-09-17T13:46:51Z  기준선 확정 57.5ms/원본 (유효 2표본 중앙값)                                 1322
+1789652857  2026-09-17T13:47:37Z  열화 감지 — 2표본 연속 ≥ 57.5×0.1 (마지막 76.7ms)                           2283
+1789652858  2026-09-17T13:47:38Z  개입 1: 앱 재시작 직전                                                      2283
+1789652862  2026-09-17T13:47:42Z  개입 1: 앱 재시작 완료 — 2회차                                              2283
+1789652931  2026-09-17T13:48:51Z  미회복 — 개입 1 뒤 중앙값 76.7ms (기준선 57.5) → 앱(JVM·풀·세션) 은 아니다  3158
+1789652932  2026-09-17T13:48:52Z  개입 2: DB 재시작 직전                                                      3158
+1789652942  2026-09-17T13:49:02Z  개입 2: DB 재시작 완료 — 3회차                                              3158
+1789653011  2026-09-17T13:50:11Z  색인 완주 (앱 로그) — 남은 원본 없음                                        3652

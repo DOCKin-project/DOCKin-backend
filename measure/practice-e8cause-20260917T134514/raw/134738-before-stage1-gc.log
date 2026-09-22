@@ -1,0 +1,936 @@
+[2026-09-17T13:45:18.860+0000][0.003s][info][gc,init] CardTable entry size: 512
+[2026-09-17T13:45:18.860+0000][0.003s][debug][gc,heap] Minimum heap 268435456  Initial heap 268435456  Maximum heap 419430400
+[2026-09-17T13:45:18.860+0000][0.003s][info ][gc     ] Using Serial
+[2026-09-17T13:45:18.861+0000][0.003s][info ][gc,init] Version: 21.0.12.1+9-LTS (release)
+[2026-09-17T13:45:18.861+0000][0.003s][info ][gc,init] CPUs: 8 total, 1 available
+[2026-09-17T13:45:18.861+0000][0.003s][info ][gc,init] Memory: 512M
+[2026-09-17T13:45:18.861+0000][0.003s][info ][gc,init] Large Page Support: Disabled
+[2026-09-17T13:45:18.861+0000][0.003s][info ][gc,init] NUMA Support: Disabled
+[2026-09-17T13:45:18.861+0000][0.003s][info ][gc,init] Compressed Oops: Enabled (32-bit)
+[2026-09-17T13:45:18.861+0000][0.003s][info ][gc,init] Heap Min Capacity: 256M
+[2026-09-17T13:45:18.861+0000][0.003s][info ][gc,init] Heap Initial Capacity: 256M
+[2026-09-17T13:45:18.861+0000][0.003s][info ][gc,init] Heap Max Capacity: 400M
+[2026-09-17T13:45:18.861+0000][0.003s][info ][gc,init] Pre-touch: Disabled
+[2026-09-17T13:45:18.867+0000][0.009s][info ][gc,metaspace] CDS archive(s) mapped at: [0x00007f4550000000-0x00007f4550c9c000-0x00007f4550c9c000), size 13221888, SharedBaseAddress: 0x00007f4550000000, ArchiveRelocationMode: 1.
+[2026-09-17T13:45:18.867+0000][0.009s][info ][gc,metaspace] Compressed class space mapped at: 0x00007f4551000000-0x00007f4591000000, reserved size: 1073741824
+[2026-09-17T13:45:18.867+0000][0.009s][info ][gc,metaspace] Narrow klass base: 0x00007f4550000000, Narrow klass shift: 0, Narrow klass range: 0x100000000
+[2026-09-17T13:45:19.715+0000][0.857s][info ][gc,start    ] GC(0) Pause Young (Allocation Failure)
+[2026-09-17T13:45:19.715+0000][0.857s][debug][gc,heap     ] GC(0) Heap before GC invocations=0 (full 0):
+[2026-09-17T13:45:19.715+0000][0.857s][debug][gc,heap     ] GC(0)  def new generation   total 78656K, used 69952K [0x00000000e7000000, 0x00000000ec550000, 0x00000000ef550000)
+[2026-09-17T13:45:19.715+0000][0.857s][debug][gc,heap     ] GC(0)   eden space 69952K, 100% used [0x00000000e7000000, 0x00000000eb450000, 0x00000000eb450000)
+[2026-09-17T13:45:19.715+0000][0.857s][debug][gc,heap     ] GC(0)   from space 8704K,   0% used [0x00000000eb450000, 0x00000000eb450000, 0x00000000ebcd0000)
+[2026-09-17T13:45:19.715+0000][0.857s][debug][gc,heap     ] GC(0)   to   space 8704K,   0% used [0x00000000ebcd0000, 0x00000000ebcd0000, 0x00000000ec550000)
+[2026-09-17T13:45:19.715+0000][0.857s][debug][gc,heap     ] GC(0)  tenured generation   total 174784K, used 1073K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:19.715+0000][0.857s][debug][gc,heap     ] GC(0)    the space 174784K,   0% used [0x00000000ef550000, 0x00000000ef65c660, 0x00000000ef65c800, 0x00000000fa000000)
+[2026-09-17T13:45:19.715+0000][0.857s][debug][gc,heap     ] GC(0)  Metaspace       used 4364K, committed 4608K, reserved 1114112K
+[2026-09-17T13:45:19.715+0000][0.857s][debug][gc,heap     ] GC(0)   class space    used 464K, committed 576K, reserved 1048576K
+[2026-09-17T13:45:19.721+0000][0.863s][info ][gc,heap     ] GC(0) DefNew: 69952K(78656K)->3608K(78656K) Eden: 69952K(69952K)->0K(69952K) From: 0K(8704K)->3608K(8704K)
+[2026-09-17T13:45:19.721+0000][0.863s][info ][gc,heap     ] GC(0) Tenured: 1073K(174784K)->1073K(174784K)
+[2026-09-17T13:45:19.721+0000][0.863s][info ][gc,metaspace] GC(0) Metaspace: 4364K(4608K)->4364K(4608K) NonClass: 3899K(4032K)->3899K(4032K) Class: 464K(576K)->464K(576K)
+[2026-09-17T13:45:19.721+0000][0.863s][debug][gc,heap     ] GC(0) Heap after GC invocations=1 (full 0):
+[2026-09-17T13:45:19.721+0000][0.863s][debug][gc,heap     ] GC(0)  def new generation   total 78656K, used 3608K [0x00000000e7000000, 0x00000000ec550000, 0x00000000ef550000)
+[2026-09-17T13:45:19.721+0000][0.863s][debug][gc,heap     ] GC(0)   eden space 69952K,   0% used [0x00000000e7000000, 0x00000000e7000000, 0x00000000eb450000)
+[2026-09-17T13:45:19.721+0000][0.863s][debug][gc,heap     ] GC(0)   from space 8704K,  41% used [0x00000000ebcd0000, 0x00000000ec056220, 0x00000000ec550000)
+[2026-09-17T13:45:19.721+0000][0.863s][debug][gc,heap     ] GC(0)   to   space 8704K,   0% used [0x00000000eb450000, 0x00000000eb450000, 0x00000000ebcd0000)
+[2026-09-17T13:45:19.721+0000][0.863s][debug][gc,heap     ] GC(0)  tenured generation   total 174784K, used 1073K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:19.721+0000][0.863s][debug][gc,heap     ] GC(0)    the space 174784K,   0% used [0x00000000ef550000, 0x00000000ef65c660, 0x00000000ef65c800, 0x00000000fa000000)
+[2026-09-17T13:45:19.721+0000][0.863s][debug][gc,heap     ] GC(0)  Metaspace       used 4364K, committed 4608K, reserved 1114112K
+[2026-09-17T13:45:19.721+0000][0.863s][debug][gc,heap     ] GC(0)   class space    used 464K, committed 576K, reserved 1048576K
+[2026-09-17T13:45:19.721+0000][0.863s][info ][gc          ] GC(0) Pause Young (Allocation Failure) 69M->4M(247M) 5.670ms
+[2026-09-17T13:45:19.721+0000][0.863s][info ][gc,cpu      ] GC(0) User=0.01s Sys=0.00s Real=0.01s
+[2026-09-17T13:45:20.526+0000][1.668s][info ][gc,start    ] GC(1) Pause Young (Allocation Failure)
+[2026-09-17T13:45:20.526+0000][1.668s][debug][gc,heap     ] GC(1) Heap before GC invocations=1 (full 0):
+[2026-09-17T13:45:20.526+0000][1.668s][debug][gc,heap     ] GC(1)  def new generation   total 78656K, used 73560K [0x00000000e7000000, 0x00000000ec550000, 0x00000000ef550000)
+[2026-09-17T13:45:20.526+0000][1.668s][debug][gc,heap     ] GC(1)   eden space 69952K, 100% used [0x00000000e7000000, 0x00000000eb450000, 0x00000000eb450000)
+[2026-09-17T13:45:20.526+0000][1.668s][debug][gc,heap     ] GC(1)   from space 8704K,  41% used [0x00000000ebcd0000, 0x00000000ec056220, 0x00000000ec550000)
+[2026-09-17T13:45:20.526+0000][1.668s][debug][gc,heap     ] GC(1)   to   space 8704K,   0% used [0x00000000eb450000, 0x00000000eb450000, 0x00000000ebcd0000)
+[2026-09-17T13:45:20.526+0000][1.668s][debug][gc,heap     ] GC(1)  tenured generation   total 174784K, used 1073K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:20.526+0000][1.668s][debug][gc,heap     ] GC(1)    the space 174784K,   0% used [0x00000000ef550000, 0x00000000ef65c660, 0x00000000ef65c800, 0x00000000fa000000)
+[2026-09-17T13:45:20.526+0000][1.668s][debug][gc,heap     ] GC(1)  Metaspace       used 10352K, committed 10752K, reserved 1114112K
+[2026-09-17T13:45:20.526+0000][1.668s][debug][gc,heap     ] GC(1)   class space    used 1311K, committed 1472K, reserved 1048576K
+[2026-09-17T13:45:20.535+0000][1.677s][info ][gc,heap     ] GC(1) DefNew: 73560K(78656K)->5485K(78656K) Eden: 69952K(69952K)->0K(69952K) From: 3608K(8704K)->5485K(8704K)
+[2026-09-17T13:45:20.535+0000][1.677s][info ][gc,heap     ] GC(1) Tenured: 1073K(174784K)->1073K(174784K)
+[2026-09-17T13:45:20.535+0000][1.677s][info ][gc,metaspace] GC(1) Metaspace: 10352K(10752K)->10352K(10752K) NonClass: 9040K(9280K)->9040K(9280K) Class: 1311K(1472K)->1311K(1472K)
+[2026-09-17T13:45:20.535+0000][1.677s][debug][gc,heap     ] GC(1) Heap after GC invocations=2 (full 0):
+[2026-09-17T13:45:20.535+0000][1.677s][debug][gc,heap     ] GC(1)  def new generation   total 78656K, used 5485K [0x00000000e7000000, 0x00000000ec550000, 0x00000000ef550000)
+[2026-09-17T13:45:20.535+0000][1.677s][debug][gc,heap     ] GC(1)   eden space 69952K,   0% used [0x00000000e7000000, 0x00000000e7000000, 0x00000000eb450000)
+[2026-09-17T13:45:20.535+0000][1.677s][debug][gc,heap     ] GC(1)   from space 8704K,  63% used [0x00000000eb450000, 0x00000000eb9ab7d0, 0x00000000ebcd0000)
+[2026-09-17T13:45:20.535+0000][1.677s][debug][gc,heap     ] GC(1)   to   space 8704K,   0% used [0x00000000ebcd0000, 0x00000000ebcd0000, 0x00000000ec550000)
+[2026-09-17T13:45:20.535+0000][1.677s][debug][gc,heap     ] GC(1)  tenured generation   total 174784K, used 1073K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:20.535+0000][1.677s][debug][gc,heap     ] GC(1)    the space 174784K,   0% used [0x00000000ef550000, 0x00000000ef65c660, 0x00000000ef65c800, 0x00000000fa000000)
+[2026-09-17T13:45:20.535+0000][1.677s][debug][gc,heap     ] GC(1)  Metaspace       used 10352K, committed 10752K, reserved 1114112K
+[2026-09-17T13:45:20.535+0000][1.677s][debug][gc,heap     ] GC(1)   class space    used 1311K, committed 1472K, reserved 1048576K
+[2026-09-17T13:45:20.535+0000][1.677s][info ][gc          ] GC(1) Pause Young (Allocation Failure) 72M->6M(247M) 8.953ms
+[2026-09-17T13:45:20.535+0000][1.677s][info ][gc,cpu      ] GC(1) User=0.01s Sys=0.00s Real=0.00s
+[2026-09-17T13:45:21.322+0000][2.465s][info ][gc,start    ] GC(2) Pause Young (Allocation Failure)
+[2026-09-17T13:45:21.322+0000][2.465s][debug][gc,heap     ] GC(2) Heap before GC invocations=2 (full 0):
+[2026-09-17T13:45:21.322+0000][2.465s][debug][gc,heap     ] GC(2)  def new generation   total 78656K, used 75437K [0x00000000e7000000, 0x00000000ec550000, 0x00000000ef550000)
+[2026-09-17T13:45:21.322+0000][2.465s][debug][gc,heap     ] GC(2)   eden space 69952K, 100% used [0x00000000e7000000, 0x00000000eb450000, 0x00000000eb450000)
+[2026-09-17T13:45:21.322+0000][2.465s][debug][gc,heap     ] GC(2)   from space 8704K,  63% used [0x00000000eb450000, 0x00000000eb9ab7d0, 0x00000000ebcd0000)
+[2026-09-17T13:45:21.322+0000][2.465s][debug][gc,heap     ] GC(2)   to   space 8704K,   0% used [0x00000000ebcd0000, 0x00000000ebcd0000, 0x00000000ec550000)
+[2026-09-17T13:45:21.322+0000][2.465s][debug][gc,heap     ] GC(2)  tenured generation   total 174784K, used 1073K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:21.322+0000][2.465s][debug][gc,heap     ] GC(2)    the space 174784K,   0% used [0x00000000ef550000, 0x00000000ef65c660, 0x00000000ef65c800, 0x00000000fa000000)
+[2026-09-17T13:45:21.322+0000][2.465s][debug][gc,heap     ] GC(2)  Metaspace       used 14470K, committed 14848K, reserved 1114112K
+[2026-09-17T13:45:21.322+0000][2.465s][debug][gc,heap     ] GC(2)   class space    used 1866K, committed 2048K, reserved 1048576K
+[2026-09-17T13:45:21.335+0000][2.477s][info ][gc,heap     ] GC(2) DefNew: 75437K(78656K)->4868K(78656K) Eden: 69952K(69952K)->0K(69952K) From: 5485K(8704K)->4868K(8704K)
+[2026-09-17T13:45:21.335+0000][2.477s][info ][gc,heap     ] GC(2) Tenured: 1073K(174784K)->4593K(174784K)
+[2026-09-17T13:45:21.335+0000][2.477s][info ][gc,metaspace] GC(2) Metaspace: 14470K(14848K)->14470K(14848K) NonClass: 12604K(12800K)->12604K(12800K) Class: 1866K(2048K)->1866K(2048K)
+[2026-09-17T13:45:21.335+0000][2.477s][debug][gc,heap     ] GC(2) Heap after GC invocations=3 (full 0):
+[2026-09-17T13:45:21.335+0000][2.477s][debug][gc,heap     ] GC(2)  def new generation   total 78656K, used 4868K [0x00000000e7000000, 0x00000000ec550000, 0x00000000ef550000)
+[2026-09-17T13:45:21.335+0000][2.477s][debug][gc,heap     ] GC(2)   eden space 69952K,   0% used [0x00000000e7000000, 0x00000000e7000000, 0x00000000eb450000)
+[2026-09-17T13:45:21.335+0000][2.477s][debug][gc,heap     ] GC(2)   from space 8704K,  55% used [0x00000000ebcd0000, 0x00000000ec191168, 0x00000000ec550000)
+[2026-09-17T13:45:21.335+0000][2.477s][debug][gc,heap     ] GC(2)   to   space 8704K,   0% used [0x00000000eb450000, 0x00000000eb450000, 0x00000000ebcd0000)
+[2026-09-17T13:45:21.335+0000][2.477s][debug][gc,heap     ] GC(2)  tenured generation   total 174784K, used 4593K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:21.335+0000][2.477s][debug][gc,heap     ] GC(2)    the space 174784K,   2% used [0x00000000ef550000, 0x00000000ef9cc4d8, 0x00000000ef9cc600, 0x00000000fa000000)
+[2026-09-17T13:45:21.335+0000][2.477s][debug][gc,heap     ] GC(2)  Metaspace       used 14470K, committed 14848K, reserved 1114112K
+[2026-09-17T13:45:21.335+0000][2.477s][debug][gc,heap     ] GC(2)   class space    used 1866K, committed 2048K, reserved 1048576K
+[2026-09-17T13:45:21.335+0000][2.477s][info ][gc          ] GC(2) Pause Young (Allocation Failure) 74M->9M(247M) 12.353ms
+[2026-09-17T13:45:21.395+0000][2.538s][info ][gc,cpu      ] GC(2) User=0.02s Sys=0.00s Real=0.01s
+[2026-09-17T13:45:22.015+0000][3.157s][info ][gc,start    ] GC(3) Pause Young (Allocation Failure)
+[2026-09-17T13:45:22.015+0000][3.157s][debug][gc,heap     ] GC(3) Heap before GC invocations=3 (full 0):
+[2026-09-17T13:45:22.015+0000][3.157s][debug][gc,heap     ] GC(3)  def new generation   total 78656K, used 74820K [0x00000000e7000000, 0x00000000ec550000, 0x00000000ef550000)
+[2026-09-17T13:45:22.015+0000][3.157s][debug][gc,heap     ] GC(3)   eden space 69952K, 100% used [0x00000000e7000000, 0x00000000eb450000, 0x00000000eb450000)
+[2026-09-17T13:45:22.015+0000][3.157s][debug][gc,heap     ] GC(3)   from space 8704K,  55% used [0x00000000ebcd0000, 0x00000000ec191168, 0x00000000ec550000)
+[2026-09-17T13:45:22.015+0000][3.157s][debug][gc,heap     ] GC(3)   to   space 8704K,   0% used [0x00000000eb450000, 0x00000000eb450000, 0x00000000ebcd0000)
+[2026-09-17T13:45:22.015+0000][3.157s][debug][gc,heap     ] GC(3)  tenured generation   total 174784K, used 4593K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:22.015+0000][3.157s][debug][gc,heap     ] GC(3)    the space 174784K,   2% used [0x00000000ef550000, 0x00000000ef9cc4d8, 0x00000000ef9cc600, 0x00000000fa000000)
+[2026-09-17T13:45:22.015+0000][3.157s][debug][gc,heap     ] GC(3)  Metaspace       used 18344K, committed 18752K, reserved 1114112K
+[2026-09-17T13:45:22.015+0000][3.157s][debug][gc,heap     ] GC(3)   class space    used 2267K, committed 2432K, reserved 1048576K
+[2026-09-17T13:45:22.026+0000][3.168s][info ][gc,heap     ] GC(3) DefNew: 74820K(78656K)->5699K(78656K) Eden: 69952K(69952K)->0K(69952K) From: 4868K(8704K)->5699K(8704K)
+[2026-09-17T13:45:22.026+0000][3.168s][info ][gc,heap     ] GC(3) Tenured: 4593K(174784K)->6374K(174784K)
+[2026-09-17T13:45:22.026+0000][3.168s][info ][gc,metaspace] GC(3) Metaspace: 18344K(18752K)->18344K(18752K) NonClass: 16077K(16320K)->16077K(16320K) Class: 2267K(2432K)->2267K(2432K)
+[2026-09-17T13:45:22.026+0000][3.168s][debug][gc,heap     ] GC(3) Heap after GC invocations=4 (full 0):
+[2026-09-17T13:45:22.026+0000][3.168s][debug][gc,heap     ] GC(3)  def new generation   total 78656K, used 5699K [0x00000000e7000000, 0x00000000ec550000, 0x00000000ef550000)
+[2026-09-17T13:45:22.026+0000][3.168s][debug][gc,heap     ] GC(3)   eden space 69952K,   0% used [0x00000000e7000000, 0x00000000e7000000, 0x00000000eb450000)
+[2026-09-17T13:45:22.026+0000][3.168s][debug][gc,heap     ] GC(3)   from space 8704K,  65% used [0x00000000eb450000, 0x00000000eb9e0fe8, 0x00000000ebcd0000)
+[2026-09-17T13:45:22.026+0000][3.168s][debug][gc,heap     ] GC(3)   to   space 8704K,   0% used [0x00000000ebcd0000, 0x00000000ebcd0000, 0x00000000ec550000)
+[2026-09-17T13:45:22.026+0000][3.168s][debug][gc,heap     ] GC(3)  tenured generation   total 174784K, used 6374K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:22.026+0000][3.168s][debug][gc,heap     ] GC(3)    the space 174784K,   3% used [0x00000000ef550000, 0x00000000efb899f0, 0x00000000efb89a00, 0x00000000fa000000)
+[2026-09-17T13:45:22.026+0000][3.168s][debug][gc,heap     ] GC(3)  Metaspace       used 18344K, committed 18752K, reserved 1114112K
+[2026-09-17T13:45:22.026+0000][3.168s][debug][gc,heap     ] GC(3)   class space    used 2267K, committed 2432K, reserved 1048576K
+[2026-09-17T13:45:22.026+0000][3.168s][info ][gc          ] GC(3) Pause Young (Allocation Failure) 77M->11M(247M) 11.383ms
+[2026-09-17T13:45:22.026+0000][3.168s][info ][gc,cpu      ] GC(3) User=0.03s Sys=0.00s Real=0.02s
+[2026-09-17T13:45:22.622+0000][3.764s][info ][gc,start    ] GC(4) Pause Full (Metadata GC Threshold)
+[2026-09-17T13:45:22.622+0000][3.764s][debug][gc,heap     ] GC(4) Heap before GC invocations=4 (full 0):
+[2026-09-17T13:45:22.622+0000][3.764s][debug][gc,heap     ] GC(4)  def new generation   total 78656K, used 64968K [0x00000000e7000000, 0x00000000ec550000, 0x00000000ef550000)
+[2026-09-17T13:45:22.622+0000][3.764s][debug][gc,heap     ] GC(4)   eden space 69952K,  84% used [0x00000000e7000000, 0x00000000ea9e1038, 0x00000000eb450000)
+[2026-09-17T13:45:22.622+0000][3.764s][debug][gc,heap     ] GC(4)   from space 8704K,  65% used [0x00000000eb450000, 0x00000000eb9e0fe8, 0x00000000ebcd0000)
+[2026-09-17T13:45:22.622+0000][3.764s][debug][gc,heap     ] GC(4)   to   space 8704K,   0% used [0x00000000ebcd0000, 0x00000000ebcd0000, 0x00000000ec550000)
+[2026-09-17T13:45:22.622+0000][3.764s][debug][gc,heap     ] GC(4)  tenured generation   total 174784K, used 6374K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:22.622+0000][3.764s][debug][gc,heap     ] GC(4)    the space 174784K,   3% used [0x00000000ef550000, 0x00000000efb899f0, 0x00000000efb89a00, 0x00000000fa000000)
+[2026-09-17T13:45:22.622+0000][3.764s][debug][gc,heap     ] GC(4)  Metaspace       used 21144K, committed 21504K, reserved 1114112K
+[2026-09-17T13:45:22.622+0000][3.764s][debug][gc,heap     ] GC(4)   class space    used 2595K, committed 2752K, reserved 1048576K
+[2026-09-17T13:45:22.622+0000][3.764s][info ][gc,phases,start] GC(4) Phase 1: Mark live objects
+[2026-09-17T13:45:22.639+0000][3.781s][info ][gc,phases      ] GC(4) Phase 1: Mark live objects 16.354ms
+[2026-09-17T13:45:22.639+0000][3.781s][info ][gc,phases,start] GC(4) Phase 2: Compute new object addresses
+[2026-09-17T13:45:22.649+0000][3.792s][info ][gc,phases      ] GC(4) Phase 2: Compute new object addresses 10.745ms
+[2026-09-17T13:45:22.649+0000][3.792s][info ][gc,phases,start] GC(4) Phase 3: Adjust pointers
+[2026-09-17T13:45:22.698+0000][3.841s][info ][gc,phases      ] GC(4) Phase 3: Adjust pointers 48.908ms
+[2026-09-17T13:45:22.698+0000][3.841s][info ][gc,phases,start] GC(4) Phase 4: Move objects
+[2026-09-17T13:45:22.703+0000][3.846s][info ][gc,phases      ] GC(4) Phase 4: Move objects 5.112ms
+[2026-09-17T13:45:22.704+0000][3.846s][info ][gc,heap        ] GC(4) DefNew: 64968K(78656K)->0K(78720K) Eden: 59268K(69952K)->0K(70016K) From: 5699K(8704K)->0K(8704K)
+[2026-09-17T13:45:22.704+0000][3.846s][info ][gc,heap        ] GC(4) Tenured: 6374K(174784K)->13756K(174784K)
+[2026-09-17T13:45:22.704+0000][3.846s][info ][gc,metaspace   ] GC(4) Metaspace: 21144K(21504K)->21144K(21504K) NonClass: 18548K(18752K)->18548K(18752K) Class: 2595K(2752K)->2595K(2752K)
+[2026-09-17T13:45:22.704+0000][3.846s][debug][gc,heap        ] GC(4) Heap after GC invocations=5 (full 1):
+[2026-09-17T13:45:22.704+0000][3.846s][debug][gc,heap        ] GC(4)  def new generation   total 78720K, used 0K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:22.704+0000][3.846s][debug][gc,heap        ] GC(4)   eden space 70016K,   0% used [0x00000000e7000000, 0x00000000e7000000, 0x00000000eb460000)
+[2026-09-17T13:45:22.704+0000][3.846s][debug][gc,heap        ] GC(4)   from space 8704K,   0% used [0x00000000eb460000, 0x00000000eb460000, 0x00000000ebce0000)
+[2026-09-17T13:45:22.704+0000][3.846s][debug][gc,heap        ] GC(4)   to   space 8704K,   0% used [0x00000000ebce0000, 0x00000000ebce0000, 0x00000000ec560000)
+[2026-09-17T13:45:22.704+0000][3.846s][debug][gc,heap        ] GC(4)  tenured generation   total 174784K, used 13756K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:22.704+0000][3.846s][debug][gc,heap        ] GC(4)    the space 174784K,   7% used [0x00000000ef550000, 0x00000000f02bf118, 0x00000000f02bf200, 0x00000000fa000000)
+[2026-09-17T13:45:22.704+0000][3.846s][debug][gc,heap        ] GC(4)  Metaspace       used 21144K, committed 21504K, reserved 1114112K
+[2026-09-17T13:45:22.704+0000][3.846s][debug][gc,heap        ] GC(4)   class space    used 2595K, committed 2752K, reserved 1048576K
+[2026-09-17T13:45:22.704+0000][3.846s][info ][gc             ] GC(4) Pause Full (Metadata GC Threshold) 69M->13M(247M) 81.910ms
+[2026-09-17T13:45:22.704+0000][3.846s][info ][gc,cpu         ] GC(4) User=0.06s Sys=0.00s Real=0.08s
+[2026-09-17T13:45:23.199+0000][4.341s][info ][gc,start       ] GC(5) Pause Young (Allocation Failure)
+[2026-09-17T13:45:23.199+0000][4.341s][debug][gc,heap        ] GC(5) Heap before GC invocations=5 (full 1):
+[2026-09-17T13:45:23.199+0000][4.341s][debug][gc,heap        ] GC(5)  def new generation   total 78720K, used 70016K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:23.199+0000][4.341s][debug][gc,heap        ] GC(5)   eden space 70016K, 100% used [0x00000000e7000000, 0x00000000eb460000, 0x00000000eb460000)
+[2026-09-17T13:45:23.199+0000][4.341s][debug][gc,heap        ] GC(5)   from space 8704K,   0% used [0x00000000eb460000, 0x00000000eb460000, 0x00000000ebce0000)
+[2026-09-17T13:45:23.199+0000][4.341s][debug][gc,heap        ] GC(5)   to   space 8704K,   0% used [0x00000000ebce0000, 0x00000000ebce0000, 0x00000000ec560000)
+[2026-09-17T13:45:23.199+0000][4.341s][debug][gc,heap        ] GC(5)  tenured generation   total 174784K, used 13756K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:23.199+0000][4.341s][debug][gc,heap        ] GC(5)    the space 174784K,   7% used [0x00000000ef550000, 0x00000000f02bf118, 0x00000000f02bf200, 0x00000000fa000000)
+[2026-09-17T13:45:23.199+0000][4.342s][debug][gc,heap        ] GC(5)  Metaspace       used 24600K, committed 25024K, reserved 1114112K
+[2026-09-17T13:45:23.199+0000][4.342s][debug][gc,heap        ] GC(5)   class space    used 3135K, committed 3328K, reserved 1048576K
+[2026-09-17T13:45:23.203+0000][4.346s][info ][gc,heap        ] GC(5) DefNew: 70016K(78720K)->1227K(78720K) Eden: 70016K(70016K)->0K(70016K) From: 0K(8704K)->1227K(8704K)
+[2026-09-17T13:45:23.203+0000][4.346s][info ][gc,heap        ] GC(5) Tenured: 13756K(174784K)->13756K(174784K)
+[2026-09-17T13:45:23.203+0000][4.346s][info ][gc,metaspace   ] GC(5) Metaspace: 24600K(25024K)->24600K(25024K) NonClass: 21464K(21696K)->21464K(21696K) Class: 3135K(3328K)->3135K(3328K)
+[2026-09-17T13:45:23.203+0000][4.346s][debug][gc,heap        ] GC(5) Heap after GC invocations=6 (full 1):
+[2026-09-17T13:45:23.203+0000][4.346s][debug][gc,heap        ] GC(5)  def new generation   total 78720K, used 1227K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:23.203+0000][4.346s][debug][gc,heap        ] GC(5)   eden space 70016K,   0% used [0x00000000e7000000, 0x00000000e7000000, 0x00000000eb460000)
+[2026-09-17T13:45:23.203+0000][4.346s][debug][gc,heap        ] GC(5)   from space 8704K,  14% used [0x00000000ebce0000, 0x00000000ebe12f20, 0x00000000ec560000)
+[2026-09-17T13:45:23.203+0000][4.346s][debug][gc,heap        ] GC(5)   to   space 8704K,   0% used [0x00000000eb460000, 0x00000000eb460000, 0x00000000ebce0000)
+[2026-09-17T13:45:23.203+0000][4.346s][debug][gc,heap        ] GC(5)  tenured generation   total 174784K, used 13756K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:23.203+0000][4.346s][debug][gc,heap        ] GC(5)    the space 174784K,   7% used [0x00000000ef550000, 0x00000000f02bf118, 0x00000000f02bf200, 0x00000000fa000000)
+[2026-09-17T13:45:23.203+0000][4.346s][debug][gc,heap        ] GC(5)  Metaspace       used 24600K, committed 25024K, reserved 1114112K
+[2026-09-17T13:45:23.203+0000][4.346s][debug][gc,heap        ] GC(5)   class space    used 3135K, committed 3328K, reserved 1048576K
+[2026-09-17T13:45:23.203+0000][4.346s][info ][gc             ] GC(5) Pause Young (Allocation Failure) 81M->14M(247M) 4.155ms
+[2026-09-17T13:45:23.203+0000][4.346s][info ][gc,cpu         ] GC(5) User=0.00s Sys=0.00s Real=0.00s
+[2026-09-17T13:45:23.614+0000][4.757s][info ][gc,start       ] GC(6) Pause Young (Allocation Failure)
+[2026-09-17T13:45:23.614+0000][4.757s][debug][gc,heap        ] GC(6) Heap before GC invocations=6 (full 1):
+[2026-09-17T13:45:23.614+0000][4.757s][debug][gc,heap        ] GC(6)  def new generation   total 78720K, used 71243K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:23.615+0000][4.757s][debug][gc,heap        ] GC(6)   eden space 70016K, 100% used [0x00000000e7000000, 0x00000000eb460000, 0x00000000eb460000)
+[2026-09-17T13:45:23.615+0000][4.757s][debug][gc,heap        ] GC(6)   from space 8704K,  14% used [0x00000000ebce0000, 0x00000000ebe12f20, 0x00000000ec560000)
+[2026-09-17T13:45:23.615+0000][4.757s][debug][gc,heap        ] GC(6)   to   space 8704K,   0% used [0x00000000eb460000, 0x00000000eb460000, 0x00000000ebce0000)
+[2026-09-17T13:45:23.615+0000][4.757s][debug][gc,heap        ] GC(6)  tenured generation   total 174784K, used 13756K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:23.615+0000][4.757s][debug][gc,heap        ] GC(6)    the space 174784K,   7% used [0x00000000ef550000, 0x00000000f02bf118, 0x00000000f02bf200, 0x00000000fa000000)
+[2026-09-17T13:45:23.615+0000][4.757s][debug][gc,heap        ] GC(6)  Metaspace       used 26902K, committed 27392K, reserved 1114112K
+[2026-09-17T13:45:23.615+0000][4.757s][debug][gc,heap        ] GC(6)   class space    used 3545K, committed 3776K, reserved 1048576K
+[2026-09-17T13:45:23.620+0000][4.762s][info ][gc,heap        ] GC(6) DefNew: 71243K(78720K)->2532K(78720K) Eden: 70016K(70016K)->0K(70016K) From: 1227K(8704K)->2532K(8704K)
+[2026-09-17T13:45:23.620+0000][4.762s][info ][gc,heap        ] GC(6) Tenured: 13756K(174784K)->13756K(174784K)
+[2026-09-17T13:45:23.620+0000][4.762s][info ][gc,metaspace   ] GC(6) Metaspace: 26902K(27392K)->26902K(27392K) NonClass: 23356K(23616K)->23356K(23616K) Class: 3545K(3776K)->3545K(3776K)
+[2026-09-17T13:45:23.620+0000][4.762s][debug][gc,heap        ] GC(6) Heap after GC invocations=7 (full 1):
+[2026-09-17T13:45:23.620+0000][4.762s][debug][gc,heap        ] GC(6)  def new generation   total 78720K, used 2532K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:23.620+0000][4.762s][debug][gc,heap        ] GC(6)   eden space 70016K,   0% used [0x00000000e7000000, 0x00000000e7000000, 0x00000000eb460000)
+[2026-09-17T13:45:23.620+0000][4.762s][debug][gc,heap        ] GC(6)   from space 8704K,  29% used [0x00000000eb460000, 0x00000000eb6d90d8, 0x00000000ebce0000)
+[2026-09-17T13:45:23.620+0000][4.762s][debug][gc,heap        ] GC(6)   to   space 8704K,   0% used [0x00000000ebce0000, 0x00000000ebce0000, 0x00000000ec560000)
+[2026-09-17T13:45:23.620+0000][4.762s][debug][gc,heap        ] GC(6)  tenured generation   total 174784K, used 13756K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:23.620+0000][4.762s][debug][gc,heap        ] GC(6)    the space 174784K,   7% used [0x00000000ef550000, 0x00000000f02bf118, 0x00000000f02bf200, 0x00000000fa000000)
+[2026-09-17T13:45:23.620+0000][4.762s][debug][gc,heap        ] GC(6)  Metaspace       used 26902K, committed 27392K, reserved 1114112K
+[2026-09-17T13:45:23.620+0000][4.762s][debug][gc,heap        ] GC(6)   class space    used 3545K, committed 3776K, reserved 1048576K
+[2026-09-17T13:45:23.620+0000][4.762s][info ][gc             ] GC(6) Pause Young (Allocation Failure) 83M->15M(247M) 5.189ms
+[2026-09-17T13:45:23.620+0000][4.762s][info ][gc,cpu         ] GC(6) User=0.01s Sys=0.00s Real=0.01s
+[2026-09-17T13:45:24.402+0000][5.544s][info ][gc,start       ] GC(7) Pause Young (Allocation Failure)
+[2026-09-17T13:45:24.402+0000][5.544s][debug][gc,heap        ] GC(7) Heap before GC invocations=7 (full 1):
+[2026-09-17T13:45:24.402+0000][5.544s][debug][gc,heap        ] GC(7)  def new generation   total 78720K, used 72548K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:24.402+0000][5.544s][debug][gc,heap        ] GC(7)   eden space 70016K, 100% used [0x00000000e7000000, 0x00000000eb460000, 0x00000000eb460000)
+[2026-09-17T13:45:24.402+0000][5.544s][debug][gc,heap        ] GC(7)   from space 8704K,  29% used [0x00000000eb460000, 0x00000000eb6d90d8, 0x00000000ebce0000)
+[2026-09-17T13:45:24.402+0000][5.544s][debug][gc,heap        ] GC(7)   to   space 8704K,   0% used [0x00000000ebce0000, 0x00000000ebce0000, 0x00000000ec560000)
+[2026-09-17T13:45:24.402+0000][5.544s][debug][gc,heap        ] GC(7)  tenured generation   total 174784K, used 13756K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:24.402+0000][5.544s][debug][gc,heap        ] GC(7)    the space 174784K,   7% used [0x00000000ef550000, 0x00000000f02bf118, 0x00000000f02bf200, 0x00000000fa000000)
+[2026-09-17T13:45:24.402+0000][5.544s][debug][gc,heap        ] GC(7)  Metaspace       used 31626K, committed 32128K, reserved 1114112K
+[2026-09-17T13:45:24.402+0000][5.544s][debug][gc,heap        ] GC(7)   class space    used 4160K, committed 4352K, reserved 1048576K
+[2026-09-17T13:45:24.411+0000][5.553s][info ][gc,heap        ] GC(7) DefNew: 72548K(78720K)->4989K(78720K) Eden: 70016K(70016K)->0K(70016K) From: 2532K(8704K)->4989K(8704K)
+[2026-09-17T13:45:24.411+0000][5.554s][info ][gc,heap        ] GC(7) Tenured: 13756K(174784K)->13756K(174784K)
+[2026-09-17T13:45:24.411+0000][5.554s][info ][gc,metaspace   ] GC(7) Metaspace: 31626K(32128K)->31626K(32128K) NonClass: 27466K(27776K)->27466K(27776K) Class: 4160K(4352K)->4160K(4352K)
+[2026-09-17T13:45:24.411+0000][5.554s][debug][gc,heap        ] GC(7) Heap after GC invocations=8 (full 1):
+[2026-09-17T13:45:24.411+0000][5.554s][debug][gc,heap        ] GC(7)  def new generation   total 78720K, used 4989K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:24.411+0000][5.554s][debug][gc,heap        ] GC(7)   eden space 70016K,   0% used [0x00000000e7000000, 0x00000000e7000000, 0x00000000eb460000)
+[2026-09-17T13:45:24.411+0000][5.554s][debug][gc,heap        ] GC(7)   from space 8704K,  57% used [0x00000000ebce0000, 0x00000000ec1bf7b0, 0x00000000ec560000)
+[2026-09-17T13:45:24.411+0000][5.554s][debug][gc,heap        ] GC(7)   to   space 8704K,   0% used [0x00000000eb460000, 0x00000000eb460000, 0x00000000ebce0000)
+[2026-09-17T13:45:24.411+0000][5.554s][debug][gc,heap        ] GC(7)  tenured generation   total 174784K, used 13756K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:24.411+0000][5.554s][debug][gc,heap        ] GC(7)    the space 174784K,   7% used [0x00000000ef550000, 0x00000000f02bf118, 0x00000000f02bf200, 0x00000000fa000000)
+[2026-09-17T13:45:24.411+0000][5.554s][debug][gc,heap        ] GC(7)  Metaspace       used 31626K, committed 32128K, reserved 1114112K
+[2026-09-17T13:45:24.411+0000][5.554s][debug][gc,heap        ] GC(7)   class space    used 4160K, committed 4352K, reserved 1048576K
+[2026-09-17T13:45:24.411+0000][5.554s][info ][gc             ] GC(7) Pause Young (Allocation Failure) 84M->18M(247M) 9.600ms
+[2026-09-17T13:45:24.411+0000][5.554s][info ][gc,cpu         ] GC(7) User=0.02s Sys=0.00s Real=0.01s
+[2026-09-17T13:45:24.915+0000][6.057s][info ][gc,start       ] GC(8) Pause Full (Metadata GC Threshold)
+[2026-09-17T13:45:24.915+0000][6.057s][debug][gc,heap        ] GC(8) Heap before GC invocations=8 (full 1):
+[2026-09-17T13:45:24.915+0000][6.057s][debug][gc,heap        ] GC(8)  def new generation   total 78720K, used 64566K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:24.915+0000][6.057s][debug][gc,heap        ] GC(8)   eden space 70016K,  85% used [0x00000000e7000000, 0x00000000eaa2e410, 0x00000000eb460000)
+[2026-09-17T13:45:24.915+0000][6.057s][debug][gc,heap        ] GC(8)   from space 8704K,  57% used [0x00000000ebce0000, 0x00000000ec1bf7b0, 0x00000000ec560000)
+[2026-09-17T13:45:24.915+0000][6.057s][debug][gc,heap        ] GC(8)   to   space 8704K,   0% used [0x00000000eb460000, 0x00000000eb460000, 0x00000000ebce0000)
+[2026-09-17T13:45:24.915+0000][6.057s][debug][gc,heap        ] GC(8)  tenured generation   total 174784K, used 13756K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:24.915+0000][6.057s][debug][gc,heap        ] GC(8)    the space 174784K,   7% used [0x00000000ef550000, 0x00000000f02bf118, 0x00000000f02bf200, 0x00000000fa000000)
+[2026-09-17T13:45:24.915+0000][6.057s][debug][gc,heap        ] GC(8)  Metaspace       used 35352K, committed 35840K, reserved 1114112K
+[2026-09-17T13:45:24.915+0000][6.057s][debug][gc,heap        ] GC(8)   class space    used 4678K, committed 4928K, reserved 1048576K
+[2026-09-17T13:45:24.915+0000][6.057s][info ][gc,phases,start] GC(8) Phase 1: Mark live objects
+[2026-09-17T13:45:24.939+0000][6.081s][info ][gc,phases      ] GC(8) Phase 1: Mark live objects 24.520ms
+[2026-09-17T13:45:24.939+0000][6.082s][info ][gc,phases,start] GC(8) Phase 2: Compute new object addresses
+[2026-09-17T13:45:24.952+0000][6.095s][info ][gc,phases      ] GC(8) Phase 2: Compute new object addresses 13.062ms
+[2026-09-17T13:45:24.952+0000][6.095s][info ][gc,phases,start] GC(8) Phase 3: Adjust pointers
+[2026-09-17T13:45:24.963+0000][6.106s][info ][gc,phases      ] GC(8) Phase 3: Adjust pointers 10.900ms
+[2026-09-17T13:45:24.963+0000][6.106s][info ][gc,phases,start] GC(8) Phase 4: Move objects
+[2026-09-17T13:45:24.998+0000][6.140s][info ][gc,phases      ] GC(8) Phase 4: Move objects 34.221ms
+[2026-09-17T13:45:24.998+0000][6.140s][info ][gc,heap        ] GC(8) DefNew: 64566K(78720K)->0K(78720K) Eden: 59577K(70016K)->0K(70016K) From: 4989K(8704K)->0K(8704K)
+[2026-09-17T13:45:24.998+0000][6.140s][info ][gc,heap        ] GC(8) Tenured: 13756K(174784K)->20256K(174784K)
+[2026-09-17T13:45:24.998+0000][6.140s][info ][gc,metaspace   ] GC(8) Metaspace: 35352K(35840K)->35352K(35840K) NonClass: 30674K(30912K)->30674K(30912K) Class: 4678K(4928K)->4678K(4928K)
+[2026-09-17T13:45:24.998+0000][6.140s][debug][gc,heap        ] GC(8) Heap after GC invocations=9 (full 2):
+[2026-09-17T13:45:24.998+0000][6.140s][debug][gc,heap        ] GC(8)  def new generation   total 78720K, used 0K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:24.998+0000][6.140s][debug][gc,heap        ] GC(8)   eden space 70016K,   0% used [0x00000000e7000000, 0x00000000e7000000, 0x00000000eb460000)
+[2026-09-17T13:45:24.998+0000][6.140s][debug][gc,heap        ] GC(8)   from space 8704K,   0% used [0x00000000ebce0000, 0x00000000ebce0000, 0x00000000ec560000)
+[2026-09-17T13:45:24.998+0000][6.140s][debug][gc,heap        ] GC(8)   to   space 8704K,   0% used [0x00000000eb460000, 0x00000000eb460000, 0x00000000ebce0000)
+[2026-09-17T13:45:24.998+0000][6.140s][debug][gc,heap        ] GC(8)  tenured generation   total 174784K, used 20256K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:24.998+0000][6.140s][debug][gc,heap        ] GC(8)    the space 174784K,  11% used [0x00000000ef550000, 0x00000000f09181f0, 0x00000000f0918200, 0x00000000fa000000)
+[2026-09-17T13:45:24.998+0000][6.140s][debug][gc,heap        ] GC(8)  Metaspace       used 35352K, committed 35840K, reserved 1114112K
+[2026-09-17T13:45:24.998+0000][6.140s][debug][gc,heap        ] GC(8)   class space    used 4678K, committed 4928K, reserved 1048576K
+[2026-09-17T13:45:24.998+0000][6.140s][info ][gc             ] GC(8) Pause Full (Metadata GC Threshold) 76M->19M(247M) 83.512ms
+[2026-09-17T13:45:24.998+0000][6.140s][info ][gc,cpu         ] GC(8) User=0.06s Sys=0.01s Real=0.09s
+[2026-09-17T13:45:25.604+0000][6.746s][info ][gc,start       ] GC(9) Pause Young (Allocation Failure)
+[2026-09-17T13:45:25.604+0000][6.746s][debug][gc,heap        ] GC(9) Heap before GC invocations=9 (full 2):
+[2026-09-17T13:45:25.604+0000][6.746s][debug][gc,heap        ] GC(9)  def new generation   total 78720K, used 70016K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:25.604+0000][6.746s][debug][gc,heap        ] GC(9)   eden space 70016K, 100% used [0x00000000e7000000, 0x00000000eb460000, 0x00000000eb460000)
+[2026-09-17T13:45:25.604+0000][6.746s][debug][gc,heap        ] GC(9)   from space 8704K,   0% used [0x00000000ebce0000, 0x00000000ebce0000, 0x00000000ec560000)
+[2026-09-17T13:45:25.604+0000][6.746s][debug][gc,heap        ] GC(9)   to   space 8704K,   0% used [0x00000000eb460000, 0x00000000eb460000, 0x00000000ebce0000)
+[2026-09-17T13:45:25.604+0000][6.746s][debug][gc,heap        ] GC(9)  tenured generation   total 174784K, used 20256K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:25.604+0000][6.746s][debug][gc,heap        ] GC(9)    the space 174784K,  11% used [0x00000000ef550000, 0x00000000f09181f0, 0x00000000f0918200, 0x00000000fa000000)
+[2026-09-17T13:45:25.604+0000][6.746s][debug][gc,heap        ] GC(9)  Metaspace       used 39743K, committed 40384K, reserved 1114112K
+[2026-09-17T13:45:25.604+0000][6.746s][debug][gc,heap        ] GC(9)   class space    used 5210K, committed 5504K, reserved 1048576K
+[2026-09-17T13:45:25.611+0000][6.753s][info ][gc,heap        ] GC(9) DefNew: 70016K(78720K)->2513K(78720K) Eden: 70016K(70016K)->0K(70016K) From: 0K(8704K)->2513K(8704K)
+[2026-09-17T13:45:25.611+0000][6.753s][info ][gc,heap        ] GC(9) Tenured: 20256K(174784K)->20256K(174784K)
+[2026-09-17T13:45:25.611+0000][6.753s][info ][gc,metaspace   ] GC(9) Metaspace: 39743K(40384K)->39743K(40384K) NonClass: 34532K(34880K)->34532K(34880K) Class: 5210K(5504K)->5210K(5504K)
+[2026-09-17T13:45:25.611+0000][6.753s][debug][gc,heap        ] GC(9) Heap after GC invocations=10 (full 2):
+[2026-09-17T13:45:25.611+0000][6.753s][debug][gc,heap        ] GC(9)  def new generation   total 78720K, used 2513K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:25.611+0000][6.753s][debug][gc,heap        ] GC(9)   eden space 70016K,   0% used [0x00000000e7000000, 0x00000000e7000000, 0x00000000eb460000)
+[2026-09-17T13:45:25.611+0000][6.753s][debug][gc,heap        ] GC(9)   from space 8704K,  28% used [0x00000000eb460000, 0x00000000eb6d4530, 0x00000000ebce0000)
+[2026-09-17T13:45:25.611+0000][6.753s][debug][gc,heap        ] GC(9)   to   space 8704K,   0% used [0x00000000ebce0000, 0x00000000ebce0000, 0x00000000ec560000)
+[2026-09-17T13:45:25.611+0000][6.753s][debug][gc,heap        ] GC(9)  tenured generation   total 174784K, used 20256K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:25.611+0000][6.753s][debug][gc,heap        ] GC(9)    the space 174784K,  11% used [0x00000000ef550000, 0x00000000f09181f0, 0x00000000f0918200, 0x00000000fa000000)
+[2026-09-17T13:45:25.611+0000][6.753s][debug][gc,heap        ] GC(9)  Metaspace       used 39743K, committed 40384K, reserved 1114112K
+[2026-09-17T13:45:25.611+0000][6.753s][debug][gc,heap        ] GC(9)   class space    used 5210K, committed 5504K, reserved 1048576K
+[2026-09-17T13:45:25.611+0000][6.753s][info ][gc             ] GC(9) Pause Young (Allocation Failure) 88M->22M(247M) 6.843ms
+[2026-09-17T13:45:25.611+0000][6.753s][info ][gc,cpu         ] GC(9) User=0.01s Sys=0.00s Real=0.01s
+[2026-09-17T13:45:25.931+0000][7.074s][info ][gc,start       ] GC(10) Pause Young (Allocation Failure)
+[2026-09-17T13:45:25.931+0000][7.074s][debug][gc,heap        ] GC(10) Heap before GC invocations=10 (full 2):
+[2026-09-17T13:45:25.931+0000][7.074s][debug][gc,heap        ] GC(10)  def new generation   total 78720K, used 72529K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:25.931+0000][7.074s][debug][gc,heap        ] GC(10)   eden space 70016K, 100% used [0x00000000e7000000, 0x00000000eb460000, 0x00000000eb460000)
+[2026-09-17T13:45:25.931+0000][7.074s][debug][gc,heap        ] GC(10)   from space 8704K,  28% used [0x00000000eb460000, 0x00000000eb6d4530, 0x00000000ebce0000)
+[2026-09-17T13:45:25.931+0000][7.074s][debug][gc,heap        ] GC(10)   to   space 8704K,   0% used [0x00000000ebce0000, 0x00000000ebce0000, 0x00000000ec560000)
+[2026-09-17T13:45:25.931+0000][7.074s][debug][gc,heap        ] GC(10)  tenured generation   total 174784K, used 20256K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:25.931+0000][7.074s][debug][gc,heap        ] GC(10)    the space 174784K,  11% used [0x00000000ef550000, 0x00000000f09181f0, 0x00000000f0918200, 0x00000000fa000000)
+[2026-09-17T13:45:25.931+0000][7.074s][debug][gc,heap        ] GC(10)  Metaspace       used 45408K, committed 46016K, reserved 1114112K
+[2026-09-17T13:45:25.931+0000][7.074s][debug][gc,heap        ] GC(10)   class space    used 5878K, committed 6144K, reserved 1048576K
+[2026-09-17T13:45:25.937+0000][7.079s][info ][gc,heap        ] GC(10) DefNew: 72529K(78720K)->3235K(78720K) Eden: 70016K(70016K)->0K(70016K) From: 2513K(8704K)->3235K(8704K)
+[2026-09-17T13:45:25.937+0000][7.079s][info ][gc,heap        ] GC(10) Tenured: 20256K(174784K)->20256K(174784K)
+[2026-09-17T13:45:25.937+0000][7.079s][info ][gc,metaspace   ] GC(10) Metaspace: 45408K(46016K)->45408K(46016K) NonClass: 39530K(39872K)->39530K(39872K) Class: 5878K(6144K)->5878K(6144K)
+[2026-09-17T13:45:25.937+0000][7.079s][debug][gc,heap        ] GC(10) Heap after GC invocations=11 (full 2):
+[2026-09-17T13:45:25.937+0000][7.079s][debug][gc,heap        ] GC(10)  def new generation   total 78720K, used 3235K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:25.937+0000][7.079s][debug][gc,heap        ] GC(10)   eden space 70016K,   0% used [0x00000000e7000000, 0x00000000e7000000, 0x00000000eb460000)
+[2026-09-17T13:45:25.937+0000][7.079s][debug][gc,heap        ] GC(10)   from space 8704K,  37% used [0x00000000ebce0000, 0x00000000ec008d08, 0x00000000ec560000)
+[2026-09-17T13:45:25.937+0000][7.079s][debug][gc,heap        ] GC(10)   to   space 8704K,   0% used [0x00000000eb460000, 0x00000000eb460000, 0x00000000ebce0000)
+[2026-09-17T13:45:25.937+0000][7.079s][debug][gc,heap        ] GC(10)  tenured generation   total 174784K, used 20256K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:25.937+0000][7.079s][debug][gc,heap        ] GC(10)    the space 174784K,  11% used [0x00000000ef550000, 0x00000000f09181f0, 0x00000000f0918200, 0x00000000fa000000)
+[2026-09-17T13:45:25.937+0000][7.079s][debug][gc,heap        ] GC(10)  Metaspace       used 45408K, committed 46016K, reserved 1114112K
+[2026-09-17T13:45:25.937+0000][7.079s][debug][gc,heap        ] GC(10)   class space    used 5878K, committed 6144K, reserved 1048576K
+[2026-09-17T13:45:25.937+0000][7.079s][info ][gc             ] GC(10) Pause Young (Allocation Failure) 90M->22M(247M) 5.600ms
+[2026-09-17T13:45:25.937+0000][7.079s][info ][gc,cpu         ] GC(10) User=0.02s Sys=0.00s Real=0.01s
+[2026-09-17T13:45:26.811+0000][7.953s][info ][gc,start       ] GC(11) Pause Young (Allocation Failure)
+[2026-09-17T13:45:26.811+0000][7.953s][debug][gc,heap        ] GC(11) Heap before GC invocations=11 (full 2):
+[2026-09-17T13:45:26.811+0000][7.953s][debug][gc,heap        ] GC(11)  def new generation   total 78720K, used 73251K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:26.811+0000][7.953s][debug][gc,heap        ] GC(11)   eden space 70016K, 100% used [0x00000000e7000000, 0x00000000eb460000, 0x00000000eb460000)
+[2026-09-17T13:45:26.811+0000][7.953s][debug][gc,heap        ] GC(11)   from space 8704K,  37% used [0x00000000ebce0000, 0x00000000ec008d08, 0x00000000ec560000)
+[2026-09-17T13:45:26.811+0000][7.953s][debug][gc,heap        ] GC(11)   to   space 8704K,   0% used [0x00000000eb460000, 0x00000000eb460000, 0x00000000ebce0000)
+[2026-09-17T13:45:26.811+0000][7.953s][debug][gc,heap        ] GC(11)  tenured generation   total 174784K, used 20256K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:26.811+0000][7.953s][debug][gc,heap        ] GC(11)    the space 174784K,  11% used [0x00000000ef550000, 0x00000000f09181f0, 0x00000000f0918200, 0x00000000fa000000)
+[2026-09-17T13:45:26.811+0000][7.953s][debug][gc,heap        ] GC(11)  Metaspace       used 52840K, committed 53504K, reserved 1114112K
+[2026-09-17T13:45:26.811+0000][7.953s][debug][gc,heap        ] GC(11)   class space    used 6823K, committed 7104K, reserved 1048576K
+[2026-09-17T13:45:26.820+0000][7.962s][info ][gc,heap        ] GC(11) DefNew: 73251K(78720K)->5093K(78720K) Eden: 70016K(70016K)->0K(70016K) From: 3235K(8704K)->5093K(8704K)
+[2026-09-17T13:45:26.820+0000][7.962s][info ][gc,heap        ] GC(11) Tenured: 20256K(174784K)->20256K(174784K)
+[2026-09-17T13:45:26.820+0000][7.962s][info ][gc,metaspace   ] GC(11) Metaspace: 52840K(53504K)->52840K(53504K) NonClass: 46016K(46400K)->46016K(46400K) Class: 6823K(7104K)->6823K(7104K)
+[2026-09-17T13:45:26.820+0000][7.962s][debug][gc,heap        ] GC(11) Heap after GC invocations=12 (full 2):
+[2026-09-17T13:45:26.820+0000][7.962s][debug][gc,heap        ] GC(11)  def new generation   total 78720K, used 5093K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:26.820+0000][7.962s][debug][gc,heap        ] GC(11)   eden space 70016K,   0% used [0x00000000e7000000, 0x00000000e7000000, 0x00000000eb460000)
+[2026-09-17T13:45:26.820+0000][7.962s][debug][gc,heap        ] GC(11)   from space 8704K,  58% used [0x00000000eb460000, 0x00000000eb9596b0, 0x00000000ebce0000)
+[2026-09-17T13:45:26.820+0000][7.962s][debug][gc,heap        ] GC(11)   to   space 8704K,   0% used [0x00000000ebce0000, 0x00000000ebce0000, 0x00000000ec560000)
+[2026-09-17T13:45:26.820+0000][7.962s][debug][gc,heap        ] GC(11)  tenured generation   total 174784K, used 20256K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:26.820+0000][7.962s][debug][gc,heap        ] GC(11)    the space 174784K,  11% used [0x00000000ef550000, 0x00000000f09181f0, 0x00000000f0918200, 0x00000000fa000000)
+[2026-09-17T13:45:26.820+0000][7.962s][debug][gc,heap        ] GC(11)  Metaspace       used 52840K, committed 53504K, reserved 1114112K
+[2026-09-17T13:45:26.820+0000][7.962s][debug][gc,heap        ] GC(11)   class space    used 6823K, committed 7104K, reserved 1048576K
+[2026-09-17T13:45:26.820+0000][7.962s][info ][gc             ] GC(11) Pause Young (Allocation Failure) 91M->24M(247M) 9.260ms
+[2026-09-17T13:45:26.820+0000][7.962s][info ][gc,cpu         ] GC(11) User=0.01s Sys=0.00s Real=0.01s
+[2026-09-17T13:45:27.496+0000][8.638s][info ][gc,start       ] GC(12) Pause Young (Allocation Failure)
+[2026-09-17T13:45:27.496+0000][8.638s][debug][gc,heap        ] GC(12) Heap before GC invocations=12 (full 2):
+[2026-09-17T13:45:27.496+0000][8.638s][debug][gc,heap        ] GC(12)  def new generation   total 78720K, used 75109K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:27.496+0000][8.638s][debug][gc,heap        ] GC(12)   eden space 70016K, 100% used [0x00000000e7000000, 0x00000000eb460000, 0x00000000eb460000)
+[2026-09-17T13:45:27.496+0000][8.638s][debug][gc,heap        ] GC(12)   from space 8704K,  58% used [0x00000000eb460000, 0x00000000eb9596b0, 0x00000000ebce0000)
+[2026-09-17T13:45:27.496+0000][8.638s][debug][gc,heap        ] GC(12)   to   space 8704K,   0% used [0x00000000ebce0000, 0x00000000ebce0000, 0x00000000ec560000)
+[2026-09-17T13:45:27.496+0000][8.638s][debug][gc,heap        ] GC(12)  tenured generation   total 174784K, used 20256K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:27.496+0000][8.638s][debug][gc,heap        ] GC(12)    the space 174784K,  11% used [0x00000000ef550000, 0x00000000f09181f0, 0x00000000f0918200, 0x00000000fa000000)
+[2026-09-17T13:45:27.496+0000][8.638s][debug][gc,heap        ] GC(12)  Metaspace       used 57472K, committed 58176K, reserved 1114112K
+[2026-09-17T13:45:27.496+0000][8.638s][debug][gc,heap        ] GC(12)   class space    used 7553K, committed 7872K, reserved 1048576K
+[2026-09-17T13:45:27.508+0000][8.650s][info ][gc,heap        ] GC(12) DefNew: 75109K(78720K)->4035K(78720K) Eden: 70016K(70016K)->0K(70016K) From: 5093K(8704K)->4035K(8704K)
+[2026-09-17T13:45:27.508+0000][8.650s][info ][gc,heap        ] GC(12) Tenured: 20256K(174784K)->22666K(174784K)
+[2026-09-17T13:45:27.508+0000][8.650s][info ][gc,metaspace   ] GC(12) Metaspace: 57472K(58176K)->57472K(58176K) NonClass: 49918K(50304K)->49918K(50304K) Class: 7553K(7872K)->7553K(7872K)
+[2026-09-17T13:45:27.508+0000][8.650s][debug][gc,heap        ] GC(12) Heap after GC invocations=13 (full 2):
+[2026-09-17T13:45:27.508+0000][8.650s][debug][gc,heap        ] GC(12)  def new generation   total 78720K, used 4035K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:27.508+0000][8.650s][debug][gc,heap        ] GC(12)   eden space 70016K,   0% used [0x00000000e7000000, 0x00000000e7000000, 0x00000000eb460000)
+[2026-09-17T13:45:27.508+0000][8.650s][debug][gc,heap        ] GC(12)   from space 8704K,  46% used [0x00000000ebce0000, 0x00000000ec0d0c58, 0x00000000ec560000)
+[2026-09-17T13:45:27.508+0000][8.650s][debug][gc,heap        ] GC(12)   to   space 8704K,   0% used [0x00000000eb460000, 0x00000000eb460000, 0x00000000ebce0000)
+[2026-09-17T13:45:27.508+0000][8.650s][debug][gc,heap        ] GC(12)  tenured generation   total 174784K, used 22666K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:27.508+0000][8.650s][debug][gc,heap        ] GC(12)    the space 174784K,  12% used [0x00000000ef550000, 0x00000000f0b72818, 0x00000000f0b72a00, 0x00000000fa000000)
+[2026-09-17T13:45:27.508+0000][8.650s][debug][gc,heap        ] GC(12)  Metaspace       used 57472K, committed 58176K, reserved 1114112K
+[2026-09-17T13:45:27.508+0000][8.650s][debug][gc,heap        ] GC(12)   class space    used 7553K, committed 7872K, reserved 1048576K
+[2026-09-17T13:45:27.508+0000][8.650s][info ][gc             ] GC(12) Pause Young (Allocation Failure) 93M->26M(247M) 12.159ms
+[2026-09-17T13:45:27.508+0000][8.650s][info ][gc,cpu         ] GC(12) User=0.02s Sys=0.00s Real=0.01s
+[2026-09-17T13:45:27.726+0000][8.868s][info ][gc,start       ] GC(13) Pause Full (Metadata GC Threshold)
+[2026-09-17T13:45:27.726+0000][8.868s][debug][gc,heap        ] GC(13) Heap before GC invocations=13 (full 2):
+[2026-09-17T13:45:27.726+0000][8.868s][debug][gc,heap        ] GC(13)  def new generation   total 78720K, used 43645K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:27.726+0000][8.868s][debug][gc,heap        ] GC(13)   eden space 70016K,  56% used [0x00000000e7000000, 0x00000000e96aea40, 0x00000000eb460000)
+[2026-09-17T13:45:27.726+0000][8.868s][debug][gc,heap        ] GC(13)   from space 8704K,  46% used [0x00000000ebce0000, 0x00000000ec0d0c58, 0x00000000ec560000)
+[2026-09-17T13:45:27.726+0000][8.868s][debug][gc,heap        ] GC(13)   to   space 8704K,   0% used [0x00000000eb460000, 0x00000000eb460000, 0x00000000ebce0000)
+[2026-09-17T13:45:27.726+0000][8.868s][debug][gc,heap        ] GC(13)  tenured generation   total 174784K, used 22666K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:27.726+0000][8.868s][debug][gc,heap        ] GC(13)    the space 174784K,  12% used [0x00000000ef550000, 0x00000000f0b72818, 0x00000000f0b72a00, 0x00000000fa000000)
+[2026-09-17T13:45:27.726+0000][8.868s][debug][gc,heap        ] GC(13)  Metaspace       used 59123K, committed 59776K, reserved 1114112K
+[2026-09-17T13:45:27.726+0000][8.868s][debug][gc,heap        ] GC(13)   class space    used 7940K, committed 8256K, reserved 1048576K
+[2026-09-17T13:45:27.726+0000][8.868s][info ][gc,phases,start] GC(13) Phase 1: Mark live objects
+[2026-09-17T13:45:27.808+0000][8.950s][info ][gc,phases      ] GC(13) Phase 1: Mark live objects 81.740ms
+[2026-09-17T13:45:27.808+0000][8.950s][info ][gc,phases,start] GC(13) Phase 2: Compute new object addresses
+[2026-09-17T13:45:27.820+0000][8.962s][info ][gc,phases      ] GC(13) Phase 2: Compute new object addresses 12.099ms
+[2026-09-17T13:45:27.820+0000][8.962s][info ][gc,phases,start] GC(13) Phase 3: Adjust pointers
+[2026-09-17T13:45:27.835+0000][8.977s][info ][gc,phases      ] GC(13) Phase 3: Adjust pointers 15.190ms
+[2026-09-17T13:45:27.835+0000][8.977s][info ][gc,phases,start] GC(13) Phase 4: Move objects
+[2026-09-17T13:45:27.838+0000][8.980s][info ][gc,phases      ] GC(13) Phase 4: Move objects 3.060ms
+[2026-09-17T13:45:27.838+0000][8.981s][info ][gc,heap        ] GC(13) DefNew: 43645K(78720K)->0K(78720K) Eden: 39610K(70016K)->0K(70016K) From: 4035K(8704K)->0K(8704K)
+[2026-09-17T13:45:27.838+0000][8.981s][info ][gc,heap        ] GC(13) Tenured: 22666K(174784K)->27742K(174784K)
+[2026-09-17T13:45:27.838+0000][8.981s][info ][gc,metaspace   ] GC(13) Metaspace: 59123K(59776K)->59123K(59776K) NonClass: 51182K(51520K)->51182K(51520K) Class: 7940K(8256K)->7940K(8256K)
+[2026-09-17T13:45:27.838+0000][8.981s][debug][gc,heap        ] GC(13) Heap after GC invocations=14 (full 3):
+[2026-09-17T13:45:27.839+0000][8.981s][debug][gc,heap        ] GC(13)  def new generation   total 78720K, used 0K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:27.839+0000][8.981s][debug][gc,heap        ] GC(13)   eden space 70016K,   0% used [0x00000000e7000000, 0x00000000e7000000, 0x00000000eb460000)
+[2026-09-17T13:45:27.839+0000][8.981s][debug][gc,heap        ] GC(13)   from space 8704K,   0% used [0x00000000ebce0000, 0x00000000ebce0000, 0x00000000ec560000)
+[2026-09-17T13:45:27.839+0000][8.981s][debug][gc,heap        ] GC(13)   to   space 8704K,   0% used [0x00000000eb460000, 0x00000000eb460000, 0x00000000ebce0000)
+[2026-09-17T13:45:27.839+0000][8.981s][debug][gc,heap        ] GC(13)  tenured generation   total 174784K, used 27742K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:27.839+0000][8.981s][debug][gc,heap        ] GC(13)    the space 174784K,  15% used [0x00000000ef550000, 0x00000000f1067a58, 0x00000000f1067c00, 0x00000000fa000000)
+[2026-09-17T13:45:27.839+0000][8.981s][debug][gc,heap        ] GC(13)  Metaspace       used 59123K, committed 59776K, reserved 1114112K
+[2026-09-17T13:45:27.839+0000][8.981s][debug][gc,heap        ] GC(13)   class space    used 7940K, committed 8256K, reserved 1048576K
+[2026-09-17T13:45:27.839+0000][8.981s][info ][gc             ] GC(13) Pause Full (Metadata GC Threshold) 64M->27M(247M) 112.909ms
+[2026-09-17T13:45:27.839+0000][8.981s][info ][gc,cpu         ] GC(13) User=0.06s Sys=0.00s Real=0.11s
+[2026-09-17T13:45:28.238+0000][9.381s][info ][gc,start       ] GC(14) Pause Young (Allocation Failure)
+[2026-09-17T13:45:28.238+0000][9.381s][debug][gc,heap        ] GC(14) Heap before GC invocations=14 (full 3):
+[2026-09-17T13:45:28.238+0000][9.381s][debug][gc,heap        ] GC(14)  def new generation   total 78720K, used 70016K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:28.238+0000][9.381s][debug][gc,heap        ] GC(14)   eden space 70016K, 100% used [0x00000000e7000000, 0x00000000eb460000, 0x00000000eb460000)
+[2026-09-17T13:45:28.238+0000][9.381s][debug][gc,heap        ] GC(14)   from space 8704K,   0% used [0x00000000ebce0000, 0x00000000ebce0000, 0x00000000ec560000)
+[2026-09-17T13:45:28.238+0000][9.381s][debug][gc,heap        ] GC(14)   to   space 8704K,   0% used [0x00000000eb460000, 0x00000000eb460000, 0x00000000ebce0000)
+[2026-09-17T13:45:28.238+0000][9.381s][debug][gc,heap        ] GC(14)  tenured generation   total 174784K, used 27742K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:28.239+0000][9.381s][debug][gc,heap        ] GC(14)    the space 174784K,  15% used [0x00000000ef550000, 0x00000000f1067a58, 0x00000000f1067c00, 0x00000000fa000000)
+[2026-09-17T13:45:28.239+0000][9.381s][debug][gc,heap        ] GC(14)  Metaspace       used 63106K, committed 63808K, reserved 1114112K
+[2026-09-17T13:45:28.239+0000][9.381s][debug][gc,heap        ] GC(14)   class space    used 8578K, committed 8896K, reserved 1048576K
+[2026-09-17T13:45:28.242+0000][9.385s][info ][gc,heap        ] GC(14) DefNew: 70016K(78720K)->872K(78720K) Eden: 70016K(70016K)->0K(70016K) From: 0K(8704K)->872K(8704K)
+[2026-09-17T13:45:28.242+0000][9.385s][info ][gc,heap        ] GC(14) Tenured: 27742K(174784K)->27742K(174784K)
+[2026-09-17T13:45:28.242+0000][9.385s][info ][gc,metaspace   ] GC(14) Metaspace: 63106K(63808K)->63106K(63808K) NonClass: 54528K(54912K)->54528K(54912K) Class: 8578K(8896K)->8578K(8896K)
+[2026-09-17T13:45:28.242+0000][9.385s][debug][gc,heap        ] GC(14) Heap after GC invocations=15 (full 3):
+[2026-09-17T13:45:28.242+0000][9.385s][debug][gc,heap        ] GC(14)  def new generation   total 78720K, used 872K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:28.242+0000][9.385s][debug][gc,heap        ] GC(14)   eden space 70016K,   0% used [0x00000000e7000000, 0x00000000e7000000, 0x00000000eb460000)
+[2026-09-17T13:45:28.242+0000][9.385s][debug][gc,heap        ] GC(14)   from space 8704K,  10% used [0x00000000eb460000, 0x00000000eb53a2a0, 0x00000000ebce0000)
+[2026-09-17T13:45:28.242+0000][9.385s][debug][gc,heap        ] GC(14)   to   space 8704K,   0% used [0x00000000ebce0000, 0x00000000ebce0000, 0x00000000ec560000)
+[2026-09-17T13:45:28.242+0000][9.385s][debug][gc,heap        ] GC(14)  tenured generation   total 174784K, used 27742K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:28.242+0000][9.385s][debug][gc,heap        ] GC(14)    the space 174784K,  15% used [0x00000000ef550000, 0x00000000f1067a58, 0x00000000f1067c00, 0x00000000fa000000)
+[2026-09-17T13:45:28.242+0000][9.385s][debug][gc,heap        ] GC(14)  Metaspace       used 63106K, committed 63808K, reserved 1114112K
+[2026-09-17T13:45:28.242+0000][9.385s][debug][gc,heap        ] GC(14)   class space    used 8578K, committed 8896K, reserved 1048576K
+[2026-09-17T13:45:28.242+0000][9.385s][info ][gc             ] GC(14) Pause Young (Allocation Failure) 95M->27M(247M) 3.943ms
+[2026-09-17T13:45:28.242+0000][9.385s][info ][gc,cpu         ] GC(14) User=0.00s Sys=0.00s Real=0.00s
+[2026-09-17T13:45:28.910+0000][10.053s][info ][gc,start       ] GC(15) Pause Young (Allocation Failure)
+[2026-09-17T13:45:28.910+0000][10.053s][debug][gc,heap        ] GC(15) Heap before GC invocations=15 (full 3):
+[2026-09-17T13:45:28.910+0000][10.053s][debug][gc,heap        ] GC(15)  def new generation   total 78720K, used 70888K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:28.910+0000][10.053s][debug][gc,heap        ] GC(15)   eden space 70016K, 100% used [0x00000000e7000000, 0x00000000eb460000, 0x00000000eb460000)
+[2026-09-17T13:45:28.910+0000][10.053s][debug][gc,heap        ] GC(15)   from space 8704K,  10% used [0x00000000eb460000, 0x00000000eb53a2a0, 0x00000000ebce0000)
+[2026-09-17T13:45:28.910+0000][10.053s][debug][gc,heap        ] GC(15)   to   space 8704K,   0% used [0x00000000ebce0000, 0x00000000ebce0000, 0x00000000ec560000)
+[2026-09-17T13:45:28.910+0000][10.053s][debug][gc,heap        ] GC(15)  tenured generation   total 174784K, used 27742K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:28.910+0000][10.053s][debug][gc,heap        ] GC(15)    the space 174784K,  15% used [0x00000000ef550000, 0x00000000f1067a58, 0x00000000f1067c00, 0x00000000fa000000)
+[2026-09-17T13:45:28.910+0000][10.053s][debug][gc,heap        ] GC(15)  Metaspace       used 68760K, committed 69504K, reserved 1114112K
+[2026-09-17T13:45:28.910+0000][10.053s][debug][gc,heap        ] GC(15)   class space    used 9280K, committed 9600K, reserved 1048576K
+[2026-09-17T13:45:28.917+0000][10.059s][info ][gc,heap        ] GC(15) DefNew: 70888K(78720K)->2591K(78720K) Eden: 70016K(70016K)->0K(70016K) From: 872K(8704K)->2591K(8704K)
+[2026-09-17T13:45:28.917+0000][10.059s][info ][gc,heap        ] GC(15) Tenured: 27742K(174784K)->27742K(174784K)
+[2026-09-17T13:45:28.917+0000][10.059s][info ][gc,metaspace   ] GC(15) Metaspace: 68760K(69504K)->68760K(69504K) NonClass: 59479K(59904K)->59479K(59904K) Class: 9280K(9600K)->9280K(9600K)
+[2026-09-17T13:45:28.917+0000][10.059s][debug][gc,heap        ] GC(15) Heap after GC invocations=16 (full 3):
+[2026-09-17T13:45:28.917+0000][10.059s][debug][gc,heap        ] GC(15)  def new generation   total 78720K, used 2591K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:28.917+0000][10.059s][debug][gc,heap        ] GC(15)   eden space 70016K,   0% used [0x00000000e7000000, 0x00000000e7000000, 0x00000000eb460000)
+[2026-09-17T13:45:28.917+0000][10.059s][debug][gc,heap        ] GC(15)   from space 8704K,  29% used [0x00000000ebce0000, 0x00000000ebf67c48, 0x00000000ec560000)
+[2026-09-17T13:45:28.917+0000][10.059s][debug][gc,heap        ] GC(15)   to   space 8704K,   0% used [0x00000000eb460000, 0x00000000eb460000, 0x00000000ebce0000)
+[2026-09-17T13:45:28.917+0000][10.059s][debug][gc,heap        ] GC(15)  tenured generation   total 174784K, used 27742K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:28.917+0000][10.059s][debug][gc,heap        ] GC(15)    the space 174784K,  15% used [0x00000000ef550000, 0x00000000f1067a58, 0x00000000f1067c00, 0x00000000fa000000)
+[2026-09-17T13:45:28.917+0000][10.059s][debug][gc,heap        ] GC(15)  Metaspace       used 68760K, committed 69504K, reserved 1114112K
+[2026-09-17T13:45:28.917+0000][10.059s][debug][gc,heap        ] GC(15)   class space    used 9280K, committed 9600K, reserved 1048576K
+[2026-09-17T13:45:28.917+0000][10.059s][info ][gc             ] GC(15) Pause Young (Allocation Failure) 96M->29M(247M) 6.745ms
+[2026-09-17T13:45:28.917+0000][10.059s][info ][gc,cpu         ] GC(15) User=0.01s Sys=0.00s Real=0.01s
+[2026-09-17T13:45:29.509+0000][10.651s][info ][gc,start       ] GC(16) Pause Young (Allocation Failure)
+[2026-09-17T13:45:29.509+0000][10.651s][debug][gc,heap        ] GC(16) Heap before GC invocations=16 (full 3):
+[2026-09-17T13:45:29.509+0000][10.651s][debug][gc,heap        ] GC(16)  def new generation   total 78720K, used 72607K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:29.509+0000][10.651s][debug][gc,heap        ] GC(16)   eden space 70016K, 100% used [0x00000000e7000000, 0x00000000eb460000, 0x00000000eb460000)
+[2026-09-17T13:45:29.509+0000][10.651s][debug][gc,heap        ] GC(16)   from space 8704K,  29% used [0x00000000ebce0000, 0x00000000ebf67c48, 0x00000000ec560000)
+[2026-09-17T13:45:29.509+0000][10.651s][debug][gc,heap        ] GC(16)   to   space 8704K,   0% used [0x00000000eb460000, 0x00000000eb460000, 0x00000000ebce0000)
+[2026-09-17T13:45:29.509+0000][10.651s][debug][gc,heap        ] GC(16)  tenured generation   total 174784K, used 27742K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:29.509+0000][10.651s][debug][gc,heap        ] GC(16)    the space 174784K,  15% used [0x00000000ef550000, 0x00000000f1067a58, 0x00000000f1067c00, 0x00000000fa000000)
+[2026-09-17T13:45:29.509+0000][10.651s][debug][gc,heap        ] GC(16)  Metaspace       used 74594K, committed 75392K, reserved 1179648K
+[2026-09-17T13:45:29.509+0000][10.651s][debug][gc,heap        ] GC(16)   class space    used 10124K, committed 10496K, reserved 1048576K
+[2026-09-17T13:45:29.517+0000][10.659s][info ][gc,heap        ] GC(16) DefNew: 72607K(78720K)->3906K(78720K) Eden: 70016K(70016K)->0K(70016K) From: 2591K(8704K)->3906K(8704K)
+[2026-09-17T13:45:29.517+0000][10.659s][info ][gc,heap        ] GC(16) Tenured: 27742K(174784K)->27742K(174784K)
+[2026-09-17T13:45:29.517+0000][10.659s][info ][gc,metaspace   ] GC(16) Metaspace: 74594K(75392K)->74594K(75392K) NonClass: 64470K(64896K)->64470K(64896K) Class: 10124K(10496K)->10124K(10496K)
+[2026-09-17T13:45:29.517+0000][10.659s][debug][gc,heap        ] GC(16) Heap after GC invocations=17 (full 3):
+[2026-09-17T13:45:29.517+0000][10.659s][debug][gc,heap        ] GC(16)  def new generation   total 78720K, used 3906K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:29.517+0000][10.659s][debug][gc,heap        ] GC(16)   eden space 70016K,   0% used [0x00000000e7000000, 0x00000000e7000000, 0x00000000eb460000)
+[2026-09-17T13:45:29.517+0000][10.659s][debug][gc,heap        ] GC(16)   from space 8704K,  44% used [0x00000000eb460000, 0x00000000eb830aa8, 0x00000000ebce0000)
+[2026-09-17T13:45:29.517+0000][10.659s][debug][gc,heap        ] GC(16)   to   space 8704K,   0% used [0x00000000ebce0000, 0x00000000ebce0000, 0x00000000ec560000)
+[2026-09-17T13:45:29.517+0000][10.659s][debug][gc,heap        ] GC(16)  tenured generation   total 174784K, used 27742K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:29.517+0000][10.659s][debug][gc,heap        ] GC(16)    the space 174784K,  15% used [0x00000000ef550000, 0x00000000f1067a58, 0x00000000f1067c00, 0x00000000fa000000)
+[2026-09-17T13:45:29.517+0000][10.659s][debug][gc,heap        ] GC(16)  Metaspace       used 74594K, committed 75392K, reserved 1179648K
+[2026-09-17T13:45:29.517+0000][10.659s][debug][gc,heap        ] GC(16)   class space    used 10124K, committed 10496K, reserved 1048576K
+[2026-09-17T13:45:29.517+0000][10.659s][info ][gc             ] GC(16) Pause Young (Allocation Failure) 97M->30M(247M) 8.012ms
+[2026-09-17T13:45:29.517+0000][10.659s][info ][gc,cpu         ] GC(16) User=0.01s Sys=0.00s Real=0.01s
+[2026-09-17T13:45:30.027+0000][11.169s][info ][gc,start       ] GC(17) Pause Young (Allocation Failure)
+[2026-09-17T13:45:30.027+0000][11.169s][debug][gc,heap        ] GC(17) Heap before GC invocations=17 (full 3):
+[2026-09-17T13:45:30.027+0000][11.169s][debug][gc,heap        ] GC(17)  def new generation   total 78720K, used 73922K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:30.027+0000][11.169s][debug][gc,heap        ] GC(17)   eden space 70016K, 100% used [0x00000000e7000000, 0x00000000eb460000, 0x00000000eb460000)
+[2026-09-17T13:45:30.027+0000][11.169s][debug][gc,heap        ] GC(17)   from space 8704K,  44% used [0x00000000eb460000, 0x00000000eb830aa8, 0x00000000ebce0000)
+[2026-09-17T13:45:30.027+0000][11.169s][debug][gc,heap        ] GC(17)   to   space 8704K,   0% used [0x00000000ebce0000, 0x00000000ebce0000, 0x00000000ec560000)
+[2026-09-17T13:45:30.027+0000][11.169s][debug][gc,heap        ] GC(17)  tenured generation   total 174784K, used 27742K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:30.027+0000][11.169s][debug][gc,heap        ] GC(17)    the space 174784K,  15% used [0x00000000ef550000, 0x00000000f1067a58, 0x00000000f1067c00, 0x00000000fa000000)
+[2026-09-17T13:45:30.027+0000][11.169s][debug][gc,heap        ] GC(17)  Metaspace       used 79543K, committed 80320K, reserved 1179648K
+[2026-09-17T13:45:30.027+0000][11.169s][debug][gc,heap        ] GC(17)   class space    used 10983K, committed 11328K, reserved 1048576K
+[2026-09-17T13:45:30.036+0000][11.178s][info ][gc,heap        ] GC(17) DefNew: 73922K(78720K)->4910K(78720K) Eden: 70016K(70016K)->0K(70016K) From: 3906K(8704K)->4910K(8704K)
+[2026-09-17T13:45:30.036+0000][11.178s][info ][gc,heap        ] GC(17) Tenured: 27742K(174784K)->27742K(174784K)
+[2026-09-17T13:45:30.036+0000][11.178s][info ][gc,metaspace   ] GC(17) Metaspace: 79543K(80320K)->79543K(80320K) NonClass: 68560K(68992K)->68560K(68992K) Class: 10983K(11328K)->10983K(11328K)
+[2026-09-17T13:45:30.036+0000][11.178s][debug][gc,heap        ] GC(17) Heap after GC invocations=18 (full 3):
+[2026-09-17T13:45:30.036+0000][11.178s][debug][gc,heap        ] GC(17)  def new generation   total 78720K, used 4910K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:30.036+0000][11.178s][debug][gc,heap        ] GC(17)   eden space 70016K,   0% used [0x00000000e7000000, 0x00000000e7000000, 0x00000000eb460000)
+[2026-09-17T13:45:30.036+0000][11.178s][debug][gc,heap        ] GC(17)   from space 8704K,  56% used [0x00000000ebce0000, 0x00000000ec1aba98, 0x00000000ec560000)
+[2026-09-17T13:45:30.036+0000][11.178s][debug][gc,heap        ] GC(17)   to   space 8704K,   0% used [0x00000000eb460000, 0x00000000eb460000, 0x00000000ebce0000)
+[2026-09-17T13:45:30.036+0000][11.178s][debug][gc,heap        ] GC(17)  tenured generation   total 174784K, used 27742K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:30.036+0000][11.178s][debug][gc,heap        ] GC(17)    the space 174784K,  15% used [0x00000000ef550000, 0x00000000f1067a58, 0x00000000f1067c00, 0x00000000fa000000)
+[2026-09-17T13:45:30.036+0000][11.178s][debug][gc,heap        ] GC(17)  Metaspace       used 79543K, committed 80320K, reserved 1179648K
+[2026-09-17T13:45:30.036+0000][11.178s][debug][gc,heap        ] GC(17)   class space    used 10983K, committed 11328K, reserved 1048576K
+[2026-09-17T13:45:30.036+0000][11.178s][info ][gc             ] GC(17) Pause Young (Allocation Failure) 99M->31M(247M) 9.382ms
+[2026-09-17T13:45:30.036+0000][11.178s][info ][gc,cpu         ] GC(17) User=0.02s Sys=0.01s Real=0.01s
+[2026-09-17T13:45:30.744+0000][11.886s][info ][gc,start       ] GC(18) Pause Young (Allocation Failure)
+[2026-09-17T13:45:30.744+0000][11.886s][debug][gc,heap        ] GC(18) Heap before GC invocations=18 (full 3):
+[2026-09-17T13:45:30.744+0000][11.886s][debug][gc,heap        ] GC(18)  def new generation   total 78720K, used 74926K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:30.744+0000][11.886s][debug][gc,heap        ] GC(18)   eden space 70016K, 100% used [0x00000000e7000000, 0x00000000eb460000, 0x00000000eb460000)
+[2026-09-17T13:45:30.744+0000][11.886s][debug][gc,heap        ] GC(18)   from space 8704K,  56% used [0x00000000ebce0000, 0x00000000ec1aba98, 0x00000000ec560000)
+[2026-09-17T13:45:30.744+0000][11.886s][debug][gc,heap        ] GC(18)   to   space 8704K,   0% used [0x00000000eb460000, 0x00000000eb460000, 0x00000000ebce0000)
+[2026-09-17T13:45:30.744+0000][11.886s][debug][gc,heap        ] GC(18)  tenured generation   total 174784K, used 27742K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:30.744+0000][11.886s][debug][gc,heap        ] GC(18)    the space 174784K,  15% used [0x00000000ef550000, 0x00000000f1067a58, 0x00000000f1067c00, 0x00000000fa000000)
+[2026-09-17T13:45:30.744+0000][11.886s][debug][gc,heap        ] GC(18)  Metaspace       used 84254K, committed 85120K, reserved 1179648K
+[2026-09-17T13:45:30.744+0000][11.886s][debug][gc,heap        ] GC(18)   class space    used 11636K, committed 12032K, reserved 1048576K
+[2026-09-17T13:45:30.754+0000][11.897s][info ][gc,heap        ] GC(18) DefNew: 74926K(78720K)->5641K(78720K) Eden: 70016K(70016K)->0K(70016K) From: 4910K(8704K)->5641K(8704K)
+[2026-09-17T13:45:30.755+0000][11.897s][info ][gc,heap        ] GC(18) Tenured: 27742K(174784K)->28542K(174784K)
+[2026-09-17T13:45:30.755+0000][11.897s][info ][gc,metaspace   ] GC(18) Metaspace: 84254K(85120K)->84254K(85120K) NonClass: 72618K(73088K)->72618K(73088K) Class: 11636K(12032K)->11636K(12032K)
+[2026-09-17T13:45:30.755+0000][11.897s][debug][gc,heap        ] GC(18) Heap after GC invocations=19 (full 3):
+[2026-09-17T13:45:30.755+0000][11.897s][debug][gc,heap        ] GC(18)  def new generation   total 78720K, used 5641K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:30.755+0000][11.897s][debug][gc,heap        ] GC(18)   eden space 70016K,   0% used [0x00000000e7000000, 0x00000000e7000000, 0x00000000eb460000)
+[2026-09-17T13:45:30.755+0000][11.897s][debug][gc,heap        ] GC(18)   from space 8704K,  64% used [0x00000000eb460000, 0x00000000eb9e2560, 0x00000000ebce0000)
+[2026-09-17T13:45:30.755+0000][11.897s][debug][gc,heap        ] GC(18)   to   space 8704K,   0% used [0x00000000ebce0000, 0x00000000ebce0000, 0x00000000ec560000)
+[2026-09-17T13:45:30.755+0000][11.897s][debug][gc,heap        ] GC(18)  tenured generation   total 174784K, used 28542K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:30.755+0000][11.897s][debug][gc,heap        ] GC(18)    the space 174784K,  16% used [0x00000000ef550000, 0x00000000f112fb48, 0x00000000f112fc00, 0x00000000fa000000)
+[2026-09-17T13:45:30.755+0000][11.897s][debug][gc,heap        ] GC(18)  Metaspace       used 84254K, committed 85120K, reserved 1179648K
+[2026-09-17T13:45:30.755+0000][11.897s][debug][gc,heap        ] GC(18)   class space    used 11636K, committed 12032K, reserved 1048576K
+[2026-09-17T13:45:30.755+0000][11.897s][info ][gc             ] GC(18) Pause Young (Allocation Failure) 100M->33M(247M) 11.066ms
+[2026-09-17T13:45:30.795+0000][11.938s][info ][gc,cpu         ] GC(18) User=0.03s Sys=0.00s Real=0.01s
+[2026-09-17T13:45:31.332+0000][12.474s][info ][gc,start       ] GC(19) Pause Young (Allocation Failure)
+[2026-09-17T13:45:31.332+0000][12.474s][debug][gc,heap        ] GC(19) Heap before GC invocations=19 (full 3):
+[2026-09-17T13:45:31.332+0000][12.474s][debug][gc,heap        ] GC(19)  def new generation   total 78720K, used 75657K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:31.332+0000][12.474s][debug][gc,heap        ] GC(19)   eden space 70016K, 100% used [0x00000000e7000000, 0x00000000eb460000, 0x00000000eb460000)
+[2026-09-17T13:45:31.332+0000][12.474s][debug][gc,heap        ] GC(19)   from space 8704K,  64% used [0x00000000eb460000, 0x00000000eb9e2560, 0x00000000ebce0000)
+[2026-09-17T13:45:31.332+0000][12.474s][debug][gc,heap        ] GC(19)   to   space 8704K,   0% used [0x00000000ebce0000, 0x00000000ebce0000, 0x00000000ec560000)
+[2026-09-17T13:45:31.332+0000][12.474s][debug][gc,heap        ] GC(19)  tenured generation   total 174784K, used 28542K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:31.332+0000][12.474s][debug][gc,heap        ] GC(19)    the space 174784K,  16% used [0x00000000ef550000, 0x00000000f112fb48, 0x00000000f112fc00, 0x00000000fa000000)
+[2026-09-17T13:45:31.332+0000][12.474s][debug][gc,heap        ] GC(19)  Metaspace       used 89337K, committed 90112K, reserved 1179648K
+[2026-09-17T13:45:31.332+0000][12.474s][debug][gc,heap        ] GC(19)   class space    used 12337K, committed 12672K, reserved 1048576K
+[2026-09-17T13:45:31.396+0000][12.538s][info ][gc,heap        ] GC(19) DefNew: 75657K(78720K)->6110K(78720K) Eden: 70016K(70016K)->0K(70016K) From: 5641K(8704K)->6110K(8704K)
+[2026-09-17T13:45:31.396+0000][12.538s][info ][gc,heap        ] GC(19) Tenured: 28542K(174784K)->30244K(174784K)
+[2026-09-17T13:45:31.396+0000][12.538s][info ][gc,metaspace   ] GC(19) Metaspace: 89337K(90112K)->89337K(90112K) NonClass: 77000K(77440K)->77000K(77440K) Class: 12337K(12672K)->12337K(12672K)
+[2026-09-17T13:45:31.396+0000][12.538s][debug][gc,heap        ] GC(19) Heap after GC invocations=20 (full 3):
+[2026-09-17T13:45:31.396+0000][12.538s][debug][gc,heap        ] GC(19)  def new generation   total 78720K, used 6110K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:31.396+0000][12.538s][debug][gc,heap        ] GC(19)   eden space 70016K,   0% used [0x00000000e7000000, 0x00000000e7000000, 0x00000000eb460000)
+[2026-09-17T13:45:31.396+0000][12.538s][debug][gc,heap        ] GC(19)   from space 8704K,  70% used [0x00000000ebce0000, 0x00000000ec2d7828, 0x00000000ec560000)
+[2026-09-17T13:45:31.396+0000][12.538s][debug][gc,heap        ] GC(19)   to   space 8704K,   0% used [0x00000000eb460000, 0x00000000eb460000, 0x00000000ebce0000)
+[2026-09-17T13:45:31.396+0000][12.538s][debug][gc,heap        ] GC(19)  tenured generation   total 174784K, used 30244K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:31.396+0000][12.538s][debug][gc,heap        ] GC(19)    the space 174784K,  17% used [0x00000000ef550000, 0x00000000f12d9258, 0x00000000f12d9400, 0x00000000fa000000)
+[2026-09-17T13:45:31.396+0000][12.538s][debug][gc,heap        ] GC(19)  Metaspace       used 89337K, committed 90112K, reserved 1179648K
+[2026-09-17T13:45:31.396+0000][12.538s][debug][gc,heap        ] GC(19)   class space    used 12337K, committed 12672K, reserved 1048576K
+[2026-09-17T13:45:31.396+0000][12.538s][info ][gc             ] GC(19) Pause Young (Allocation Failure) 101M->35M(247M) 63.980ms
+[2026-09-17T13:45:31.396+0000][12.538s][info ][gc,cpu         ] GC(19) User=0.03s Sys=0.00s Real=0.07s
+[2026-09-17T13:45:31.904+0000][13.046s][info ][gc,start       ] GC(20) Pause Young (Allocation Failure)
+[2026-09-17T13:45:31.904+0000][13.046s][debug][gc,heap        ] GC(20) Heap before GC invocations=20 (full 3):
+[2026-09-17T13:45:31.904+0000][13.046s][debug][gc,heap        ] GC(20)  def new generation   total 78720K, used 76126K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:31.904+0000][13.046s][debug][gc,heap        ] GC(20)   eden space 70016K, 100% used [0x00000000e7000000, 0x00000000eb460000, 0x00000000eb460000)
+[2026-09-17T13:45:31.904+0000][13.046s][debug][gc,heap        ] GC(20)   from space 8704K,  70% used [0x00000000ebce0000, 0x00000000ec2d7828, 0x00000000ec560000)
+[2026-09-17T13:45:31.904+0000][13.046s][debug][gc,heap        ] GC(20)   to   space 8704K,   0% used [0x00000000eb460000, 0x00000000eb460000, 0x00000000ebce0000)
+[2026-09-17T13:45:31.904+0000][13.046s][debug][gc,heap        ] GC(20)  tenured generation   total 174784K, used 30244K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:31.904+0000][13.046s][debug][gc,heap        ] GC(20)    the space 174784K,  17% used [0x00000000ef550000, 0x00000000f12d9258, 0x00000000f12d9400, 0x00000000fa000000)
+[2026-09-17T13:45:31.904+0000][13.046s][debug][gc,heap        ] GC(20)  Metaspace       used 93064K, committed 93824K, reserved 1179648K
+[2026-09-17T13:45:31.904+0000][13.046s][debug][gc,heap        ] GC(20)   class space    used 13054K, committed 13376K, reserved 1048576K
+[2026-09-17T13:45:31.917+0000][13.059s][info ][gc,heap        ] GC(20) DefNew: 76126K(78720K)->6417K(78720K) Eden: 70016K(70016K)->0K(70016K) From: 6110K(8704K)->6417K(8704K)
+[2026-09-17T13:45:31.917+0000][13.059s][info ][gc,heap        ] GC(20) Tenured: 30244K(174784K)->32494K(174784K)
+[2026-09-17T13:45:31.917+0000][13.059s][info ][gc,metaspace   ] GC(20) Metaspace: 93064K(93824K)->93064K(93824K) NonClass: 80010K(80448K)->80010K(80448K) Class: 13054K(13376K)->13054K(13376K)
+[2026-09-17T13:45:31.917+0000][13.059s][debug][gc,heap        ] GC(20) Heap after GC invocations=21 (full 3):
+[2026-09-17T13:45:31.917+0000][13.059s][debug][gc,heap        ] GC(20)  def new generation   total 78720K, used 6417K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:31.917+0000][13.059s][debug][gc,heap        ] GC(20)   eden space 70016K,   0% used [0x00000000e7000000, 0x00000000e7000000, 0x00000000eb460000)
+[2026-09-17T13:45:31.917+0000][13.059s][debug][gc,heap        ] GC(20)   from space 8704K,  73% used [0x00000000eb460000, 0x00000000ebaa4628, 0x00000000ebce0000)
+[2026-09-17T13:45:31.917+0000][13.059s][debug][gc,heap        ] GC(20)   to   space 8704K,   0% used [0x00000000ebce0000, 0x00000000ebce0000, 0x00000000ec560000)
+[2026-09-17T13:45:31.917+0000][13.059s][debug][gc,heap        ] GC(20)  tenured generation   total 174784K, used 32494K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:31.917+0000][13.059s][debug][gc,heap        ] GC(20)    the space 174784K,  18% used [0x00000000ef550000, 0x00000000f150b858, 0x00000000f150ba00, 0x00000000fa000000)
+[2026-09-17T13:45:31.917+0000][13.059s][debug][gc,heap        ] GC(20)  Metaspace       used 93064K, committed 93824K, reserved 1179648K
+[2026-09-17T13:45:31.917+0000][13.059s][debug][gc,heap        ] GC(20)   class space    used 13054K, committed 13376K, reserved 1048576K
+[2026-09-17T13:45:31.917+0000][13.059s][info ][gc             ] GC(20) Pause Young (Allocation Failure) 103M->37M(247M) 12.935ms
+[2026-09-17T13:45:31.917+0000][13.059s][info ][gc,cpu         ] GC(20) User=0.01s Sys=0.01s Real=0.02s
+[2026-09-17T13:45:32.528+0000][13.670s][info ][gc,start       ] GC(21) Pause Full (Metadata GC Threshold)
+[2026-09-17T13:45:32.528+0000][13.670s][debug][gc,heap        ] GC(21) Heap before GC invocations=21 (full 3):
+[2026-09-17T13:45:32.528+0000][13.670s][debug][gc,heap        ] GC(21)  def new generation   total 78720K, used 59334K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:32.528+0000][13.670s][debug][gc,heap        ] GC(21)   eden space 70016K,  75% used [0x00000000e7000000, 0x00000000ea3ad2a8, 0x00000000eb460000)
+[2026-09-17T13:45:32.528+0000][13.670s][debug][gc,heap        ] GC(21)   from space 8704K,  73% used [0x00000000eb460000, 0x00000000ebaa4628, 0x00000000ebce0000)
+[2026-09-17T13:45:32.528+0000][13.670s][debug][gc,heap        ] GC(21)   to   space 8704K,   0% used [0x00000000ebce0000, 0x00000000ebce0000, 0x00000000ec560000)
+[2026-09-17T13:45:32.528+0000][13.670s][debug][gc,heap        ] GC(21)  tenured generation   total 174784K, used 32494K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:32.528+0000][13.670s][debug][gc,heap        ] GC(21)    the space 174784K,  18% used [0x00000000ef550000, 0x00000000f150b858, 0x00000000f150ba00, 0x00000000fa000000)
+[2026-09-17T13:45:32.528+0000][13.670s][debug][gc,heap        ] GC(21)  Metaspace       used 98855K, committed 99648K, reserved 1179648K
+[2026-09-17T13:45:32.528+0000][13.670s][debug][gc,heap        ] GC(21)   class space    used 13877K, committed 14272K, reserved 1048576K
+[2026-09-17T13:45:32.528+0000][13.670s][info ][gc,phases,start] GC(21) Phase 1: Mark live objects
+[2026-09-17T13:45:32.571+0000][13.714s][info ][gc,phases      ] GC(21) Phase 1: Mark live objects 43.702ms
+[2026-09-17T13:45:32.571+0000][13.714s][info ][gc,phases,start] GC(21) Phase 2: Compute new object addresses
+[2026-09-17T13:45:32.608+0000][13.750s][info ][gc,phases      ] GC(21) Phase 2: Compute new object addresses 36.498ms
+[2026-09-17T13:45:32.608+0000][13.750s][info ][gc,phases,start] GC(21) Phase 3: Adjust pointers
+[2026-09-17T13:45:32.631+0000][13.773s][info ][gc,phases      ] GC(21) Phase 3: Adjust pointers 22.473ms
+[2026-09-17T13:45:32.631+0000][13.773s][info ][gc,phases,start] GC(21) Phase 4: Move objects
+[2026-09-17T13:45:32.644+0000][13.786s][info ][gc,phases      ] GC(21) Phase 4: Move objects 13.043ms
+[2026-09-17T13:45:32.645+0000][13.787s][info ][gc,heap        ] GC(21) DefNew: 59334K(78720K)->0K(78720K) Eden: 52916K(70016K)->0K(70016K) From: 6417K(8704K)->0K(8704K)
+[2026-09-17T13:45:32.645+0000][13.787s][info ][gc,heap        ] GC(21) Tenured: 32494K(174784K)->38692K(174784K)
+[2026-09-17T13:45:32.645+0000][13.787s][info ][gc,metaspace   ] GC(21) Metaspace: 98855K(99648K)->98855K(99648K) NonClass: 84977K(85376K)->84977K(85376K) Class: 13877K(14272K)->13877K(14272K)
+[2026-09-17T13:45:32.645+0000][13.787s][debug][gc,heap        ] GC(21) Heap after GC invocations=22 (full 4):
+[2026-09-17T13:45:32.645+0000][13.787s][debug][gc,heap        ] GC(21)  def new generation   total 78720K, used 0K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:32.645+0000][13.787s][debug][gc,heap        ] GC(21)   eden space 70016K,   0% used [0x00000000e7000000, 0x00000000e7000000, 0x00000000eb460000)
+[2026-09-17T13:45:32.645+0000][13.787s][debug][gc,heap        ] GC(21)   from space 8704K,   0% used [0x00000000eb460000, 0x00000000eb460000, 0x00000000ebce0000)
+[2026-09-17T13:45:32.645+0000][13.787s][debug][gc,heap        ] GC(21)   to   space 8704K,   0% used [0x00000000ebce0000, 0x00000000ebce0000, 0x00000000ec560000)
+[2026-09-17T13:45:32.645+0000][13.787s][debug][gc,heap        ] GC(21)  tenured generation   total 174784K, used 38692K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:32.645+0000][13.787s][debug][gc,heap        ] GC(21)    the space 174784K,  22% used [0x00000000ef550000, 0x00000000f1b190a8, 0x00000000f1b19200, 0x00000000fa000000)
+[2026-09-17T13:45:32.645+0000][13.787s][debug][gc,heap        ] GC(21)  Metaspace       used 98855K, committed 99648K, reserved 1179648K
+[2026-09-17T13:45:32.645+0000][13.787s][debug][gc,heap        ] GC(21)   class space    used 13877K, committed 14272K, reserved 1048576K
+[2026-09-17T13:45:32.645+0000][13.787s][info ][gc             ] GC(21) Pause Full (Metadata GC Threshold) 89M->37M(247M) 117.429ms
+[2026-09-17T13:45:32.645+0000][13.787s][info ][gc,cpu         ] GC(21) User=0.10s Sys=0.00s Real=0.11s
+[2026-09-17T13:45:33.204+0000][14.346s][info ][gc,start       ] GC(22) Pause Young (Allocation Failure)
+[2026-09-17T13:45:33.204+0000][14.346s][debug][gc,heap        ] GC(22) Heap before GC invocations=22 (full 4):
+[2026-09-17T13:45:33.204+0000][14.346s][debug][gc,heap        ] GC(22)  def new generation   total 78720K, used 70016K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:33.204+0000][14.346s][debug][gc,heap        ] GC(22)   eden space 70016K, 100% used [0x00000000e7000000, 0x00000000eb460000, 0x00000000eb460000)
+[2026-09-17T13:45:33.204+0000][14.346s][debug][gc,heap        ] GC(22)   from space 8704K,   0% used [0x00000000eb460000, 0x00000000eb460000, 0x00000000ebce0000)
+[2026-09-17T13:45:33.204+0000][14.346s][debug][gc,heap        ] GC(22)   to   space 8704K,   0% used [0x00000000ebce0000, 0x00000000ebce0000, 0x00000000ec560000)
+[2026-09-17T13:45:33.204+0000][14.346s][debug][gc,heap        ] GC(22)  tenured generation   total 174784K, used 38692K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:33.204+0000][14.346s][debug][gc,heap        ] GC(22)    the space 174784K,  22% used [0x00000000ef550000, 0x00000000f1b190a8, 0x00000000f1b19200, 0x00000000fa000000)
+[2026-09-17T13:45:33.204+0000][14.346s][debug][gc,heap        ] GC(22)  Metaspace       used 102742K, committed 103488K, reserved 1179648K
+[2026-09-17T13:45:33.204+0000][14.346s][debug][gc,heap        ] GC(22)   class space    used 14384K, committed 14720K, reserved 1048576K
+[2026-09-17T13:45:33.211+0000][14.353s][info ][gc,heap        ] GC(22) DefNew: 70016K(78720K)->2971K(78720K) Eden: 70016K(70016K)->0K(70016K) From: 0K(8704K)->2971K(8704K)
+[2026-09-17T13:45:33.211+0000][14.353s][info ][gc,heap        ] GC(22) Tenured: 38692K(174784K)->38692K(174784K)
+[2026-09-17T13:45:33.211+0000][14.353s][info ][gc,metaspace   ] GC(22) Metaspace: 102742K(103488K)->102742K(103488K) NonClass: 88357K(88768K)->88357K(88768K) Class: 14384K(14720K)->14384K(14720K)
+[2026-09-17T13:45:33.211+0000][14.353s][debug][gc,heap        ] GC(22) Heap after GC invocations=23 (full 4):
+[2026-09-17T13:45:33.211+0000][14.353s][debug][gc,heap        ] GC(22)  def new generation   total 78720K, used 2971K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:33.211+0000][14.353s][debug][gc,heap        ] GC(22)   eden space 70016K,   0% used [0x00000000e7000000, 0x00000000e7000000, 0x00000000eb460000)
+[2026-09-17T13:45:33.211+0000][14.353s][debug][gc,heap        ] GC(22)   from space 8704K,  34% used [0x00000000ebce0000, 0x00000000ebfc6dc8, 0x00000000ec560000)
+[2026-09-17T13:45:33.211+0000][14.353s][debug][gc,heap        ] GC(22)   to   space 8704K,   0% used [0x00000000eb460000, 0x00000000eb460000, 0x00000000ebce0000)
+[2026-09-17T13:45:33.211+0000][14.353s][debug][gc,heap        ] GC(22)  tenured generation   total 174784K, used 38692K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:33.211+0000][14.353s][debug][gc,heap        ] GC(22)    the space 174784K,  22% used [0x00000000ef550000, 0x00000000f1b190a8, 0x00000000f1b19200, 0x00000000fa000000)
+[2026-09-17T13:45:33.211+0000][14.353s][debug][gc,heap        ] GC(22)  Metaspace       used 102742K, committed 103488K, reserved 1179648K
+[2026-09-17T13:45:33.211+0000][14.353s][debug][gc,heap        ] GC(22)   class space    used 14384K, committed 14720K, reserved 1048576K
+[2026-09-17T13:45:33.211+0000][14.353s][info ][gc             ] GC(22) Pause Young (Allocation Failure) 106M->40M(247M) 7.055ms
+[2026-09-17T13:45:33.211+0000][14.353s][info ][gc,cpu         ] GC(22) User=0.01s Sys=0.00s Real=0.01s
+[2026-09-17T13:45:33.519+0000][14.662s][info ][gc,start       ] GC(23) Pause Young (Allocation Failure)
+[2026-09-17T13:45:33.519+0000][14.662s][debug][gc,heap        ] GC(23) Heap before GC invocations=23 (full 4):
+[2026-09-17T13:45:33.519+0000][14.662s][debug][gc,heap        ] GC(23)  def new generation   total 78720K, used 72987K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:33.519+0000][14.662s][debug][gc,heap        ] GC(23)   eden space 70016K, 100% used [0x00000000e7000000, 0x00000000eb460000, 0x00000000eb460000)
+[2026-09-17T13:45:33.519+0000][14.662s][debug][gc,heap        ] GC(23)   from space 8704K,  34% used [0x00000000ebce0000, 0x00000000ebfc6dc8, 0x00000000ec560000)
+[2026-09-17T13:45:33.519+0000][14.662s][debug][gc,heap        ] GC(23)   to   space 8704K,   0% used [0x00000000eb460000, 0x00000000eb460000, 0x00000000ebce0000)
+[2026-09-17T13:45:33.519+0000][14.662s][debug][gc,heap        ] GC(23)  tenured generation   total 174784K, used 38692K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:33.519+0000][14.662s][debug][gc,heap        ] GC(23)    the space 174784K,  22% used [0x00000000ef550000, 0x00000000f1b190a8, 0x00000000f1b19200, 0x00000000fa000000)
+[2026-09-17T13:45:33.519+0000][14.662s][debug][gc,heap        ] GC(23)  Metaspace       used 104982K, committed 105792K, reserved 1179648K
+[2026-09-17T13:45:33.519+0000][14.662s][debug][gc,heap        ] GC(23)   class space    used 14663K, committed 15040K, reserved 1048576K
+[2026-09-17T13:45:33.549+0000][14.691s][info ][gc,heap        ] GC(23) DefNew: 72987K(78720K)->8704K(78720K) Eden: 70016K(70016K)->0K(70016K) From: 2971K(8704K)->8704K(8704K)
+[2026-09-17T13:45:33.549+0000][14.691s][info ][gc,heap        ] GC(23) Tenured: 38692K(174784K)->45121K(174784K)
+[2026-09-17T13:45:33.549+0000][14.691s][info ][gc,metaspace   ] GC(23) Metaspace: 104982K(105792K)->104982K(105792K) NonClass: 90319K(90752K)->90319K(90752K) Class: 14663K(15040K)->14663K(15040K)
+[2026-09-17T13:45:33.549+0000][14.691s][debug][gc,heap        ] GC(23) Heap after GC invocations=24 (full 4):
+[2026-09-17T13:45:33.549+0000][14.691s][debug][gc,heap        ] GC(23)  def new generation   total 78720K, used 8704K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:33.549+0000][14.691s][debug][gc,heap        ] GC(23)   eden space 70016K,   0% used [0x00000000e7000000, 0x00000000e7000000, 0x00000000eb460000)
+[2026-09-17T13:45:33.549+0000][14.691s][debug][gc,heap        ] GC(23)   from space 8704K, 100% used [0x00000000eb460000, 0x00000000ebce0000, 0x00000000ebce0000)
+[2026-09-17T13:45:33.549+0000][14.691s][debug][gc,heap        ] GC(23)   to   space 8704K,   0% used [0x00000000ebce0000, 0x00000000ebce0000, 0x00000000ec560000)
+[2026-09-17T13:45:33.549+0000][14.691s][debug][gc,heap        ] GC(23)  tenured generation   total 174784K, used 45121K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:33.549+0000][14.691s][debug][gc,heap        ] GC(23)    the space 174784K,  25% used [0x00000000ef550000, 0x00000000f2160698, 0x00000000f2160800, 0x00000000fa000000)
+[2026-09-17T13:45:33.549+0000][14.691s][debug][gc,heap        ] GC(23)  Metaspace       used 104982K, committed 105792K, reserved 1179648K
+[2026-09-17T13:45:33.549+0000][14.691s][debug][gc,heap        ] GC(23)   class space    used 14663K, committed 15040K, reserved 1048576K
+[2026-09-17T13:45:33.549+0000][14.691s][info ][gc             ] GC(23) Pause Young (Allocation Failure) 109M->52M(247M) 29.830ms
+[2026-09-17T13:45:33.549+0000][14.691s][info ][gc,cpu         ] GC(23) User=0.03s Sys=0.00s Real=0.03s
+[2026-09-17T13:45:33.710+0000][14.853s][info ][gc,start       ] GC(24) Pause Young (Allocation Failure)
+[2026-09-17T13:45:33.710+0000][14.853s][debug][gc,heap        ] GC(24) Heap before GC invocations=24 (full 4):
+[2026-09-17T13:45:33.711+0000][14.853s][debug][gc,heap        ] GC(24)  def new generation   total 78720K, used 78720K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:33.711+0000][14.853s][debug][gc,heap        ] GC(24)   eden space 70016K, 100% used [0x00000000e7000000, 0x00000000eb460000, 0x00000000eb460000)
+[2026-09-17T13:45:33.711+0000][14.853s][debug][gc,heap        ] GC(24)   from space 8704K, 100% used [0x00000000eb460000, 0x00000000ebce0000, 0x00000000ebce0000)
+[2026-09-17T13:45:33.711+0000][14.853s][debug][gc,heap        ] GC(24)   to   space 8704K,   0% used [0x00000000ebce0000, 0x00000000ebce0000, 0x00000000ec560000)
+[2026-09-17T13:45:33.711+0000][14.853s][debug][gc,heap        ] GC(24)  tenured generation   total 174784K, used 45121K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:33.711+0000][14.853s][debug][gc,heap        ] GC(24)    the space 174784K,  25% used [0x00000000ef550000, 0x00000000f2160698, 0x00000000f2160800, 0x00000000fa000000)
+[2026-09-17T13:45:33.711+0000][14.853s][debug][gc,heap        ] GC(24)  Metaspace       used 105031K, committed 105856K, reserved 1179648K
+[2026-09-17T13:45:33.711+0000][14.853s][debug][gc,heap        ] GC(24)   class space    used 14663K, committed 15040K, reserved 1048576K
+[2026-09-17T13:45:33.754+0000][14.896s][info ][gc,heap        ] GC(24) DefNew: 78720K(78720K)->8704K(78720K) Eden: 70016K(70016K)->0K(70016K) From: 8704K(8704K)->8704K(8704K)
+[2026-09-17T13:45:33.754+0000][14.896s][info ][gc,heap        ] GC(24) Tenured: 45121K(174784K)->57805K(174784K)
+[2026-09-17T13:45:33.754+0000][14.896s][info ][gc,metaspace   ] GC(24) Metaspace: 105031K(105856K)->105031K(105856K) NonClass: 90367K(90816K)->90367K(90816K) Class: 14663K(15040K)->14663K(15040K)
+[2026-09-17T13:45:33.754+0000][14.896s][debug][gc,heap        ] GC(24) Heap after GC invocations=25 (full 4):
+[2026-09-17T13:45:33.754+0000][14.896s][debug][gc,heap        ] GC(24)  def new generation   total 78720K, used 8704K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:33.754+0000][14.896s][debug][gc,heap        ] GC(24)   eden space 70016K,   0% used [0x00000000e7000000, 0x00000000e7000000, 0x00000000eb460000)
+[2026-09-17T13:45:33.754+0000][14.896s][debug][gc,heap        ] GC(24)   from space 8704K, 100% used [0x00000000ebce0000, 0x00000000ec560000, 0x00000000ec560000)
+[2026-09-17T13:45:33.754+0000][14.896s][debug][gc,heap        ] GC(24)   to   space 8704K,   0% used [0x00000000eb460000, 0x00000000eb460000, 0x00000000ebce0000)
+[2026-09-17T13:45:33.754+0000][14.896s][debug][gc,heap        ] GC(24)  tenured generation   total 174784K, used 57805K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:33.754+0000][14.896s][debug][gc,heap        ] GC(24)    the space 174784K,  33% used [0x00000000ef550000, 0x00000000f2dc3470, 0x00000000f2dc3600, 0x00000000fa000000)
+[2026-09-17T13:45:33.754+0000][14.896s][debug][gc,heap        ] GC(24)  Metaspace       used 105031K, committed 105856K, reserved 1179648K
+[2026-09-17T13:45:33.754+0000][14.896s][debug][gc,heap        ] GC(24)   class space    used 14663K, committed 15040K, reserved 1048576K
+[2026-09-17T13:45:33.754+0000][14.896s][info ][gc             ] GC(24) Pause Young (Allocation Failure) 120M->64M(247M) 43.483ms
+[2026-09-17T13:45:33.754+0000][14.896s][info ][gc,cpu         ] GC(24) User=0.04s Sys=0.00s Real=0.04s
+[2026-09-17T13:45:33.924+0000][15.066s][info ][gc,start       ] GC(25) Pause Young (Allocation Failure)
+[2026-09-17T13:45:33.924+0000][15.066s][debug][gc,heap        ] GC(25) Heap before GC invocations=25 (full 4):
+[2026-09-17T13:45:33.924+0000][15.066s][debug][gc,heap        ] GC(25)  def new generation   total 78720K, used 78720K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:33.924+0000][15.066s][debug][gc,heap        ] GC(25)   eden space 70016K, 100% used [0x00000000e7000000, 0x00000000eb460000, 0x00000000eb460000)
+[2026-09-17T13:45:33.924+0000][15.066s][debug][gc,heap        ] GC(25)   from space 8704K, 100% used [0x00000000ebce0000, 0x00000000ec560000, 0x00000000ec560000)
+[2026-09-17T13:45:33.924+0000][15.066s][debug][gc,heap        ] GC(25)   to   space 8704K,   0% used [0x00000000eb460000, 0x00000000eb460000, 0x00000000ebce0000)
+[2026-09-17T13:45:33.924+0000][15.066s][debug][gc,heap        ] GC(25)  tenured generation   total 174784K, used 57805K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:33.924+0000][15.066s][debug][gc,heap        ] GC(25)    the space 174784K,  33% used [0x00000000ef550000, 0x00000000f2dc3470, 0x00000000f2dc3600, 0x00000000fa000000)
+[2026-09-17T13:45:33.924+0000][15.066s][debug][gc,heap        ] GC(25)  Metaspace       used 105195K, committed 106048K, reserved 1179648K
+[2026-09-17T13:45:33.924+0000][15.066s][debug][gc,heap        ] GC(25)   class space    used 14693K, committed 15104K, reserved 1048576K
+[2026-09-17T13:45:33.943+0000][15.085s][info ][gc,heap        ] GC(25) DefNew: 78720K(78720K)->1524K(78720K) Eden: 70016K(70016K)->0K(70016K) From: 8704K(8704K)->1524K(8704K)
+[2026-09-17T13:45:33.943+0000][15.086s][info ][gc,heap        ] GC(25) Tenured: 57805K(174784K)->64622K(174784K)
+[2026-09-17T13:45:33.943+0000][15.086s][info ][gc,metaspace   ] GC(25) Metaspace: 105195K(106048K)->105195K(106048K) NonClass: 90502K(90944K)->90502K(90944K) Class: 14693K(15104K)->14693K(15104K)
+[2026-09-17T13:45:33.943+0000][15.086s][debug][gc,heap        ] GC(25) Heap after GC invocations=26 (full 4):
+[2026-09-17T13:45:33.943+0000][15.086s][debug][gc,heap        ] GC(25)  def new generation   total 78720K, used 1524K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:33.943+0000][15.086s][debug][gc,heap        ] GC(25)   eden space 70016K,   0% used [0x00000000e7000000, 0x00000000e7000000, 0x00000000eb460000)
+[2026-09-17T13:45:33.943+0000][15.086s][debug][gc,heap        ] GC(25)   from space 8704K,  17% used [0x00000000eb460000, 0x00000000eb5dd150, 0x00000000ebce0000)
+[2026-09-17T13:45:33.943+0000][15.086s][debug][gc,heap        ] GC(25)   to   space 8704K,   0% used [0x00000000ebce0000, 0x00000000ebce0000, 0x00000000ec560000)
+[2026-09-17T13:45:33.943+0000][15.086s][debug][gc,heap        ] GC(25)  tenured generation   total 174784K, used 64622K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:33.943+0000][15.086s][debug][gc,heap        ] GC(25)    the space 174784K,  36% used [0x00000000ef550000, 0x00000000f346b9c8, 0x00000000f346ba00, 0x00000000fa000000)
+[2026-09-17T13:45:33.943+0000][15.086s][debug][gc,heap        ] GC(25)  Metaspace       used 105195K, committed 106048K, reserved 1179648K
+[2026-09-17T13:45:33.943+0000][15.086s][debug][gc,heap        ] GC(25)   class space    used 14693K, committed 15104K, reserved 1048576K
+[2026-09-17T13:45:33.943+0000][15.086s][info ][gc             ] GC(25) Pause Young (Allocation Failure) 133M->64M(247M) 19.815ms
+[2026-09-17T13:45:33.943+0000][15.086s][info ][gc,cpu         ] GC(25) User=0.03s Sys=0.00s Real=0.02s
+[2026-09-17T13:45:34.203+0000][15.345s][info ][gc,start       ] GC(26) Pause Young (Allocation Failure)
+[2026-09-17T13:45:34.203+0000][15.345s][debug][gc,heap        ] GC(26) Heap before GC invocations=26 (full 4):
+[2026-09-17T13:45:34.203+0000][15.345s][debug][gc,heap        ] GC(26)  def new generation   total 78720K, used 71540K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:34.203+0000][15.345s][debug][gc,heap        ] GC(26)   eden space 70016K, 100% used [0x00000000e7000000, 0x00000000eb460000, 0x00000000eb460000)
+[2026-09-17T13:45:34.203+0000][15.345s][debug][gc,heap        ] GC(26)   from space 8704K,  17% used [0x00000000eb460000, 0x00000000eb5dd150, 0x00000000ebce0000)
+[2026-09-17T13:45:34.203+0000][15.345s][debug][gc,heap        ] GC(26)   to   space 8704K,   0% used [0x00000000ebce0000, 0x00000000ebce0000, 0x00000000ec560000)
+[2026-09-17T13:45:34.203+0000][15.345s][debug][gc,heap        ] GC(26)  tenured generation   total 174784K, used 64622K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:34.203+0000][15.345s][debug][gc,heap        ] GC(26)    the space 174784K,  36% used [0x00000000ef550000, 0x00000000f346b9c8, 0x00000000f346ba00, 0x00000000fa000000)
+[2026-09-17T13:45:34.203+0000][15.345s][debug][gc,heap        ] GC(26)  Metaspace       used 105505K, committed 106368K, reserved 1179648K
+[2026-09-17T13:45:34.203+0000][15.345s][debug][gc,heap        ] GC(26)   class space    used 14728K, committed 15104K, reserved 1048576K
+[2026-09-17T13:45:34.209+0000][15.351s][info ][gc,heap        ] GC(26) DefNew: 71540K(78720K)->3406K(78720K) Eden: 70016K(70016K)->0K(70016K) From: 1524K(8704K)->3406K(8704K)
+[2026-09-17T13:45:34.209+0000][15.351s][info ][gc,heap        ] GC(26) Tenured: 64622K(174784K)->64622K(174784K)
+[2026-09-17T13:45:34.209+0000][15.351s][info ][gc,metaspace   ] GC(26) Metaspace: 105505K(106368K)->105505K(106368K) NonClass: 90777K(91264K)->90777K(91264K) Class: 14728K(15104K)->14728K(15104K)
+[2026-09-17T13:45:34.209+0000][15.351s][debug][gc,heap        ] GC(26) Heap after GC invocations=27 (full 4):
+[2026-09-17T13:45:34.209+0000][15.351s][debug][gc,heap        ] GC(26)  def new generation   total 78720K, used 3406K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:34.209+0000][15.351s][debug][gc,heap        ] GC(26)   eden space 70016K,   0% used [0x00000000e7000000, 0x00000000e7000000, 0x00000000eb460000)
+[2026-09-17T13:45:34.209+0000][15.351s][debug][gc,heap        ] GC(26)   from space 8704K,  39% used [0x00000000ebce0000, 0x00000000ec033978, 0x00000000ec560000)
+[2026-09-17T13:45:34.209+0000][15.351s][debug][gc,heap        ] GC(26)   to   space 8704K,   0% used [0x00000000eb460000, 0x00000000eb460000, 0x00000000ebce0000)
+[2026-09-17T13:45:34.209+0000][15.351s][debug][gc,heap        ] GC(26)  tenured generation   total 174784K, used 64622K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:34.209+0000][15.351s][debug][gc,heap        ] GC(26)    the space 174784K,  36% used [0x00000000ef550000, 0x00000000f346b9c8, 0x00000000f346ba00, 0x00000000fa000000)
+[2026-09-17T13:45:34.209+0000][15.351s][debug][gc,heap        ] GC(26)  Metaspace       used 105505K, committed 106368K, reserved 1179648K
+[2026-09-17T13:45:34.209+0000][15.351s][debug][gc,heap        ] GC(26)   class space    used 14728K, committed 15104K, reserved 1048576K
+[2026-09-17T13:45:34.209+0000][15.351s][info ][gc             ] GC(26) Pause Young (Allocation Failure) 132M->66M(247M) 6.028ms
+[2026-09-17T13:45:34.209+0000][15.351s][info ][gc,cpu         ] GC(26) User=0.01s Sys=0.00s Real=0.01s
+[2026-09-17T13:45:34.330+0000][15.472s][info ][gc,start       ] GC(27) Pause Young (Allocation Failure)
+[2026-09-17T13:45:34.330+0000][15.473s][debug][gc,heap        ] GC(27) Heap before GC invocations=27 (full 4):
+[2026-09-17T13:45:34.330+0000][15.473s][debug][gc,heap        ] GC(27)  def new generation   total 78720K, used 73422K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:34.330+0000][15.473s][debug][gc,heap        ] GC(27)   eden space 70016K, 100% used [0x00000000e7000000, 0x00000000eb460000, 0x00000000eb460000)
+[2026-09-17T13:45:34.330+0000][15.473s][debug][gc,heap        ] GC(27)   from space 8704K,  39% used [0x00000000ebce0000, 0x00000000ec033978, 0x00000000ec560000)
+[2026-09-17T13:45:34.330+0000][15.473s][debug][gc,heap        ] GC(27)   to   space 8704K,   0% used [0x00000000eb460000, 0x00000000eb460000, 0x00000000ebce0000)
+[2026-09-17T13:45:34.330+0000][15.473s][debug][gc,heap        ] GC(27)  tenured generation   total 174784K, used 64622K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:34.330+0000][15.473s][debug][gc,heap        ] GC(27)    the space 174784K,  36% used [0x00000000ef550000, 0x00000000f346b9c8, 0x00000000f346ba00, 0x00000000fa000000)
+[2026-09-17T13:45:34.330+0000][15.473s][debug][gc,heap        ] GC(27)  Metaspace       used 105561K, committed 106368K, reserved 1179648K
+[2026-09-17T13:45:34.330+0000][15.473s][debug][gc,heap        ] GC(27)   class space    used 14734K, committed 15104K, reserved 1048576K
+[2026-09-17T13:45:34.339+0000][15.481s][info ][gc,heap        ] GC(27) DefNew: 73422K(78720K)->5781K(78720K) Eden: 70016K(70016K)->0K(70016K) From: 3406K(8704K)->5781K(8704K)
+[2026-09-17T13:45:34.339+0000][15.481s][info ][gc,heap        ] GC(27) Tenured: 64622K(174784K)->64622K(174784K)
+[2026-09-17T13:45:34.339+0000][15.481s][info ][gc,metaspace   ] GC(27) Metaspace: 105561K(106368K)->105561K(106368K) NonClass: 90827K(91264K)->90827K(91264K) Class: 14734K(15104K)->14734K(15104K)
+[2026-09-17T13:45:34.339+0000][15.481s][debug][gc,heap        ] GC(27) Heap after GC invocations=28 (full 4):
+[2026-09-17T13:45:34.339+0000][15.481s][debug][gc,heap        ] GC(27)  def new generation   total 78720K, used 5781K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:34.339+0000][15.481s][debug][gc,heap        ] GC(27)   eden space 70016K,   0% used [0x00000000e7000000, 0x00000000e7000000, 0x00000000eb460000)
+[2026-09-17T13:45:34.339+0000][15.481s][debug][gc,heap        ] GC(27)   from space 8704K,  66% used [0x00000000eb460000, 0x00000000eba055a0, 0x00000000ebce0000)
+[2026-09-17T13:45:34.339+0000][15.481s][debug][gc,heap        ] GC(27)   to   space 8704K,   0% used [0x00000000ebce0000, 0x00000000ebce0000, 0x00000000ec560000)
+[2026-09-17T13:45:34.339+0000][15.481s][debug][gc,heap        ] GC(27)  tenured generation   total 174784K, used 64622K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:34.339+0000][15.481s][debug][gc,heap        ] GC(27)    the space 174784K,  36% used [0x00000000ef550000, 0x00000000f346b9c8, 0x00000000f346ba00, 0x00000000fa000000)
+[2026-09-17T13:45:34.339+0000][15.481s][debug][gc,heap        ] GC(27)  Metaspace       used 105561K, committed 106368K, reserved 1179648K
+[2026-09-17T13:45:34.339+0000][15.481s][debug][gc,heap        ] GC(27)   class space    used 14734K, committed 15104K, reserved 1048576K
+[2026-09-17T13:45:34.339+0000][15.481s][info ][gc             ] GC(27) Pause Young (Allocation Failure) 134M->68M(247M) 8.700ms
+[2026-09-17T13:45:34.395+0000][15.538s][info ][gc,cpu         ] GC(27) User=0.02s Sys=0.00s Real=0.01s
+[2026-09-17T13:45:34.839+0000][15.981s][info ][gc,start       ] GC(28) Pause Young (Allocation Failure)
+[2026-09-17T13:45:34.839+0000][15.981s][debug][gc,heap        ] GC(28) Heap before GC invocations=28 (full 4):
+[2026-09-17T13:45:34.839+0000][15.981s][debug][gc,heap        ] GC(28)  def new generation   total 78720K, used 75797K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:34.839+0000][15.981s][debug][gc,heap        ] GC(28)   eden space 70016K, 100% used [0x00000000e7000000, 0x00000000eb460000, 0x00000000eb460000)
+[2026-09-17T13:45:34.839+0000][15.981s][debug][gc,heap        ] GC(28)   from space 8704K,  66% used [0x00000000eb460000, 0x00000000eba055a0, 0x00000000ebce0000)
+[2026-09-17T13:45:34.839+0000][15.981s][debug][gc,heap        ] GC(28)   to   space 8704K,   0% used [0x00000000ebce0000, 0x00000000ebce0000, 0x00000000ec560000)
+[2026-09-17T13:45:34.839+0000][15.981s][debug][gc,heap        ] GC(28)  tenured generation   total 174784K, used 64622K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:34.839+0000][15.981s][debug][gc,heap        ] GC(28)    the space 174784K,  36% used [0x00000000ef550000, 0x00000000f346b9c8, 0x00000000f346ba00, 0x00000000fa000000)
+[2026-09-17T13:45:34.839+0000][15.981s][debug][gc,heap        ] GC(28)  Metaspace       used 110944K, committed 111744K, reserved 1179648K
+[2026-09-17T13:45:34.839+0000][15.981s][debug][gc,heap        ] GC(28)   class space    used 15303K, committed 15680K, reserved 1048576K
+[2026-09-17T13:45:34.847+0000][15.990s][info ][gc,heap        ] GC(28) DefNew: 75797K(78720K)->3439K(78720K) Eden: 70016K(70016K)->0K(70016K) From: 5781K(8704K)->3439K(8704K)
+[2026-09-17T13:45:34.847+0000][15.990s][info ][gc,heap        ] GC(28) Tenured: 64622K(174784K)->66101K(174784K)
+[2026-09-17T13:45:34.847+0000][15.990s][info ][gc,metaspace   ] GC(28) Metaspace: 110944K(111744K)->110944K(111744K) NonClass: 95640K(96064K)->95640K(96064K) Class: 15303K(15680K)->15303K(15680K)
+[2026-09-17T13:45:34.847+0000][15.990s][debug][gc,heap        ] GC(28) Heap after GC invocations=29 (full 4):
+[2026-09-17T13:45:34.847+0000][15.990s][debug][gc,heap        ] GC(28)  def new generation   total 78720K, used 3439K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:34.847+0000][15.990s][debug][gc,heap        ] GC(28)   eden space 70016K,   0% used [0x00000000e7000000, 0x00000000e7000000, 0x00000000eb460000)
+[2026-09-17T13:45:34.847+0000][15.990s][debug][gc,heap        ] GC(28)   from space 8704K,  39% used [0x00000000ebce0000, 0x00000000ec03bf00, 0x00000000ec560000)
+[2026-09-17T13:45:34.847+0000][15.990s][debug][gc,heap        ] GC(28)   to   space 8704K,   0% used [0x00000000eb460000, 0x00000000eb460000, 0x00000000ebce0000)
+[2026-09-17T13:45:34.847+0000][15.990s][debug][gc,heap        ] GC(28)  tenured generation   total 174784K, used 66101K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:34.847+0000][15.990s][debug][gc,heap        ] GC(28)    the space 174784K,  37% used [0x00000000ef550000, 0x00000000f35dd6d8, 0x00000000f35dd800, 0x00000000fa000000)
+[2026-09-17T13:45:34.847+0000][15.990s][debug][gc,heap        ] GC(28)  Metaspace       used 110944K, committed 111744K, reserved 1179648K
+[2026-09-17T13:45:34.847+0000][15.990s][debug][gc,heap        ] GC(28)   class space    used 15303K, committed 15680K, reserved 1048576K
+[2026-09-17T13:45:34.847+0000][15.990s][info ][gc             ] GC(28) Pause Young (Allocation Failure) 137M->67M(247M) 8.272ms
+[2026-09-17T13:45:34.847+0000][15.990s][info ][gc,cpu         ] GC(28) User=0.01s Sys=0.00s Real=0.01s
+[2026-09-17T13:45:35.508+0000][16.650s][info ][gc,start       ] GC(29) Pause Young (Allocation Failure)
+[2026-09-17T13:45:35.508+0000][16.650s][debug][gc,heap        ] GC(29) Heap before GC invocations=29 (full 4):
+[2026-09-17T13:45:35.508+0000][16.650s][debug][gc,heap        ] GC(29)  def new generation   total 78720K, used 73455K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:35.508+0000][16.650s][debug][gc,heap        ] GC(29)   eden space 70016K, 100% used [0x00000000e7000000, 0x00000000eb460000, 0x00000000eb460000)
+[2026-09-17T13:45:35.508+0000][16.650s][debug][gc,heap        ] GC(29)   from space 8704K,  39% used [0x00000000ebce0000, 0x00000000ec03bf00, 0x00000000ec560000)
+[2026-09-17T13:45:35.508+0000][16.650s][debug][gc,heap        ] GC(29)   to   space 8704K,   0% used [0x00000000eb460000, 0x00000000eb460000, 0x00000000ebce0000)
+[2026-09-17T13:45:35.508+0000][16.650s][debug][gc,heap        ] GC(29)  tenured generation   total 174784K, used 66101K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:35.508+0000][16.650s][debug][gc,heap        ] GC(29)    the space 174784K,  37% used [0x00000000ef550000, 0x00000000f35dd6d8, 0x00000000f35dd800, 0x00000000fa000000)
+[2026-09-17T13:45:35.508+0000][16.650s][debug][gc,heap        ] GC(29)  Metaspace       used 114976K, committed 115904K, reserved 1179648K
+[2026-09-17T13:45:35.508+0000][16.650s][debug][gc,heap        ] GC(29)   class space    used 15836K, committed 16256K, reserved 1048576K
+[2026-09-17T13:45:35.518+0000][16.661s][info ][gc,heap        ] GC(29) DefNew: 73455K(78720K)->6358K(78720K) Eden: 70016K(70016K)->0K(70016K) From: 3439K(8704K)->6358K(8704K)
+[2026-09-17T13:45:35.518+0000][16.661s][info ][gc,heap        ] GC(29) Tenured: 66101K(174784K)->66101K(174784K)
+[2026-09-17T13:45:35.518+0000][16.661s][info ][gc,metaspace   ] GC(29) Metaspace: 114976K(115904K)->114976K(115904K) NonClass: 99139K(99648K)->99139K(99648K) Class: 15836K(16256K)->15836K(16256K)
+[2026-09-17T13:45:35.518+0000][16.661s][debug][gc,heap        ] GC(29) Heap after GC invocations=30 (full 4):
+[2026-09-17T13:45:35.518+0000][16.661s][debug][gc,heap        ] GC(29)  def new generation   total 78720K, used 6358K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:35.518+0000][16.661s][debug][gc,heap        ] GC(29)   eden space 70016K,   0% used [0x00000000e7000000, 0x00000000e7000000, 0x00000000eb460000)
+[2026-09-17T13:45:35.518+0000][16.661s][debug][gc,heap        ] GC(29)   from space 8704K,  73% used [0x00000000eb460000, 0x00000000eba95bf8, 0x00000000ebce0000)
+[2026-09-17T13:45:35.518+0000][16.661s][debug][gc,heap        ] GC(29)   to   space 8704K,   0% used [0x00000000ebce0000, 0x00000000ebce0000, 0x00000000ec560000)
+[2026-09-17T13:45:35.518+0000][16.661s][debug][gc,heap        ] GC(29)  tenured generation   total 174784K, used 66101K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:35.518+0000][16.661s][debug][gc,heap        ] GC(29)    the space 174784K,  37% used [0x00000000ef550000, 0x00000000f35dd6d8, 0x00000000f35dd800, 0x00000000fa000000)
+[2026-09-17T13:45:35.518+0000][16.661s][debug][gc,heap        ] GC(29)  Metaspace       used 114976K, committed 115904K, reserved 1179648K
+[2026-09-17T13:45:35.518+0000][16.661s][debug][gc,heap        ] GC(29)   class space    used 15836K, committed 16256K, reserved 1048576K
+[2026-09-17T13:45:35.519+0000][16.661s][info ][gc             ] GC(29) Pause Young (Allocation Failure) 136M->70M(247M) 10.766ms
+[2026-09-17T13:45:35.519+0000][16.661s][info ][gc,cpu         ] GC(29) User=0.01s Sys=0.00s Real=0.01s
+[2026-09-17T13:45:36.016+0000][17.158s][info ][gc,start       ] GC(30) Pause Young (Allocation Failure)
+[2026-09-17T13:45:36.016+0000][17.158s][debug][gc,heap        ] GC(30) Heap before GC invocations=30 (full 4):
+[2026-09-17T13:45:36.016+0000][17.158s][debug][gc,heap        ] GC(30)  def new generation   total 78720K, used 76374K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:36.016+0000][17.158s][debug][gc,heap        ] GC(30)   eden space 70016K, 100% used [0x00000000e7000000, 0x00000000eb460000, 0x00000000eb460000)
+[2026-09-17T13:45:36.016+0000][17.158s][debug][gc,heap        ] GC(30)   from space 8704K,  73% used [0x00000000eb460000, 0x00000000eba95bf8, 0x00000000ebce0000)
+[2026-09-17T13:45:36.016+0000][17.158s][debug][gc,heap        ] GC(30)   to   space 8704K,   0% used [0x00000000ebce0000, 0x00000000ebce0000, 0x00000000ec560000)
+[2026-09-17T13:45:36.016+0000][17.158s][debug][gc,heap        ] GC(30)  tenured generation   total 174784K, used 66101K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:36.016+0000][17.159s][debug][gc,heap        ] GC(30)    the space 174784K,  37% used [0x00000000ef550000, 0x00000000f35dd6d8, 0x00000000f35dd800, 0x00000000fa000000)
+[2026-09-17T13:45:36.016+0000][17.159s][debug][gc,heap        ] GC(30)  Metaspace       used 116265K, committed 117248K, reserved 1179648K
+[2026-09-17T13:45:36.016+0000][17.159s][debug][gc,heap        ] GC(30)   class space    used 16031K, committed 16512K, reserved 1048576K
+[2026-09-17T13:45:36.030+0000][17.172s][info ][gc,heap        ] GC(30) DefNew: 76374K(78720K)->5215K(78720K) Eden: 70016K(70016K)->0K(70016K) From: 6358K(8704K)->5215K(8704K)
+[2026-09-17T13:45:36.030+0000][17.172s][info ][gc,heap        ] GC(30) Tenured: 66101K(174784K)->69463K(174784K)
+[2026-09-17T13:45:36.030+0000][17.172s][info ][gc,metaspace   ] GC(30) Metaspace: 116265K(117248K)->116265K(117248K) NonClass: 100234K(100736K)->100234K(100736K) Class: 16031K(16512K)->16031K(16512K)
+[2026-09-17T13:45:36.030+0000][17.172s][debug][gc,heap        ] GC(30) Heap after GC invocations=31 (full 4):
+[2026-09-17T13:45:36.030+0000][17.172s][debug][gc,heap        ] GC(30)  def new generation   total 78720K, used 5215K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:36.030+0000][17.172s][debug][gc,heap        ] GC(30)   eden space 70016K,   0% used [0x00000000e7000000, 0x00000000e7000000, 0x00000000eb460000)
+[2026-09-17T13:45:36.030+0000][17.172s][debug][gc,heap        ] GC(30)   from space 8704K,  59% used [0x00000000ebce0000, 0x00000000ec1f7d58, 0x00000000ec560000)
+[2026-09-17T13:45:36.030+0000][17.172s][debug][gc,heap        ] GC(30)   to   space 8704K,   0% used [0x00000000eb460000, 0x00000000eb460000, 0x00000000ebce0000)
+[2026-09-17T13:45:36.030+0000][17.172s][debug][gc,heap        ] GC(30)  tenured generation   total 174784K, used 69463K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:36.030+0000][17.172s][debug][gc,heap        ] GC(30)    the space 174784K,  39% used [0x00000000ef550000, 0x00000000f3925ef8, 0x00000000f3926000, 0x00000000fa000000)
+[2026-09-17T13:45:36.030+0000][17.172s][debug][gc,heap        ] GC(30)  Metaspace       used 116265K, committed 117248K, reserved 1179648K
+[2026-09-17T13:45:36.030+0000][17.172s][debug][gc,heap        ] GC(30)   class space    used 16031K, committed 16512K, reserved 1048576K
+[2026-09-17T13:45:36.030+0000][17.172s][info ][gc             ] GC(30) Pause Young (Allocation Failure) 139M->72M(247M) 13.552ms
+[2026-09-17T13:45:36.030+0000][17.172s][info ][gc,cpu         ] GC(30) User=0.02s Sys=0.00s Real=0.01s
+[2026-09-17T13:45:36.703+0000][17.846s][info ][gc,start       ] GC(31) Pause Young (Allocation Failure)
+[2026-09-17T13:45:36.704+0000][17.846s][debug][gc,heap        ] GC(31) Heap before GC invocations=31 (full 4):
+[2026-09-17T13:45:36.704+0000][17.846s][debug][gc,heap        ] GC(31)  def new generation   total 78720K, used 75231K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:36.704+0000][17.846s][debug][gc,heap        ] GC(31)   eden space 70016K, 100% used [0x00000000e7000000, 0x00000000eb460000, 0x00000000eb460000)
+[2026-09-17T13:45:36.704+0000][17.846s][debug][gc,heap        ] GC(31)   from space 8704K,  59% used [0x00000000ebce0000, 0x00000000ec1f7d58, 0x00000000ec560000)
+[2026-09-17T13:45:36.704+0000][17.846s][debug][gc,heap        ] GC(31)   to   space 8704K,   0% used [0x00000000eb460000, 0x00000000eb460000, 0x00000000ebce0000)
+[2026-09-17T13:45:36.704+0000][17.846s][debug][gc,heap        ] GC(31)  tenured generation   total 174784K, used 69463K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:36.704+0000][17.846s][debug][gc,heap        ] GC(31)    the space 174784K,  39% used [0x00000000ef550000, 0x00000000f3925ef8, 0x00000000f3926000, 0x00000000fa000000)
+[2026-09-17T13:45:36.704+0000][17.846s][debug][gc,heap        ] GC(31)  Metaspace       used 119741K, committed 120768K, reserved 1179648K
+[2026-09-17T13:45:36.704+0000][17.846s][debug][gc,heap        ] GC(31)   class space    used 16533K, committed 17024K, reserved 1048576K
+[2026-09-17T13:45:36.718+0000][17.860s][info ][gc,heap        ] GC(31) DefNew: 75231K(78720K)->4765K(78720K) Eden: 70016K(70016K)->0K(70016K) From: 5215K(8704K)->4765K(8704K)
+[2026-09-17T13:45:36.718+0000][17.860s][info ][gc,heap        ] GC(31) Tenured: 69463K(174784K)->72394K(174784K)
+[2026-09-17T13:45:36.718+0000][17.860s][info ][gc,metaspace   ] GC(31) Metaspace: 119741K(120768K)->119741K(120768K) NonClass: 103208K(103744K)->103208K(103744K) Class: 16533K(17024K)->16533K(17024K)
+[2026-09-17T13:45:36.718+0000][17.860s][debug][gc,heap        ] GC(31) Heap after GC invocations=32 (full 4):
+[2026-09-17T13:45:36.718+0000][17.860s][debug][gc,heap        ] GC(31)  def new generation   total 78720K, used 4765K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:36.718+0000][17.860s][debug][gc,heap        ] GC(31)   eden space 70016K,   0% used [0x00000000e7000000, 0x00000000e7000000, 0x00000000eb460000)
+[2026-09-17T13:45:36.718+0000][17.860s][debug][gc,heap        ] GC(31)   from space 8704K,  54% used [0x00000000eb460000, 0x00000000eb907620, 0x00000000ebce0000)
+[2026-09-17T13:45:36.718+0000][17.860s][debug][gc,heap        ] GC(31)   to   space 8704K,   0% used [0x00000000ebce0000, 0x00000000ebce0000, 0x00000000ec560000)
+[2026-09-17T13:45:36.718+0000][17.860s][debug][gc,heap        ] GC(31)  tenured generation   total 174784K, used 72394K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:36.718+0000][17.860s][debug][gc,heap        ] GC(31)    the space 174784K,  41% used [0x00000000ef550000, 0x00000000f3c02a40, 0x00000000f3c02c00, 0x00000000fa000000)
+[2026-09-17T13:45:36.718+0000][17.860s][debug][gc,heap        ] GC(31)  Metaspace       used 119741K, committed 120768K, reserved 1179648K
+[2026-09-17T13:45:36.718+0000][17.860s][debug][gc,heap        ] GC(31)   class space    used 16533K, committed 17024K, reserved 1048576K
+[2026-09-17T13:45:36.718+0000][17.860s][info ][gc             ] GC(31) Pause Young (Allocation Failure) 141M->75M(247M) 14.336ms
+[2026-09-17T13:45:36.718+0000][17.860s][info ][gc,cpu         ] GC(31) User=0.02s Sys=0.01s Real=0.02s
+[2026-09-17T13:45:37.511+0000][18.653s][info ][gc,start       ] GC(32) Pause Young (Allocation Failure)
+[2026-09-17T13:45:37.511+0000][18.653s][debug][gc,heap        ] GC(32) Heap before GC invocations=32 (full 4):
+[2026-09-17T13:45:37.511+0000][18.653s][debug][gc,heap        ] GC(32)  def new generation   total 78720K, used 74781K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:37.511+0000][18.653s][debug][gc,heap        ] GC(32)   eden space 70016K, 100% used [0x00000000e7000000, 0x00000000eb460000, 0x00000000eb460000)
+[2026-09-17T13:45:37.511+0000][18.653s][debug][gc,heap        ] GC(32)   from space 8704K,  54% used [0x00000000eb460000, 0x00000000eb907620, 0x00000000ebce0000)
+[2026-09-17T13:45:37.511+0000][18.653s][debug][gc,heap        ] GC(32)   to   space 8704K,   0% used [0x00000000ebce0000, 0x00000000ebce0000, 0x00000000ec560000)
+[2026-09-17T13:45:37.511+0000][18.653s][debug][gc,heap        ] GC(32)  tenured generation   total 174784K, used 72394K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:37.511+0000][18.653s][debug][gc,heap        ] GC(32)    the space 174784K,  41% used [0x00000000ef550000, 0x00000000f3c02a40, 0x00000000f3c02c00, 0x00000000fa000000)
+[2026-09-17T13:45:37.511+0000][18.653s][debug][gc,heap        ] GC(32)  Metaspace       used 122340K, committed 123392K, reserved 1179648K
+[2026-09-17T13:45:37.511+0000][18.653s][debug][gc,heap        ] GC(32)   class space    used 16931K, committed 17408K, reserved 1048576K
+[2026-09-17T13:45:37.524+0000][18.667s][info ][gc,heap        ] GC(32) DefNew: 74781K(78720K)->4658K(78720K) Eden: 70016K(70016K)->0K(70016K) From: 4765K(8704K)->4658K(8704K)
+[2026-09-17T13:45:37.524+0000][18.667s][info ][gc,heap        ] GC(32) Tenured: 72394K(174784K)->74643K(174784K)
+[2026-09-17T13:45:37.524+0000][18.667s][info ][gc,metaspace   ] GC(32) Metaspace: 122340K(123392K)->122340K(123392K) NonClass: 105409K(105984K)->105409K(105984K) Class: 16931K(17408K)->16931K(17408K)
+[2026-09-17T13:45:37.524+0000][18.667s][debug][gc,heap        ] GC(32) Heap after GC invocations=33 (full 4):
+[2026-09-17T13:45:37.524+0000][18.667s][debug][gc,heap        ] GC(32)  def new generation   total 78720K, used 4658K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:37.524+0000][18.667s][debug][gc,heap        ] GC(32)   eden space 70016K,   0% used [0x00000000e7000000, 0x00000000e7000000, 0x00000000eb460000)
+[2026-09-17T13:45:37.524+0000][18.667s][debug][gc,heap        ] GC(32)   from space 8704K,  53% used [0x00000000ebce0000, 0x00000000ec16c860, 0x00000000ec560000)
+[2026-09-17T13:45:37.524+0000][18.667s][debug][gc,heap        ] GC(32)   to   space 8704K,   0% used [0x00000000eb460000, 0x00000000eb460000, 0x00000000ebce0000)
+[2026-09-17T13:45:37.524+0000][18.667s][debug][gc,heap        ] GC(32)  tenured generation   total 174784K, used 74643K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:37.524+0000][18.667s][debug][gc,heap        ] GC(32)    the space 174784K,  42% used [0x00000000ef550000, 0x00000000f3e34e08, 0x00000000f3e35000, 0x00000000fa000000)
+[2026-09-17T13:45:37.524+0000][18.667s][debug][gc,heap        ] GC(32)  Metaspace       used 122340K, committed 123392K, reserved 1179648K
+[2026-09-17T13:45:37.524+0000][18.667s][debug][gc,heap        ] GC(32)   class space    used 16931K, committed 17408K, reserved 1048576K
+[2026-09-17T13:45:37.524+0000][18.667s][info ][gc             ] GC(32) Pause Young (Allocation Failure) 143M->77M(247M) 13.905ms
+[2026-09-17T13:45:37.524+0000][18.667s][info ][gc,cpu         ] GC(32) User=0.02s Sys=0.00s Real=0.01s
+[2026-09-17T13:45:38.318+0000][19.460s][info ][gc,start       ] GC(33) Pause Young (Allocation Failure)
+[2026-09-17T13:45:38.318+0000][19.460s][debug][gc,heap        ] GC(33) Heap before GC invocations=33 (full 4):
+[2026-09-17T13:45:38.318+0000][19.460s][debug][gc,heap        ] GC(33)  def new generation   total 78720K, used 74674K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:38.318+0000][19.460s][debug][gc,heap        ] GC(33)   eden space 70016K, 100% used [0x00000000e7000000, 0x00000000eb460000, 0x00000000eb460000)
+[2026-09-17T13:45:38.318+0000][19.460s][debug][gc,heap        ] GC(33)   from space 8704K,  53% used [0x00000000ebce0000, 0x00000000ec16c860, 0x00000000ec560000)
+[2026-09-17T13:45:38.318+0000][19.460s][debug][gc,heap        ] GC(33)   to   space 8704K,   0% used [0x00000000eb460000, 0x00000000eb460000, 0x00000000ebce0000)
+[2026-09-17T13:45:38.318+0000][19.460s][debug][gc,heap        ] GC(33)  tenured generation   total 174784K, used 74643K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:38.318+0000][19.460s][debug][gc,heap        ] GC(33)    the space 174784K,  42% used [0x00000000ef550000, 0x00000000f3e34e08, 0x00000000f3e35000, 0x00000000fa000000)
+[2026-09-17T13:45:38.318+0000][19.460s][debug][gc,heap        ] GC(33)  Metaspace       used 126986K, committed 128128K, reserved 1179648K
+[2026-09-17T13:45:38.318+0000][19.461s][debug][gc,heap        ] GC(33)   class space    used 17587K, committed 18112K, reserved 1048576K
+[2026-09-17T13:45:38.337+0000][19.480s][info ][gc,heap        ] GC(33) DefNew: 74674K(78720K)->4456K(78720K) Eden: 70016K(70016K)->0K(70016K) From: 4658K(8704K)->4456K(8704K)
+[2026-09-17T13:45:38.337+0000][19.480s][info ][gc,heap        ] GC(33) Tenured: 74643K(174784K)->76954K(174784K)
+[2026-09-17T13:45:38.337+0000][19.480s][info ][gc,metaspace   ] GC(33) Metaspace: 126986K(128128K)->126986K(128128K) NonClass: 109398K(110016K)->109398K(110016K) Class: 17587K(18112K)->17587K(18112K)
+[2026-09-17T13:45:38.337+0000][19.480s][debug][gc,heap        ] GC(33) Heap after GC invocations=34 (full 4):
+[2026-09-17T13:45:38.337+0000][19.480s][debug][gc,heap        ] GC(33)  def new generation   total 78720K, used 4456K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:38.337+0000][19.480s][debug][gc,heap        ] GC(33)   eden space 70016K,   0% used [0x00000000e7000000, 0x00000000e7000000, 0x00000000eb460000)
+[2026-09-17T13:45:38.337+0000][19.480s][debug][gc,heap        ] GC(33)   from space 8704K,  51% used [0x00000000eb460000, 0x00000000eb8ba208, 0x00000000ebce0000)
+[2026-09-17T13:45:38.337+0000][19.480s][debug][gc,heap        ] GC(33)   to   space 8704K,   0% used [0x00000000ebce0000, 0x00000000ebce0000, 0x00000000ec560000)
+[2026-09-17T13:45:38.337+0000][19.480s][debug][gc,heap        ] GC(33)  tenured generation   total 174784K, used 76954K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:38.337+0000][19.480s][debug][gc,heap        ] GC(33)    the space 174784K,  44% used [0x00000000ef550000, 0x00000000f4076bc8, 0x00000000f4076c00, 0x00000000fa000000)
+[2026-09-17T13:45:38.337+0000][19.480s][debug][gc,heap        ] GC(33)  Metaspace       used 126986K, committed 128128K, reserved 1179648K
+[2026-09-17T13:45:38.337+0000][19.480s][debug][gc,heap        ] GC(33)   class space    used 17587K, committed 18112K, reserved 1048576K
+[2026-09-17T13:45:38.337+0000][19.480s][info ][gc             ] GC(33) Pause Young (Allocation Failure) 145M->79M(247M) 19.223ms
+[2026-09-17T13:45:38.337+0000][19.480s][info ][gc,cpu         ] GC(33) User=0.02s Sys=0.00s Real=0.02s
+[2026-09-17T13:45:39.030+0000][20.173s][info ][gc,start       ] GC(34) Pause Young (Allocation Failure)
+[2026-09-17T13:45:39.031+0000][20.173s][debug][gc,heap        ] GC(34) Heap before GC invocations=34 (full 4):
+[2026-09-17T13:45:39.031+0000][20.173s][debug][gc,heap        ] GC(34)  def new generation   total 78720K, used 74472K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:39.031+0000][20.173s][debug][gc,heap        ] GC(34)   eden space 70016K, 100% used [0x00000000e7000000, 0x00000000eb460000, 0x00000000eb460000)
+[2026-09-17T13:45:39.031+0000][20.173s][debug][gc,heap        ] GC(34)   from space 8704K,  51% used [0x00000000eb460000, 0x00000000eb8ba208, 0x00000000ebce0000)
+[2026-09-17T13:45:39.031+0000][20.173s][debug][gc,heap        ] GC(34)   to   space 8704K,   0% used [0x00000000ebce0000, 0x00000000ebce0000, 0x00000000ec560000)
+[2026-09-17T13:45:39.031+0000][20.173s][debug][gc,heap        ] GC(34)  tenured generation   total 174784K, used 76954K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:39.031+0000][20.173s][debug][gc,heap        ] GC(34)    the space 174784K,  44% used [0x00000000ef550000, 0x00000000f4076bc8, 0x00000000f4076c00, 0x00000000fa000000)
+[2026-09-17T13:45:39.031+0000][20.173s][debug][gc,heap        ] GC(34)  Metaspace       used 131849K, committed 133120K, reserved 1179648K
+[2026-09-17T13:45:39.031+0000][20.173s][debug][gc,heap        ] GC(34)   class space    used 18233K, committed 18816K, reserved 1048576K
+[2026-09-17T13:45:39.044+0000][20.186s][info ][gc,heap        ] GC(34) DefNew: 74472K(78720K)->3897K(78720K) Eden: 70016K(70016K)->0K(70016K) From: 4456K(8704K)->3897K(8704K)
+[2026-09-17T13:45:39.044+0000][20.186s][info ][gc,heap        ] GC(34) Tenured: 76954K(174784K)->78945K(174784K)
+[2026-09-17T13:45:39.044+0000][20.186s][info ][gc,metaspace   ] GC(34) Metaspace: 131849K(133120K)->131849K(133120K) NonClass: 113615K(114304K)->113615K(114304K) Class: 18233K(18816K)->18233K(18816K)
+[2026-09-17T13:45:39.044+0000][20.186s][debug][gc,heap        ] GC(34) Heap after GC invocations=35 (full 4):
+[2026-09-17T13:45:39.044+0000][20.186s][debug][gc,heap        ] GC(34)  def new generation   total 78720K, used 3897K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:45:39.044+0000][20.186s][debug][gc,heap        ] GC(34)   eden space 70016K,   0% used [0x00000000e7000000, 0x00000000e7000000, 0x00000000eb460000)
+[2026-09-17T13:45:39.044+0000][20.186s][debug][gc,heap        ] GC(34)   from space 8704K,  44% used [0x00000000ebce0000, 0x00000000ec0ae418, 0x00000000ec560000)
+[2026-09-17T13:45:39.044+0000][20.186s][debug][gc,heap        ] GC(34)   to   space 8704K,   0% used [0x00000000eb460000, 0x00000000eb460000, 0x00000000ebce0000)
+[2026-09-17T13:45:39.044+0000][20.186s][debug][gc,heap        ] GC(34)  tenured generation   total 174784K, used 78945K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:45:39.044+0000][20.186s][debug][gc,heap        ] GC(34)    the space 174784K,  45% used [0x00000000ef550000, 0x00000000f42687d0, 0x00000000f4268800, 0x00000000fa000000)
+[2026-09-17T13:45:39.044+0000][20.186s][debug][gc,heap        ] GC(34)  Metaspace       used 131849K, committed 133120K, reserved 1179648K
+[2026-09-17T13:45:39.044+0000][20.186s][debug][gc,heap        ] GC(34)   class space    used 18233K, committed 18816K, reserved 1048576K
+[2026-09-17T13:45:39.044+0000][20.186s][info ][gc             ] GC(34) Pause Young (Allocation Failure) 147M->80M(247M) 13.423ms
+[2026-09-17T13:45:39.044+0000][20.186s][info ][gc,cpu         ] GC(34) User=0.02s Sys=0.00s Real=0.01s
+[2026-09-17T13:46:04.553+0000][45.695s][info ][gc,start       ] GC(35) Pause Young (Allocation Failure)
+[2026-09-17T13:46:04.553+0000][45.695s][debug][gc,heap        ] GC(35) Heap before GC invocations=35 (full 4):
+[2026-09-17T13:46:04.553+0000][45.695s][debug][gc,heap        ] GC(35)  def new generation   total 78720K, used 73913K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:46:04.553+0000][45.695s][debug][gc,heap        ] GC(35)   eden space 70016K, 100% used [0x00000000e7000000, 0x00000000eb460000, 0x00000000eb460000)
+[2026-09-17T13:46:04.553+0000][45.695s][debug][gc,heap        ] GC(35)   from space 8704K,  44% used [0x00000000ebce0000, 0x00000000ec0ae418, 0x00000000ec560000)
+[2026-09-17T13:46:04.553+0000][45.695s][debug][gc,heap        ] GC(35)   to   space 8704K,   0% used [0x00000000eb460000, 0x00000000eb460000, 0x00000000ebce0000)
+[2026-09-17T13:46:04.553+0000][45.695s][debug][gc,heap        ] GC(35)  tenured generation   total 174784K, used 78945K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:46:04.553+0000][45.695s][debug][gc,heap        ] GC(35)    the space 174784K,  45% used [0x00000000ef550000, 0x00000000f42687d0, 0x00000000f4268800, 0x00000000fa000000)
+[2026-09-17T13:46:04.553+0000][45.695s][debug][gc,heap        ] GC(35)  Metaspace       used 136532K, committed 137792K, reserved 1179648K
+[2026-09-17T13:46:04.553+0000][45.695s][debug][gc,heap        ] GC(35)   class space    used 18717K, committed 19328K, reserved 1048576K
+[2026-09-17T13:46:04.564+0000][45.706s][info ][gc,heap        ] GC(35) DefNew: 73913K(78720K)->5233K(78720K) Eden: 70016K(70016K)->0K(70016K) From: 3897K(8704K)->5233K(8704K)
+[2026-09-17T13:46:04.564+0000][45.706s][info ][gc,heap        ] GC(35) Tenured: 78945K(174784K)->78945K(174784K)
+[2026-09-17T13:46:04.564+0000][45.706s][info ][gc,metaspace   ] GC(35) Metaspace: 136532K(137792K)->136532K(137792K) NonClass: 117814K(118464K)->117814K(118464K) Class: 18717K(19328K)->18717K(19328K)
+[2026-09-17T13:46:04.564+0000][45.707s][debug][gc,heap        ] GC(35) Heap after GC invocations=36 (full 4):
+[2026-09-17T13:46:04.564+0000][45.707s][debug][gc,heap        ] GC(35)  def new generation   total 78720K, used 5233K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:46:04.564+0000][45.707s][debug][gc,heap        ] GC(35)   eden space 70016K,   0% used [0x00000000e7000000, 0x00000000e7000000, 0x00000000eb460000)
+[2026-09-17T13:46:04.564+0000][45.707s][debug][gc,heap        ] GC(35)   from space 8704K,  60% used [0x00000000eb460000, 0x00000000eb97c4a8, 0x00000000ebce0000)
+[2026-09-17T13:46:04.564+0000][45.707s][debug][gc,heap        ] GC(35)   to   space 8704K,   0% used [0x00000000ebce0000, 0x00000000ebce0000, 0x00000000ec560000)
+[2026-09-17T13:46:04.564+0000][45.707s][debug][gc,heap        ] GC(35)  tenured generation   total 174784K, used 78945K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:46:04.564+0000][45.707s][debug][gc,heap        ] GC(35)    the space 174784K,  45% used [0x00000000ef550000, 0x00000000f42687d0, 0x00000000f4268800, 0x00000000fa000000)
+[2026-09-17T13:46:04.564+0000][45.707s][debug][gc,heap        ] GC(35)  Metaspace       used 136532K, committed 137792K, reserved 1179648K
+[2026-09-17T13:46:04.564+0000][45.707s][debug][gc,heap        ] GC(35)   class space    used 18717K, committed 19328K, reserved 1048576K
+[2026-09-17T13:46:04.564+0000][45.707s][info ][gc             ] GC(35) Pause Young (Allocation Failure) 149M->82M(247M) 11.750ms
+[2026-09-17T13:46:04.564+0000][45.707s][info ][gc,cpu         ] GC(35) User=0.01s Sys=0.00s Real=0.01s
+[2026-09-17T13:47:22.707+0000][123.849s][info ][gc,start       ] GC(36) Pause Young (Allocation Failure)
+[2026-09-17T13:47:22.707+0000][123.849s][debug][gc,heap        ] GC(36) Heap before GC invocations=36 (full 4):
+[2026-09-17T13:47:22.707+0000][123.849s][debug][gc,heap        ] GC(36)  def new generation   total 78720K, used 75249K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:47:22.707+0000][123.849s][debug][gc,heap        ] GC(36)   eden space 70016K, 100% used [0x00000000e7000000, 0x00000000eb460000, 0x00000000eb460000)
+[2026-09-17T13:47:22.707+0000][123.849s][debug][gc,heap        ] GC(36)   from space 8704K,  60% used [0x00000000eb460000, 0x00000000eb97c4a8, 0x00000000ebce0000)
+[2026-09-17T13:47:22.707+0000][123.849s][debug][gc,heap        ] GC(36)   to   space 8704K,   0% used [0x00000000ebce0000, 0x00000000ebce0000, 0x00000000ec560000)
+[2026-09-17T13:47:22.707+0000][123.849s][debug][gc,heap        ] GC(36)  tenured generation   total 174784K, used 78945K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:47:22.707+0000][123.849s][debug][gc,heap        ] GC(36)    the space 174784K,  45% used [0x00000000ef550000, 0x00000000f42687d0, 0x00000000f4268800, 0x00000000fa000000)
+[2026-09-17T13:47:22.707+0000][123.849s][debug][gc,heap        ] GC(36)  Metaspace       used 137786K, committed 139072K, reserved 1179648K
+[2026-09-17T13:47:22.707+0000][123.849s][debug][gc,heap        ] GC(36)   class space    used 18738K, committed 19328K, reserved 1048576K
+[2026-09-17T13:47:22.719+0000][123.861s][info ][gc,heap        ] GC(36) DefNew: 75249K(78720K)->3616K(78720K) Eden: 70016K(70016K)->0K(70016K) From: 5233K(8704K)->3616K(8704K)
+[2026-09-17T13:47:22.719+0000][123.861s][info ][gc,heap        ] GC(36) Tenured: 78945K(174784K)->81176K(174784K)
+[2026-09-17T13:47:22.719+0000][123.861s][info ][gc,metaspace   ] GC(36) Metaspace: 137786K(139072K)->137786K(139072K) NonClass: 119047K(119744K)->119047K(119744K) Class: 18738K(19328K)->18738K(19328K)
+[2026-09-17T13:47:22.719+0000][123.861s][debug][gc,heap        ] GC(36) Heap after GC invocations=37 (full 4):
+[2026-09-17T13:47:22.719+0000][123.861s][debug][gc,heap        ] GC(36)  def new generation   total 78720K, used 3616K [0x00000000e7000000, 0x00000000ec560000, 0x00000000ef550000)
+[2026-09-17T13:47:22.719+0000][123.861s][debug][gc,heap        ] GC(36)   eden space 70016K,   0% used [0x00000000e7000000, 0x00000000e7000000, 0x00000000eb460000)
+[2026-09-17T13:47:22.719+0000][123.861s][debug][gc,heap        ] GC(36)   from space 8704K,  41% used [0x00000000ebce0000, 0x00000000ec068218, 0x00000000ec560000)
+[2026-09-17T13:47:22.719+0000][123.861s][debug][gc,heap        ] GC(36)   to   space 8704K,   0% used [0x00000000eb460000, 0x00000000eb460000, 0x00000000ebce0000)
+[2026-09-17T13:47:22.719+0000][123.861s][debug][gc,heap        ] GC(36)  tenured generation   total 174784K, used 81176K [0x00000000ef550000, 0x00000000fa000000, 0x0000000100000000)
+[2026-09-17T13:47:22.719+0000][123.861s][debug][gc,heap        ] GC(36)    the space 174784K,  46% used [0x00000000ef550000, 0x00000000f44961e0, 0x00000000f4496200, 0x00000000fa000000)
+[2026-09-17T13:47:22.719+0000][123.861s][debug][gc,heap        ] GC(36)  Metaspace       used 137786K, committed 139072K, reserved 1179648K
+[2026-09-17T13:47:22.719+0000][123.861s][debug][gc,heap        ] GC(36)   class space    used 18738K, committed 19328K, reserved 1048576K
+[2026-09-17T13:47:22.719+0000][123.861s][info ][gc             ] GC(36) Pause Young (Allocation Failure) 150M->82M(247M) 12.649ms
+[2026-09-17T13:47:22.719+0000][123.861s][info ][gc,cpu         ] GC(36) User=0.01s Sys=0.00s Real=0.01s
