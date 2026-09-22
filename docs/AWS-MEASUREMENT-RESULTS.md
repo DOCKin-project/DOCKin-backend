@@ -762,7 +762,7 @@ ERROR: canceling statement due to lock timeout
 
 밤 2의 1.8배 열화(63 → 108~145ms/원본, 15만 청크 뒤)가 코퍼스 크기가 아니라면 무엇인지(밤 3·4, DB-IMPROVEMENT-PLAN **B1**) 가른 밤.
 밤 4까지 쓰던 인스턴스·EBS가 사라져(계정에 아무것도 없었다) 19만 코퍼스를 다시 만들어야 했고, 그래서 **0 → 24만 청크 연속 색인 자체를 밤 2 재현으로** 썼다.
-새 `m7i.2xlarge`(8 vCPU / 30GB, CPU 지문 702ms — 밤 4의 700·706과 같다), PostgreSQL 17.11, TEI 2.0 고정, 컨테이너 상한 그대로(DB 512M). 시드 200,016원본(`CorpusSeedGeneratorTest`). 부트스트랩·연습 주행 포함 약 5시간 ≈ **$2.5**. 스크립트 `scripts/e8-longrun-cause.sh`(PR #74), 산출물 `measure/e8cause-20260917T135138/`(본체 `rate.csv` — 매 분 원본당 ms + DB가 센 값, 사건 `marks.csv`, 스냅샷 `raw/`).
+새 `m7i.2xlarge`(8 vCPU / 30GB, CPU 지문 702ms — 밤 4의 700·706과 같다), PostgreSQL 17.11, TEI 2.0 고정, 컨테이너 상한 그대로(DB 512M). 시드 200,016원본(`CorpusSeedGeneratorTest`). 부트스트랩·연습 주행 포함 약 5시간 ≈ **$2.5**. 스크립트 `scripts/e8-longrun-cause.sh`(PR #74), 산출물 `measure/e8cause-20260917T135138/`(본체 `rate.csv` — 매 분 원본당 ms + DB가 센 값, 사건 `marks.csv`, 스냅샷 `raw/`), 연습 주행(3,000원본, 13:45~13:50)은 `measure/practice-e8cause-20260917T134514/`.
 
 **이 밤의 설계가 밤 4와 다른 점.** 원본당 ms 옆에 **DB가 직접 센 값**을 같은 줄에 적었다 — `pg_stat_statements`의 `INSERT INTO document_chunks` 한 건당 ms, `pg_stat_checkpointer` timed/requested, WAL, `n_dead_tup`·autovacuum 횟수·진행 중 vacuum, 힙·HNSW 크기, app/db/tei CPU%. 재시작 없이도 "DB 안인가 밖인가"가 갈리고, 재시작(기준선×1.4가 3표본 연속이면 앱 → DB → REINDEX 순, 개입마다 8표본 중앙값으로 판정)은 그 위에 얹었다.
 

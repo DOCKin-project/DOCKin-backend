@@ -1,0 +1,6 @@
+2026-09-17 22:40:41.170 KST [55] LOG:  checkpoint starting: shutdown immediate
+2026-09-17 22:40:41.194 KST [55] LOG:  checkpoint complete: wrote 921 buffers (5.6%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.014 s, sync=0.006 s, total=0.026 s; sync files=301, longest=0.003 s, average=0.001 s; distance=4238 kB, estimate=4238 kB; lsn=0/190A9C0, redo lsn=0/190A9C0
+2026-09-17 22:45:41.390 KST [68] LOG:  checkpoint starting: time
+2026-09-17 22:47:13.642 KST [68] LOG:  checkpoint complete: wrote 924 buffers (5.6%); 0 WAL file(s) added, 0 removed, 1 recycled; write=92.209 s, sync=0.036 s, total=92.252 s; sync files=268, longest=0.005 s, average=0.001 s; distance=16698 kB, estimate=16698 kB; lsn=0/344F008, redo lsn=0/29594B0
+2026-09-17 22:48:55.707 KST [68] LOG:  checkpoint starting: shutdown immediate
+2026-09-17 22:48:55.726 KST [68] LOG:  checkpoint complete: wrote 1826 buffers (11.1%); 0 WAL file(s) added, 0 removed, 1 recycled; write=0.012 s, sync=0.005 s, total=0.020 s; sync files=23, longest=0.004 s, average=0.001 s; distance=19509 kB, estimate=19509 kB; lsn=0/3C669A0, redo lsn=0/3C669A0
