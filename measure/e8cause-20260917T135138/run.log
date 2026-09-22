@@ -1,0 +1,234 @@
+13:51:39  watchdog: 390분 뒤 강제 정지 예약
+13:51:39  시작 코퍼스 0 청크 / 원본 200016 / TEI 상한 2.0 고정
+13:51:42  ◆ 앱 기동 — 연속 색인 시작(1회차)
+13:52:45  [baseline] 청크 718 (+718) 원본당 100.0ms | INSERT 0.665ms/건 | ckpt 0/0 wal 5.0MB | dead 0 vac 2 run=0 | hnsw 1MB | cpu app 0.94% db 0.04% tei 200.60% | base —
+13:53:48  [baseline] 청크 1922 (+1204) 원본당 63.0ms | INSERT 0.829ms/건 | ckpt 0/0 wal 12.1MB | dead 0 vac 3 run=0 | hnsw 4MB | cpu app 4.37% db 8.88% tei 189.68% | base —
+13:54:51  [baseline] 청크 3158 (+1236) 원본당 63.0ms | INSERT 0.897ms/건 | ckpt 1/0 wal 23.1MB | dead 0 vac 3 run=0 | hnsw 6MB | cpu app 0.29% db 0.11% tei 199.80% | base —
+13:55:54  [baseline] 청크 4355 (+1197) 원본당 63.0ms | INSERT 0.952ms/건 | ckpt 1/0 wal 30.1MB | dead 0 vac 4 run=0 | hnsw 8MB | cpu app 0.74% db 9.21% tei 200.68% | base —
+13:56:57  [baseline] 청크 5658 (+1303) 원본당 57.3ms | INSERT 0.992ms/건 | ckpt 1/0 wal 37.6MB | dead 0 vac 4 run=0 | hnsw 11MB | cpu app 8.39% db 12.53% tei 200.57% | base —
+13:58:00  [baseline] 청크 6971 (+1313) 원본당 57.3ms | INSERT 0.998ms/건 | ckpt 1/0 wal 45.0MB | dead 0 vac 5 run=0 | hnsw 13MB | cpu app 0.74% db 0.10% tei 199.72% | base —
+13:59:03  [baseline] 청크 8158 (+1187) 원본당 63.0ms | INSERT 1.081ms/건 | ckpt 2/0 wal 61.9MB | dead 0 vac 5 run=0 | hnsw 15MB | cpu app 0.55% db 0.09% tei 201.56% | base —
+14:00:06  [baseline] 청크 9469 (+1311) 원본당 57.3ms | INSERT 1.068ms/건 | ckpt 2/0 wal 72.6MB | dead 0 vac 5 run=0 | hnsw 17MB | cpu app 0.62% db 0.08% tei 199.12% | base —
+14:01:09  [baseline] 청크 10673 (+1204) 원본당 63.0ms | INSERT 1.053ms/건 | ckpt 2/0 wal 79.4MB | dead 0 vac 6 run=0 | hnsw 19MB | cpu app 8.29% db 0.09% tei 172.10% | base —
+14:02:12  [baseline] 청크 11966 (+1293) 원본당 57.3ms | INSERT 1.151ms/건 | ckpt 2/0 wal 86.6MB | dead 0 vac 6 run=0 | hnsw 22MB | cpu app 0.54% db 0.07% tei 200.48% | base —
+14:03:15  [baseline] 청크 13177 (+1211) 원본당 63.0ms | INSERT 1.056ms/건 | ckpt 2/0 wal 93.4MB | dead 0 vac 6 run=0 | hnsw 24MB | cpu app 0.53% db 0.09% tei 170.54% | base —
+14:04:18  [baseline] 청크 14498 (+1321) 원본당 57.3ms | INSERT 1.131ms/건 | ckpt 3/0 wal 121.9MB | dead 0 vac 7 run=0 | hnsw 26MB | cpu app 0.22% db 4.23% tei 200.68% | base —
+14:05:21  [baseline] 청크 15687 (+1189) 원본당 63.0ms | INSERT 1.090ms/건 | ckpt 3/0 wal 130.2MB | dead 0 vac 7 run=0 | hnsw 28MB | cpu app 0.29% db 14.23% tei 198.45% | base —
+14:06:24  [baseline] 청크 16997 (+1310) 원본당 57.3ms | INSERT 1.261ms/건 | ckpt 3/0 wal 137.5MB | dead 0 vac 7 run=0 | hnsw 30MB | cpu app 0.63% db 0.09% tei 200.60% | base —
+14:07:27  [baseline] 청크 18174 (+1177) 원본당 63.0ms | INSERT 1.129ms/건 | ckpt 3/0 wal 144.0MB | dead 0 vac 7 run=0 | hnsw 32MB | cpu app 1.18% db 0.07% tei 171.11% | base —
+14:08:30  [baseline] 청크 19380 (+1206) 원본당 63.0ms | INSERT 1.387ms/건 | ckpt 3/0 wal 150.8MB | dead 0 vac 8 run=0 | hnsw 34MB | cpu app 1.19% db 0.00% tei 170.57% | base —
+14:09:33  [baseline] 청크 20714 (+1334) 원본당 57.3ms | INSERT 1.148ms/건 | ckpt 4/0 wal 188.9MB | dead 0 vac 8 run=0 | hnsw 36MB | cpu app 0.23% db 0.09% tei 201.15% | base —
+14:10:36  [baseline] 청크 21906 (+1192) 원본당 63.0ms | INSERT 1.136ms/건 | ckpt 4/0 wal 196.4MB | dead 0 vac 8 run=0 | hnsw 38MB | cpu app 4.80% db 4.04% tei 200.93% | base —
+14:10:36  ◆ 기준선 확정 63.0ms/원본 (유효 15표본 중앙값)
+14:11:39  [watch] 청크 23208 (+1302) 원본당 57.3ms | INSERT 1.407ms/건 | ckpt 4/0 wal 203.7MB | dead 0 vac 8 run=0 | hnsw 41MB | cpu app 0.50% db 1.08% tei 200.45% | base 63.0
+14:12:42  [watch] 청크 24385 (+1177) 원본당 63.0ms | INSERT 1.181ms/건 | ckpt 4/0 wal 210.2MB | dead 0 vac 9 run=0 | hnsw 43MB | cpu app 0.86% db 0.10% tei 201.31% | base 63.0
+14:13:45  [watch] 청크 25692 (+1307) 원본당 57.3ms | INSERT 1.195ms/건 | ckpt 4/0 wal 217.4MB | dead 0 vac 9 run=0 | hnsw 45MB | cpu app 0.68% db 100.25% tei 199.65% | base 63.0
+14:14:48  [watch] 청크 26890 (+1198) 원본당 63.0ms | INSERT 1.471ms/건 | ckpt 5/0 wal 263.7MB | dead 0 vac 9 run=0 | hnsw 47MB | cpu app 0.50% db 4.01% tei 199.74% | base 63.0
+14:15:51  [watch] 청크 28202 (+1312) 원본당 57.3ms | INSERT 1.188ms/건 | ckpt 5/0 wal 271.9MB | dead 0 vac 9 run=0 | hnsw 49MB | cpu app 0.60% db 0.11% tei 203.03% | base 63.0
+14:16:54  [watch] 청크 29288 (+1086) 원본당 70.0ms | INSERT 1.188ms/건 | ckpt 5/0 wal 277.8MB | dead 0 vac 9 run=0 | hnsw 51MB | cpu app 0.53% db 4.02% tei 165.85% | base 63.0
+14:17:57  [watch] 청크 30601 (+1313) 원본당 57.3ms | INSERT 1.310ms/건 | ckpt 5/0 wal 285.0MB | dead 0 vac 9 run=0 | hnsw 53MB | cpu app 0.48% db 105.05% tei 198.46% | base 63.0
+14:19:00  [watch] 청크 31818 (+1217) 원본당 63.0ms | INSERT 1.416ms/건 | ckpt 6/0 wal 305.4MB | dead 0 vac 9 run=0 | hnsw 55MB | cpu app 2.65% db 0.09% tei 200.73% | base 63.0
+14:20:03  [watch] 청크 33019 (+1201) 원본당 63.0ms | INSERT 1.235ms/건 | ckpt 6/0 wal 346.6MB | dead 0 vac 10 run=0 | hnsw 57MB | cpu app 0.53% db 0.10% tei 200.30% | base 63.0
+14:21:06  [watch] 청크 34322 (+1303) 원본당 57.3ms | INSERT 1.251ms/건 | ckpt 6/0 wal 354.7MB | dead 0 vac 10 run=0 | hnsw 59MB | cpu app 0.48% db 4.13% tei 200.56% | base 63.0
+14:22:09  [watch] 청크 35522 (+1200) 원본당 63.0ms | INSERT 1.350ms/건 | ckpt 6/0 wal 361.2MB | dead 0 vac 10 run=0 | hnsw 61MB | cpu app 0.48% db 100.10% tei 200.77% | base 63.0
+14:23:12  [watch] 청크 36726 (+1204) 원본당 63.0ms | INSERT 1.403ms/건 | ckpt 6/0 wal 367.8MB | dead 0 vac 10 run=0 | hnsw 63MB | cpu app 3.68% db 0.10% tei 200.74% | base 63.0
+14:24:15  [watch] 청크 37928 (+1202) 원본당 63.0ms | INSERT 1.287ms/건 | ckpt 7/0 wal 402.5MB | dead 0 vac 10 run=0 | hnsw 65MB | cpu app 1.54% db 0.10% tei 199.92% | base 63.0
+14:25:18  [watch] 청크 39138 (+1210) 원본당 63.0ms | INSERT 1.230ms/건 | ckpt 7/0 wal 438.2MB | dead 0 vac 10 run=0 | hnsw 67MB | cpu app 1.10% db 16.28% tei 200.15% | base 63.0
+14:26:21  [watch] 청크 40458 (+1320) 원본당 57.3ms | INSERT 1.250ms/건 | ckpt 7/0 wal 446.5MB | dead 0 vac 10 run=0 | hnsw 69MB | cpu app 0.25% db 0.10% tei 201.63% | base 63.0
+14:27:24  [watch] 청크 41648 (+1190) 원본당 63.0ms | INSERT 1.433ms/건 | ckpt 7/0 wal 453.1MB | dead 0 vac 11 run=0 | hnsw 71MB | cpu app 0.45% db 100.48% tei 199.61% | base 63.0
+14:28:27  [watch] 청크 42856 (+1208) 원본당 63.0ms | INSERT 1.399ms/건 | ckpt 7/0 wal 459.9MB | dead 0 vac 11 run=0 | hnsw 73MB | cpu app 0.52% db 15.25% tei 199.08% | base 63.0
+14:29:30  [watch] 청크 44166 (+1310) 원본당 57.3ms | INSERT 1.308ms/건 | ckpt 8/0 wal 517.2MB | dead 0 vac 11 run=0 | hnsw 75MB | cpu app 0.27% db 0.10% tei 199.89% | base 63.0
+14:30:33  [watch] 청크 45363 (+1197) 원본당 63.0ms | INSERT 1.261ms/건 | ckpt 8/0 wal 539.5MB | dead 0 vac 11 run=0 | hnsw 77MB | cpu app 0.46% db 0.12% tei 199.39% | base 63.0
+14:31:36  [watch] 청크 46680 (+1317) 원본당 57.3ms | INSERT 1.278ms/건 | ckpt 8/0 wal 547.7MB | dead 0 vac 11 run=0 | hnsw 79MB | cpu app 0.45% db 0.09% tei 199.64% | base 63.0
+14:32:39  [watch] 청크 47889 (+1209) 원본당 63.0ms | INSERT 1.621ms/건 | ckpt 8/0 wal 554.3MB | dead 0 vac 11 run=0 | hnsw 81MB | cpu app 0.22% db 99.59% tei 201.95% | base 63.0
+14:33:42  [watch] 청크 49083 (+1194) 원본당 63.0ms | INSERT 1.299ms/건 | ckpt 8/0 wal 561.1MB | dead 0 vac 11 run=0 | hnsw 83MB | cpu app 1.36% db 0.02% tei 168.00% | base 63.0
+14:34:45  [watch] 청크 50477 (+1394) 원본당 52.5ms | INSERT 1.332ms/건 | ckpt 9/0 wal 636.1MB | dead 0 vac 11 run=0 | hnsw 86MB | cpu app 0.48% db 0.11% tei 201.67% | base 63.0
+14:35:48  [watch] 청크 51690 (+1213) 원본당 63.0ms | INSERT 1.263ms/건 | ckpt 9/0 wal 650.4MB | dead 0 vac 12 run=0 | hnsw 88MB | cpu app 0.53% db 0.11% tei 201.61% | base 63.0
+14:36:51  [watch] 청크 53002 (+1312) 원본당 57.3ms | INSERT 1.286ms/건 | ckpt 9/0 wal 658.4MB | dead 0 vac 12 run=0 | hnsw 90MB | cpu app 0.49% db 0.13% tei 200.77% | base 63.0
+14:37:54  [watch] 청크 54207 (+1205) 원본당 63.0ms | INSERT 1.354ms/건 | ckpt 9/0 wal 665.0MB | dead 0 vac 12 run=0 | hnsw 92MB | cpu app 0.42% db 100.09% tei 200.68% | base 63.0
+14:38:57  [watch] 청크 55391 (+1184) 원본당 63.0ms | INSERT 1.575ms/건 | ckpt 9/0 wal 671.7MB | dead 0 vac 12 run=0 | hnsw 94MB | cpu app 0.35% db 16.37% tei 199.35% | base 63.0
+14:40:00  [watch] 청크 56605 (+1214) 원본당 63.0ms | INSERT 1.356ms/건 | ckpt 10/0 wal 752.5MB | dead 0 vac 12 run=0 | hnsw 96MB | cpu app 0.26% db 16.42% tei 200.07% | base 63.0
+14:41:03  [watch] 청크 57934 (+1329) 원본당 57.3ms | INSERT 1.302ms/건 | ckpt 10/0 wal 769.7MB | dead 0 vac 12 run=0 | hnsw 98MB | cpu app 2.21% db 1.18% tei 201.44% | base 63.0
+14:42:06  [watch] 청크 59131 (+1197) 원본당 63.0ms | INSERT 1.323ms/건 | ckpt 10/0 wal 777.1MB | dead 0 vac 12 run=0 | hnsw 100MB | cpu app 0.42% db 0.12% tei 199.74% | base 63.0
+14:43:09  [watch] 청크 60338 (+1207) 원본당 63.0ms | INSERT 1.316ms/건 | ckpt 10/0 wal 783.7MB | dead 0 vac 12 run=0 | hnsw 102MB | cpu app 0.51% db 0.13% tei 201.73% | base 63.0
+14:44:12  [watch] 청크 61561 (+1223) 원본당 63.0ms | INSERT 1.547ms/건 | ckpt 11/0 wal 823.2MB | dead 0 vac 12 run=0 | hnsw 104MB | cpu app 0.90% db 99.95% tei 152.37% | base 63.0
+14:45:15  [watch] 청크 62771 (+1210) 원본당 63.0ms | INSERT 1.638ms/건 | ckpt 11/0 wal 882.7MB | dead 0 vac 12 run=0 | hnsw 106MB | cpu app 2.77% db 0.15% tei 199.12% | base 63.0
+14:46:18  [watch] 청크 63980 (+1209) 원본당 63.0ms | INSERT 1.352ms/건 | ckpt 11/0 wal 896.3MB | dead 0 vac 12 run=0 | hnsw 108MB | cpu app 0.42% db 0.13% tei 199.41% | base 63.0
+14:47:21  [watch] 청크 65181 (+1201) 원본당 63.0ms | INSERT 1.341ms/건 | ckpt 11/0 wal 903.9MB | dead 0 vac 12 run=0 | hnsw 110MB | cpu app 0.26% db 3.76% tei 199.56% | base 63.0
+14:48:24  [watch] 청크 66401 (+1220) 원본당 63.0ms | INSERT 1.331ms/건 | ckpt 11/0 wal 910.9MB | dead 0 vac 13 run=0 | hnsw 112MB | cpu app 1.00% db 11.04% tei 200.10% | base 63.0
+14:49:27  [watch] 청크 67704 (+1303) 원본당 57.3ms | INSERT 1.417ms/건 | ckpt 12/0 wal 979.8MB | dead 0 vac 13 run=0 | hnsw 115MB | cpu app 2.69% db 4.10% tei 199.28% | base 63.0
+14:50:30  [watch] 청크 68902 (+1198) 원본당 63.0ms | INSERT 1.353ms/건 | ckpt 12/0 wal 1021.0MB | dead 0 vac 13 run=0 | hnsw 117MB | cpu app 0.21% db 0.11% tei 199.52% | base 63.0
+14:51:33  [watch] 청크 70106 (+1204) 원본당 63.0ms | INSERT 1.608ms/건 | ckpt 12/0 wal 1032.8MB | dead 0 vac 13 run=0 | hnsw 119MB | cpu app 0.68% db 99.33% tei 161.80% | base 63.0
+14:52:36  [watch] 청크 71413 (+1307) 원본당 58.2ms | INSERT 1.482ms/건 | ckpt 12/0 wal 1040.8MB | dead 0 vac 13 run=0 | hnsw 121MB | cpu app 0.22% db 0.10% tei 199.64% | base 63.0
+14:53:40  [watch] 청크 72511 (+1098) 원본당 70.0ms | INSERT 1.326ms/건 | ckpt 12/0 wal 1046.9MB | dead 0 vac 13 run=0 | hnsw 123MB | cpu app 3.00% db 19.42% tei 200.88% | base 63.0
+14:54:43  [watch] 청크 73738 (+1227) 원본당 63.0ms | INSERT 1.475ms/건 | ckpt 13/0 wal 1126.9MB | dead 0 vac 13 run=0 | hnsw 125MB | cpu app 0.71% db 7.67% tei 156.99% | base 63.0
+14:55:46  [watch] 청크 74958 (+1220) 원본당 63.0ms | INSERT 1.687ms/건 | ckpt 13/0 wal 1164.8MB | dead 0 vac 13 run=0 | hnsw 127MB | cpu app 0.21% db 0.52% tei 200.42% | base 63.0
+14:56:49  [watch] 청크 76144 (+1186) 원본당 63.0ms | INSERT 1.624ms/건 | ckpt 13/0 wal 1177.0MB | dead 0 vac 13 run=0 | hnsw 129MB | cpu app 0.97% db 19.88% tei 201.01% | base 63.0
+14:57:52  [watch] 청크 77358 (+1214) 원본당 63.0ms | INSERT 1.537ms/건 | ckpt 13/0 wal 1184.6MB | dead 0 vac 13 run=0 | hnsw 131MB | cpu app 0.44% db 0.43% tei 201.66% | base 63.0
+14:58:55  [watch] 청크 78546 (+1188) 원본당 63.0ms | INSERT 1.685ms/건 | ckpt 13/0 wal 1191.4MB | dead 0 vac 13 run=0 | hnsw 133MB | cpu app 0.22% db 118.44% tei 199.90% | base 63.0
+14:59:58  [watch] 청크 79859 (+1313) 원본당 57.3ms | INSERT 2.147ms/건 | ckpt 14/0 wal 1293.9MB | dead 0 vac 13 run=0 | hnsw 135MB | cpu app 0.94% db 0.68% tei 199.97% | base 63.0
+15:01:01  [watch] 청크 81066 (+1207) 원본당 63.0ms | INSERT 1.653ms/건 | ckpt 14/0 wal 1320.0MB | dead 0 vac 13 run=0 | hnsw 137MB | cpu app 0.41% db 0.50% tei 199.08% | base 63.0
+15:02:04  [watch] 청크 82285 (+1219) 원본당 63.0ms | INSERT 1.684ms/건 | ckpt 14/0 wal 1330.7MB | dead 0 vac 13 run=0 | hnsw 139MB | cpu app 0.27% db 4.84% tei 198.53% | base 63.0
+15:03:07  [watch] 청크 83502 (+1217) 원본당 63.0ms | INSERT 1.686ms/건 | ckpt 14/0 wal 1338.4MB | dead 0 vac 14 run=0 | hnsw 141MB | cpu app 0.22% db 0.27% tei 199.91% | base 63.0
+15:04:10  [watch] 청크 84698 (+1196) 원본당 63.0ms | INSERT 1.770ms/건 | ckpt 15/0 wal 1378.2MB | dead 0 vac 14 run=0 | hnsw 143MB | cpu app 0.26% db 0.09% tei 200.03% | base 63.0
+15:05:13  [watch] 청크 85900 (+1202) 원본당 63.0ms | INSERT 1.882ms/건 | ckpt 15/0 wal 1458.9MB | dead 0 vac 14 run=0 | hnsw 145MB | cpu app 0.45% db 1.46% tei 199.47% | base 63.0
+15:06:16  [watch] 청크 87202 (+1302) 원본당 57.3ms | INSERT 1.824ms/건 | ckpt 15/0 wal 1483.0MB | dead 0 vac 14 run=0 | hnsw 147MB | cpu app 0.28% db 0.23% tei 199.98% | base 63.0
+15:07:19  [watch] 청크 88402 (+1200) 원본당 63.0ms | INSERT 1.857ms/건 | ckpt 15/0 wal 1492.9MB | dead 0 vac 14 run=0 | hnsw 149MB | cpu app 0.40% db 0.55% tei 199.34% | base 63.0
+15:08:22  [watch] 청크 89592 (+1190) 원본당 64.0ms | INSERT 2.270ms/건 | ckpt 15/0 wal 1500.2MB | dead 0 vac 14 run=0 | hnsw 151MB | cpu app 0.24% db 100.07% tei 200.40% | base 63.0
+15:09:25  [watch] 청크 90808 (+1216) 원본당 63.0ms | INSERT 2.185ms/건 | ckpt 16/0 wal 1566.6MB | dead 0 vac 14 run=0 | hnsw 153MB | cpu app 0.41% db 0.33% tei 201.20% | base 63.0
+15:10:29  [watch] 청크 92002 (+1194) 원본당 63.0ms | INSERT 2.012ms/건 | ckpt 16/0 wal 1631.9MB | dead 0 vac 14 run=0 | hnsw 155MB | cpu app 2.56% db 0.33% tei 145.59% | base 63.0
+15:11:32  [watch] 청크 93209 (+1207) 원본당 63.0ms | INSERT 1.943ms/건 | ckpt 16/0 wal 1653.4MB | dead 0 vac 14 run=0 | hnsw 157MB | cpu app 0.21% db 23.33% tei 200.47% | base 63.0
+15:12:35  [watch] 청크 94422 (+1213) 원본당 63.0ms | INSERT 1.905ms/건 | ckpt 16/0 wal 1663.4MB | dead 0 vac 14 run=0 | hnsw 159MB | cpu app 2.60% db 0.25% tei 151.73% | base 63.0
+15:13:38  [watch] 청크 95622 (+1200) 원본당 63.0ms | INSERT 1.919ms/건 | ckpt 16/0 wal 1671.0MB | dead 0 vac 14 run=0 | hnsw 161MB | cpu app 0.24% db 0.39% tei 199.44% | base 63.0
+15:14:41  [watch] 청크 96812 (+1190) 원본당 63.0ms | INSERT 2.068ms/건 | ckpt 17/0 wal 1757.7MB | dead 0 vac 14 run=0 | hnsw 163MB | cpu app 0.27% db 25.17% tei 201.37% | base 63.0
+15:15:44  [watch] 청크 98028 (+1216) 원본당 63.0ms | INSERT 2.042ms/건 | ckpt 17/0 wal 1812.5MB | dead 0 vac 14 run=0 | hnsw 165MB | cpu app 0.42% db 24.49% tei 149.76% | base 63.0
+15:16:47  [watch] 청크 99255 (+1227) 원본당 63.0ms | INSERT 2.113ms/건 | ckpt 17/0 wal 1832.1MB | dead 0 vac 14 run=0 | hnsw 167MB | cpu app 0.21% db 100.22% tei 201.17% | base 63.0
+15:17:50  [watch] 청크 100452 (+1197) 원본당 63.0ms | INSERT 2.629ms/건 | ckpt 17/0 wal 1842.1MB | dead 0 vac 14 run=0 | hnsw 169MB | cpu app 0.19% db 0.09% tei 199.40% | base 63.0
+15:18:53  [watch] 청크 101657 (+1205) 원본당 63.0ms | INSERT 2.025ms/건 | ckpt 17/0 wal 1849.9MB | dead 0 vac 14 run=0 | hnsw 171MB | cpu app 0.29% db 0.02% tei 199.76% | base 63.0
+15:19:56  [watch] 청크 102856 (+1199) 원본당 63.0ms | INSERT 2.192ms/건 | ckpt 18/0 wal 1960.6MB | dead 0 vac 14 run=0 | hnsw 173MB | cpu app 0.22% db 0.51% tei 198.72% | base 63.0
+15:20:59  [watch] 청크 104050 (+1194) 원본당 63.0ms | INSERT 2.112ms/건 | ckpt 18/0 wal 2002.8MB | dead 0 vac 14 run=0 | hnsw 175MB | cpu app 0.39% db 4.59% tei 201.93% | base 63.0
+15:22:02  [watch] 청크 105255 (+1205) 원본당 63.0ms | INSERT 2.149ms/건 | ckpt 18/0 wal 2020.0MB | dead 0 vac 15 run=0 | hnsw 177MB | cpu app 0.94% db 0.05% tei 152.21% | base 63.0
+15:23:06  [watch] 청크 106549 (+1294) 원본당 58.2ms | INSERT 2.122ms/건 | ckpt 18/0 wal 2030.2MB | dead 0 vac 15 run=0 | hnsw 179MB | cpu app 0.37% db 0.01% tei 199.15% | base 63.0
+15:24:09  [watch] 청크 107762 (+1213) 원본당 63.0ms | INSERT 2.100ms/건 | ckpt 19/0 wal 2072.2MB | dead 0 vac 15 run=0 | hnsw 181MB | cpu app 0.38% db 1.86% tei 200.61% | base 63.0
+15:25:12  [watch] 청크 108966 (+1204) 원본당 63.0ms | INSERT 2.242ms/건 | ckpt 19/0 wal 2168.1MB | dead 0 vac 15 run=0 | hnsw 183MB | cpu app 0.39% db 0.15% tei 200.82% | base 63.0
+15:26:15  [watch] 청크 110177 (+1211) 원본당 63.0ms | INSERT 2.182ms/건 | ckpt 19/0 wal 2201.1MB | dead 0 vac 15 run=0 | hnsw 185MB | cpu app 0.64% db 0.05% tei 201.92% | base 63.0
+15:27:18  [watch] 청크 111363 (+1186) 원본당 63.0ms | INSERT 2.184ms/건 | ckpt 19/0 wal 2216.6MB | dead 0 vac 15 run=0 | hnsw 187MB | cpu app 0.43% db 0.04% tei 200.28% | base 63.0
+15:28:21  [watch] 청크 112469 (+1106) 원본당 70.0ms | INSERT 2.530ms/건 | ckpt 19/0 wal 2225.4MB | dead 0 vac 15 run=0 | hnsw 189MB | cpu app 0.39% db 116.75% tei 202.02% | base 63.0
+15:29:24  [watch] 청크 113680 (+1211) 원본당 63.0ms | INSERT 2.518ms/건 | ckpt 20/0 wal 2296.0MB | dead 0 vac 15 run=0 | hnsw 191MB | cpu app 0.95% db 0.20% tei 143.29% | base 63.0
+15:30:27  [watch] 청크 114893 (+1213) 원본당 63.0ms | INSERT 2.243ms/건 | ckpt 20/0 wal 2375.4MB | dead 0 vac 15 run=0 | hnsw 193MB | cpu app 0.22% db 20.11% tei 199.71% | base 63.0
+15:31:30  [watch] 청크 116088 (+1195) 원본당 63.0ms | INSERT 2.267ms/건 | ckpt 20/0 wal 2406.3MB | dead 0 vac 15 run=0 | hnsw 195MB | cpu app 0.40% db 0.05% tei 169.99% | base 63.0
+15:32:34  [watch] 청크 117403 (+1315) 원본당 58.2ms | INSERT 2.199ms/건 | ckpt 20/0 wal 2421.5MB | dead 0 vac 15 run=0 | hnsw 197MB | cpu app 0.38% db 0.29% tei 198.70% | base 63.0
+15:33:37  [watch] 청크 118584 (+1181) 원본당 63.0ms | INSERT 2.225ms/건 | ckpt 20/0 wal 2430.4MB | dead 0 vac 15 run=0 | hnsw 199MB | cpu app 0.59% db 4.93% tei 178.76% | base 63.0
+15:34:40  [watch] 청크 119796 (+1212) 원본당 63.0ms | INSERT 2.354ms/건 | ckpt 21/0 wal 2527.1MB | dead 0 vac 15 run=0 | hnsw 201MB | cpu app 0.35% db 0.07% tei 200.94% | base 63.0
+15:35:43  [watch] 청크 120994 (+1198) 원본당 63.0ms | INSERT 2.343ms/건 | ckpt 21/0 wal 2593.0MB | dead 0 vac 15 run=0 | hnsw 203MB | cpu app 0.35% db 27.91% tei 200.57% | base 63.0
+15:36:46  [watch] 청크 122291 (+1297) 원본당 57.3ms | INSERT 2.417ms/건 | ckpt 21/0 wal 2621.6MB | dead 0 vac 15 run=0 | hnsw 206MB | cpu app 0.39% db 4.79% tei 199.92% | base 63.0
+15:37:49  [watch] 청크 123483 (+1192) 원본당 63.0ms | INSERT 2.326ms/건 | ckpt 21/0 wal 2634.5MB | dead 0 vac 15 run=0 | hnsw 208MB | cpu app 0.23% db 0.23% tei 200.89% | base 63.0
+15:38:52  [watch] 청크 124685 (+1202) 원본당 63.0ms | INSERT 2.576ms/건 | ckpt 21/0 wal 2643.4MB | dead 0 vac 15 run=0 | hnsw 210MB | cpu app 0.91% db 106.33% tei 109.63% | base 63.0
+15:39:55  [watch] 청크 125979 (+1294) 원본당 57.3ms | INSERT 3.466ms/건 | ckpt 22/0 wal 2772.3MB | dead 0 vac 15 run=0 | hnsw 212MB | cpu app 0.37% db 4.81% tei 200.03% | base 63.0
+15:40:58  [watch] 청크 127073 (+1094) 원본당 70.0ms | INSERT 2.366ms/건 | ckpt 22/0 wal 2818.1MB | dead 0 vac 15 run=0 | hnsw 214MB | cpu app 0.66% db 10.09% tei 159.20% | base 63.0
+15:42:01  [watch] 청크 128274 (+1201) 원본당 63.0ms | INSERT 2.391ms/건 | ckpt 22/0 wal 2841.9MB | dead 0 vac 15 run=0 | hnsw 216MB | cpu app 0.21% db 5.63% tei 164.86% | base 63.0
+15:43:05  [watch] 청크 129476 (+1202) 원본당 64.0ms | INSERT 2.370ms/건 | ckpt 22/0 wal 2855.0MB | dead 0 vac 15 run=0 | hnsw 218MB | cpu app 1.37% db 4.93% tei 144.24% | base 63.0
+15:44:08  [watch] 청크 130687 (+1211) 원본당 63.0ms | INSERT 2.346ms/건 | ckpt 23/0 wal 2883.1MB | dead 0 vac 15 run=0 | hnsw 220MB | cpu app 0.35% db 0.06% tei 201.01% | base 63.0
+15:45:11  [watch] 청크 131999 (+1312) 원본당 57.3ms | INSERT 2.507ms/건 | ckpt 23/0 wal 3007.8MB | dead 0 vac 16 run=0 | hnsw 222MB | cpu app 0.37% db 0.11% tei 199.80% | base 63.0
+15:46:14  [watch] 청크 133204 (+1205) 원본당 63.0ms | INSERT 2.391ms/건 | ckpt 23/0 wal 3052.7MB | dead 0 vac 16 run=0 | hnsw 224MB | cpu app 0.21% db 0.06% tei 200.15% | base 63.0
+15:47:17  [watch] 청크 134401 (+1197) 원본당 63.0ms | INSERT 2.363ms/건 | ckpt 23/0 wal 3073.2MB | dead 0 vac 16 run=0 | hnsw 226MB | cpu app 0.34% db 0.12% tei 199.96% | base 63.0
+15:48:20  [watch] 청크 135616 (+1215) 원본당 63.0ms | INSERT 2.320ms/건 | ckpt 23/0 wal 3085.4MB | dead 0 vac 16 run=0 | hnsw 228MB | cpu app 0.38% db 0.56% tei 201.46% | base 63.0
+15:49:23  [watch] 청크 136708 (+1092) 원본당 70.0ms | INSERT 2.413ms/건 | ckpt 24/0 wal 3157.5MB | dead 0 vac 16 run=0 | hnsw 230MB | cpu app 0.63% db 17.62% tei 172.81% | base 63.0
+15:50:26  [watch] 청크 138018 (+1310) 원본당 57.3ms | INSERT 2.495ms/건 | ckpt 24/0 wal 3255.2MB | dead 0 vac 16 run=0 | hnsw 232MB | cpu app 0.36% db 0.04% tei 200.58% | base 63.0
+15:51:29  [watch] 청크 139191 (+1173) 원본당 63.0ms | INSERT 2.443ms/건 | ckpt 24/0 wal 3292.2MB | dead 0 vac 16 run=0 | hnsw 234MB | cpu app 0.36% db 28.66% tei 198.62% | base 63.0
+15:52:33  [watch] 청크 140393 (+1202) 원본당 63.0ms | INSERT 3.791ms/건 | ckpt 24/0 wal 3311.3MB | dead 0 vac 16 run=0 | hnsw 236MB | cpu app 0.62% db 113.20% tei 148.57% | base 63.0
+15:53:36  [watch] 청크 141600 (+1207) 원본당 64.0ms | INSERT 2.471ms/건 | ckpt 24/0 wal 3322.8MB | dead 0 vac 16 run=0 | hnsw 238MB | cpu app 0.89% db 0.04% tei 146.59% | base 63.0
+15:54:39  [watch] 청크 142799 (+1199) 원본당 63.0ms | INSERT 2.419ms/건 | ckpt 25/0 wal 3421.3MB | dead 0 vac 16 run=0 | hnsw 240MB | cpu app 0.61% db 15.40% tei 167.94% | base 63.0
+15:55:42  [watch] 청크 144015 (+1216) 원본당 63.0ms | INSERT 2.405ms/건 | ckpt 25/0 wal 3500.3MB | dead 0 vac 16 run=0 | hnsw 242MB | cpu app 0.45% db 0.04% tei 187.59% | base 63.0
+15:56:45  [watch] 청크 145311 (+1296) 원본당 57.3ms | INSERT 2.399ms/건 | ckpt 25/0 wal 3539.6MB | dead 0 vac 16 run=0 | hnsw 244MB | cpu app 2.44% db 0.03% tei 201.36% | base 63.0
+15:57:48  [watch] 청크 146511 (+1200) 원본당 63.0ms | INSERT 2.379ms/건 | ckpt 25/0 wal 3557.7MB | dead 0 vac 16 run=0 | hnsw 246MB | cpu app 0.20% db 4.06% tei 198.87% | base 63.0
+15:58:51  [watch] 청크 147708 (+1197) 원본당 63.0ms | INSERT 2.406ms/건 | ckpt 25/0 wal 3569.1MB | dead 0 vac 16 run=0 | hnsw 248MB | cpu app 0.81% db 0.18% tei 143.06% | base 63.0
+15:59:54  [watch] 청크 149024 (+1316) 원본당 57.3ms | INSERT 2.550ms/건 | ckpt 26/0 wal 3699.2MB | dead 0 vac 16 run=0 | hnsw 250MB | cpu app 0.42% db 0.04% tei 199.66% | base 63.0
+16:00:57  [watch] 청크 150219 (+1195) 원본당 63.0ms | INSERT 2.457ms/건 | ckpt 26/0 wal 3764.3MB | dead 0 vac 16 run=0 | hnsw 252MB | cpu app 3.22% db 4.60% tei 200.62% | base 63.0
+16:02:01  [watch] 청크 151313 (+1094) 원본당 71.1ms | INSERT 2.743ms/건 | ckpt 26/0 wal 3793.3MB | dead 0 vac 16 run=0 | hnsw 254MB | cpu app 0.36% db 0.55% tei 199.15% | base 63.0
+16:03:04  [watch] 청크 152505 (+1192) 원본당 63.0ms | INSERT 2.427ms/건 | ckpt 26/0 wal 3811.4MB | dead 0 vac 16 run=0 | hnsw 256MB | cpu app 0.64% db 0.19% tei 146.43% | base 63.0
+16:04:07  [watch] 청크 153714 (+1209) 원본당 63.0ms | INSERT 2.443ms/건 | ckpt 27/0 wal 3840.9MB | dead 0 vac 16 run=0 | hnsw 258MB | cpu app 0.97% db 4.20% tei 129.60% | base 63.0
+16:05:10  [watch] 청크 154910 (+1196) 원본당 63.0ms | INSERT 2.585ms/건 | ckpt 27/0 wal 3968.1MB | dead 0 vac 16 run=0 | hnsw 260MB | cpu app 2.47% db 0.05% tei 135.81% | base 63.0
+16:06:13  [watch] 청크 156130 (+1220) 원본당 63.0ms | INSERT 6.276ms/건 | ckpt 27/0 wal 4027.3MB | dead 0 vac 16 run=0 | hnsw 262MB | cpu app 0.18% db 104.76% tei 200.49% | base 63.0
+16:07:16  [watch] 청크 157324 (+1194) 원본당 63.0ms | INSERT 3.892ms/건 | ckpt 27/0 wal 4056.5MB | dead 0 vac 16 run=0 | hnsw 264MB | cpu app 0.35% db 0.23% tei 199.94% | base 63.0
+16:08:20  [watch] 청크 158509 (+1185) 원본당 64.0ms | INSERT 2.516ms/건 | ckpt 27/0 wal 4074.6MB | dead 0 vac 16 run=0 | hnsw 267MB | cpu app 0.36% db 0.20% tei 200.00% | base 63.0
+16:09:23  [watch] 청크 159732 (+1223) 원본당 63.0ms | INSERT 2.472ms/건 | ckpt 28/0 wal 4135.7MB | dead 0 vac 16 run=0 | hnsw 268MB | cpu app 2.31% db 32.63% tei 201.42% | base 63.0
+16:10:26  [watch] 청크 160935 (+1203) 원본당 63.0ms | INSERT 2.743ms/건 | ckpt 28/0 wal 4245.1MB | dead 0 vac 16 run=0 | hnsw 271MB | cpu app 0.36% db 9.72% tei 200.67% | base 63.0
+16:11:29  [watch] 청크 162269 (+1334) 원본당 57.3ms | INSERT 2.596ms/건 | ckpt 28/0 wal 4302.5MB | dead 0 vac 16 run=0 | hnsw 273MB | cpu app 0.19% db 0.04% tei 201.43% | base 63.0
+16:12:32  [watch] 청크 163475 (+1206) 원본당 63.0ms | INSERT 2.588ms/건 | ckpt 28/0 wal 4329.1MB | dead 0 vac 16 run=0 | hnsw 275MB | cpu app 0.20% db 0.20% tei 199.62% | base 63.0
+16:13:35  [watch] 청크 164676 (+1201) 원본당 63.0ms | INSERT 2.489ms/건 | ckpt 28/0 wal 4344.8MB | dead 0 vac 17 run=0 | hnsw 277MB | cpu app 2.43% db 0.03% tei 200.35% | base 63.0
+16:14:38  [watch] 청크 165891 (+1215) 원본당 63.0ms | INSERT 2.748ms/건 | ckpt 29/0 wal 4447.3MB | dead 0 vac 17 run=0 | hnsw 279MB | cpu app 0.18% db 0.03% tei 199.23% | base 63.0
+16:15:42  [watch] 청크 167073 (+1182) 원본당 64.0ms | INSERT 3.264ms/건 | ckpt 29/0 wal 4537.7MB | dead 0 vac 17 run=0 | hnsw 281MB | cpu app 0.38% db 33.96% tei 139.02% | base 63.0
+16:16:45  [watch] 청크 168278 (+1205) 원본당 63.0ms | INSERT 2.554ms/건 | ckpt 29/0 wal 4582.4MB | dead 0 vac 17 run=0 | hnsw 283MB | cpu app 0.21% db 30.09% tei 137.15% | base 63.0
+16:17:48  [watch] 청크 169593 (+1315) 원본당 57.3ms | INSERT 2.563ms/건 | ckpt 29/0 wal 4608.6MB | dead 0 vac 17 run=0 | hnsw 285MB | cpu app 0.33% db 0.01% tei 200.82% | base 63.0
+16:18:51  [watch] 청크 170800 (+1207) 원본당 63.0ms | INSERT 2.524ms/건 | ckpt 29/0 wal 4623.0MB | dead 0 vac 17 run=0 | hnsw 287MB | cpu app 0.36% db 0.02% tei 199.21% | base 63.0
+16:19:54  [watch] 청크 172015 (+1215) 원본당 63.0ms | INSERT 2.700ms/건 | ckpt 30/0 wal 4757.0MB | dead 0 vac 17 run=0 | hnsw 289MB | cpu app 0.32% db 20.18% tei 200.71% | base 63.0
+16:20:57  [watch] 청크 173217 (+1202) 원본당 63.0ms | INSERT 2.679ms/건 | ckpt 30/0 wal 4832.0MB | dead 0 vac 17 run=0 | hnsw 291MB | cpu app 0.48% db 0.07% tei 133.93% | base 63.0
+16:22:01  [watch] 청크 174303 (+1086) 원본당 70.0ms | INSERT 9.325ms/건 | ckpt 30/0 wal 4868.2MB | dead 0 vac 17 run=0 | hnsw 293MB | cpu app 0.32% db 105.33% tei 199.73% | base 63.0
+16:23:04  [watch] 청크 175382 (+1079) 원본당 71.1ms | INSERT 7.107ms/건 | ckpt 30/0 wal 4890.1MB | dead 0 vac 17 run=0 | hnsw 295MB | cpu app 0.33% db 29.37% tei 202.05% | base 63.0
+16:24:07  [watch] 청크 176685 (+1303) 원본당 57.3ms | INSERT 2.743ms/건 | ckpt 31/0 wal 4942.2MB | dead 0 vac 17 run=0 | hnsw 297MB | cpu app 0.23% db 0.10% tei 200.70% | base 63.0
+16:25:10  [watch] 청크 177803 (+1118) 원본당 70.0ms | INSERT 3.917ms/건 | ckpt 31/0 wal 5058.4MB | dead 0 vac 17 run=0 | hnsw 299MB | cpu app 0.35% db 4.83% tei 201.51% | base 63.0
+16:26:13  [watch] 청크 178997 (+1194) 원본당 63.0ms | INSERT 3.361ms/건 | ckpt 31/0 wal 5126.3MB | dead 0 vac 17 run=0 | hnsw 301MB | cpu app 0.37% db 31.10% tei 201.73% | base 63.0
+16:27:16  [watch] 청크 180289 (+1292) 원본당 57.3ms | INSERT 3.225ms/건 | ckpt 31/0 wal 5165.9MB | dead 0 vac 17 run=0 | hnsw 303MB | cpu app 0.40% db 0.05% tei 200.40% | base 63.0
+16:28:19  [watch] 청크 181494 (+1205) 원본당 63.0ms | INSERT 3.491ms/건 | ckpt 31/0 wal 5185.9MB | dead 0 vac 17 run=0 | hnsw 305MB | cpu app 0.42% db 26.67% tei 60.04% | base 63.0
+16:29:23  [watch] 청크 182682 (+1188) 원본당 64.0ms | INSERT 6.067ms/건 | ckpt 32/0 wal 5263.0MB | dead 0 vac 17 run=0 | hnsw 307MB | cpu app 0.69% db 6.43% tei 66.80% | base 63.0
+16:30:26  [watch] 청크 183875 (+1193) 원본당 63.0ms | INSERT 4.836ms/건 | ckpt 32/0 wal 5373.7MB | dead 0 vac 17 run=0 | hnsw 309MB | cpu app 0.47% db 6.13% tei 190.84% | base 63.0
+16:31:29  [watch] 청크 185068 (+1193) 원본당 63.0ms | INSERT 6.687ms/건 | ckpt 32/0 wal 5433.4MB | dead 0 vac 17 run=0 | hnsw 311MB | cpu app 0.19% db 0.12% tei 200.17% | base 63.0
+16:32:32  [watch] 청크 186154 (+1086) 원본당 70.0ms | INSERT 4.664ms/건 | ckpt 32/0 wal 5464.0MB | dead 0 vac 17 run=0 | hnsw 313MB | cpu app 0.43% db 7.27% tei 199.56% | base 63.0
+16:33:35  [watch] 청크 187347 (+1193) 원본당 63.0ms | INSERT 5.550ms/건 | ckpt 32/0 wal 5484.4MB | dead 0 vac 17 run=0 | hnsw 315MB | cpu app 2.47% db 0.08% tei 201.90% | base 63.0
+16:34:38  [watch] 청크 188425 (+1078) 원본당 70.0ms | INSERT 8.759ms/건 | ckpt 33/0 wal 5575.7MB | dead 0 vac 17 run=0 | hnsw 317MB | cpu app 0.20% db 13.15% tei 0.15% | base 63.0
+16:35:42  [watch] 청크 189520 (+1095) 원본당 71.1ms | INSERT 9.201ms/건 | ckpt 33/0 wal 5673.7MB | dead 0 vac 17 run=0 | hnsw 318MB | cpu app 0.22% db 15.23% tei 146.39% | base 63.0
+16:36:45  [watch] 청크 190703 (+1183) 원본당 63.0ms | INSERT 8.749ms/건 | ckpt 33/0 wal 5733.4MB | dead 0 vac 17 run=0 | hnsw 320MB | cpu app 0.19% db 4.14% tei 200.40% | base 63.0
+16:37:48  [watch] 청크 191770 (+1067) 원본당 70.0ms | INSERT 9.837ms/건 | ckpt 33/0 wal 5764.9MB | dead 0 vac 17 run=0 | hnsw 322MB | cpu app 2.73% db 11.85% tei 143.87% | base 63.0
+16:38:52  [watch] 청크 192730 (+960) 원본당 78.8ms | INSERT 15.391ms/건 | ckpt 33/0 wal 5783.6MB | dead 0 vac 17 run=0 | hnsw 324MB | cpu app 0.19% db 105.88% tei 0.16% | base 63.0
+16:39:55  [watch] 청크 193445 (+715) 원본당 106.7ms | INSERT 47.996ms/건 | ckpt 34/0 wal 5870.9MB | dead 0 vac 17 run=0 | hnsw 325MB | cpu app 0.34% db 0.18% tei 199.09% | base 63.0
+16:40:58  [watch] 청크 194410 (+965) 원본당 78.8ms | INSERT 14.254ms/건 | ckpt 34/0 wal 5962.9MB | dead 0 vac 17 run=0 | hnsw 327MB | cpu app 0.19% db 12.54% tei 0.16% | base 63.0
+16:42:01  [watch] 청크 195389 (+979) 원본당 78.8ms | INSERT 13.974ms/건 | ckpt 34/0 wal 6018.7MB | dead 0 vac 17 run=0 | hnsw 328MB | cpu app 0.20% db 13.08% tei 0.17% | base 63.0
+16:43:05  [watch] 청크 196479 (+1090) 원본당 71.1ms | INSERT 12.418ms/건 | ckpt 34/0 wal 6057.0MB | dead 0 vac 17 run=0 | hnsw 330MB | cpu app 0.32% db 0.01% tei 200.74% | base 63.0
+16:44:08  [watch] 청크 197438 (+959) 원본당 78.8ms | INSERT 14.142ms/건 | ckpt 35/0 wal 6095.6MB | dead 0 vac 17 run=0 | hnsw 332MB | cpu app 0.17% db 9.10% tei 0.15% | base 63.0
+16:45:11  [watch] 청크 198285 (+847) 원본당 90.0ms | INSERT 21.732ms/건 | ckpt 35/0 wal 6202.3MB | dead 0 vac 17 run=0 | hnsw 333MB | cpu app 0.33% db 0.05% tei 199.65% | base 63.0
+16:46:14  [watch] 청크 199369 (+1084) 원본당 70.0ms | INSERT 14.550ms/건 | ckpt 35/0 wal 6285.8MB | dead 0 vac 17 run=0 | hnsw 335MB | cpu app 0.32% db 0.03% tei 199.24% | base 63.0
+16:47:18  [watch] 청크 200309 (+940) 원본당 80.0ms | INSERT 14.657ms/건 | ckpt 35/0 wal 6331.0MB | dead 0 vac 17 run=0 | hnsw 337MB | cpu app 0.16% db 7.33% tei 0.15% | base 63.0
+16:48:21  [watch] 청크 201269 (+960) 원본당 78.8ms | INSERT 23.939ms/건 | ckpt 35/0 wal 6360.7MB | dead 0 vac 17 run=0 | hnsw 338MB | cpu app 0.22% db 0.54% tei 200.45% | base 63.0
+16:49:24  [watch] 청크 202104 (+835) 원본당 90.0ms | INSERT 23.930ms/건 | ckpt 36/0 wal 6426.9MB | dead 0 vac 17 run=0 | hnsw 340MB | cpu app 2.39% db 0.21% tei 200.59% | base 63.0
+16:50:28  [watch] 청크 202838 (+734) 원본당 105.0ms | INSERT 28.717ms/건 | ckpt 36/0 wal 6510.7MB | dead 0 vac 17 run=0 | hnsw 341MB | cpu app 0.33% db 5.36% tei 200.77% | base 63.0
+16:51:31  [watch] 청크 203817 (+979) 원본당 80.0ms | INSERT 20.775ms/건 | ckpt 36/0 wal 6583.2MB | dead 0 vac 17 run=0 | hnsw 342MB | cpu app 0.16% db 0.01% tei 199.70% | base 63.0
+16:52:34  [watch] 청크 204566 (+749) 원본당 105.0ms | INSERT 25.460ms/건 | ckpt 36/0 wal 6620.3MB | dead 0 vac 18 run=0 | hnsw 344MB | cpu app 0.15% db 0.01% tei 91.86% | base 63.0
+16:53:38  [watch] 청크 205639 (+1073) 원본당 71.1ms | INSERT 17.634ms/건 | ckpt 36/0 wal 6656.5MB | dead 0 vac 18 run=0 | hnsw 345MB | cpu app 0.31% db 3.87% tei 198.46% | base 63.0
+16:54:41  [watch] 청크 206385 (+746) 원본당 105.0ms | INSERT 25.659ms/건 | ckpt 37/0 wal 6735.1MB | dead 0 vac 18 run=0 | hnsw 347MB | cpu app 0.23% db 7.70% tei 0.10% | base 63.0
+16:55:44  [watch] 청크 207237 (+852) 원본당 90.0ms | INSERT 28.615ms/건 | ckpt 37/0 wal 6825.1MB | dead 0 vac 18 run=0 | hnsw 348MB | cpu app 0.12% db 2.77% tei 0.09% | base 63.0
+16:56:47  [watch] 청크 208060 (+823) 원본당 90.0ms | INSERT 27.425ms/건 | ckpt 37/0 wal 6883.5MB | dead 0 vac 18 run=0 | hnsw 350MB | cpu app 0.13% db 10.87% tei 0.09% | base 63.0
+16:56:47  ◆ 열화 감지 — 3표본 연속 ≥ 63.0×1.4 (마지막 90.0ms)
+16:56:48  ◆ 개입 1: 앱 재시작 직전
+16:56:53  ◆ 개입 1: 앱 재시작 완료 — 2회차
+16:57:56  [observe-1] 청크 208188 (+128) 원본당 690.0ms | INSERT 53.446ms/건 | ckpt 37/0 wal 6890.2MB | dead 0 vac 18 run=0 | hnsw 350MB | cpu app 0.31% db 2.83% tei 0.11% | base 63.0
+16:58:59  [observe-1] 청크 209032 (+844) 원본당 90.0ms | INSERT 32.610ms/건 | ckpt 38/0 wal 6928.1MB | dead 0 vac 18 run=0 | hnsw 351MB | cpu app 0.94% db 3.92% tei 200.18% | base 63.0
+17:00:02  [observe-1] 청크 209743 (+711) 원본당 105.0ms | INSERT 36.431ms/건 | ckpt 38/0 wal 7028.4MB | dead 0 vac 18 run=0 | hnsw 352MB | cpu app 0.64% db 0.09% tei 200.36% | base 63.0
+17:01:05  [observe-1] 청크 210468 (+725) 원본당 105.0ms | INSERT 32.615ms/건 | ckpt 38/0 wal 7098.3MB | dead 0 vac 18 run=0 | hnsw 354MB | cpu app 0.14% db 7.31% tei 0.09% | base 63.0
+17:02:09  [observe-1] 청크 211305 (+837) 원본당 91.4ms | INSERT 31.755ms/건 | ckpt 38/0 wal 7155.5MB | dead 0 vac 18 run=0 | hnsw 355MB | cpu app 0.77% db 3.89% tei 86.39% | base 63.0
+17:03:12  [observe-1] 청크 212008 (+703) 원본당 105.0ms | INSERT 34.820ms/건 | ckpt 38/0 wal 7189.8MB | dead 0 vac 18 run=0 | hnsw 356MB | cpu app 0.75% db 7.00% tei 105.86% | base 63.0
+17:04:15  [observe-1] 청크 212737 (+729) 원본당 105.0ms | INSERT 37.304ms/건 | ckpt 39/0 wal 7231.9MB | dead 0 vac 18 run=0 | hnsw 357MB | cpu app 0.14% db 7.08% tei 0.09% | base 63.0
+17:05:18  [observe-1] 청크 213458 (+721) 원본당 105.0ms | INSERT 44.091ms/건 | ckpt 39/0 wal 7326.9MB | dead 0 vac 18 run=0 | hnsw 359MB | cpu app 0.21% db 6.17% tei 0.08% | base 63.0
+17:06:21  [observe-1] 청크 214190 (+732) 원본당 105.0ms | INSERT 42.593ms/건 | ckpt 39/0 wal 7394.3MB | dead 0 vac 18 run=0 | hnsw 360MB | cpu app 0.17% db 0.01% tei 200.17% | base 63.0
+17:07:25  [observe-1] 청크 214678 (+488) 원본당 157.5ms | INSERT 71.658ms/건 | ckpt 39/0 wal 7427.8MB | dead 0 vac 18 run=0 | hnsw 361MB | cpu app 0.47% db 106.74% tei 108.29% | base 63.0
+17:08:28  [observe-1] 청크 215280 (+602) 원본당 128.0ms | INSERT 54.945ms/건 | ckpt 39/0 wal 7461.0MB | dead 0 vac 18 run=0 | hnsw 362MB | cpu app 0.21% db 5.00% tei 0.13% | base 63.0
+17:08:28  ◆ 미회복 — 개입 1 뒤 중앙값 105.0ms (기준선 63.0) → 앱(JVM·풀·세션) 은 아니다
+17:08:29  ◆ 개입 2: DB 재시작 직전
+17:08:39  ◆ 개입 2: DB 재시작 완료 — 3회차
+17:09:42  [observe-2] 청크 215398 (+118) 원본당 740.0ms | INSERT 31.317ms/건 | ckpt 39/1 wal 7470.7MB | dead 100 vac 18 run=0 | hnsw 362MB | cpu app 1.11% db 2.88% tei 200.01% | base 63.0
+17:10:46  [observe-2] 청크 216589 (+1191) 원본당 63.0ms | INSERT 2.949ms/건 | ckpt 39/1 wal 7622.6MB | dead 100 vac 18 run=0 | hnsw 364MB | cpu app 0.21% db 29.73% tei 199.37% | base 63.0
+17:11:49  [observe-2] 청크 217814 (+1225) 원본당 64.0ms | INSERT 2.601ms/건 | ckpt 39/1 wal 7707.9MB | dead 100 vac 18 run=0 | hnsw 366MB | cpu app 1.41% db 23.90% tei 182.11% | base 63.0
+17:12:52  [observe-2] 청크 219109 (+1295) 원본당 57.3ms | INSERT 2.609ms/건 | ckpt 39/1 wal 7760.5MB | dead 100 vac 18 run=0 | hnsw 368MB | cpu app 13.31% db 0.06% tei 152.11% | base 63.0
+17:13:55  [observe-2] 청크 220332 (+1223) 원본당 63.0ms | INSERT 2.608ms/건 | ckpt 40/1 wal 7838.2MB | dead 100 vac 18 run=0 | hnsw 370MB | cpu app 0.55% db 0.06% tei 200.29% | base 63.0
+17:14:58  [observe-2] 청크 221525 (+1193) 원본당 63.0ms | INSERT 2.705ms/건 | ckpt 40/1 wal 7967.3MB | dead 100 vac 18 run=0 | hnsw 372MB | cpu app 2.33% db 22.68% tei 160.19% | base 63.0
+17:16:01  [observe-2] 청크 222724 (+1199) 원본당 63.0ms | INSERT 2.692ms/건 | ckpt 40/1 wal 8046.4MB | dead 100 vac 18 run=0 | hnsw 374MB | cpu app 0.19% db 0.14% tei 200.97% | base 63.0
+17:17:05  [observe-2] 청크 224026 (+1302) 원본당 58.2ms | INSERT 2.632ms/건 | ckpt 40/1 wal 8089.3MB | dead 100 vac 18 run=0 | hnsw 376MB | cpu app 0.48% db 0.09% tei 199.35% | base 63.0
+17:18:08  [observe-2] 청크 225227 (+1201) 원본당 63.0ms | INSERT 2.543ms/건 | ckpt 40/1 wal 8116.5MB | dead 100 vac 18 run=0 | hnsw 378MB | cpu app 0.24% db 34.18% tei 200.12% | base 63.0
+17:19:11  [observe-2] 청크 226538 (+1311) 원본당 57.3ms | INSERT 2.681ms/건 | ckpt 41/1 wal 8228.0MB | dead 100 vac 18 run=0 | hnsw 381MB | cpu app 0.64% db 0.13% tei 141.01% | base 63.0
+17:20:14  [observe-2] 청크 227828 (+1290) 원본당 57.3ms | INSERT 2.770ms/건 | ckpt 41/1 wal 8347.0MB | dead 100 vac 18 run=0 | hnsw 383MB | cpu app 0.23% db 0.14% tei 200.05% | base 63.0
+17:20:15  ◆ 회복 — 개입 2 뒤 중앙값 60.6ms (기준선 63.0) → 원인은 DB 휘발 상태(버퍼·WAL 백로그·진행 중 autovacuum)
+17:21:18  [settled] 청크 229029 (+1201) 원본당 64.0ms | INSERT 2.620ms/건 | ckpt 41/1 wal 8409.4MB | dead 100 vac 18 run=0 | hnsw 385MB | cpu app 2.90% db 0.02% tei 199.61% | base 63.0
+17:22:21  [settled] 청크 230225 (+1196) 원본당 63.0ms | INSERT 2.588ms/건 | ckpt 41/1 wal 8448.3MB | dead 100 vac 18 run=0 | hnsw 387MB | cpu app 0.61% db 0.08% tei 197.24% | base 63.0
+17:23:24  [settled] 청크 231527 (+1302) 원본당 57.3ms | INSERT 2.614ms/건 | ckpt 41/1 wal 8475.3MB | dead 100 vac 18 run=0 | hnsw 389MB | cpu app 1.76% db 2.64% tei 199.72% | base 63.0
+17:24:27  [settled] 청크 232740 (+1213) 원본당 63.0ms | INSERT 2.708ms/건 | ckpt 42/1 wal 8609.9MB | dead 100 vac 18 run=0 | hnsw 391MB | cpu app 0.52% db 0.09% tei 159.31% | base 63.0
+17:25:31  [settled] 청크 233954 (+1214) 원본당 64.0ms | INSERT 2.660ms/건 | ckpt 42/1 wal 8710.8MB | dead 100 vac 18 run=0 | hnsw 393MB | cpu app 3.75% db 5.88% tei 145.96% | base 63.0
+17:26:34  [settled] 청크 235271 (+1317) 원본당 57.3ms | INSERT 2.637ms/건 | ckpt 42/1 wal 8776.0MB | dead 100 vac 18 run=0 | hnsw 395MB | cpu app 0.17% db 0.01% tei 199.89% | base 63.0
+17:27:37  [settled] 청크 236482 (+1211) 원본당 63.0ms | INSERT 2.617ms/건 | ckpt 42/1 wal 8812.7MB | dead 100 vac 18 run=0 | hnsw 397MB | cpu app 0.21% db 26.69% tei 200.86% | base 63.0
+17:28:40  [settled] 청크 237690 (+1208) 원본당 63.0ms | INSERT 2.946ms/건 | ckpt 43/1 wal 8854.8MB | dead 100 vac 18 run=0 | hnsw 399MB | cpu app 1.93% db 98.56% tei 200.15% | base 63.0
+17:29:43  [settled] 청크 238986 (+1296) 원본당 57.3ms | INSERT 3.281ms/건 | ckpt 43/1 wal 9013.9MB | dead 100 vac 18 run=0 | hnsw 402MB | cpu app 2.72% db 3.99% tei 201.66% | base 63.0
+17:30:47  [settled] 청크 240099 (+1113) 원본당 69.5ms | INSERT 2.692ms/건 | ckpt 43/1 wal 9092.8MB | dead 100 vac 18 run=0 | hnsw 403MB | cpu app 0.21% db 0.01% tei 0.08% | base 63.0
+17:30:47  ◆ 색인 완주 (앱 로그) — 남은 원본 없음
+17:30:47  최종 코퍼스 240099 청크 (시작 0) / 개입 2단계까지 / 재기동 0회
+17:31:38  완료. 사건 표=measure/e8cause-20260917T135138/marks.csv  본체=measure/e8cause-20260917T135138/rate.csv
+t_epoch     t_iso                 event                                                                                                   chunks
+1789653102  2026-09-17T13:51:42Z  앱 기동 — 연속 색인 시작(1회차)                                                                         0
+1789654236  2026-09-17T14:10:36Z  기준선 확정 63.0ms/원본 (유효 15표본 중앙값)                                                            21906
+1789664207  2026-09-17T16:56:47Z  열화 감지 — 3표본 연속 ≥ 63.0×1.4 (마지막 90.0ms)                                                       208060
+1789664208  2026-09-17T16:56:48Z  개입 1: 앱 재시작 직전                                                                                  208060
+1789664213  2026-09-17T16:56:53Z  개입 1: 앱 재시작 완료 — 2회차                                                                          208188
+1789664908  2026-09-17T17:08:28Z  미회복 — 개입 1 뒤 중앙값 105.0ms (기준선 63.0) → 앱(JVM·풀·세션) 은 아니다                             215280
+1789664908  2026-09-17T17:08:28Z  개입 2: DB 재시작 직전                                                                                  215280
+1789664919  2026-09-17T17:08:39Z  개입 2: DB 재시작 완료 — 3회차                                                                          215280
+1789665614  2026-09-17T17:20:14Z  회복 — 개입 2 뒤 중앙값 60.6ms (기준선 63.0) → 원인은 DB 휘발 상태(버퍼·WAL 백로그·진행 중 autovacuum)  227828
+1789666247  2026-09-17T17:30:47Z  색인 완주 (앱 로그) — 남은 원본 없음                                                                    240099
+17:31:38  600초 뒤 인스턴스를 정지한다 (EBS는 남는다). 산출물 measure/e8cause-20260917T135138
