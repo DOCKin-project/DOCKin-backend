@@ -12,14 +12,20 @@
 
 ## DB 운영 기록
 
-백엔드·DB 담당([@Khyojae](https://github.com/Khyojae))이 PostgreSQL(pgvector)과 Redis를 AWS EC2에 올려 부하를 걸며 점검한 기록입니다. 수치는 합성 데이터 기준이고 실제 사용자 트래픽은 없습니다.
+> 백엔드·DB 담당 [@Khyojae](https://github.com/Khyojae) · PostgreSQL(pgvector) · Redis · AWS EC2 · 합성 데이터
 
-| 주제 | 결과 | 기록 |
-| :--- | :--- | :--- |
-| 무중단 스키마 변경 절차 | `CREATE INDEX CONCURRENTLY`가 Flyway의 이력 잠금을 기다리다 5초 뒤 실패하던 원인을 찾아 설정으로 해결하고 MySQL과 다른 점을 절차로 정리. 테스트로 재현한 범위이고 운영 규모 실행은 아직 | [`docs/db/online-ddl.md`](docs/db/online-ddl.md) |
-| INSERT 지연 원인 | 대량 저장 중 INSERT 한 건이 2.7ms에서 40ms로 느려짐. 원인은 DB 컨테이너 메모리 상한 512MB가 파일 캐시까지 세던 것. 상한을 1GB로 올려 회복 | [`docs/AWS-MEASUREMENT-RESULTS.md`](docs/AWS-MEASUREMENT-RESULTS.md) 밤 16 |
-| 부하에서 먼저 깨지는 곳 | 초당 16건 부하에서 DB CPU가 상한에 닿음. 쿼리 통계 1위는 작업일지 목록 조회. 커넥션 풀을 10에서 20으로 늘리면 오히려 느려짐 | [`docs/AWS-MEASUREMENT-RESULTS.md`](docs/AWS-MEASUREMENT-RESULTS.md) 밤 15 |
-| 슬로우 쿼리 점검 절차 | 누적·평균·호출 상위 10개 쿼리와 대기 중인 세션을 뽑는 스크립트. 주간 실행은 아직 | [`docs/OPERATIONS-SLOW-QUERY.md`](docs/OPERATIONS-SLOW-QUERY.md) |
+DB를 클라우드 서버에 올려 부하를 걸며 점검한 기록입니다. 실제 사용자 트래픽은 없습니다.
+
+| 주제 | 핵심 | 기록 |
+| :--- | :--- | :---: |
+| 무중단 인덱스 추가 | `CONCURRENTLY`가 Flyway의 잠금을 기다려 **5초 뒤 실패** → 설정으로 해결 | [절차](docs/db/online-ddl.md) |
+| INSERT 지연 | 한 건이 **2.7ms → 40ms** · 원인은 컨테이너 메모리 상한 | [밤 16](docs/AWS-MEASUREMENT-RESULTS.md) |
+| 부하 한계 | **초당 16건**에서 DB CPU가 상한 · 풀을 늘리면 더 느려짐 | [밤 15](docs/AWS-MEASUREMENT-RESULTS.md) |
+| 슬로우 쿼리 점검 | 상위 10개 쿼리와 대기 세션을 뽑는 스크립트 | [절차](docs/OPERATIONS-SLOW-QUERY.md) |
+
+- **MySQL과 다른 점** — PostgreSQL은 일반 인덱스 생성이 쓰기를 막고 구조 변경이 트랜잭션 안에서 돈다. 절차 문서 첫 절에 정리
+- **INSERT 지연의 원인** — 상한 512MB가 운영체제의 파일 캐시까지 세고 있었다. 1GB로 올려 회복
+- **아직 안 한 것** — 운영 규모에서의 무중단 변경 실행, 슬로우 쿼리 점검의 주간 실행
 
 ---
 
