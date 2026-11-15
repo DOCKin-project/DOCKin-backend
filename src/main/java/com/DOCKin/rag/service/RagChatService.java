@@ -3,9 +3,7 @@ package com.DOCKin.rag.service;
 import com.DOCKin.ai.dto.ChatDomain;
 import com.DOCKin.ai.service.FastApiService;
 import com.DOCKin.rag.dto.RetrievalResult;
-import com.DOCKin.rag.dto.RetrievedChunk;
 import com.DOCKin.rag.generation.ChatGenerator;
-import com.DOCKin.rag.model.SourceType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -88,55 +86,35 @@ public class RagChatService {
     }
 
     /**
-     * 마지막 user 메시지를 "근거 + 지시문 + 원질문" 형태로 교체한다.
+     * 챗봇 서버가 받는 메시지 수 상한(aiserver {@code ChatRequest.messages} max_length=30, 팀원 서버와 같은 스키마).
+     * {@code system} 하나를 앞에 붙이므로 사용자 대화는 그보다 하나 적게 남긴다.
+     */
+    static final int MAX_MESSAGES = 30;
+
+    /**
+     * {@code system} 지시를 앞에 두고, 마지막 user 메시지를 "자료 태그 + 질문"으로 바꾼다(#177).
      * 근거가 없으면 원본 요청을 그대로 돌려준다.
+     *
+     * <p>"자료에 없으면 모른다고 하라"는 지시가 중요하다. 이것이 없으면 모델이 근거를 무시하고
+     * 자체 지식으로 답해버려, 근거를 붙인 의미가 사라지고 환각을 거르지 못한다.
+     * 그 지시를 자료와 다른 메시지({@code system})에 두는 이유는 {@link RagPrompt} 참고.
      */
     private ChatDomain.Request augment(ChatDomain.Request request, String question,
                                        RetrievalResult retrieval) {
         if (retrieval.isEmpty()) {
             return request;
         }
-        String augmentedContent = buildPrompt(question, retrieval.chunks());
+        List<ChatDomain.Request.Message> conversation = new ArrayList<>(request.messages());
+        int last = conversation.size() - 1;
+        conversation.set(last, new ChatDomain.Request.Message(conversation.get(last).role(),
+                RagPrompt.userContent(question, retrieval.chunks())));
 
-        List<ChatDomain.Request.Message> messages = new ArrayList<>(request.messages());
-        int last = messages.size() - 1;
-        messages.set(last, new ChatDomain.Request.Message(messages.get(last).role(), augmentedContent));
+        List<ChatDomain.Request.Message> messages = new ArrayList<>();
+        messages.add(new ChatDomain.Request.Message("system", RagPrompt.groundingRules()));
+        // 오래된 대화부터 버린다. 질문(마지막)은 항상 남는다.
+        messages.addAll(conversation.subList(Math.max(0, conversation.size() - (MAX_MESSAGES - 1)),
+                conversation.size()));
 
         return new ChatDomain.Request(messages, request.lang(), request.traceId());
-    }
-
-    /**
-     * 근거를 붙인 프롬프트를 만든다.
-     *
-     * <p>"자료에 없으면 모른다고 하라"는 지시가 중요하다. 이것이 없으면 모델이 근거를 무시하고
-     * 자체 지식으로 답해버려, 근거를 붙인 의미가 사라지고 환각을 거르지 못한다.
-     */
-    private String buildPrompt(String question, List<RetrievedChunk> chunks) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("[참고 자료]\n");
-
-        for (int i = 0; i < chunks.size(); i++) {
-            RetrievedChunk chunk = chunks.get(i);
-            sb.append(i + 1).append(". (")
-                    .append(describe(chunk.sourceType()))
-                    .append(" #").append(chunk.sourceId()).append(") ")
-                    .append(chunk.content()).append('\n');
-        }
-
-        sb.append("\n위 참고 자료를 근거로 답변하세요. ")
-                .append("자료에 없는 내용은 추측하지 말고 모른다고 답하세요. ")
-                .append("답변에 사용한 자료 번호를 함께 알려주세요.\n\n")
-                .append("[질문]\n")
-                .append(question);
-
-        return sb.toString();
-    }
-
-    private String describe(SourceType sourceType) {
-        return switch (sourceType) {
-            case WORK_LOG, WORK_LOG_TRANSLATION -> "작업일지";
-            case SAFETY_COURSE -> "안전교육";
-            case CHECKLIST_ITEM -> "점검항목";
-        };
     }
 }
