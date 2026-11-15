@@ -178,7 +178,7 @@ class WorkLogChunkSharingTest extends ContainerTestSupport {
                 INSERT INTO users (user_id, name, password, role, language_code,
                                    ship_yard_area, remaining_leave_days, tts_enabled, work_shift, created_at)
                 VALUES (?, ?, ?, ?, 'ko', ?, 15, false, 'MORNING', ?)
-                """, userId, userId, "$2a$10$" + "0".repeat(53), role, area, LocalDateTime.of(2026, 1, 1, 0, 0));
+                """, userId, userId.substring(4), "$2a$10$" + "0".repeat(53), role, area, LocalDateTime.of(2026, 1, 1, 0, 0));
     }
 
     private void insertChunk(long chunkId, SourceType type, Long sourceId, String content) {
