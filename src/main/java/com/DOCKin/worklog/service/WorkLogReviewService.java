@@ -5,6 +5,9 @@ import com.DOCKin.global.error.ErrorCode;
 import com.DOCKin.member.model.Member;
 import com.DOCKin.member.model.UserRole;
 import com.DOCKin.member.repository.MemberRepository;
+import com.DOCKin.ai.repository.TranslateRepository;
+import com.DOCKin.rag.service.ChunkIndexWriter;
+import com.DOCKin.rag.service.WorkLogChunkAccess;
 import com.DOCKin.worklog.dto.WorkLogDto;
 import com.DOCKin.worklog.model.WorkLog;
 import com.DOCKin.worklog.model.WorkLogStatus;
@@ -37,12 +40,15 @@ public class WorkLogReviewService {
 
     private final WorkLogRepository workLogsRepository;
     private final MemberRepository memberRepository;
+    private final TranslateRepository translateRepository;
+    private final ChunkIndexWriter chunkIndexWriter;
 
     @Transactional
     public WorkLogDto approve(String adminUserId, Long logId, String comment) {
         Member admin = requireAdmin(adminUserId);
         WorkLog log = requirePending(logId);
         log.approve(admin, comment);
+        syncChunkAccess(log);
         return WorkLogDto.from(log);
     }
 
@@ -51,7 +57,17 @@ public class WorkLogReviewService {
         Member admin = requireAdmin(adminUserId);
         WorkLog log = requirePending(logId);
         log.reject(admin, comment);
+        syncChunkAccess(log);
         return WorkLogDto.from(log);
+    }
+
+    /**
+     * 승인되면 RAG 근거가 같은 구역에 열리고, 반려면 본인만 남는다(ADR-0012). 같은 트랜잭션이다 —
+     * 승인이 롤백되면 공개도 돌아온다. 반려는 PENDING에서만 오므로 이미 OWNER지만, 규칙을 한 곳에 두려고 똑같이 부른다.
+     */
+    private void syncChunkAccess(WorkLog log) {
+        chunkIndexWriter.syncWorkLogAccess(log.getLogId(),
+                translateRepository.findIdsByLogId(log.getLogId()), WorkLogChunkAccess.of(log));
     }
 
     private Member requireAdmin(String userId) {
