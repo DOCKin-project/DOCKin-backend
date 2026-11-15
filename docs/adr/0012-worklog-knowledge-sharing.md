@@ -1,6 +1,6 @@
 # ADR-0012: 승인된 작업일지만 RAG 근거로 공유한다 — 범위는 앱의 권한(같은 구역)을 넘지 않는다
 
-- 상태: **제안.** 2026-11-15. 코드 없음. 이슈 #174
+- 상태: **결정.** 2026-11-15(사용자). 코드는 `feat/rag-area-sharing`. 이슈 #174
 - 대상 코드: `rag/service/IndexingService`(`toTarget`의 `Visibility.OWNER` 고정), `rag/service/ChunkIndexWriter`(해시가 같으면 건너뜀), `rag/repository/NearestChunkJdbcRepository`·`DocumentChunkRepository`(선필터), `rag/model/Visibility`, `worklog/model/WorkLog`(`approve`·`reject`·`resetReview`), `worklog/service/WorkLogReviewService`, `worklog/service/WorkLogsService.requireVisible`
 - 관련 문서: ADR-0006 6절(선필터)·8-4(선택도 스윕), ADR-0007(보존), `docs/SEARCH-QUALITY-EVAL-PLAN.md` E6, `docs/PORTFOLIO-ROADMAP.md` 8-1·8-2
 - 작성 목적: ADR-0006은 **남의 작업일지가 새지 않게** 하는 데 집중했고, **무엇을 공유해야 하는지**는 정하지 않았다. 그 결과 메인 기능이 관리자에게만 성립했다. 공유 대상(승인된 일지), 공유 범위(같은 구역), 상태 변화를 청크에 반영하는 방법을 정한다.
