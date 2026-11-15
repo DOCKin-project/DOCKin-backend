@@ -2,6 +2,8 @@ package com.DOCKin.rag.service;
 
 import com.DOCKin.global.error.BusinessException;
 import com.DOCKin.global.error.ErrorCode;
+import com.DOCKin.member.model.Member;
+import com.DOCKin.member.repository.MemberRepository;
 import com.DOCKin.rag.dto.RetrievalResult;
 import com.DOCKin.rag.dto.RetrievedChunk;
 import com.DOCKin.rag.model.DocumentChunk;
@@ -79,6 +81,8 @@ public class RetrievalService {
     /** SQL 경로(벡터 검색). 둘을 나눈 이유는 {@link NearestChunkJdbcRepository} 참고. */
     private final NearestChunkJdbcRepository nearestChunkJdbcRepository;
     private final EmbeddingClient embeddingClient;
+    /** 같은 구역 승인분(ADR-0012)을 고르려고 조회자의 구역을 읽는다. */
+    private final MemberRepository memberRepository;
 
     /**
      * 최소 유사도. 이보다 낮은 청크는 근거로 쓰지 않는다.
@@ -158,10 +162,15 @@ public class RetrievalService {
         if (admin) {
             candidates = nearestChunkJdbcRepository.findNearestAll(model, literal, limit);
         } else {
-            // 공개 청크와 본인 소유 청크를 각각 top-n으로 뽑아 합친다.
+            // 공개 청크, 본인 소유 청크, 같은 구역의 승인분(ADR-0012)을 각각 top-n으로 뽑아 합친다.
             // 각 목록이 자기 집합의 상위 n건이므로, 합집합의 상위 n건은 이 안에 들어 있다.
+            // 세 집합은 visibility 값(PUBLIC/OWNER/AREA)으로 나뉘어 같은 청크가 두 번 오지 않는다.
             candidates = new ArrayList<>(nearestChunkJdbcRepository.findNearestPublic(model, literal, limit));
             candidates.addAll(nearestChunkJdbcRepository.findNearestOwned(model, userId, literal, limit));
+            String area = areaOf(userId);
+            if (area != null) {
+                candidates.addAll(nearestChunkJdbcRepository.findNearestInArea(model, area, literal, limit));
+            }
         }
         return selectTopK(candidates, topK);
     }
@@ -228,11 +237,13 @@ public class RetrievalService {
         }
         Pageable limit = PageRequest.of(0, topK);
         Map<Long, RetrievedChunk> merged = new LinkedHashMap<>();
+        // 폴백도 벡터 경로와 같은 범위다(ADR-0006 7절) — 구역 승인분까지, 그 이상은 아니다.
+        String area = admin ? null : areaOf(userId);
 
         for (String keyword : keywords) {
             List<DocumentChunk> found = admin
                     ? documentChunkRepository.searchAllByKeyword(model, keyword, limit)
-                    : documentChunkRepository.searchByKeyword(model, userId, keyword, limit);
+                    : documentChunkRepository.searchByKeyword(model, userId, area, keyword, limit);
 
             for (DocumentChunk chunk : found) {
                 // 폴백에는 유사도 점수가 없다. 0.0으로 두어 벡터 결과와 혼동되지 않게 한다.
@@ -245,6 +256,16 @@ public class RetrievalService {
             }
         }
         return merged.values().stream().limit(topK).toList();
+    }
+
+    /**
+     * 조회자의 구역. 없는 사용자면 null — 구역 승인분을 하나도 고르지 않는다(좁히는 쪽으로 실패한다).
+     * 앱의 작업일지 화면({@code WorkLogsService.requireVisible})과 같은 값을 본다.
+     */
+    private String areaOf(String userId) {
+        return memberRepository.findByUserId(userId)
+                .map(Member::getShipYardArea)
+                .orElse(null);
     }
 
     /**
