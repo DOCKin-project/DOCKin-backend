@@ -47,6 +47,35 @@ public class Member {
     private WorkShift workShift = WorkShift.MORNING;
 
     /**
+     * 탈퇴 시각(V20, #100). null이면 재직 중이다.
+     *
+     * <p>탈퇴는 행을 지우지 않는다. 근태·안전교육·작업일지는 퇴사 뒤에도 남아야 하는 기록이고(근태·임금 서류의 법정 보존,
+     * 승인된 일지는 같은 구역의 RAG 지식 — ADR-0012), {@code users}를 참조하는 FK 9개가 그 기록을 붙잡고 있다.
+     * 대신 식별 정보를 지우고({@link #withdraw}) 로그인·인증·배치·집계에서 뺀다.
+     */
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    /** 탈퇴 뒤 이름 자리에 남는 값. 작업일지·댓글 작성자로 이 이름이 보인다. {@code name} 길이(10) 안이다. */
+    public static final String WITHDRAWN_NAME = "탈퇴회원";
+
+    public boolean isDeleted() {
+        return deletedAt != null;
+    }
+
+    /**
+     * 탈퇴 — 비활성화와 익명화. 사번({@code userId})은 기록의 FK라 남는다.
+     *
+     * <p>비밀번호는 BCrypt 모양이 아닌 값으로 덮는다. 로그인 경로가 탈퇴 회원을 먼저 거르지만, 어떤 경로로든
+     * 비밀번호 대조에 닿으면 BCrypt 인코더가 "형식이 아니다"로 거부한다 — 어떤 평문과도 맞을 수 없다.
+     */
+    public void withdraw(LocalDateTime now) {
+        this.name = WITHDRAWN_NAME;
+        this.password = "!withdrawn";
+        this.deletedAt = now;
+    }
+
+    /**
      * 근태 판정에 쓰는 교대. 컬럼이 nullable(V2)이라 필드 도입 이전 행은 null일 수 있고, 그때는 MORNING으로 본다.
      * 출근·결근 배치·휴가 반영이 전부 이 메서드를 쓴다 — 기본값 처리가 호출부마다 흩어지지 않게.
      */

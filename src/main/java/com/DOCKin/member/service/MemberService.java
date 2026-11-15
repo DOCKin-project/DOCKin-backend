@@ -18,6 +18,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -42,7 +44,8 @@ public class MemberService{
         // 시도 제한은 bcrypt 앞이다(P2-18-12). 막힌 요청이 해시를 태우면 제한이 CPU 소모의 도구가 된다.
         // 없는 사원번호도 같은 카운터로 센다 — 있는 계정만 세면 429가 존재 여부를 말해 준다.
         loginAttempts.check(dto.getUserId());
-        Member member = memberRepository.findByUserId(dto.getUserId()).orElse(null);
+        // 탈퇴 회원은 "없는 사원번호"와 같은 답이다(#100) — 다르게 답하면 탈퇴 여부가 새어 나간다.
+        Member member = memberRepository.findByUserId(dto.getUserId()).filter(m -> !m.isDeleted()).orElse(null);
         String storedHash = member != null ? member.getPassword() : DUMMY_HASH;
         boolean matches = passwordEncoder.matches(dto.getPassword(), storedHash);
         if (member == null || !matches) {
@@ -159,6 +162,11 @@ public class MemberService{
      * 있었다(P2-18-2). 존재 여부보다 먼저 본인인지를 본다: 남의 ID로 왔을 때 "없는 사용자"와
      * "있는 사용자"를 다르게 답하면 계정 목록을 캐는 데 쓰인다.
      *
+     * <p><b>행을 지우지 않는다</b>(#100, 사용자 결정: 비활성화 + 익명화). 예전 {@code delete}는 {@code users}를 참조하는
+     * FK 9개가 전부 NO ACTION이라 근태·일지가 하나라도 있으면 500이었다 — 가입 직후가 아니면 탈퇴가 불가능했다.
+     * 기록은 남기고 {@link Member#withdraw}로 이름·비밀번호를 지운다. 인증 필터가 요청마다 회원을 다시 읽어
+     * 탈퇴 회원을 거르므로({@code CustomUserDetailsService}) 남아 있는 액세스 토큰도 바로 무효다.
+     *
      * @param userId      지우려는 계정 (경로 변수)
      * @param requesterId 요청한 사람 (인증 주체)
      */
@@ -168,8 +176,9 @@ public class MemberService{
             throw new BusinessException(ErrorCode.ACCESS_DENIED);
         }
         Member member = memberRepository.findByUserId(userId)
+                .filter(m -> !m.isDeleted())
                 .orElseThrow(()-> new BusinessException(ErrorCode.USER_NOT_FOUND));
-        memberRepository.delete(member);
+        member.withdraw(LocalDateTime.now());
         refreshTokenRepository.deleteByUserId(userId);
     }
 }
