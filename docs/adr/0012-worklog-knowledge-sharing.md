@@ -67,10 +67,12 @@ A를 버린 이유:
 
 ## 3. 상태 변화를 청크에 반영한다 — 배치를 기다리지 않는다
 
-### 지금 구조로는 반영되지 않는다
+### 지금 구조로는 하루 늦게 반영된다
 
 - 색인은 매일 03:00 배치다(`rag.indexing.cron`).
-- `ChunkIndexWriter`는 본문 해시가 같으면 그 청크를 **건너뛴다.** 승인·반려는 본문을 바꾸지 않으므로, 배치가 돌아도 `visibility`가 바뀌지 않는다.
+- `ChunkIndexWriter`는 본문 해시가 같으면 임베딩을 건너뛰지만, 권한 컬럼은 `updateVisibility`로 맞춘다. 그러니 배치에 상태 규칙만 넣으면 반영은 된다 — **다음 03:00에.**
+
+> 초안(제안 단계)에는 "해시가 같으면 `visibility`가 안 바뀐다"고 적었다. 구현하며 코드를 읽어 보니 틀렸다. 결론(즉시 반영이 필요하다)은 아래 표 때문이라 그대로다.
 
 ### 반영이 늦으면 생기는 것
 
@@ -87,8 +89,19 @@ A를 버린 이유:
    `approve` / `reject` / `resetReview`가 일어나는 같은 트랜잭션에서 그 일지와 번역본의 청크에 `UPDATE document_chunks SET visibility = …, area = …`를 건다.
    임베딩은 다시 계산하지 않는다. 행 수가 일지당 수 개라 비용이 작다.
    **좁히는 방향(`resetReview`·`reject`)은 반드시 같은 트랜잭션이다.** 커밋 뒤 이벤트로 미루면 그 사이 창이 생긴다.
-2. **배치 — 해시가 같아도 메타데이터는 맞춘다.**
-   아직 청크가 없는 일지(오늘 쓰고 오늘 승인된 것)는 1이 갱신할 행이 없다. 03:00 배치의 `toTarget`이 상태로 공개 범위를 계산하고, `ChunkIndexWriter`는 해시가 같아도 `visibility`·`area`·`owner_user_id`가 다르면 UPDATE한다. 1이 어떤 이유로 빠졌을 때의 보정도 겸한다.
+2. **배치 — 같은 규칙으로 보정한다.**
+   아직 청크가 없는 일지(오늘 쓰고 오늘 승인된 것)는 1이 갱신할 행이 없다. 03:00 배치의 `toTarget`이 상태로 공개 범위를 계산하고, `ChunkIndexWriter`가 해시가 같아도 `visibility`·`area`·`owner_user_id`를 맞춘다(기존 `updateVisibility`). 1이 어떤 이유로 빠졌을 때의 보정도 겸한다.
+   두 경로가 규칙을 따로 가지면 배치가 즉시 반영한 값을 되돌릴 수 있다. 그래서 규칙은 `WorkLogChunkAccess.of` 한 곳에 둔다.
+
+### 구현 (2026-11-15)
+
+| 무엇 | 어디 |
+|---|---|
+| 규칙 | `rag/service/WorkLogChunkAccess` — `APPROVED`면 `AREA`+작성자 구역, 아니면 `OWNER` |
+| 즉시 반영 | `ChunkIndexWriter.syncWorkLogAccess` → `DocumentChunkRepository.updateAccess`(벌크 JPQL). `WorkLogReviewService.approve`·`reject`, `WorkLogsService.updateWorklog`가 같은 트랜잭션에서 부른다 |
+| 검색 | `NearestChunkJdbcRepository.findNearestInArea`를 `RetrievalService`가 공개·본인 조회와 함께 합친다. 키워드 폴백도 같은 범위 |
+| 스키마 | `V18__document_chunks_area_visibility.sql` — `area` 컬럼, CHECK 둘, 부분 인덱스, 이미 승인된 일지 청크 백필 |
+| 테스트 | `WorkLogChunkSharingTest`(컨테이너), `WorkLogChunkAccessTest`, `RetrievalServiceTest` |
 
 ## 4. 스키마와 쿼리
 

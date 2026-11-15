@@ -9,6 +9,11 @@ package com.DOCKin.rag.model;
 public enum Visibility {
     /** 전체 공개 (안전교육, 체크리스트, 향후 사내 규정) */
     PUBLIC,
-    /** 작성자 본인과 ADMIN만 조회 가능 (작업일지) */
-    OWNER
+    /** 작성자 본인과 ADMIN만 조회 가능 (미승인·반려된 작업일지) */
+    OWNER,
+    /**
+     * 작성자 본인, 같은 구역({@code area}) 근로자, ADMIN이 조회 가능 (승인된 작업일지, ADR-0012).
+     * 앱 화면이 같은 구역 일지를 보여주는 범위와 같다 — RAG가 앱의 권한을 넘지 않는다.
+     */
+    AREA
 }

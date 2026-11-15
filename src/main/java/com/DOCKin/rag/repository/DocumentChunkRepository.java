@@ -2,6 +2,7 @@ package com.DOCKin.rag.repository;
 
 import com.DOCKin.rag.model.DocumentChunk;
 import com.DOCKin.rag.model.SourceType;
+import com.DOCKin.rag.model.Visibility;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -37,6 +38,23 @@ public interface DocumentChunkRepository extends JpaRepository<DocumentChunk, Lo
     @Query("DELETE FROM DocumentChunk c WHERE c.sourceType = :sourceType AND c.sourceId IN :sourceIds")
     int deleteBySource(@Param("sourceType") SourceType sourceType, @Param("sourceIds") Collection<Long> sourceIds);
 
+    /**
+     * 원본의 승인 상태가 바뀔 때 그 청크들의 공개 범위만 바꾼다(모델 불문, ADR-0012). 임베딩은 건드리지 않는다.
+     * {@link #deleteBySource}와 같은 이유로 벌크 JPQL이고, 원본 상태를 바꾸는 쪽의 트랜잭션에서 부른다.
+     */
+    @Modifying
+    @Query("""
+            UPDATE DocumentChunk c
+            SET c.visibility = :visibility, c.ownerUserId = :ownerUserId, c.area = :area,
+                c.updatedAt = CURRENT_TIMESTAMP
+            WHERE c.sourceType = :sourceType AND c.sourceId IN :sourceIds
+            """)
+    int updateAccess(@Param("sourceType") SourceType sourceType,
+                     @Param("sourceIds") Collection<Long> sourceIds,
+                     @Param("visibility") Visibility visibility,
+                     @Param("ownerUserId") String ownerUserId,
+                     @Param("area") String area);
+
     /*
      * 최근접 검색(pgvector <=>)은 여기 없다. 엔티티를 다루지 않는 순수 SQL이라
      * NearestChunkJdbcRepository가 JdbcClient로 친다. 이 인터페이스에는 엔티티를 오가는
@@ -70,17 +88,22 @@ public interface DocumentChunkRepository extends JpaRepository<DocumentChunk, Lo
      * <p>양쪽 와일드카드 LIKE라 인덱스를 타지 못한다(ADR-0002 2-2와 동일한 한계).
      * 장애 시에만 도는 경로이고 {@code Pageable}로 건수를 제한하므로 Phase 1에서는 감수한다.
      * ADR-0003 3-1의 ngram FULLTEXT를 도입하면 이 쿼리가 그 대상이 된다.
+     *
+     * <p>범위는 벡터 경로와 같다 — 공개, 본인 소유({@code OWNER}·{@code AREA} 모두), 같은 구역의 승인분({@code AREA}).
+     * {@code area}가 null이면(구역 모름) 마지막 조건은 아무것도 안 고른다.
      */
     @Query("""
             SELECT c FROM DocumentChunk c
             WHERE c.embeddingModel = :model
               AND (c.visibility = com.DOCKin.rag.model.Visibility.PUBLIC
-                   OR c.ownerUserId = :userId)
+                   OR c.ownerUserId = :userId
+                   OR (c.visibility = com.DOCKin.rag.model.Visibility.AREA AND c.area = :area))
               AND c.content LIKE %:keyword%
             ORDER BY c.chunkId DESC
             """)
     List<DocumentChunk> searchByKeyword(@Param("model") String embeddingModel,
                                         @Param("userId") String userId,
+                                        @Param("area") String area,
                                         @Param("keyword") String keyword,
                                         Pageable pageable);
 

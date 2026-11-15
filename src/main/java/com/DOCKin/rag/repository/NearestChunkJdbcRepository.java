@@ -33,8 +33,9 @@ import java.util.List;
  * <b>인덱스는 그 위에 얹히는 두 번째 층</b>이다. 상세는 ADR-0006 8-2.
  *
  * <h3>권한 선필터는 SQL 안에 있다</h3>
- * 공개 청크만 대상으로 하는 {@link #findNearestPublic}과 본인 소유만 대상으로 하는
- * {@link #findNearestOwned}를 각각 실행해 애플리케이션에서 합친다.
+ * 공개 청크만 대상으로 하는 {@link #findNearestPublic}, 본인 소유만 대상으로 하는
+ * {@link #findNearestOwned}, 같은 구역의 승인분만 대상으로 하는 {@link #findNearestInArea}(ADR-0012)를
+ * 각각 실행해 애플리케이션에서 합친다. 세 집합은 {@code visibility} 값으로 서로 겹치지 않는다.
  * 후보에 애초에 들어오지 않으므로 "내가 못 보는 문서가 존재한다"는 사실도 새지 않는다(ADR-0006 6절).
  *
  * <p>둘로 나눈 것은 MySQL 시절 {@code OR}가 인덱스를 전혀 타지 못해서였다.
@@ -96,6 +97,20 @@ public class NearestChunkJdbcRepository {
         return jdbcClient.sql(SELECT + "  AND visibility = 'OWNER'\n  AND owner_user_id = :userId\n" + ORDER_LIMIT)
                 .param("model", embeddingModel)
                 .param("userId", userId)
+                .param("queryVector", queryVector)
+                .param("limit", limit)
+                .query(ROW)
+                .list();
+    }
+
+    /**
+     * 같은 구역의 승인된 작업일지 청크(ADR-0012). 작성자 본인의 승인분도 여기로 온다 —
+     * {@link #findNearestOwned}는 {@code OWNER}만 보므로 둘이 겹치지 않는다.
+     */
+    public List<NearestChunk> findNearestInArea(String embeddingModel, String area, String queryVector, int limit) {
+        return jdbcClient.sql(SELECT + "  AND visibility = 'AREA'\n  AND area = :area\n" + ORDER_LIMIT)
+                .param("model", embeddingModel)
+                .param("area", area)
                 .param("queryVector", queryVector)
                 .param("limit", limit)
                 .query(ROW)
