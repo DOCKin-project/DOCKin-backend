@@ -1,0 +1,111 @@
+
+2026-11-15T15:26:12Z == 하드 watchdog — 세션이 죽어도 4시간 뒤 꺼진다(stop. terminate는 로컬 fetcher가 한다)
+Shutdown scheduled for Sun 2026-11-15 19:26:12 UTC, use 'shutdown -c' to cancel.
+
+2026-11-15T15:26:12Z == 패키지
+Created symlink /etc/systemd/system/multi-user.target.wants/docker.service → /usr/lib/systemd/system/docker.service.
+8
+               total        used        free      shared  buff/cache   available
+Mem:              30           0          29           0           1          30
+
+2026-11-15T15:27:02Z == 저장소 (measure/search-eval-pilot)
+d91e5bc measure: 밤 21 원격 실행 스크립트 — 검색 품질 하네스 20,000건 (#170)
+
+2026-11-15T15:27:03Z == TEI (ghcr.io/huggingface/text-embeddings-inference:cpu-latest)
+Unable to find image 'ghcr.io/huggingface/text-embeddings-inference:cpu-latest' locally
+cpu-latest: Pulling from huggingface/text-embeddings-inference
+dd051e1b8c92: Pulling fs layer
+e3067c2831ca: Pulling fs layer
+cb37f82dbc11: Pulling fs layer
+592539a8b830: Pulling fs layer
+4339542cdedc: Pulling fs layer
+fd23ae9b2a29: Pulling fs layer
+35a1632dcbaa: Pulling fs layer
+074f19d3f95a: Pulling fs layer
+248bd439589e: Pulling fs layer
+74ba689c48c5: Pulling fs layer
+44df17c3203d: Pulling fs layer
+803f12ad7e79: Pulling fs layer
+f0ecfad84089: Pulling fs layer
+592539a8b830: Waiting
+4339542cdedc: Waiting
+fd23ae9b2a29: Waiting
+35a1632dcbaa: Waiting
+44df17c3203d: Waiting
+f0ecfad84089: Waiting
+803f12ad7e79: Waiting
+074f19d3f95a: Waiting
+248bd439589e: Waiting
+74ba689c48c5: Waiting
+dd051e1b8c92: Verifying Checksum
+dd051e1b8c92: Download complete
+cb37f82dbc11: Verifying Checksum
+cb37f82dbc11: Download complete
+dd051e1b8c92: Pull complete
+592539a8b830: Verifying Checksum
+592539a8b830: Download complete
+fd23ae9b2a29: Verifying Checksum
+fd23ae9b2a29: Download complete
+4339542cdedc: Verifying Checksum
+4339542cdedc: Download complete
+35a1632dcbaa: Verifying Checksum
+35a1632dcbaa: Download complete
+074f19d3f95a: Verifying Checksum
+074f19d3f95a: Download complete
+248bd439589e: Verifying Checksum
+248bd439589e: Download complete
+e3067c2831ca: Verifying Checksum
+e3067c2831ca: Download complete
+803f12ad7e79: Verifying Checksum
+803f12ad7e79: Download complete
+e3067c2831ca: Pull complete
+cb37f82dbc11: Pull complete
+44df17c3203d: Verifying Checksum
+44df17c3203d: Download complete
+592539a8b830: Pull complete
+4339542cdedc: Pull complete
+fd23ae9b2a29: Pull complete
+35a1632dcbaa: Pull complete
+74ba689c48c5: Verifying Checksum
+74ba689c48c5: Download complete
+074f19d3f95a: Pull complete
+248bd439589e: Pull complete
+74ba689c48c5: Pull complete
+44df17c3203d: Pull complete
+803f12ad7e79: Pull complete
+f0ecfad84089: Verifying Checksum
+f0ecfad84089: Download complete
+f0ecfad84089: Pull complete
+Digest: sha256:05732aee715044520aea42dcd6e2f8b7763b2125787430f3815da869ce18f9bc
+Status: Downloaded newer image for ghcr.io/huggingface/text-embeddings-inference:cpu-latest
+image digest: sha256:d00dbd6efcc092d27246f4edfc9c62f7897d1d893c67121460570a9bbcbbfcbf
+
+2026-11-15T15:27:52Z == TEI 처리량 (배치 32, 2회 평균)
+8 ms/passage
+
+2026-11-15T15:27:53Z == 하네스 (SEARCH_EVAL_CORPUS=20000)
+Downloading https://services.gradle.org/distributions/gradle-9.2.1-bin.zip
+............10%.............20%.............30%.............40%.............50%.............60%.............70%.............80%.............90%.............100%
+Note: /home/ec2-user/DOCKin-spring/src/main/java/com/DOCKin/global/security/jwt/JwtBlacklist.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Note: /home/ec2-user/DOCKin-spring/src/test/java/com/DOCKin/ai/service/FastApiContractTest.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+2026-11-15T15:47:31.689Z  INFO [] 30569 --- [DOCKin-spring] [ionShutdownHook] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-11-15T15:47:31.691Z  INFO [] 30569 --- [DOCKin-spring] [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2026-11-15T15:47:31.697Z  INFO [] 30569 --- [DOCKin-spring] [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+/home/ec2-user/.dockin-search-eval/:
+total 16
+drwxrwxr-x. 3 ec2-user docker      26 Nov 15 15:47 .
+drwx------. 7 ec2-user ec2-user 16384 Nov 15 15:47 ..
+drwxrwxr-x. 2 ec2-user docker     130 Nov 15 15:47 corpus-20000
+
+build/search-eval/:
+total 212
+drwxrwxr-x. 2 ec2-user docker     45 Nov 15 15:47 .
+drwxrwxr-x. 9 ec2-user docker    120 Nov 15 15:31 ..
+-rw-rw-r--. 1 ec2-user docker 206821 Nov 15 15:47 per_query.tsv
+-rw-rw-r--. 1 ec2-user docker   6413 Nov 15 15:47 summary.md
+<testsuite name="검색 품질 하네스 (#170) - RUN_SEARCH_EVAL이 있을 때만" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-15T15:31:38.607Z" hostname="ip-172-31-6-23.ap-northeast-2.compute.internal" time="953.034">
+
+2026-11-15T15:47:32Z == 끝 (exit 0)
