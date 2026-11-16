@@ -5,14 +5,13 @@ import com.DOCKin.global.error.ErrorCode;
 import com.DOCKin.rag.dto.RetrievalResult;
 import com.DOCKin.rag.dto.RetrievedChunk;
 import com.DOCKin.rag.model.DocumentChunk;
-import com.DOCKin.rag.repository.DocumentChunkRepository;
+import com.DOCKin.rag.repository.KeywordChunk;
+import com.DOCKin.rag.repository.KeywordChunkJdbcRepository;
 import com.DOCKin.rag.repository.NearestChunk;
 import com.DOCKin.rag.repository.NearestChunkJdbcRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,7 +19,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -71,11 +69,16 @@ public class RetrievalService {
      */
     private static final int CANDIDATE_MULTIPLIER = 4;
 
-    /** 폴백에서 사용할 최대 키워드 수. 질의가 길어도 LIKE 쿼리가 무한정 늘지 않게 한다. */
-    private static final int MAX_FALLBACK_KEYWORDS = 3;
+    /**
+     * 폴백에서 사용할 최대 키워드 수. 질의가 길어도 {@code LIKE} 조건이 무한정 늘지 않게 한다.
+     *
+     * <p>3이었을 때는 "CO2 용접기 송급 롤러 이상 진동"에서 부품·증상 단어가 잘려 나갔다(#186).
+     * 키워드는 한 쿼리 안의 조건으로 들어가므로 늘려도 왕복은 한 번이다.
+     */
+    static final int MAX_FALLBACK_KEYWORDS = 8;
 
-    /** 엔티티 경로(키워드 폴백). */
-    private final DocumentChunkRepository documentChunkRepository;
+    /** SQL 경로(키워드 폴백). 맞은 키워드 수로 순위를 매긴다(#186). */
+    private final KeywordChunkJdbcRepository keywordChunkJdbcRepository;
     /** SQL 경로(벡터 검색). 둘을 나눈 이유는 {@link NearestChunkJdbcRepository} 참고. */
     private final NearestChunkJdbcRepository nearestChunkJdbcRepository;
     private final EmbeddingClient embeddingClient;
@@ -213,38 +216,43 @@ public class RetrievalService {
      * <p>질의 문장 전체를 LIKE로 던지면 절대 매치되지 않으므로 토큰 단위로 나눈다.
      * 형태소 분석기가 없어 조사가 붙은 채로 검색되는 한계가 있다 — 폴백 품질이 낮은 이유 중 하나이며,
      * ADR-0003 3-1(ngram FULLTEXT)이 겨냥하는 지점이기도 하다.
+     *
+     * <p>순위는 맞은 키워드 수, 같으면 최신순이다. 키워드마다 최신순으로 자르면 흔한 단어 하나가
+     * 후보를 다 채운다(#186).
      */
     private List<RetrievedChunk> keywordFallback(String query, String userId, boolean admin, int topK) {
+        List<String> keywords = fallbackKeywords(query);
+        if (keywords.isEmpty() || topK <= 0) {
+            return List.of();
+        }
         String model = embeddingClient.getModelName();
-        List<String> keywords = Arrays.stream(query.split("\\s+"))
+        List<KeywordChunk> found = admin
+                ? keywordChunkJdbcRepository.findAll(model, keywords, topK)
+                : keywordChunkJdbcRepository.findVisible(model, userId, keywords, topK);
+
+        // 폴백에는 유사도 점수가 없다. 0.0으로 두어 벡터 결과와 혼동되지 않게 한다.
+        return found.stream()
+                .map(c -> new RetrievedChunk(c.chunkId(), c.sourceType(), c.sourceId(),
+                        c.chunkIndex(), c.content(), 0.0))
+                .toList();
+    }
+
+    /**
+     * 폴백 키워드. 공백으로 쪼개 글자·숫자만 남기고, 2글자 이상을 중복 없이 긴 것부터 고른다.
+     *
+     * <p>글자·숫자만 남기므로 {@code LIKE}의 {@code %}·{@code _}가 키워드에 들어가지 않는다.
+     */
+    static List<String> fallbackKeywords(String query) {
+        if (query == null) {
+            return List.of();
+        }
+        return Arrays.stream(query.split("\\s+"))
                 .map(t -> t.replaceAll("[^\\p{L}\\p{N}]", ""))
                 .filter(t -> t.length() >= 2)
+                .distinct()
                 .sorted(Comparator.comparingInt(String::length).reversed())
                 .limit(MAX_FALLBACK_KEYWORDS)
                 .toList();
-
-        if (keywords.isEmpty()) {
-            return List.of();
-        }
-        Pageable limit = PageRequest.of(0, topK);
-        Map<Long, RetrievedChunk> merged = new LinkedHashMap<>();
-
-        for (String keyword : keywords) {
-            List<DocumentChunk> found = admin
-                    ? documentChunkRepository.searchAllByKeyword(model, keyword, limit)
-                    : documentChunkRepository.searchByKeyword(model, userId, keyword, limit);
-
-            for (DocumentChunk chunk : found) {
-                // 폴백에는 유사도 점수가 없다. 0.0으로 두어 벡터 결과와 혼동되지 않게 한다.
-                merged.putIfAbsent(chunk.getChunkId(), new RetrievedChunk(
-                        chunk.getChunkId(), chunk.getSourceType(), chunk.getSourceId(),
-                        chunk.getChunkIndex(), chunk.getContent(), 0.0));
-            }
-            if (merged.size() >= topK) {
-                break;
-            }
-        }
-        return merged.values().stream().limit(topK).toList();
     }
 
     /**
