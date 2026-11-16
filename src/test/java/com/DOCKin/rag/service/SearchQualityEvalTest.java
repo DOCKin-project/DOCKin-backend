@@ -97,7 +97,7 @@ class SearchQualityEvalTest extends ContainerTestSupport {
             "n06", List.of("자격", "면허"));
 
     private static final List<String> METHODS =
-            List.of("ann-default", "ann-decided", "exact", "ann-no-translation", "keyword");
+            List.of("ann-default", "ann-decided", "exact", "ann-no-translation", "keyword", "keyword-ranked");
 
     @DynamicPropertySource
     static void embedding(DynamicPropertyRegistry registry) {
@@ -181,9 +181,11 @@ class SearchQualityEvalTest extends ContainerTestSupport {
                 float[] vector = embeddingClient.embedQuery(q.query);
                 String literal = RetrievalService.toVectorLiteral(vector);
                 for (String method : METHODS) {
-                    List<Ranked> ranked = method.equals("keyword")
-                            ? keyword(conn, q.query, translationToLog)
-                            : vector(conn, method, literal, translationToLog);
+                    List<Ranked> ranked = switch (method) {
+                        case "keyword" -> keyword(conn, q.query, translationToLog);
+                        case "keyword-ranked" -> keywordRanked(conn, q.query, translationToLog);
+                        default -> vector(conn, method, literal, translationToLog);
+                    };
                     results.add(new Result(q, method, ranked, labels.get(q.qid)));
                 }
             }
@@ -469,6 +471,43 @@ class SearchQualityEvalTest extends ContainerTestSupport {
         return byDocument(new ArrayList<>(merged.values()).subList(0, Math.min(TOP_K, merged.size())));
     }
 
+    /**
+     * #186 이후의 키워드 폴백. {@code KeywordChunkJdbcRepository}와 같은 SQL 꼴(관리자 경로):
+     * 키워드 최대 8개(중복 제거)를 한 쿼리에 넣고 맞은 개수 내림차순, 같으면 최신순.
+     */
+    private List<Ranked> keywordRanked(Connection conn, String query, Map<Long, Long> translationToLog) throws SQLException {
+        List<String> keywords = Arrays.stream(query.split("\\s+"))
+                .map(t -> t.replaceAll("[^\\p{L}\\p{N}]", ""))
+                .filter(t -> t.length() >= 2)
+                .distinct()
+                .sorted(Comparator.comparingInt(String::length).reversed())
+                .limit(8)
+                .toList();
+        if (keywords.isEmpty()) {
+            return List.of();
+        }
+        String matched = keywords.stream().map(k -> "CASE WHEN content LIKE ? THEN 1 ELSE 0 END")
+                .collect(Collectors.joining(" + "));
+        String sql = "SELECT chunk_id, source_type, source_id FROM (SELECT chunk_id, source_type, source_id, "
+                + matched + " AS matched FROM document_chunks WHERE embedding_model = ?) c "
+                + "WHERE matched > 0 ORDER BY matched DESC, chunk_id DESC LIMIT ?";
+        List<Ranked> chunks = new ArrayList<>();
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            int i = 1;
+            for (String kw : keywords) {
+                ps.setString(i++, "%" + kw + "%");
+            }
+            ps.setString(i++, MODEL);
+            ps.setInt(i, TOP_K);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    chunks.add(toRanked(rs.getString(2), rs.getLong(3), 0.0, translationToLog));
+                }
+            }
+        }
+        return byDocument(chunks);
+    }
+
     private Ranked toRanked(String sourceType, long sourceId, double sim, Map<Long, Long> translationToLog) {
         return switch (sourceType) {
             case "WORK_LOG" -> new Ranked("log:" + sourceId, sourceId, sim);
@@ -598,6 +637,7 @@ class SearchQualityEvalTest extends ContainerTestSupport {
                 {"exact", "ann-decided", "E3 정확 → ANN(결정값)"},
                 {"ann-no-translation", "ann-decided", "E2 번역본 없음 → 있음"},
                 {"ann-decided", "keyword", "E4 벡터 → 키워드 폴백"},
+                {"keyword", "keyword-ranked", "#186 키워드 최신순 → 맞은 개수순"},
         };
         for (String[] p : pairs) {
             for (String lang : List.of("ko", "en", "vi")) {
