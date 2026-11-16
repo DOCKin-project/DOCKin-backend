@@ -1,0 +1,109 @@
+qid	type	lang	query	equipment	unit	part	symptom	cause	action	no_answer	translator
+q01	T	ko	CO2 용접기 송급 롤러 이상 진동	CO2 용접기		송급 롤러	이상 진동이 발생했다			0	-
+q01	T	en	Abnormal vibration in CO2 welder wire feed roller	CO2 용접기		송급 롤러	이상 진동이 발생했다			0	claude-opus-5-5(미검수)
+q01	T	vi	Rung động bất thường ở con lăn cấp liệu của máy hàn CO2	CO2 용접기		송급 롤러	이상 진동이 발생했다			0	claude-opus-5-5(미검수)
+q02	T	ko	겐트리 크레인 3호기 유압 실린더	겐트리 크레인	3	유압 실린더				0	-
+q02	T	en	Gantry crane No. 3 hydraulic cylinder	겐트리 크레인	3	유압 실린더				0	claude-opus-5-5(미검수)
+q02	T	vi	Xi lanh thủy lực cần trục giàn số 3	겐트리 크레인	3	유압 실린더				0	claude-opus-5-5(미검수)
+q03	T	ko	플라즈마 절단기 제어 패널 경보 반복	플라즈마 절단기		제어 패널	경보가 반복 발생했다			0	-
+q03	T	en	Plasma cutter control panel repeated alarms	플라즈마 절단기		제어 패널	경보가 반복 발생했다			0	claude-opus-5-5(미검수)
+q03	T	vi	Bảng điều khiển máy cắt plasma báo động liên tục	플라즈마 절단기		제어 패널	경보가 반복 발생했다			0	claude-opus-5-5(미검수)
+q04	T	ko	고소작업대 안전 스위치 기동 실패	고소작업대		안전 스위치	기동에 실패했다			0	-
+q04	T	en	Aerial work platform safety switch failed to start	고소작업대		안전 스위치	기동에 실패했다			0	claude-opus-5-5(미검수)
+q04	T	vi	Công tắc an toàn xe nâng người làm việc trên cao không khởi động được	고소작업대		안전 스위치	기동에 실패했다			0	claude-opus-5-5(미검수)
+q05	T	ko	유압 프레스 7호기 배관 플랜지	유압 프레스	7	배관 플랜지				0	-
+q05	T	en	Hydraulic press No. 7 pipe flange	유압 프레스	7	배관 플랜지				0	claude-opus-5-5(미검수)
+q05	T	vi	Mặt bích đường ống máy ép thủy lực số 7	유압 프레스	7	배관 플랜지				0	claude-opus-5-5(미검수)
+q06	T	ko	블라스팅 장비 필터 막힘	블라스팅 장비				필터 막힘		0	-
+q06	T	en	Blasting equipment clogged filter	블라스팅 장비				필터 막힘		0	claude-opus-5-5(미검수)
+q06	T	vi	Thiết bị phun cát bị tắc bộ lọc	블라스팅 장비				필터 막힘		0	claude-opus-5-5(미검수)
+q07	T	ko	이송 컨베이어 감속기 소음	이송 컨베이어		감속기	소음이 평소보다 커졌다			0	-
+q07	T	en	Transfer conveyor reducer noise	이송 컨베이어		감속기	소음이 평소보다 커졌다			0	claude-opus-5-5(미검수)
+q07	T	vi	Hộp giảm tốc băng tải vận chuyển kêu to	이송 컨베이어		감속기	소음이 평소보다 커졌다			0	claude-opus-5-5(미검수)
+q08	T	ko	공기압축기 압력 유지 안 됨 개스킷 경화	공기압축기			압력이 유지되지 않았다	개스킷 경화		0	-
+q08	T	en	Air compressor not holding pressure, hardened gasket	공기압축기			압력이 유지되지 않았다	개스킷 경화		0	claude-opus-5-5(미검수)
+q08	T	vi	Máy nén khí không giữ được áp suất, gioăng bị chai cứng	공기압축기			압력이 유지되지 않았다	개스킷 경화		0	claude-opus-5-5(미검수)
+q09	T	ko	집진 설비 냉각 팬 과전류 차단	집진 설비		냉각 팬	과전류로 차단되었다			0	-
+q09	T	en	Dust collector cooling fan tripped by overcurrent	집진 설비		냉각 팬	과전류로 차단되었다			0	claude-opus-5-5(미검수)
+q09	T	vi	Quạt làm mát thiết bị hút bụi bị ngắt do quá dòng	집진 설비		냉각 팬	과전류로 차단되었다			0	claude-opus-5-5(미검수)
+q10	T	ko	지게차 2호기 전동기 축	지게차	2	전동기 축				0	-
+q10	T	en	Forklift No. 2 motor shaft	지게차	2	전동기 축				0	claude-opus-5-5(미검수)
+q10	T	vi	Trục động cơ điện xe nâng số 2	지게차	2	전동기 축				0	claude-opus-5-5(미검수)
+q11	T	ko	발전기 절연 저하 케이블 교체	발전기				절연 저하	절연 저항을 측정하고 케이블을 교체했다	0	-
+q11	T	en	Generator insulation degradation, cable replaced	발전기				절연 저하	절연 저항을 측정하고 케이블을 교체했다	0	claude-opus-5-5(미검수)
+q11	T	vi	Máy phát điện suy giảm cách điện, đã thay cáp	발전기				절연 저하	절연 저항을 측정하고 케이블을 교체했다	0	claude-opus-5-5(미검수)
+q12	T	ko	무인 도장설비 케이블 그랜드 표시값 튐	무인 도장설비		케이블 그랜드	표시값이 튀는 현상이 있었다			0	-
+q12	T	en	Automated painting equipment cable gland, display value jumping	무인 도장설비		케이블 그랜드	표시값이 튀는 현상이 있었다			0	claude-opus-5-5(미검수)
+q12	T	vi	Ốc siết cáp thiết bị sơn tự động, giá trị hiển thị nhảy	무인 도장설비		케이블 그랜드	표시값이 튀는 현상이 있었다			0	claude-opus-5-5(미검수)
+q13	T	ko	겐트리 크레인 베어링 마모	겐트리 크레인				베어링 마모		0	-
+q13	T	en	Gantry crane bearing wear	겐트리 크레인				베어링 마모		0	claude-opus-5-5(미검수)
+q13	T	vi	Cần trục giàn bị mòn vòng bi	겐트리 크레인				베어링 마모		0	claude-opus-5-5(미검수)
+q14	T	ko	CO2 용접기 5호기 제어 패널	CO2 용접기	5	제어 패널				0	-
+q14	T	en	CO2 welder No. 5 control panel	CO2 용접기	5	제어 패널				0	claude-opus-5-5(미검수)
+q14	T	vi	Bảng điều khiển máy hàn CO2 số 5	CO2 용접기	5	제어 패널				0	claude-opus-5-5(미검수)
+q15	T	ko	공기압축기 냉각수 부족 온도 초과	공기압축기			온도가 규정치를 넘었다	냉각수 부족		0	-
+q15	T	en	Air compressor low coolant, over temperature	공기압축기			온도가 규정치를 넘었다	냉각수 부족		0	claude-opus-5-5(미검수)
+q15	T	vi	Máy nén khí thiếu nước làm mát, nhiệt độ vượt mức	공기압축기			온도가 규정치를 넘었다	냉각수 부족		0	claude-opus-5-5(미검수)
+q16	S	ko	크레인 실린더에서 기름이 새면 어떻게 처리했어?	겐트리 크레인		유압 실린더	누유가 확인되었다			0	-
+q16	S	en	What did you do when oil leaked from the crane cylinder?	겐트리 크레인		유압 실린더	누유가 확인되었다			0	claude-opus-5-5(미검수)
+q16	S	vi	Xi lanh cần cẩu bị chảy dầu thì đã xử lý thế nào?	겐트리 크레인		유압 실린더	누유가 확인되었다			0	claude-opus-5-5(미검수)
+q17	S	ko	용접기가 일하다가 자꾸 멈춰요	CO2 용접기			간헐적으로 정지했다			0	-
+q17	S	en	The welder keeps stopping in the middle of work	CO2 용접기			간헐적으로 정지했다			0	claude-opus-5-5(미검수)
+q17	S	vi	Máy hàn cứ đang làm thì lại dừng	CO2 용접기			간헐적으로 정지했다			0	claude-opus-5-5(미검수)
+q18	S	ko	절단기 화면 숫자가 왔다갔다 해	플라즈마 절단기			표시값이 튀는 현상이 있었다			0	-
+q18	S	en	The numbers on the cutter screen keep jumping around	플라즈마 절단기			표시값이 튀는 현상이 있었다			0	claude-opus-5-5(미검수)
+q18	S	vi	Số trên màn hình máy cắt cứ nhảy lung tung	플라즈마 절단기			표시값이 튀는 현상이 있었다			0	claude-opus-5-5(미검수)
+q19	S	ko	프레스가 기름칠이 모자라서 고장 난 기록	유압 프레스				윤활 부족		0	-
+q19	S	en	Records of the press breaking down from not enough grease	유압 프레스				윤활 부족		0	claude-opus-5-5(미검수)
+q19	S	vi	Ghi chép máy ép hỏng vì thiếu dầu mỡ	유압 프레스				윤활 부족		0	claude-opus-5-5(미검수)
+q20	S	ko	컨베이어가 덜덜 떨릴 때 원인이 뭐였어?	이송 컨베이어			이상 진동이 발생했다			0	-
+q20	S	en	What caused it when the conveyor was shaking?	이송 컨베이어			이상 진동이 발생했다			0	claude-opus-5-5(미검수)
+q20	S	vi	Băng chuyền rung lắc thì nguyên nhân là gì?	이송 컨베이어			이상 진동이 발생했다			0	claude-opus-5-5(미검수)
+q21	S	ko	먼지 빨아들이는 설비가 너무 뜨거워졌을 때	집진 설비			온도가 규정치를 넘었다			0	-
+q21	S	en	When the dust suction machine got too hot	집진 설비			온도가 규정치를 넘었다			0	claude-opus-5-5(미검수)
+q21	S	vi	Khi máy hút bụi bị nóng quá	집진 설비			온도가 규정치를 넘었다			0	claude-opus-5-5(미검수)
+q22	S	ko	지게차 시동이 안 걸렸을 때 뭐 했어?	지게차			기동에 실패했다			0	-
+q22	S	en	What was done when the forklift wouldn't start?	지게차			기동에 실패했다			0	claude-opus-5-5(미검수)
+q22	S	vi	Xe nâng không nổ máy thì đã làm gì?	지게차			기동에 실패했다			0	claude-opus-5-5(미검수)
+q23	S	ko	발전기 전기가 들쭉날쭉 나와	발전기			출력이 불안정했다			0	-
+q23	S	en	The generator's power keeps going up and down	발전기			출력이 불안정했다			0	claude-opus-5-5(미검수)
+q23	S	vi	Máy phát điện ra điện lúc mạnh lúc yếu	발전기			출력이 불안정했다			0	claude-opus-5-5(미검수)
+q24	S	ko	높은 데 올라가는 작업대가 반응이 늦어	고소작업대			동작이 지연되었다			0	-
+q24	S	en	The lift platform for working up high responds slowly	고소작업대			동작이 지연되었다			0	claude-opus-5-5(미검수)
+q24	S	vi	Bàn nâng lên cao phản ứng chậm	고소작업대			동작이 지연되었다			0	claude-opus-5-5(미검수)
+q25	S	ko	모래 뿌리는 장비에 뭐가 들어가서 고장 났던 거	블라스팅 장비				이물질 유입		0	-
+q25	S	en	When something got inside the sand blasting machine and broke it	블라스팅 장비				이물질 유입		0	claude-opus-5-5(미검수)
+q25	S	vi	Có vật gì lọt vào máy bắn cát nên bị hỏng	블라스팅 장비				이물질 유입		0	claude-opus-5-5(미검수)
+q26	S	ko	도장 로봇 볼트가 풀려서 다시 조인 기록	무인 도장설비				체결 볼트 이완	규정 토크로 재체결했다	0	-
+q26	S	en	Records of re-tightening loose bolts on the painting robot	무인 도장설비				체결 볼트 이완	규정 토크로 재체결했다	0	claude-opus-5-5(미검수)
+q26	S	vi	Ghi chép siết lại bu lông bị lỏng ở robot sơn	무인 도장설비				체결 볼트 이완	규정 토크로 재체결했다	0	claude-opus-5-5(미검수)
+q27	S	ko	압축기 센서 접촉이 나빠서 경보 울린 거	공기압축기			경보가 반복 발생했다	센서 접점 불량		0	-
+q27	S	en	Compressor alarm going off because of a bad sensor contact	공기압축기			경보가 반복 발생했다	센서 접점 불량		0	claude-opus-5-5(미검수)
+q27	S	vi	Máy nén báo động vì cảm biến tiếp xúc kém	공기압축기			경보가 반복 발생했다	센서 접점 불량		0	claude-opus-5-5(미검수)
+q28	S	ko	크레인 모터 돌아가는 쪽에서 큰 소리가 나	겐트리 크레인		전동기 축	소음이 평소보다 커졌다			0	-
+q28	S	en	Loud noise from where the crane motor turns	겐트리 크레인		전동기 축	소음이 평소보다 커졌다			0	claude-opus-5-5(미검수)
+q28	S	vi	Tiếng ồn lớn phía trục quay động cơ cần cẩu	겐트리 크레인		전동기 축	소음이 평소보다 커졌다			0	claude-opus-5-5(미검수)
+q29	S	ko	용접기 설정값이 잘못 들어가서 생긴 문제	CO2 용접기				제어 파라미터 오설정		0	-
+q29	S	en	Problems caused by wrong settings entered on the welder	CO2 용접기				제어 파라미터 오설정		0	claude-opus-5-5(미검수)
+q29	S	vi	Lỗi do nhập sai cài đặt trên máy hàn	CO2 용접기				제어 파라미터 오설정		0	claude-opus-5-5(미검수)
+q30	S	ko	프레스 압이 안 잡혀	유압 프레스			압력이 유지되지 않았다			0	-
+q30	S	en	The press won't build up pressure	유압 프레스			압력이 유지되지 않았다			0	claude-opus-5-5(미검수)
+q30	S	vi	Máy ép không lên áp	유압 프레스			압력이 유지되지 않았다			0	claude-opus-5-5(미검수)
+n01	N	ko	용접 로봇 티칭 오류							1	-
+n01	N	en	Welding robot teaching error							1	claude-opus-5-5(미검수)
+n01	N	vi	Lỗi dạy lệnh cho robot hàn							1	claude-opus-5-5(미검수)
+n02	N	ko	비계 해체 순서							1	-
+n02	N	en	Scaffolding dismantling order							1	claude-opus-5-5(미검수)
+n02	N	vi	Thứ tự tháo dỡ giàn giáo							1	claude-opus-5-5(미검수)
+n03	N	ko	방독 마스크 교체 주기							1	-
+n03	N	en	Gas mask replacement interval							1	claude-opus-5-5(미검수)
+n03	N	vi	Chu kỳ thay mặt nạ phòng độc							1	claude-opus-5-5(미검수)
+n04	N	ko	CO2 용접기 구매 단가							1	-
+n04	N	en	CO2 welder purchase price							1	claude-opus-5-5(미검수)
+n04	N	vi	Giá mua máy hàn CO2							1	claude-opus-5-5(미검수)
+n05	N	ko	겐트리 크레인 정격 하중							1	-
+n05	N	en	Gantry crane rated load							1	claude-opus-5-5(미검수)
+n05	N	vi	Tải trọng định mức của cần trục giàn							1	claude-opus-5-5(미검수)
+n06	N	ko	지게차 운전 자격 요건							1	-
+n06	N	en	Forklift operator license requirements							1	claude-opus-5-5(미검수)
+n06	N	vi	Điều kiện chứng chỉ lái xe nâng							1	claude-opus-5-5(미검수)
