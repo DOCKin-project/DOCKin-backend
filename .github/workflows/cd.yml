@@ -1,0 +1,164 @@
+# 배포 자동화 (PRODUCTION-READINESS R2·R5, docs/OPERATIONS-DEPLOY.md).
+#
+# main에 머지 -> CI 통과 -> 이 워크플로가 이미지를 커밋 해시 태그로 푸시하고 운영 호스트에서 바꿔 끼운다.
+#
+# [이전 워크플로와 다른 점] (e672ea9에서 삭제된 workflow.yml)
+#  - 테스트와 분리했다. 이전 것은 빌드·푸시·배포가 한 잡이었고 `-x test`로 테스트를 건너뛰었다.
+#    여기서는 CI(ci.yml)가 성공한 커밋만 받는다(workflow_run). 배포 자격증명 문제로 테스트가 빨개지는 일이 없다.
+#  - 태그가 커밋 해시다. latest 하나를 덮어쓰던 동안은 무엇이 떠 있는지 태그로 알 수 없었다.
+#  - `docker-compose down`으로 전체를 내리지 않는다. 앱 컨테이너만 바꾸고 DB·Redis는 그대로 둔다.
+#  - 헬스를 기다리고, 실패하면 직전 태그로 되돌린다(scripts/deploy/deploy.sh).
+#  - 서드파티 SSH 액션을 쓰지 않는다. 운영 서버 키를 만지는 단계라 러너의 ssh를 직접 쓴다.
+#
+# [수동 실행] Actions 탭 -> CD -> Run workflow
+#  - tag를 비우면: 고른 브랜치의 최신 커밋을 빌드해 배포
+#  - tag에 커밋 해시를 넣으면: 빌드 없이 그 이미지로 배포 — 롤백은 이것이다
+
+name: CD
+
+on:
+  workflow_run:
+    workflows: [ "CI" ]
+    types: [ completed ]
+    branches: [ "main" ]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: '배포할 이미지 태그(커밋 해시). 비우면 이 브랜치 최신 커밋을 빌드해 배포'
+        required: false
+        default: ''
+
+# 배포는 겹치면 안 되고, 진행 중인 배포를 취소해서도 안 된다(반쯤 바뀐 상태로 남는다).
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  image:
+    name: 이미지 빌드 + 푸시
+    # CI가 main push에서 성공했을 때만. PR에서 돈 CI(event=pull_request)는 배포하지 않는다.
+    if: >-
+      (github.event_name == 'workflow_run'
+        && github.event.workflow_run.conclusion == 'success'
+        && github.event.workflow_run.event == 'push')
+      || (github.event_name == 'workflow_dispatch' && inputs.tag == '')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # workflow_run에서 github.sha는 main의 최신이다. CI가 실제로 검사한 커밋을 받는다.
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: JDK 21 설치
+        uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Gradle 설정
+        uses: gradle/actions/setup-gradle@v6
+
+      # 태그는 build.gradle의 buildInfo(commit)와 같은 명령으로 만든다 —
+      # /actuator/info가 답하는 커밋과 이미지 태그가 글자까지 같아야 "무엇이 떠 있나"를 한 번에 잇는다.
+      - name: 태그
+        id: tag
+        run: echo "tag=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+      # 테스트는 CI가 이 커밋에서 이미 돌렸다. 여기서 다시 돌리지 않는다.
+      - run: chmod +x gradlew && ./gradlew bootJar
+
+      - name: Docker Hub 로그인
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: 빌드 + 푸시
+        env:
+          IMAGE: ${{ secrets.DOCKER_USERNAME }}/dockin-app
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          docker build -t "$IMAGE:$TAG" -t "$IMAGE:latest" .
+          docker push "$IMAGE:$TAG"
+          # latest도 옮긴다 — 로컬에서 태그 없이 compose up 하는 사람이 받는 이미지. 운영은 latest를 쓰지 않는다.
+          docker push "$IMAGE:latest"
+          echo "### 이미지 \`$IMAGE:$TAG\`" >> "$GITHUB_STEP_SUMMARY"
+
+  deploy:
+    name: 운영 배포
+    needs: image
+    # image가 성공했거나, 수동 실행에 태그를 줘서 image를 건너뛴 경우.
+    if: >-
+      always()
+      && (needs.image.result == 'success'
+          || (needs.image.result == 'skipped' && github.event_name == 'workflow_dispatch' && inputs.tag != ''))
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # 저장소 Settings -> Environments -> production 에서 승인자를 걸 수 있다(문서 2절).
+    environment: production
+    env:
+      EC2_HOST: ${{ secrets.EC2_HOST }}
+      EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
+      DEPLOY_DIR: ${{ vars.DEPLOY_DIR || '/home/ubuntu/DOCKin-spring' }}
+      TAG: ${{ needs.image.outputs.tag || inputs.tag }}
+      IMAGE: ${{ secrets.DOCKER_USERNAME }}/dockin-app
+    steps:
+      # 운영 서버가 없는 동안(측정용 AWS는 매번 terminate한다) 이 잡은 빨간불이 아니라 건너뜀이어야 한다.
+      # 이전 워크플로가 지워진 이유가 "push마다 실패"였다.
+      - name: 배포 대상 확인
+        id: target
+        run: |
+          if [ -z "$EC2_HOST" ] || [ -z "$EC2_USERNAME" ]; then
+            echo "::warning::EC2_HOST/EC2_USERNAME 시크릿이 없어 배포를 건너뛴다. 이미지는 $IMAGE:$TAG 로 푸시됐다."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v7
+        if: steps.target.outputs.enabled == 'true'
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: SSH 준비
+        if: steps.target.outputs.enabled == 'true'
+        env:
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          # 있으면 호스트 키를 고정한다(`ssh-keyscan <호스트>` 출력 한 줄). 없으면 처음 본 키를 믿는다 — 문서 2절.
+          EC2_HOST_KEY: ${{ secrets.EC2_HOST_KEY }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$EC2_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          if [ -n "$EC2_HOST_KEY" ]; then
+            printf '%s\n' "$EC2_HOST_KEY" > ~/.ssh/known_hosts
+          else
+            echo "::warning::EC2_HOST_KEY 시크릿이 없어 ssh-keyscan 결과를 그대로 믿는다."
+            ssh-keyscan -T 10 "$EC2_HOST" > ~/.ssh/known_hosts
+          fi
+
+      # 앱 이미지 말고 호스트에 있어야 하는 파일: compose.yaml, nginx 설정, 배포 스크립트.
+      # .env는 보내지 않는다 — 비밀값은 호스트에만 있다(문서 3절).
+      - name: 배포 파일 복사
+        if: steps.target.outputs.enabled == 'true'
+        run: |
+          tar -czf - compose.yaml nginx scripts/deploy/deploy.sh \
+            | ssh -i ~/.ssh/deploy_key "$EC2_USERNAME@$EC2_HOST" \
+                "mkdir -p '$DEPLOY_DIR' && tar -xzf - -C '$DEPLOY_DIR'"
+
+      - name: 교체
+        if: steps.target.outputs.enabled == 'true'
+        run: |
+          ssh -i ~/.ssh/deploy_key "$EC2_USERNAME@$EC2_HOST" \
+            "cd '$DEPLOY_DIR' && DOCKIN_IMAGE='$IMAGE' bash scripts/deploy/deploy.sh '$TAG'"
+          echo "### 배포 \`$TAG\` -> $EC2_HOST" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: SSH 키 지우기
+        if: always()
+        run: rm -f ~/.ssh/deploy_key
