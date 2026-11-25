@@ -52,12 +52,12 @@
 | # | 항목 | 상태 | 지금 | 해야 할 것 |
 |---|---|---|---|---|
 | R1 | CI | ✅ | 빌드+테스트, Testcontainers, 빨간불 → 이슈 자동 생성(P2-16-1) | 유지 |
-| R2 | CD | ❌ | 없음. 배포 워크플로는 P0-7에서 의도적으로 복구하지 않았다(로드맵 7-5). 그 결과 이미지가 소스보다 한 달 낡은 채 돌았다(P2-13-1) | `main` 머지 = 이미지 푸시 = 배포. 태그를 커밋 해시로(`/actuator/info`가 이미 해시를 답한다) |
-| R3 | 환경 분리 | ❌ | `application.properties` 하나 + `application-seed.properties`. Swagger·`/v3/api-docs`가 화이트리스트 | `dev`/`staging`/`prod` 프로파일. prod에서 Swagger·seed 끔 |
-| R4 | 시크릿 | ❌ | `.env`는 커밋되지 않는다. 배포 환경에 어떻게 넘기는지 답이 없다(P2-11-6) | AWS면 SSM Parameter Store/Secrets Manager. 아니면 최소한 "호스트 `.env`를 누가 어떻게 바꾸는가" 문서 |
-| R5 | 롤백 | ❌ | 없음 | 이전 이미지로 돌리는 명령 한 줄 + "마이그레이션이 이미 돌았으면"의 답(전진 수정 원칙이면 그렇게 적는다) |
-| R6 | 헬스 기반 교체 | △ | `/actuator/health` + compose 헬스체크(P2-11-2) | 새 컨테이너 UP 뒤 옛 것을 내리는 순서만 |
-| R7 | graceful shutdown | ❌ | `server.shutdown` 미설정 | 한 줄. 색인 배치는 멱등이라 중단 후 재개가 이미 된다 |
+| R2 | CD | ✅ 2026-11-26 코드 / 운영 미검증 | `cd.yml`: CI 통과한 main 커밋 → 이미지 `:<커밋 해시>` 푸시 → 호스트에서 앱만 교체(`OPERATIONS-DEPLOY.md`). 호스트에서 실제로 돈 적은 아직 없다 | 첫 배포 전 호스트 점검(그 문서 2절), `EC2_HOST_KEY` 시크릿 |
+| R3 | 환경 분리 | ✅ 2026-11-26 | `prod` 프로파일: Swagger 404, CORS 기본값 없음, 챗봇 스텁 off. `ProdProfileGuard`가 prod+seed를 기동 거부. `ProdProfileTest`가 prod로 실제 기동 | staging은 서버가 생기면 |
+| R4 | 시크릿 | △ 2026-11-26 | 호스트 `.env`에만 있고 CD는 보내지 않는다. 바꾸는 절차는 `OPERATIONS-DEPLOY.md` 3절 | SSM Parameter Store/Secrets Manager |
+| R5 | 롤백 | ✅ 2026-11-26 | `deploy.sh --rollback` 또는 CD 수동 실행에 태그. 헬스 실패 시 자동으로 직전 태그. 마이그레이션은 전진 수정 — Flyway `*:future`를 복구해 옛 이미지가 새 스키마 위에서 뜬다 | 실제 호스트에서 롤백 한 번 |
+| R6 | 헬스 기반 교체 | △ | 새 컨테이너가 healthy가 될 때까지 기다리고 아니면 되돌린다. **무중단은 아니다**(고정 container_name, 기동 동안 502) | 파일럿에서 문제가 되면 블루-그린 |
+| R7 | graceful shutdown | ✅ 2026-11-26 | `server.shutdown=graceful` 20초 + compose `stop_grace_period: 30s` | 유지 |
 
 ---
 
@@ -116,7 +116,7 @@
 ```
 0  1절 G1~G6  ✅ 2026-09-14           ← 닫았다
 1  D1 백업·복구 리허설  △ 2026-09-14    ← 일일 덤프 + 리허설. PITR은 파일럿 뒤
-2  R2 CD + R3 환경 분리 + R4 시크릿      ← 이거 없이는 고칠 때마다 손으로 배포
+2  R2 CD + R3 환경 분리 + R4 시크릿  △ 2026-11-26  ← 코드는 끝. 운영 호스트에서 첫 배포·롤백 한 번이 남았다
 3  O2 알림 4개 + O3 로그 집계            ← 이거 없이는 사용자가 QA
 4  ADR-0008 구현(F4) + FCM(P2-17-3)     ← 이거 없이는 기능이 반쪽
 5  H1 파일럿 → 가정표의 [측정 필요] 채우기
