@@ -2,10 +2,12 @@ package com.DOCKin.rag.service;
 
 import com.DOCKin.global.error.BusinessException;
 import com.DOCKin.global.error.ErrorCode;
+import com.DOCKin.rag.dto.RetrievalResult;
 import com.DOCKin.rag.dto.RetrievedChunk;
 import com.DOCKin.rag.model.DocumentChunk;
 import com.DOCKin.rag.model.SourceType;
-import com.DOCKin.rag.repository.DocumentChunkRepository;
+import com.DOCKin.rag.repository.KeywordChunk;
+import com.DOCKin.rag.repository.KeywordChunkJdbcRepository;
 import com.DOCKin.rag.repository.NearestChunk;
 import com.DOCKin.rag.repository.NearestChunkJdbcRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -20,6 +22,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -34,7 +37,7 @@ class RetrievalServiceTest {
     private static final String USER = "10001";
 
     @Mock
-    private DocumentChunkRepository documentChunkRepository;
+    private KeywordChunkJdbcRepository keywordChunkJdbcRepository;
     @Mock
     private NearestChunkJdbcRepository nearestChunkJdbcRepository;
     @Mock
@@ -155,6 +158,53 @@ class RetrievalServiceTest {
         // 권한 필터가 걸린 쿼리는 호출되지 않아야 한다.
         verify(nearestChunkJdbcRepository, never()).findNearestPublic(anyString(), anyString(), anyInt());
         verify(nearestChunkJdbcRepository, never()).findNearestOwned(anyString(), anyString(), anyString(), anyInt());
+    }
+
+    @Test
+    @DisplayName("폴백 키워드 - 글자·숫자만 남기고 2글자 이상을 중복 없이 긴 것부터, 최대 MAX개")
+    void 폴백_키워드() {
+        assertEquals(List.of("CO2", "용접기", "송급", "롤러", "이상", "진동"),
+                RetrievalService.fallbackKeywords("CO2 용접기, 송급 롤러 이상 진동? 용접기 a"));
+        assertTrue(RetrievalService.fallbackKeywords("  ? ! a ").isEmpty());
+        assertTrue(RetrievalService.fallbackKeywords(null).isEmpty());
+
+        String longQuery = "가나 다라 마바 사아 자차 카타 파하 거너 더러 머버";
+        assertEquals(RetrievalService.MAX_FALLBACK_KEYWORDS,
+                RetrievalService.fallbackKeywords(longQuery).size());
+    }
+
+    @Test
+    @DisplayName("임베딩 장애 시 키워드 전부를 한 번에 넘겨 폴백하고, 결과 순서를 그대로 쓴다(#186)")
+    void 키워드_폴백() {
+        when(embeddingClient.getModelName()).thenReturn(MODEL);
+        when(embeddingClient.embedQuery(anyString()))
+                .thenThrow(new BusinessException(ErrorCode.EMBEDDING_SERVER_ERROR));
+        when(keywordChunkJdbcRepository.findVisible(MODEL, USER, List.of("용접기", "롤러", "진동"), 5))
+                .thenReturn(List.of(
+                        new KeywordChunk(2L, SourceType.WORK_LOG, 20L, 0, "셋 다 맞음", 3),
+                        new KeywordChunk(9L, SourceType.WORK_LOG, 90L, 0, "하나만 맞음", 1)));
+
+        RetrievalResult result = retrievalService.retrieve("용접기 롤러 진동", USER, false, 5);
+
+        assertEquals(RetrievalResult.RetrievalMode.KEYWORD, result.mode());
+        assertEquals(List.of("셋 다 맞음", "하나만 맞음"),
+                result.chunks().stream().map(RetrievedChunk::content).toList());
+        assertEquals(0.0, result.chunks().get(0).score(), 0.0);
+        verify(keywordChunkJdbcRepository, never()).findAll(anyString(), any(), anyInt());
+    }
+
+    @Test
+    @DisplayName("관리자 폴백은 권한 필터 없는 쿼리를 쓴다")
+    void 관리자_키워드_폴백() {
+        when(embeddingClient.getModelName()).thenReturn(MODEL);
+        when(embeddingClient.embedQuery(anyString()))
+                .thenThrow(new BusinessException(ErrorCode.EMBEDDING_SERVER_ERROR));
+        when(keywordChunkJdbcRepository.findAll(MODEL, List.of("용접기"), 5)).thenReturn(List.of());
+
+        RetrievalResult result = retrievalService.retrieve("용접기", "admin", true, 5);
+
+        assertTrue(result.chunks().isEmpty());
+        verify(keywordChunkJdbcRepository, never()).findVisible(anyString(), anyString(), any(), anyInt());
     }
 
     // --- helpers ---
