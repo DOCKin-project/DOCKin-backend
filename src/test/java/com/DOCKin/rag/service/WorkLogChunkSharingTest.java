@@ -14,7 +14,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.PageRequest;
+import com.DOCKin.rag.repository.KeywordChunkJdbcRepository;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
@@ -62,6 +62,7 @@ class WorkLogChunkSharingTest extends ContainerTestSupport {
     @Autowired private WorkLogReviewService reviewService;
     @Autowired private WorkLogsService workLogsService;
     @Autowired private DocumentChunkRepository documentChunkRepository;
+    @Autowired private KeywordChunkJdbcRepository keywordChunkJdbcRepository;
     @Autowired private JdbcTemplate jdbc;
 
     private Long logId;
@@ -155,16 +156,16 @@ class WorkLogChunkSharingTest extends ContainerTestSupport {
     @Test
     @DisplayName("키워드 폴백도 같은 범위다 - 같은 구역 승인분은 찾고, 다른 구역에서는 못 찾는다")
     void keywordFallbackSameScope() {
-        assertThat(documentChunkRepository.searchByKeyword(MODEL, PEER, AREA, "공유", PageRequest.of(0, 10)))
+        assertThat(keywordChunkJdbcRepository.findVisible(MODEL, PEER, AREA, List.of("공유"), 10))
                 .as("승인 전").isEmpty();
 
         reviewService.approve(ADMIN, logId, "ok");
 
-        assertThat(documentChunkRepository.searchByKeyword(MODEL, PEER, AREA, "공유", PageRequest.of(0, 10)))
+        assertThat(keywordChunkJdbcRepository.findVisible(MODEL, PEER, AREA, List.of("공유"), 10))
                 .hasSize(2);
-        assertThat(documentChunkRepository.searchByKeyword(MODEL, OUTSIDER, OTHER_AREA, "공유", PageRequest.of(0, 10)))
+        assertThat(keywordChunkJdbcRepository.findVisible(MODEL, OUTSIDER, OTHER_AREA, List.of("공유"), 10))
                 .isEmpty();
-        assertThat(documentChunkRepository.searchByKeyword(MODEL, OUTSIDER, null, "공유", PageRequest.of(0, 10)))
+        assertThat(keywordChunkJdbcRepository.findVisible(MODEL, OUTSIDER, null, List.of("공유"), 10))
                 .as("구역을 모르면 좁히는 쪽으로").isEmpty();
     }
 

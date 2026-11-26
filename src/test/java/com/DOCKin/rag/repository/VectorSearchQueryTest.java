@@ -71,6 +71,16 @@ class VectorSearchQueryTest extends ContainerTestSupport {
     }
 
     @Test
+    @DisplayName("커넥션 초기화로 hnsw.iterative_scan이 켜져 있다 - 권한 필터가 붙어도 k개를 채우기 위한 설정(ADR-0006 8-2)")
+    void iterative_scan_켜짐() {
+        // application.properties의 spring.datasource.hikari.connection-init-sql이 연결마다 SET 한다.
+        // 이 설정이 빠지면 에러 없이 HNSW가 후보 40개만 훑고, 권한 필터를 통과한 결과가 k개보다 적게 돌아온다.
+        Object value = entityManager.createNativeQuery("SHOW hnsw.iterative_scan").getSingleResult();
+
+        assertEquals("relaxed_order", value);
+    }
+
+    @Test
     @DisplayName("거리 오름차순으로 반환되고 distance는 1 - 코사인 유사도다")
     void 거리_정렬과_값() {
         // 질의와 같은 방향(거리 0), 45도(거리 약 0.293), 직교(거리 1)
