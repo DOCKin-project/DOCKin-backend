@@ -77,7 +77,9 @@ public class JwtUtil {
         try{
             parser.parseClaimsJws(token);
             return true;
-        } catch (SecurityException | MalformedJwtException e) {
+        // io.jsonwebtoken.* 와일드카드로는 security 하위 패키지가 안 들어온다 — 이름만 쓰면 java.lang.SecurityException이라
+        // 서명이 틀린 토큰(SignatureException)이 false 대신 그대로 던져졌다(#164). 패키지까지 적는다.
+        } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
             log.info("Invalid JWT signature.", e);
         } catch (ExpiredJwtException e) {
             log.info("Expired JWT token.", e);

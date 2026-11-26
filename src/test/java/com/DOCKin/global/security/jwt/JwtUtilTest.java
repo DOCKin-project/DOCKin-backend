@@ -46,4 +46,17 @@ class JwtUtilTest {
         assertThat(util.isValidToken(expired)).isFalse();
         assertThat(util.parseClaims(expired).getSubject()).isEqualTo("worker01");
     }
+
+    @Test
+    @DisplayName("다른 키로 서명한 토큰·깨진 토큰·빈 값은 예외 없이 false다 (#164)")
+    void invalidTokensReturnFalseWithoutThrowing() {
+        JwtUtil util = new JwtUtil(SECRET, 3600, 86400);
+        String otherSecret = Base64.getEncoder().encodeToString(
+                "another-secret-key-for-signature-mismatch-32bytes!".getBytes());
+        String forged = new JwtUtil(otherSecret, 3600, 86400).createAccessToken(worker());
+
+        assertThat(util.isValidToken(forged)).as("서명 불일치").isFalse();
+        assertThat(util.isValidToken("not.a.jwt")).as("형식 오류").isFalse();
+        assertThat(util.isValidToken("")).as("빈 값").isFalse();
+    }
 }
