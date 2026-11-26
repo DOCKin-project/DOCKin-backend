@@ -81,6 +81,15 @@ class VectorSearchQueryTest extends ContainerTestSupport {
     }
 
     @Test
+    @DisplayName("커넥션 초기화로 hnsw.ef_search가 100이다 - 기본값 40 대신 8-4 스윕이 고른 값(ADR-0006 8-4)")
+    void ef_search_100() {
+        // connection-init-sql은 SET 두 개를 한 줄에 담는다. 두 번째 SET이 빠지거나 무시돼도 에러가 나지 않으므로 값을 직접 본다.
+        Object value = entityManager.createNativeQuery("SHOW hnsw.ef_search").getSingleResult();
+
+        assertEquals("100", value);
+    }
+
+    @Test
     @DisplayName("거리 오름차순으로 반환되고 distance는 1 - 코사인 유사도다")
     void 거리_정렬과_값() {
         // 질의와 같은 방향(거리 0), 45도(거리 약 0.293), 직교(거리 1)
