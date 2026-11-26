@@ -1,0 +1,230 @@
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+INFO:     Started server process [18247]
+INFO:     Waiting for application startup.
+2026-11-26 09:28:28,924 INFO aiserver.glossary 용어 사전 /home/ec2-user/pylab/aiserver/glossary/ko.yaml: 28항목
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:49828 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49840 - "GET /health HTTP/1.1" 200 OK
+2026-11-26 09:29:53,920 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:49846 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:32:45,995 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:33:03,529 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:33:34,663 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:33:47,100 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:34:01,222 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:34:28,515 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:34:42,363 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:34:55,861 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:35:08,916 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:35:22,198 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:35:37,916 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:35:57,907 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:36:10,663 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:36:16,344 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:36:55,350 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:37:05,333 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:37:19,491 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:37:39,563 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:37:49,565 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:38:00,291 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:38:25,835 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:38:38,148 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:38:50,777 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:39:03,596 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:39:13,989 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:39:32,775 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:39:55,302 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:40:10,802 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:40:15,419 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:40:30,416 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:40:46,174 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:40:51,931 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:41:28,434 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:41:40,289 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:41:51,888 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:42:18,521 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:42:29,548 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:42:46,625 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:43:15,384 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:43:26,745 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:43:36,620 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:43:57,121 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:44:09,512 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:44:24,017 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:44:45,818 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:44:53,196 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:44:57,679 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:45:20,531 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:45:37,925 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:45:54,965 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:46:17,211 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:46:28,052 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:46:40,851 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:46:44,876 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:46:51,352 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:47:00,561 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:47:27,443 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:47:35,991 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:47:42,112 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:48:02,602 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:48:13,112 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:48:18,034 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:48:28,313 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:48:37,596 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:48:42,453 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:49:05,746 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:49:16,754 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:49:30,891 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:49:47,930 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:49:56,233 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:50:08,736 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:50:34,182 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:50:39,605 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:50:53,027 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:51:04,694 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:51:07,848 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:51:21,777 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:51:51,929 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:51:57,485 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:52:03,399 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:52:43,049 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:52:57,876 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:53:12,180 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:53:44,958 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:53:56,098 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:54:10,011 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:54:34,861 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:54:49,979 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:55:03,153 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:55:20,087 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:55:23,948 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:55:33,096 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:55:53,275 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:56:03,022 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:56:06,877 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:56:20,715 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:56:23,811 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:56:26,532 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:56:47,425 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:56:51,142 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:56:53,741 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:56:58,969 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:57:01,632 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:57:09,399 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:57:34,578 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:57:42,083 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:57:48,351 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+2026-11-26 09:58:01,617 INFO httpx2 HTTP Request: POST http://127.0.0.1:11434/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60344 - "POST /api/chatbot HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [18247]

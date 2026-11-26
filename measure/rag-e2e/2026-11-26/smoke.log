@@ -1,0 +1,89 @@
+
+2026-11-26T08:55:04Z == 하드 watchdog — 세션이 죽어도 4시간 뒤 꺼진다(stop. terminate는 로컬이 한다)
+Shutdown scheduled for Thu 2026-11-26 12:55:04 UTC, use 'shutdown -c' to cancel.
+
+2026-11-26T08:55:04Z == 환경
+4
+               total        used        free      shared  buff/cache   available
+Mem:              15           2           1           0          11          12
+Tesla T4, 15360 MiB, 595.112.07
+
+2026-11-26T08:55:06Z == 저장소
+5c729f0 measure(rag-e2e): 챗봇 서버 주소를 TEST_AI_SERVER_URL로 — ContainerTestSupport의 9999가 하위 클래스 설정을 이겼다. remote.sh는 pylab을 절대 경로로
+fatal: not a git repository (or any of the parent directories): .git
+
+2026-11-26T08:55:06Z == TEI (ghcr.io/huggingface/text-embeddings-inference:turing-latest)
+
+2026-11-26T08:55:52Z == Ollama (ollama/ollama:latest) — 모델 받기
+[?2026h[?25l[1Gpulling manifest ⠋ [K[?25h[?2026l[?2026h[?25l[1Gpulling manifest ⠙ [K[?25h[?2026l[?2026h[?25l[1Gpulling manifest ⠹ [K[?25h[?2026l[?2026h[?25l[1Gpulling manifest ⠸ [K[?25h[?2026l[?2026h[?25l[1Gpulling manifest ⠼ [K[?25h[?2026l[?2026h[?25l[1Gpulling manifest ⠴ [K[?25h[?2026l[?2026h[?25l[1Gpulling manifest ⠦ [K[?25h[?2026l[?2026h[?25l[1Gpulling manifest [K
+pulling 2bada8a74506: 100% ▕██████████████████▏ 4.7 GB                         [K
+pulling 66b9ea09bd5b: 100% ▕██████████████████▏   68 B                         [K
+pulling eb4402837c78: 100% ▕██████████████████▏ 1.5 KB                         [K
+pulling 832dd9e00a68: 100% ▕██████████████████▏  11 KB                         [K
+pulling 2f15b3218f05: 100% ▕██████████████████▏  487 B                         [K
+verifying sha256 digest [K
+writing manifest [K
+removing unused layers [K
+success [K[?25h[?2026l
+pulled qwen2.5:7b
+[?2026h[?25l[1Gpulling manifest ⠋ [K[?25h[?2026l[?2026h[?25l[1Gpulling manifest ⠙ [K[?25h[?2026l[?2026h[?25l[1Gpulling manifest ⠹ [K[?25h[?2026l[?2026h[?25l[1Gpulling manifest ⠸ [K[?25h[?2026l[?2026h[?25l[1Gpulling manifest ⠼ [K[?25h[?2026l[?2026h[?25l[1Gpulling manifest ⠴ [K[?25h[?2026l[?2026h[?25l[1Gpulling manifest ⠦ [K[?25h[?2026l[?2026h[?25l[1Gpulling manifest [K
+pulling 2049f5674b1e: 100% ▕██████████████████▏ 9.0 GB                         [K
+pulling 66b9ea09bd5b: 100% ▕██████████████████▏   68 B                         [K
+pulling eb4402837c78: 100% ▕██████████████████▏ 1.5 KB                         [K
+pulling 832dd9e00a68: 100% ▕██████████████████▏  11 KB                         [K
+pulling db59b814cab7: 100% ▕██████████████████▏  488 B                         [K
+verifying sha256 digest [K
+writing manifest [K
+removing unused layers [K
+success [K[?25h[?2026l
+pulled qwen2.5:14b
+NAME           ID              SIZE      MODIFIED               
+qwen2.5:14b    7cdf5a0187d5    9.0 GB    Less than a second ago    
+qwen2.5:7b     845dbda0ea48    4.7 GB    1 second ago              
+/eval-embed sha256:1b2aa2f952ea7379618c93b9183fc3fab5fece57844e32235f48310273fcb61b
+/ollama sha256:2150ce8563f986d3d4bd9f85c4c1b3e75b19389883863b8f13beb4429b14c28e
+
+2026-11-26T08:55:59Z == pylab aiserver 준비
+
+2026-11-26T08:56:00Z == 수집 — qwen2.5:7b
+{"status":"ok","app":"pylab-aiserver","engine":"ctranslate2/int8","loaded_models":[],"stt":"faster-whisper/small/w2t2/prompt","stt_loaded":false,"chat":"qwen2.5:7b@http://127.0.0.1:11434/v1","chat_key_loaded":true,"batching":{},"glossary":{"terms":28,"applied":0,"annotated":0,"lost":0,"fallback":0}}
+warmup 200 180.054711s
+OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+The message received from the daemon indicates that the daemon has disappeared.
+Build request sent: Build{id=21e8b270-90d9-45fd-a427-efc5cbe42162, currentDir=/home/ec2-user/DOCKin-spring}
+Attempting to read last messages from the daemon log...
+Daemon pid: 10516
+  log file: /home/ec2-user/.gradle/daemon/9.2.1/daemon-10516.out.log
+----- Last 20 lines from daemon log file - daemon-10516.out.log -----
+2026-11-26T08:59:16.190+0000 [DEBUG] [org.gradle.launcher.daemon.server.exec.ExecuteBuild] The daemon has started executing the build.
+2026-11-26T08:59:16.190+0000 [DEBUG] [org.gradle.launcher.daemon.server.exec.ExecuteBuild] Executing build with daemon context: DefaultDaemonContext[uid=18d5cfbf-391b-415e-aacd-271ee46d8bfb,javaHome=/usr/lib/jvm/java-21-amazon-corretto.x86_64,javaVersion=21,javaVendor=Amazon.com Inc.,daemonRegistryDir=/home/ec2-user/.gradle/daemon,pid=10516,idleTimeout=120000,priority=NORMAL,applyInstrumentationAgent=true,nativeServicesMode=ENABLED,daemonOpts=-XX:MaxMetaspaceSize=384m,-XX:+HeapDumpOnOutOfMemoryError,-Xms256m,-Xmx512m,-Dfile.encoding=UTF-8,-Duser.country,-Duser.language=en,-Duser.variant]
+OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+Daemon vm is shutting down... The daemon has exited normally or was terminated in response to a user interrupt.
+Remove shutdown hook failed
+java.lang.IllegalStateException: Shutdown in progress
+	at java.base/java.lang.ApplicationShutdownHooks.remove(ApplicationShutdownHooks.java:83)
+	at java.base/java.lang.Runtime.removeShutdownHook(Runtime.java:281)
+	at org.gradle.process.internal.shutdown.ShutdownHooks.removeShutdownHook(ShutdownHooks.java:38)
+	at org.gradle.process.internal.DefaultExecHandle.setEndStateInfo(DefaultExecHandle.java:209)
+	at org.gradle.process.internal.DefaultExecHandle.aborted(DefaultExecHandle.java:400)
+	at org.gradle.process.internal.ExecHandleRunner.completed(ExecHandleRunner.java:162)
+	at org.gradle.process.internal.ExecHandleRunner.lambda$run$2(ExecHandleRunner.java:127)
+	at org.gradle.internal.operations.CurrentBuildOperationRef.with(CurrentBuildOperationRef.java:84)
+	at org.gradle.process.internal.ExecHandleRunner.run(ExecHandleRunner.java:125)
+	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
+	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)----- End of the daemon log -----
+
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Gradle build daemon disappeared unexpectedly (it may have been killed or may have crashed)
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to generate a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
