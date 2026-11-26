@@ -257,17 +257,43 @@ class SearchQualityEvalTest extends ContainerTestSupport {
     static final List<String> CORPUS_TABLES =
             List.of("equipment", "users", "work_logs", "work_log_translations", "document_chunks");
 
-    /** 테이블을 PostgreSQL {@code COPY} 텍스트 형식으로 파일에 쓴다. 벡터도 텍스트 표현 그대로 왕복한다. */
+    /**
+     * 테이블을 PostgreSQL {@code COPY} 텍스트 형식으로 파일에 쓴다. 벡터도 텍스트 표현 그대로 왕복한다.
+     *
+     * <p><b>컬럼 이름을 같이 남긴다</b>({@code <table>.columns}). 컬럼 목록 없이 {@code COPY table}로 쓰면
+     * 캐시를 만든 뒤 마이그레이션이 컬럼을 하나만 더해도(V20 {@code users.deleted_at}) 복원이
+     * "missing data for column"으로 죽는다 — 2026-11-26 E1 첫 실행이 그랬다. 이름을 알면 새 컬럼은 기본값으로 채워진다.
+     */
     void dump(Connection conn, Path dir) throws SQLException, IOException {
         Path tmp = dir.resolveSibling(dir.getFileName() + ".tmp");
         Files.createDirectories(tmp);
         org.postgresql.copy.CopyManager copy = conn.unwrap(org.postgresql.PGConnection.class).getCopyAPI();
         for (String table : CORPUS_TABLES) {
+            List<String> columns = columnsOf(conn, table);
+            Files.writeString(tmp.resolve(table + ".columns"), String.join(",", columns), StandardCharsets.UTF_8);
             try (var out = Files.newOutputStream(tmp.resolve(table + ".copy"))) {
-                copy.copyOut("COPY " + table + " TO STDOUT", out);
+                copy.copyOut("COPY " + table + " (" + String.join(", ", columns) + ") TO STDOUT", out);
             }
         }
         Files.move(tmp, dir);   // 다 쓴 뒤에만 이름을 바꾼다 — 중간에 죽으면 반쪽 캐시를 쓰지 않는다
+    }
+
+    /** 테이블의 컬럼 이름, 정의 순서대로. */
+    private static List<String> columnsOf(Connection conn, String table) throws SQLException {
+        List<String> columns = new ArrayList<>();
+        try (PreparedStatement ps = conn.prepareStatement("""
+                SELECT column_name FROM information_schema.columns
+                WHERE table_schema = current_schema() AND table_name = ?
+                ORDER BY ordinal_position
+                """)) {
+            ps.setString(1, table);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    columns.add(rs.getString(1));
+                }
+            }
+        }
+        return columns;
     }
 
     /**
@@ -280,8 +306,14 @@ class SearchQualityEvalTest extends ContainerTestSupport {
             st.execute("TRUNCATE " + String.join(", ", CORPUS_TABLES) + " CASCADE");
         }
         for (String table : CORPUS_TABLES) {
+            Path columns = dir.resolve(table + ".columns");
+            if (!Files.exists(columns)) {
+                throw new IllegalStateException("코퍼스 캐시 " + dir + "가 컬럼 목록 없이 만들어진 옛 형식이다. "
+                        + "그 뒤 마이그레이션이 컬럼을 더했으면 복원이 깨진다. 캐시 디렉터리를 옮기거나 지우고 다시 돌리면 새로 만든다(색인 15분 안팎).");
+            }
+            String list = Files.readString(columns, StandardCharsets.UTF_8).trim();
             try (var in = Files.newInputStream(dir.resolve(table + ".copy"))) {
-                copy.copyIn("COPY " + table + " FROM STDIN", in);
+                copy.copyIn("COPY " + table + " (" + list + ") FROM STDIN", in);
             }
         }
         try (Statement st = conn.createStatement()) {
