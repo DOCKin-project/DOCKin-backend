@@ -3,6 +3,7 @@ package com.DOCKin.chat.service;
 import com.DOCKin.chat.dto.ChatRoomRequestDto;
 import com.DOCKin.chat.dto.ChatRoomResponseDto;
 import com.DOCKin.chat.dto.ChatRoomUpdateRequestDto;
+import com.DOCKin.chat.event.ChatMembersRemoved;
 import com.DOCKin.global.error.BusinessException;
 import com.DOCKin.global.error.ErrorCode;
 import com.DOCKin.chat.model.ChatMembers;
@@ -14,15 +15,18 @@ import com.DOCKin.chat.repository.ChatRoomsRepository;
 import com.DOCKin.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import org.springframework.data.domain.PageImpl;
 import com.DOCKin.chat.dto.ChatRoomListRow;
 import com.DOCKin.chat.repository.ChatJdbcRepository;
@@ -37,6 +41,7 @@ public class ChatRoomService {
     private final MemberRepository memberRepository;
     private final ChatMessagesRepository chatMessagesRepository;
     private final ChatJdbcRepository chatJdbcRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     //채팅방 개설 (처음 채팅방 만들 때 해당)
     @Transactional
@@ -133,11 +138,13 @@ public class ChatRoomService {
         }
 
         //멤버 삭제(방장 제외)
+        Set<String> removed = new HashSet<>();
         if(dto.getRemoveParticipantIds()!=null){
             dto.getRemoveParticipantIds().forEach(removeId->{
                 if(!removeId.equals(rooms.getCreatorId())){
                     chatMembersRepository.deleteByChatRoomsAndMemberUserId(rooms,removeId);
                     rooms.removeMember(removeId);
+                    removed.add(removeId);
                 }
                 rooms.getMembers().removeIf(m -> m.getMember().getUserId().equals(removeId));
             });
@@ -160,6 +167,12 @@ public class ChatRoomService {
             // 트랜잭션이 롤백되므로 앞의 이름 변경·멤버 변경도 함께 취소된다(#102)
             throw new BusinessException(ErrorCode.CHATROOM_MIN_MEMBERS);
         }
+        // 내보낸 사람의 실시간 구독도 커밋 뒤 거둔다 — SUBSCRIBE 때 한 번 본 멤버십은 그 뒤 다시 안 본다.
+        // 같은 요청에서 다시 넣은 사람은 빼낸다(여전히 멤버다).
+        removed.removeIf(id -> chatMembersRepository.existsByChatRoomsAndMemberUserId(rooms, id));
+        if(!removed.isEmpty()){
+            eventPublisher.publishEvent(new ChatMembersRemoved(chatRoomId, removed));
+        }
         chatMembersRepository.flush();
         ChatRooms updatedRoom = chatRoomsRepository.findById(chatRoomId)
                 .orElseThrow(()->new BusinessException(ErrorCode.CHATROOM_NOT_FOUND));
@@ -176,7 +189,9 @@ public class ChatRoomService {
         if(!Objects.equals(chatRooms.getCreatorId(), userId)){
             throw new BusinessException(ErrorCode.CHATROOM_AUTHOR);
         }
+        Set<String> members = new HashSet<>(chatJdbcRepository.memberIds(chatRoomId));
         chatRoomsRepository.delete(chatRooms);
+        eventPublisher.publishEvent(new ChatMembersRemoved(chatRoomId, members));
     }
 
     //채팅방 나가기 (한명만)
@@ -191,6 +206,7 @@ public class ChatRoomService {
         chatMembersRepository.deleteByChatRoomsAndMemberUserId(room,userId);
         room.removeMember(userId);
         chatMembersRepository.flush();
+        eventPublisher.publishEvent(new ChatMembersRemoved(chatRoomId, Set.of(userId)));
 
         long memberCount = chatMembersRepository.countByChatRooms(room);
         if(memberCount==0){

@@ -4,7 +4,10 @@ import com.DOCKin.chat.presence.Presence;
 import com.DOCKin.chat.repository.ChatMembersRepository;
 import com.DOCKin.global.error.BusinessException;
 import com.DOCKin.global.error.ErrorCode;
+import com.DOCKin.global.security.jwt.JwtBlacklist;
 import com.DOCKin.global.security.jwt.JwtUtil;
+import com.DOCKin.global.websocket.StompSessions;
+import com.DOCKin.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
@@ -25,6 +28,8 @@ public class StompHandler implements ChannelInterceptor {
     private final JwtUtil jwtUtil;
     private final ChatMembersRepository chatMembersRepository;
     private final Presence presence;
+    private final JwtBlacklist jwtBlacklist;
+    private final MemberRepository memberRepository;
 
     /**
      * 구독을 허용하는 목적지 둘. {@code ChatController}가 보내는 곳과 정확히 같다.
@@ -61,17 +66,24 @@ public class StompHandler implements ChannelInterceptor {
                     token = token.substring(7);
                 }
 
-                // JWT 토큰 유효성 검증
-                if (!jwtUtil.isValidToken(token)) {
+                // JWT 토큰 유효성 검증. HTTP(JwtAuthFilter)와 같은 세 겹 — 서명·만료, 블랙리스트, 탈퇴.
+                // 전에는 서명·만료만 봐서 로그아웃한 토큰과 탈퇴 회원의 토큰도 만료까지 소켓을 열 수 있었다.
+                // 블랙리스트 조회가 실패(Redis 장애)하면 예외가 아래 catch로 가 거부된다 — HTTP와 같이 닫는 쪽.
+                if (!jwtUtil.isValidToken(token) || jwtBlacklist.isBlacklisted(token)) {
                     throw new BusinessException(ErrorCode.INVALID_TOKEN);
                 }
 
                 // 토큰에서 유저 아이디(UserId) 추출
                 String userId = jwtUtil.getUserId(token);
+                if (memberRepository.findByUserId(userId).filter(m -> !m.isDeleted()).isEmpty()) {
+                    throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+                }
 
-                // 세션 속성에 userId 저장 (나중에 SUBSCRIBE 등에서 꺼내 쓰기 위함)
+                // 세션 속성에 userId 저장 (나중에 SUBSCRIBE 등에서 꺼내 쓰기 위함).
+                // 토큰 지문은 로그아웃 때 이 토큰으로 붙은 세션만 골라 닫는 데 쓴다(StompRevocation).
                 if (accessor.getSessionAttributes() != null) {
-                    accessor.getSessionAttributes().put("userId", userId);
+                    accessor.getSessionAttributes().put(StompSessions.USER_ID, userId);
+                    accessor.getSessionAttributes().put(StompSessions.TOKEN_FINGERPRINT, JwtBlacklist.fingerprint(token));
                 }
 
                 // 접속 상태는 Redis에(Presence). 해제는 여기가 아니라 SessionDisconnectEvent가 잡는다 --

@@ -53,6 +53,9 @@ public class MemberServiceTest {
     @Mock
     private com.DOCKin.member.login.LoginAttempts loginAttempts;
 
+    @Mock
+    private org.springframework.context.ApplicationEventPublisher eventPublisher;
+
     @InjectMocks
     private MemberService memberService; // 위 가짜 객체들을 주입받은 서비스
 

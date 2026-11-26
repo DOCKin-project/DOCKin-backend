@@ -5,6 +5,8 @@ import com.DOCKin.global.error.ErrorCode;
 import com.DOCKin.global.security.jwt.JwtBlacklist;
 import com.DOCKin.global.security.jwt.JwtUtil;
 import com.DOCKin.member.dto.*;
+import com.DOCKin.member.event.AccessTokenRevoked;
+import com.DOCKin.member.event.MemberWithdrawn;
 import com.DOCKin.member.login.LoginAttempts;
 import com.DOCKin.member.model.Member;
 import com.DOCKin.member.model.RefreshToken;
@@ -14,6 +16,7 @@ import com.DOCKin.member.repository.MemberRepository;
 import com.DOCKin.member.repository.RefreshTokenRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +34,7 @@ public class MemberService{
     private final PasswordEncoder passwordEncoder;
     private final JwtBlacklist jwtBlacklist;
     private final LoginAttempts loginAttempts;
+    private final ApplicationEventPublisher eventPublisher;
 
     /** 없는 사용자에게 돌릴 bcrypt 해시. 값은 무의미하고 비용만 같으면 된다("dummy"의 해시). */
     private static final String DUMMY_HASH = "$2a$10$7EqJtq98hPqEX7fNZaFWoOhi5XkfM9x1Sgb4c5Z0zVfLg5T5Yqz0K";
@@ -131,6 +135,8 @@ public class MemberService{
         }
         long expiration = jwtUtil.getExpiration(token);
         jwtBlacklist.add(token,expiration);
+        // 이 토큰으로 이미 열린 WebSocket도 닫는다 — 블랙리스트는 다음 CONNECT부터만 막는다(StompRevocation).
+        eventPublisher.publishEvent(new AccessTokenRevoked(token));
     }
 
     //회원가입 로직
@@ -180,5 +186,7 @@ public class MemberService{
                 .orElseThrow(()-> new BusinessException(ErrorCode.USER_NOT_FOUND));
         member.withdraw(LocalDateTime.now());
         refreshTokenRepository.deleteByUserId(userId);
+        // 열린 WebSocket은 요청마다 회원을 다시 읽지 않는다 — 커밋 뒤 닫는다(StompRevocation).
+        eventPublisher.publishEvent(new MemberWithdrawn(userId));
     }
 }
