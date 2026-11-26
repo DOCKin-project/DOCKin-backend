@@ -2,6 +2,7 @@ package com.DOCKin.rag.service;
 
 import com.DOCKin.global.error.BusinessException;
 import com.DOCKin.global.error.ErrorCode;
+import com.DOCKin.member.repository.MemberRepository;
 import com.DOCKin.rag.dto.RetrievalResult;
 import com.DOCKin.rag.dto.RetrievedChunk;
 import com.DOCKin.rag.model.DocumentChunk;
@@ -42,6 +43,9 @@ class RetrievalServiceTest {
     private NearestChunkJdbcRepository nearestChunkJdbcRepository;
     @Mock
     private EmbeddingClient embeddingClient;
+    /** 구역 조회(ADR-0012). 스텁하지 않으면 Optional.empty — 구역 승인분 조회를 건너뛴다. */
+    @Mock
+    private MemberRepository memberRepository;
 
     @InjectMocks
     private RetrievalService retrievalService;
@@ -179,7 +183,7 @@ class RetrievalServiceTest {
         when(embeddingClient.getModelName()).thenReturn(MODEL);
         when(embeddingClient.embedQuery(anyString()))
                 .thenThrow(new BusinessException(ErrorCode.EMBEDDING_SERVER_ERROR));
-        when(keywordChunkJdbcRepository.findVisible(MODEL, USER, List.of("용접기", "롤러", "진동"), 5))
+        when(keywordChunkJdbcRepository.findVisible(MODEL, USER, null, List.of("용접기", "롤러", "진동"), 5))
                 .thenReturn(List.of(
                         new KeywordChunk(2L, SourceType.WORK_LOG, 20L, 0, "셋 다 맞음", 3),
                         new KeywordChunk(9L, SourceType.WORK_LOG, 90L, 0, "하나만 맞음", 1)));
@@ -204,12 +208,30 @@ class RetrievalServiceTest {
         RetrievalResult result = retrievalService.retrieve("용접기", "admin", true, 5);
 
         assertTrue(result.chunks().isEmpty());
-        verify(keywordChunkJdbcRepository, never()).findVisible(anyString(), anyString(), any(), anyInt());
+        verify(keywordChunkJdbcRepository, never()).findVisible(anyString(), anyString(), any(), any(), anyInt());
     }
 
     // --- helpers ---
 
     /** 컬럼 차원과 맞는 질의 벡터를 준다. 값은 무의미하다 - 거리는 리포지토리 목이 정한다. */
+    @Test
+    @DisplayName("구역이 있는 사용자는 같은 구역 승인분도 후보로 합친다 - 구역을 모르면 그 조회를 하지 않는다 (ADR-0012)")
+    void 구역_승인분_합침() {
+        stubQuery();
+        when(memberRepository.findByUserId(USER)).thenReturn(java.util.Optional.of(
+                com.DOCKin.member.model.Member.builder().userId(USER).shipYardArea("A").build()));
+        when(nearestChunkJdbcRepository.findNearestInArea(eq(MODEL), eq("A"), anyString(), anyInt())).thenReturn(List.of(
+                chunk(4L, SourceType.WORK_LOG, 400L, "동료의 승인 일지", 0.10)));
+
+        List<RetrievedChunk> result = retrievalService.search("안전", USER, false, 5);
+
+        assertEquals(List.of("동료의 승인 일지"), result.stream().map(RetrievedChunk::content).toList());
+
+        when(memberRepository.findByUserId("ghost")).thenReturn(java.util.Optional.empty());
+        retrievalService.search("안전", "ghost", false, 5);
+        verify(nearestChunkJdbcRepository, never()).findNearestInArea(anyString(), eq(null), anyString(), anyInt());
+    }
+
     private void stubQuery() {
         when(embeddingClient.getModelName()).thenReturn(MODEL);
         when(embeddingClient.embedQuery(anyString()))

@@ -63,9 +63,34 @@ public class ChunkIndexWriter {
         return deleted;
     }
 
+    /**
+     * 작업일지의 승인 상태가 바뀐 그 트랜잭션에서 청크의 공개 범위를 맞춘다 (ADR-0012 3절).
+     *
+     * <p>새벽 배치도 같은 일을 하지만(해시가 같아도 {@code updateVisibility}) 최대 하루 늦다. 승인 쪽은 늦어도
+     * 안전하지만, 승인된 일지를 작성자가 고치면({@code resetReview}) <b>검토 안 된 내용이 그동안 같은 구역에
+     * 보인다.</b> 그래서 좁히는 방향을 포함해 전부 호출자의 트랜잭션에 합류해({@code REQUIRED}) 같이 커밋한다.
+     *
+     * <p>메타데이터만 바꾸는 벌크 UPDATE다 — 임베딩은 그대로다. 수정된 본문의 재임베딩은 배치가 한다.
+     * 청크가 아직 없으면(오늘 쓰고 오늘 승인) 0행이고, 배치가 처음 색인할 때 같은 규칙({@link WorkLogChunkAccess})으로 만든다.
+     *
+     * @return 바꾼 청크 수
+     */
+    @Transactional
+    public int syncWorkLogAccess(Long logId, List<Long> translationIds, WorkLogChunkAccess access) {
+        int updated = documentChunkRepository.updateAccess(SourceType.WORK_LOG, List.of(logId),
+                access.visibility(), access.ownerUserId(), access.area());
+        if (!translationIds.isEmpty()) {
+            updated += documentChunkRepository.updateAccess(SourceType.WORK_LOG_TRANSLATION, translationIds,
+                    access.visibility(), access.ownerUserId(), access.area());
+        }
+        log.info("[색인] 작업일지 {} 공개 범위 → {}{} (청크 {}건)", logId, access.visibility(),
+                access.area() == null ? "" : "(" + access.area() + ")", updated);
+        return updated;
+    }
+
     /** 색인 대상 원본 하나의 스냅샷. 원본 엔티티 종류에 의존하지 않도록 평평하게 만든다. */
     public record IndexTarget(SourceType sourceType, Long sourceId, String text,
-                              String languageCode, Visibility visibility, String ownerUserId) {}
+                              String languageCode, Visibility visibility, String ownerUserId, String area) {}
 
     /**
      * 원본 목록을 청킹·임베딩해 저장한다. 한 번의 호출이 하나의 트랜잭션이다.
@@ -102,7 +127,7 @@ public class ChunkIndexWriter {
 
             if (prev != null && hash.equals(prev.getContentHash())) {
                 // 내용은 그대로다. 원본 권한이 바뀌었을 수 있으므로 그것만 맞춘다.
-                prev.updateVisibility(target.visibility(), target.ownerUserId());
+                prev.updateVisibility(target.visibility(), target.ownerUserId(), target.area());
                 continue;
             }
             pending.add(new PendingChunk(target, i, content, hash, prev));
@@ -131,7 +156,7 @@ public class ChunkIndexWriter {
 
             if (p.previous() != null) {
                 p.previous().reindex(p.content(), p.contentHash(), vector, vector.length);
-                p.previous().updateVisibility(t.visibility(), t.ownerUserId());
+                p.previous().updateVisibility(t.visibility(), t.ownerUserId(), t.area());
             } else {
                 toSave.add(DocumentChunk.builder()
                         .sourceType(t.sourceType())
@@ -145,6 +170,7 @@ public class ChunkIndexWriter {
                         .embeddingModel(model)
                         .visibility(t.visibility())
                         .ownerUserId(t.ownerUserId())
+                        .area(t.area())
                         .build());
             }
         }

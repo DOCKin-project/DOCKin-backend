@@ -2,6 +2,7 @@ package com.DOCKin.rag.repository;
 
 import com.DOCKin.rag.model.DocumentChunk;
 import com.DOCKin.rag.model.SourceType;
+import com.DOCKin.rag.model.Visibility;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.Modifying;
@@ -35,6 +36,23 @@ public interface DocumentChunkRepository extends JpaRepository<DocumentChunk, Lo
     @Modifying
     @Query("DELETE FROM DocumentChunk c WHERE c.sourceType = :sourceType AND c.sourceId IN :sourceIds")
     int deleteBySource(@Param("sourceType") SourceType sourceType, @Param("sourceIds") Collection<Long> sourceIds);
+
+    /**
+     * 원본의 승인 상태가 바뀔 때 그 청크들의 공개 범위만 바꾼다(모델 불문, ADR-0012). 임베딩은 건드리지 않는다.
+     * {@link #deleteBySource}와 같은 이유로 벌크 JPQL이고, 원본 상태를 바꾸는 쪽의 트랜잭션에서 부른다.
+     */
+    @Modifying
+    @Query("""
+            UPDATE DocumentChunk c
+            SET c.visibility = :visibility, c.ownerUserId = :ownerUserId, c.area = :area,
+                c.updatedAt = CURRENT_TIMESTAMP
+            WHERE c.sourceType = :sourceType AND c.sourceId IN :sourceIds
+            """)
+    int updateAccess(@Param("sourceType") SourceType sourceType,
+                     @Param("sourceIds") Collection<Long> sourceIds,
+                     @Param("visibility") Visibility visibility,
+                     @Param("ownerUserId") String ownerUserId,
+                     @Param("area") String area);
 
     /*
      * 최근접 검색(pgvector <=>)은 여기 없다. 엔티티를 다루지 않는 순수 SQL이라

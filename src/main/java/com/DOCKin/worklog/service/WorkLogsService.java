@@ -3,6 +3,7 @@ package com.DOCKin.worklog.service;
 import com.DOCKin.ai.repository.TranslateRepository;
 import com.DOCKin.ai.service.SttService;
 import com.DOCKin.rag.service.ChunkIndexWriter;
+import com.DOCKin.rag.service.WorkLogChunkAccess;
 import com.DOCKin.global.file.S3PresignedService;
 import com.DOCKin.worklog.dto.WorkLogsCreateRequestDto;
 import com.DOCKin.worklog.dto.WorkLogsUpdateRequestDto;
@@ -232,6 +233,10 @@ public class WorkLogsService {
         // 승인·반려 뒤에 고쳤으면 그 결정은 다른 내용에 대한 것이다. 검토를 처음부터 (P2-17-1).
         // 제목·본문·사진·장비 중 무엇을 바꿨든 같다 — 무엇이 "내용"인지 가르기 시작하면 끝이 없다.
         logs.resetReview();
+        // 승인돼 같은 구역에 공개됐던 근거를 지금 닫는다(ADR-0012 3절). 새벽 배치에 맡기면 검토 안 된 새 내용이
+        // 다음 색인 전까지 남의 챗봇 근거로 나간다 — 옛 청크도 지금부터는 본인만 본다. 재임베딩은 배치가 한다.
+        chunkIndexWriter.syncWorkLogAccess(logId, translateRepository.findIdsByLogId(logId),
+                WorkLogChunkAccess.of(logs));
         if(images !=null && !images.isEmpty()){
             logs.getImages().clear();
 

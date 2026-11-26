@@ -39,17 +39,22 @@ public class KeywordChunkJdbcRepository {
 
     private final JdbcClient jdbcClient;
 
-    /** 공개 청크와 본인 청크에서 찾는다. */
-    public List<KeywordChunk> findVisible(String embeddingModel, String userId, List<String> keywords, int limit) {
-        return find(embeddingModel, userId, keywords, limit);
+    /**
+     * 공개 청크, 본인 청크, 같은 구역의 승인분({@code AREA})에서 찾는다 — 벡터 경로와 같은 범위다(ADR-0012).
+     * {@code area}가 null이면(구역 모름) 구역 승인분은 하나도 고르지 않는다.
+     */
+    public List<KeywordChunk> findVisible(String embeddingModel, String userId, String area,
+                                          List<String> keywords, int limit) {
+        return find(embeddingModel, userId, area, keywords, limit);
     }
 
     /** 관리자용. 권한 필터 없이 전체에서 찾는다. */
     public List<KeywordChunk> findAll(String embeddingModel, List<String> keywords, int limit) {
-        return find(embeddingModel, null, keywords, limit);
+        return find(embeddingModel, null, null, keywords, limit);
     }
 
-    private List<KeywordChunk> find(String embeddingModel, String userId, List<String> keywords, int limit) {
+    private List<KeywordChunk> find(String embeddingModel, String userId, String area,
+                                    List<String> keywords, int limit) {
         if (keywords.isEmpty() || limit <= 0) {
             return List.of();
         }
@@ -67,7 +72,8 @@ public class KeywordChunkJdbcRepository {
                 .append("  FROM document_chunks\n")
                 .append("  WHERE embedding_model = :model\n");
         if (userId != null) {
-            sql.append("    AND (visibility = 'PUBLIC' OR owner_user_id = :userId)\n");
+            sql.append("    AND (visibility = 'PUBLIC' OR owner_user_id = :userId\n")
+                    .append("         OR (visibility = 'AREA' AND area = :area))\n");
         }
         sql.append(") c\n")
                 .append("WHERE matched > 0\n")
@@ -78,7 +84,7 @@ public class KeywordChunkJdbcRepository {
                 .param("model", embeddingModel)
                 .param("limit", limit);
         if (userId != null) {
-            spec = spec.param("userId", userId);
+            spec = spec.param("userId", userId).param("area", area);
         }
         for (int i = 0; i < keywords.size(); i++) {
             spec = spec.param("kw" + i, "%" + keywords.get(i) + "%");

@@ -86,11 +86,23 @@ class KeywordSearchQueryTest extends ContainerTestSupport {
         save(3L, "용접기 롤러 진동.", Visibility.OWNER, OTHER);
         entityManager.flush();
 
-        List<Long> visible = search.findVisible(MODEL, OWNER, KEYWORDS, 10).stream()
+        List<Long> visible = search.findVisible(MODEL, OWNER, null, KEYWORDS, 10).stream()
                 .map(KeywordChunk::sourceId).toList();
 
         assertEquals(List.of(2L, 1L), visible);
         assertEquals(3, search.findAll(MODEL, KEYWORDS, 10).size(), "관리자 경로는 전부 본다");
+    }
+
+    @Test
+    @DisplayName("구역 승인분 - 같은 구역의 AREA 청크는 오고, 다른 구역이나 구역을 모르면 오지 않는다 (ADR-0012)")
+    void 구역_승인분() {
+        saveInArea(1L, "A");
+        saveInArea(2L, "B");
+        entityManager.flush();
+
+        assertEquals(List.of(1L), search.findVisible(MODEL, OWNER, "A", KEYWORDS, 10).stream()
+                .map(KeywordChunk::sourceId).toList());
+        assertTrue(search.findVisible(MODEL, OWNER, null, KEYWORDS, 10).isEmpty(), "구역을 모르면 좁히는 쪽으로 실패한다");
     }
 
     @Test
@@ -111,6 +123,13 @@ class KeywordSearchQueryTest extends ContainerTestSupport {
 
     private void save(long sourceId, String content, Visibility visibility, String ownerUserId) {
         repository.save(chunk(sourceId, content, visibility, ownerUserId, MODEL));
+    }
+
+    /** 남(OTHER)이 쓴 같은 내용의 구역 승인분. */
+    private void saveInArea(long sourceId, String area) {
+        DocumentChunk c = chunk(sourceId, "용접기 롤러 진동.", Visibility.AREA, OTHER, MODEL);
+        c.updateVisibility(Visibility.AREA, OTHER, area);
+        repository.save(c);
     }
 
     private static DocumentChunk chunk(long sourceId, String content, Visibility visibility,
