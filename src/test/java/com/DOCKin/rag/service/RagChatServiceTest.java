@@ -87,7 +87,7 @@ class RagChatServiceTest {
     }
 
     @Test
-    @DisplayName("권한 밖이라 근거가 없으면 retrieval은 NONE·빈 목록이고, 질문은 그대로 - 붙는 것은 언어 지시뿐이다 (#178)")
+    @DisplayName("권한 밖이라 근거가 없으면 retrieval은 NONE·빈 목록이고, 질문은 그대로 - system에는 근거 없음 지시와 언어 지시가 간다 (#178, #197)")
     void 근거_없음() {
         RetrievalResult none = RetrievalResult.none();
         when(retrievalService.retrieve(anyString(), eq(USER), eq(false), anyInt())).thenReturn(none);
@@ -107,6 +107,8 @@ class RagChatServiceTest {
         String system = messages.get(0).content();
         assertTrue(system.contains("베트남어"), "lang=vi면 베트남어로 답하라고 한다");
         assertFalse(system.contains("<자료>"), "자료가 없으니 근거 지시는 붙지 않는다");
+        assertTrue(system.contains("찾지 못했다고"), "근거가 없으면 없다고 답하라고 한다 (#197)");
+        assertTrue(system.contains("지어내지 마세요"), "일반 지식으로 절차를 지어내지 말라고 한다 (#197)");
         assertEquals("Dây hàn bị kẹt?", messages.get(1).content(), "질문은 손대지 않는다");
         verify(fastApiService, never()).chatBotFromSpringToFastApi(any(), anyString());
     }

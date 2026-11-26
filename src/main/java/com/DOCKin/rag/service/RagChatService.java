@@ -99,7 +99,8 @@ public class RagChatService {
      * 그 지시를 자료와 다른 메시지({@code system})에 두는 이유는 {@link RagPrompt} 참고.
      *
      * <p><b>근거가 없어도 답변 언어 지시는 붙인다</b>(#178). 전에는 근거가 없으면 요청을 그대로 보냈는데,
-     * 언어 지시는 근거와 무관하다. 근거 지시("자료를 근거로…")는 붙이지 않는다 — 자료가 없다.
+     * 언어 지시는 근거와 무관하다. 근거 지시("자료를 근거로…") 대신 <b>근거 없음 지시</b>를 붙인다(#197) —
+     * 지시가 아예 없으면 모델이 일반 지식으로 절차를 지어낼 수 있다.
      */
     private ChatDomain.Request augment(ChatDomain.Request request, String question,
                                        RetrievalResult retrieval) {
@@ -107,12 +108,14 @@ public class RagChatService {
             return request;
         }
         List<ChatDomain.Request.Message> conversation = new ArrayList<>(request.messages());
-        String rules = RagPrompt.languageRule(request.lang());
-        if (!retrieval.isEmpty()) {
+        String rules;
+        if (retrieval.isEmpty()) {
+            rules = RagPrompt.noEvidenceRules() + "\n" + RagPrompt.languageRule(request.lang());
+        } else {
             int last = conversation.size() - 1;
             conversation.set(last, new ChatDomain.Request.Message(conversation.get(last).role(),
                     RagPrompt.userContent(question, retrieval.chunks())));
-            rules = RagPrompt.groundingRules() + "\n" + rules;
+            rules = RagPrompt.groundingRules() + "\n" + RagPrompt.languageRule(request.lang());
         }
 
         List<ChatDomain.Request.Message> messages = new ArrayList<>();
