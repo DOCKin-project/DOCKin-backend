@@ -1,0 +1,91 @@
+qid	type	lang	follow_up	bare_hit	context_hit
+q01	T	ko	그거 원인이 뭐였어?	0	1
+q01	T	en	What was the cause of that?	0	0
+q01	T	vi	Nguyên nhân của việc đó là gì?	0	1
+q02	T	ko	그거 원인이 뭐였어?	0	1
+q02	T	en	What was the cause of that?	0	0
+q02	T	vi	Nguyên nhân của việc đó là gì?	0	1
+q03	T	ko	그거 원인이 뭐였어?	0	1
+q03	T	en	What was the cause of that?	0	0
+q03	T	vi	Nguyên nhân của việc đó là gì?	0	0
+q04	T	ko	그거 원인이 뭐였어?	0	1
+q04	T	en	What was the cause of that?	0	0
+q04	T	vi	Nguyên nhân của việc đó là gì?	0	0
+q05	T	ko	그거 원인이 뭐였어?	0	1
+q05	T	en	What was the cause of that?	0	0
+q05	T	vi	Nguyên nhân của việc đó là gì?	0	1
+q06	T	ko	그거 원인이 뭐였어?	0	1
+q06	T	en	What was the cause of that?	0	1
+q06	T	vi	Nguyên nhân của việc đó là gì?	0	0
+q07	T	ko	그거 원인이 뭐였어?	0	1
+q07	T	en	What was the cause of that?	0	0
+q07	T	vi	Nguyên nhân của việc đó là gì?	0	0
+q08	T	ko	그거 원인이 뭐였어?	0	1
+q08	T	en	What was the cause of that?	0	0
+q08	T	vi	Nguyên nhân của việc đó là gì?	0	1
+q09	T	ko	그거 원인이 뭐였어?	0	1
+q09	T	en	What was the cause of that?	0	0
+q09	T	vi	Nguyên nhân của việc đó là gì?	0	0
+q10	T	ko	그거 원인이 뭐였어?	0	1
+q10	T	en	What was the cause of that?	0	0
+q10	T	vi	Nguyên nhân của việc đó là gì?	0	1
+q11	T	ko	그거 원인이 뭐였어?	0	0
+q11	T	en	What was the cause of that?	0	0
+q11	T	vi	Nguyên nhân của việc đó là gì?	0	0
+q12	T	ko	그거 원인이 뭐였어?	0	1
+q12	T	en	What was the cause of that?	0	0
+q12	T	vi	Nguyên nhân của việc đó là gì?	0	1
+q13	T	ko	그거 원인이 뭐였어?	0	1
+q13	T	en	What was the cause of that?	0	1
+q13	T	vi	Nguyên nhân của việc đó là gì?	0	1
+q14	T	ko	그거 원인이 뭐였어?	0	1
+q14	T	en	What was the cause of that?	0	1
+q14	T	vi	Nguyên nhân của việc đó là gì?	0	1
+q15	T	ko	그거 원인이 뭐였어?	0	0
+q15	T	en	What was the cause of that?	0	0
+q15	T	vi	Nguyên nhân của việc đó là gì?	0	0
+q16	S	ko	그거 원인이 뭐였어?	0	0
+q16	S	en	What was the cause of that?	0	0
+q16	S	vi	Nguyên nhân của việc đó là gì?	0	0
+q17	S	ko	그거 원인이 뭐였어?	0	0
+q17	S	en	What was the cause of that?	0	0
+q17	S	vi	Nguyên nhân của việc đó là gì?	0	0
+q18	S	ko	그거 원인이 뭐였어?	0	0
+q18	S	en	What was the cause of that?	0	0
+q18	S	vi	Nguyên nhân của việc đó là gì?	0	0
+q19	S	ko	그거 원인이 뭐였어?	0	1
+q19	S	en	What was the cause of that?	0	0
+q19	S	vi	Nguyên nhân của việc đó là gì?	0	1
+q20	S	ko	그거 원인이 뭐였어?	0	0
+q20	S	en	What was the cause of that?	0	0
+q20	S	vi	Nguyên nhân của việc đó là gì?	0	0
+q21	S	ko	그거 원인이 뭐였어?	0	0
+q21	S	en	What was the cause of that?	0	0
+q21	S	vi	Nguyên nhân của việc đó là gì?	0	1
+q22	S	ko	그거 원인이 뭐였어?	0	1
+q22	S	en	What was the cause of that?	0	0
+q22	S	vi	Nguyên nhân của việc đó là gì?	0	0
+q23	S	ko	그거 원인이 뭐였어?	0	1
+q23	S	en	What was the cause of that?	0	0
+q23	S	vi	Nguyên nhân của việc đó là gì?	0	1
+q24	S	ko	그거 원인이 뭐였어?	0	1
+q24	S	en	What was the cause of that?	0	0
+q24	S	vi	Nguyên nhân của việc đó là gì?	0	1
+q25	S	ko	그거 원인이 뭐였어?	0	0
+q25	S	en	What was the cause of that?	0	1
+q25	S	vi	Nguyên nhân của việc đó là gì?	0	1
+q26	S	ko	그거 원인이 뭐였어?	0	1
+q26	S	en	What was the cause of that?	0	0
+q26	S	vi	Nguyên nhân của việc đó là gì?	0	0
+q27	S	ko	그거 원인이 뭐였어?	0	1
+q27	S	en	What was the cause of that?	0	0
+q27	S	vi	Nguyên nhân của việc đó là gì?	0	0
+q28	S	ko	그거 원인이 뭐였어?	0	0
+q28	S	en	What was the cause of that?	0	0
+q28	S	vi	Nguyên nhân của việc đó là gì?	0	0
+q29	S	ko	그거 원인이 뭐였어?	0	1
+q29	S	en	What was the cause of that?	0	1
+q29	S	vi	Nguyên nhân của việc đó là gì?	0	1
+q30	S	ko	그거 원인이 뭐였어?	0	0
+q30	S	en	What was the cause of that?	0	0
+q30	S	vi	Nguyên nhân của việc đó là gì?	0	1
