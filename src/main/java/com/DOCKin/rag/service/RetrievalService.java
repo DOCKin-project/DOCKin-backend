@@ -7,6 +7,7 @@ import com.DOCKin.member.repository.MemberRepository;
 import com.DOCKin.rag.dto.RetrievalResult;
 import com.DOCKin.rag.dto.RetrievedChunk;
 import com.DOCKin.rag.model.DocumentChunk;
+import com.DOCKin.rag.model.SourceType;
 import com.DOCKin.rag.repository.KeywordChunk;
 import com.DOCKin.rag.repository.KeywordChunkJdbcRepository;
 import com.DOCKin.rag.repository.NearestChunk;
@@ -21,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -102,6 +104,26 @@ public class RetrievalService {
     private double minScore;
 
     /**
+     * 하이브리드 검색 — 벡터 후보와 키워드 후보를 순위로 합친다(RRF).
+     *
+     * <p>벡터는 "안전벨트"로 물어 "추락 방지 장비"를 찾지만, 호기 번호·약어·부품명처럼 <b>글자가 그대로 맞아야
+     * 하는 질문</b>에는 약하다(ADR-0013 2단계 3, #203). 키워드 경로는 반대다. 둘을 합치면 서로의 빈칸을 메운다.
+     *
+     * <p><b>기본은 꺼짐이다.</b> 켜면 질문마다 {@code LIKE} 전체 훑기가 한 번 붙는다(인덱스 없음, ADR-0002 2-2).
+     * 품질(평가셋 Hit@5·P@5)과 지연을 같은 표로 잰 뒤에 켠다 `[미측정]`.
+     */
+    @Value("${rag.search.hybrid.enabled:false}")
+    private boolean hybridEnabled;
+
+    /**
+     * RRF 상수 k. 순위 r의 점수는 {@code 1 / (k + r)}다. k가 크면 상위와 하위의 점수 차가 줄어
+     * 한쪽 목록 1위가 다른 쪽 여러 순위를 이기기 어려워진다. 60은 RRF 원 논문(Cormack 2009)과
+     * 검색 엔진들의 기본값이다 — 이 코퍼스에서 맞는지는 평가셋으로 스윕한다.
+     */
+    @Value("${rag.search.hybrid.rrf-k:60}")
+    private int rrfK;
+
+    /**
      * 근거를 찾되, 임베딩 서버 장애 시 키워드 검색으로 떨어진다.
      *
      * <p>임베딩 서버는 나중에 붙인 부가 컴포넌트다. 그것이 죽었다고 챗봇 전체가 멈추면 안 된다
@@ -116,7 +138,9 @@ public class RetrievalService {
             List<RetrievedChunk> chunks = search(query, userId, admin, topK);
             return chunks.isEmpty()
                     ? RetrievalResult.none()
-                    : new RetrievalResult(RetrievalResult.RetrievalMode.VECTOR, chunks);
+                    : new RetrievalResult(hybridEnabled
+                            ? RetrievalResult.RetrievalMode.HYBRID
+                            : RetrievalResult.RetrievalMode.VECTOR, chunks);
 
         } catch (BusinessException e) {
             if (e.getErrorCode() != ErrorCode.EMBEDDING_SERVER_ERROR
@@ -162,6 +186,7 @@ public class RetrievalService {
         int limit = topK * CANDIDATE_MULTIPLIER;
 
         List<NearestChunk> candidates;
+        String area = admin ? null : areaOf(userId);
         if (admin) {
             candidates = nearestChunkJdbcRepository.findNearestAll(model, literal, limit);
         } else {
@@ -170,12 +195,116 @@ public class RetrievalService {
             // 세 집합은 visibility 값(PUBLIC/OWNER/AREA)으로 나뉘어 같은 청크가 두 번 오지 않는다.
             candidates = new ArrayList<>(nearestChunkJdbcRepository.findNearestPublic(model, literal, limit));
             candidates.addAll(nearestChunkJdbcRepository.findNearestOwned(model, userId, literal, limit));
-            String area = areaOf(userId);
             if (area != null) {
                 candidates.addAll(nearestChunkJdbcRepository.findNearestInArea(model, area, literal, limit));
             }
         }
-        return selectTopK(candidates, topK);
+        if (!hybridEnabled) {
+            return selectTopK(candidates, topK);
+        }
+        return fuse(candidates, lexicalCandidates(query, model, userId, area, admin, limit), topK);
+    }
+
+    /**
+     * 하이브리드의 키워드 후보. 폴백과 같은 쿼리·같은 권한 범위다(공개·본인·같은 구역 승인분).
+     *
+     * <p>키워드 쿼리가 실패해도 검색 전체를 실패시키지 않는다 — 벡터 결과만으로 답한다.
+     * 하이브리드는 정상 경로의 <b>보강</b>이지 필수 경로가 아니다.
+     */
+    private List<KeywordChunk> lexicalCandidates(String query, String model, String userId, String area,
+                                                 boolean admin, int limit) {
+        List<String> keywords = fallbackKeywords(query);
+        if (keywords.isEmpty()) {
+            return List.of();
+        }
+        try {
+            return admin
+                    ? keywordChunkJdbcRepository.findAll(model, keywords, limit)
+                    : keywordChunkJdbcRepository.findVisible(model, userId, area, keywords, limit);
+        } catch (RuntimeException e) {
+            log.warn("[RAG] 하이브리드 키워드 후보 조회 실패 - 벡터 결과만 씁니다: {}", e.getMessage());
+            return List.of();
+        }
+    }
+
+    /**
+     * 벡터 후보와 키워드 후보를 RRF(Reciprocal Rank Fusion)로 합친다.
+     *
+     * <p>점수 = Σ {@code 1 / (k + 순위)}. 순위만 쓰고 원점수(코사인·맞은 개수)는 쓰지 않는다 —
+     * 두 점수는 단위가 달라 더하면 한쪽이 다른 쪽을 지배한다. 양쪽에 다 있는 청크가 위로 온다.
+     *
+     * <ul>
+     *   <li>{@code min-score}는 벡터 후보에만 건다. 키워드로 맞은 청크는 유사도가 낮아도 남긴다 — 그게 하이브리드의 목적이다.</li>
+     *   <li>응답의 {@code score}는 RRF 점수가 아니라 <b>코사인 유사도</b>(키워드로만 온 청크는 0.0)다.
+     *       {@code chat_history}·SLO가 이 값을 유사도로 읽는다.</li>
+     *   <li>문서당 상한({@link #MAX_PER_SOURCE})은 합친 뒤에 건다.</li>
+     * </ul>
+     */
+    List<RetrievedChunk> fuse(List<NearestChunk> vector, List<KeywordChunk> lexical, int topK) {
+        List<NearestChunk> sortedVector = new ArrayList<>(vector);
+        sortedVector.sort(Comparator.comparingDouble(NearestChunk::distance));
+
+        Map<Long, Fused> fused = new LinkedHashMap<>();
+        int rank = 0;
+        for (NearestChunk c : sortedVector) {
+            double similarity = 1.0 - c.distance();
+            if (similarity < minScore) {
+                break;
+            }
+            rank++;
+            Fused f = fused.computeIfAbsent(c.chunkId(), id -> new Fused(
+                    c.chunkId(), c.sourceType(), c.sourceId(), c.chunkIndex(), c.content()));
+            f.similarity = similarity;
+            f.score += 1.0 / (rrfK + rank);
+        }
+        rank = 0;
+        for (KeywordChunk c : lexical) {
+            rank++;
+            Fused f = fused.computeIfAbsent(c.chunkId(), id -> new Fused(
+                    c.chunkId(), c.sourceType(), c.sourceId(), c.chunkIndex(), c.content()));
+            f.score += 1.0 / (rrfK + rank);
+        }
+
+        List<Fused> ordered = new ArrayList<>(fused.values());
+        ordered.sort(Comparator.comparingDouble((Fused f) -> f.score).reversed()
+                .thenComparing(Comparator.comparingDouble((Fused f) -> f.similarity).reversed())
+                .thenComparing(Comparator.comparingLong((Fused f) -> f.chunkId).reversed()));
+
+        List<RetrievedChunk> selected = new ArrayList<>(topK);
+        Map<String, Integer> perSource = new HashMap<>();
+        for (Fused f : ordered) {
+            String sourceKey = f.sourceType + ":" + f.sourceId;
+            int used = perSource.getOrDefault(sourceKey, 0);
+            if (used >= MAX_PER_SOURCE) {
+                continue;
+            }
+            perSource.put(sourceKey, used + 1);
+            selected.add(new RetrievedChunk(f.chunkId, f.sourceType, f.sourceId, f.chunkIndex, f.content,
+                    f.similarity < 0 ? 0.0 : f.similarity));
+            if (selected.size() >= topK) {
+                break;
+            }
+        }
+        return selected;
+    }
+
+    /** RRF 누적용. 키워드로만 온 청크는 {@code similarity}가 -1로 남는다. */
+    private static final class Fused {
+        final Long chunkId;
+        final SourceType sourceType;
+        final Long sourceId;
+        final Integer chunkIndex;
+        final String content;
+        double similarity = -1;
+        double score;
+
+        Fused(Long chunkId, SourceType sourceType, Long sourceId, Integer chunkIndex, String content) {
+            this.chunkId = chunkId;
+            this.sourceType = sourceType;
+            this.sourceId = sourceId;
+            this.chunkIndex = chunkIndex;
+            this.content = content;
+        }
     }
 
     /**

@@ -211,6 +211,78 @@ class RetrievalServiceTest {
         verify(keywordChunkJdbcRepository, never()).findVisible(anyString(), anyString(), any(), any(), anyInt());
     }
 
+    @Test
+    @DisplayName("하이브리드가 꺼져 있으면 정상 경로에서 키워드 쿼리를 부르지 않고 모드는 VECTOR다")
+    void 하이브리드_꺼짐() {
+        stubQuery();
+        when(nearestChunkJdbcRepository.findNearestPublic(eq(MODEL), anyString(), anyInt())).thenReturn(List.of(
+                chunk(1L, SourceType.WORK_LOG, 10L, "벡터", 0.2)));
+
+        RetrievalResult result = retrievalService.retrieve("용접기 롤러", USER, false, 5);
+
+        assertEquals(RetrievalResult.RetrievalMode.VECTOR, result.mode());
+        verify(keywordChunkJdbcRepository, never()).findVisible(anyString(), anyString(), any(), any(), anyInt());
+    }
+
+    @Test
+    @DisplayName("하이브리드: 양쪽에 다 있는 청크가 위로, 키워드로만 맞은 청크도 들어온다(점수 0.0) - 모드 HYBRID")
+    void 하이브리드_RRF() {
+        hybrid();
+        stubQuery();
+        // 벡터 순위: 1(가장 가까움) > 2 > 3
+        when(nearestChunkJdbcRepository.findNearestPublic(eq(MODEL), anyString(), anyInt())).thenReturn(List.of(
+                chunk(1L, SourceType.WORK_LOG, 10L, "의미만 가까움", 0.10),
+                chunk(2L, SourceType.WORK_LOG, 20L, "양쪽 다", 0.20),
+                chunk(3L, SourceType.WORK_LOG, 30L, "벡터 3위", 0.30)));
+        // 키워드 순위: 2 > 9(벡터에 없음)
+        when(keywordChunkJdbcRepository.findVisible(eq(MODEL), eq(USER), any(), eq(List.of("5호기", "롤러")), anyInt()))
+                .thenReturn(List.of(
+                        new KeywordChunk(2L, SourceType.WORK_LOG, 20L, 0, "양쪽 다", 2),
+                        new KeywordChunk(9L, SourceType.WORK_LOG, 90L, 0, "호기 번호만 맞음", 2)));
+
+        RetrievalResult result = retrievalService.retrieve("5호기 롤러", USER, false, 4);
+
+        assertEquals(RetrievalResult.RetrievalMode.HYBRID, result.mode());
+        // RRF(k=60): 2 = 1/62+1/61, 1 = 1/61, 9 = 1/62, 3 = 1/63
+        assertEquals(List.of(2L, 1L, 9L, 3L), result.chunks().stream().map(RetrievedChunk::chunkId).toList());
+        assertEquals(0.80, result.chunks().get(0).score(), 1e-9, "점수는 RRF가 아니라 코사인 유사도");
+        assertEquals(0.0, result.chunks().get(2).score(), 0.0, "키워드로만 온 청크는 0.0");
+    }
+
+    @Test
+    @DisplayName("하이브리드: 합친 뒤에도 문서당 2개 상한이 걸린다")
+    void 하이브리드_문서당_상한() {
+        hybrid();
+        List<RetrievedChunk> fused = retrievalService.fuse(
+                List.of(chunk(1L, SourceType.WORK_LOG, 10L, "a", 0.1),
+                        chunk(2L, SourceType.WORK_LOG, 10L, "b", 0.2)),
+                List.of(new KeywordChunk(3L, SourceType.WORK_LOG, 10L, 2, "c", 1),
+                        new KeywordChunk(4L, SourceType.WORK_LOG, 40L, 0, "d", 1)),
+                5);
+        // RRF: 1·3 = 1/61(동점 → 유사도 있는 1이 앞), 2·4 = 1/62. 문서 10은 1·3으로 두 칸이 차서 2가 빠진다
+        assertEquals(List.of(1L, 3L, 4L), fused.stream().map(RetrievedChunk::chunkId).toList());
+    }
+
+    @Test
+    @DisplayName("하이브리드: 키워드 쿼리가 실패해도 벡터 결과로 답한다")
+    void 하이브리드_키워드_실패() {
+        hybrid();
+        stubQuery();
+        when(nearestChunkJdbcRepository.findNearestPublic(eq(MODEL), anyString(), anyInt())).thenReturn(List.of(
+                chunk(1L, SourceType.WORK_LOG, 10L, "벡터", 0.2)));
+        when(keywordChunkJdbcRepository.findVisible(anyString(), anyString(), any(), any(), anyInt()))
+                .thenThrow(new org.springframework.dao.QueryTimeoutException("timeout"));
+
+        RetrievalResult result = retrievalService.retrieve("용접기 롤러", USER, false, 5);
+
+        assertEquals(List.of(1L), result.chunks().stream().map(RetrievedChunk::chunkId).toList());
+    }
+
+    private void hybrid() {
+        org.springframework.test.util.ReflectionTestUtils.setField(retrievalService, "hybridEnabled", true);
+        org.springframework.test.util.ReflectionTestUtils.setField(retrievalService, "rrfK", 60);
+    }
+
     // --- helpers ---
 
     /** 컬럼 차원과 맞는 질의 벡터를 준다. 값은 무의미하다 - 거리는 리포지토리 목이 정한다. */
