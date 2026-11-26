@@ -50,3 +50,5 @@ out/
 application-secret.properties
 # DB 백업 덤프. scripts/backup/db-backup.sh가 만든다. 저장소에 넣지 않는다.
 backups/
+# JVM 크래시 덤프. 로컬 환경 변수(PATH·USERNAME)가 담긴다(#195).
+hs_err_pid*.log
