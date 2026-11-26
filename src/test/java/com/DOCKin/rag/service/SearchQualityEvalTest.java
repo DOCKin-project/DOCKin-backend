@@ -120,6 +120,32 @@ class SearchQualityEvalTest extends ContainerTestSupport {
     private static final List<String> METHODS =
             List.of("ann-default", "ann-decided", "exact", "ann-no-translation", "keyword", "keyword-ranked");
 
+    /**
+     * 호기 필터 실험({@code docs/eval/search-quality/UNIT-FILTER-EXPERIMENT.md}). {@code SEARCH_EVAL_UNIT_FILTER=1}일 때만 더한다.
+     * 전부 {@code ann-decided}와 같은 설정이고, 호기를 알 때만 달라진다 — 모르면 {@code ann-decided} 그대로다.
+     * <ul>
+     *   <li>{@code unit-oracle} — 정답 조건의 (설비, 호기)로 선필터. 현장에서 설비 QR/NFC를 찍고 묻는 경우의 상한</li>
+     *   <li>{@code unit-oracle-exact} — 같은 필터, 정확 최근접. 선택도 ≈ 1/108에서 ANN이 잃는 것(ADR-0006 8-4)</li>
+     *   <li>{@code unit-parsed} — 질문 문장에서 뽑은 (설비, 호기)로 선필터({@link UnitQueryParser})</li>
+     *   <li>{@code unit-boost} — 필터 대신 {@code ann-decided}의 후보 20개 안에서 같은 호기를 앞으로. 스키마 변경 없는 대안</li>
+     * </ul>
+     */
+    private static final List<String> UNIT_METHODS =
+            List.of("unit-oracle", "unit-oracle-exact", "unit-parsed", "unit-boost");
+
+    static boolean unitFilter() {
+        return System.getenv("SEARCH_EVAL_UNIT_FILTER") != null;
+    }
+
+    private static List<String> methods() {
+        if (!unitFilter()) {
+            return METHODS;
+        }
+        List<String> all = new ArrayList<>(METHODS);
+        all.addAll(UNIT_METHODS);
+        return all;
+    }
+
     /** HNSW 인덱스를 타는 방식. 재구축마다 다시 묻는 것은 이것뿐이다(#187). */
     private static final List<String> ANN_METHODS = List.of("ann-default", "ann-decided", "ann-no-translation");
 
@@ -180,6 +206,7 @@ class SearchQualityEvalTest extends ContainerTestSupport {
             Conditions cond = conditions(conn, corpus, indexMs);
             List<Query> queries = loadQueries();
             Map<Long, Long> translationToLog = translationToLog(conn);
+            Map<Long, String> logMachine = unitFilter() ? tagMachines(conn) : Map.of();
 
             // 2. 정답
             Map<String, Set<Long>> labels = new LinkedHashMap<>();
@@ -217,13 +244,15 @@ class SearchQualityEvalTest extends ContainerTestSupport {
                 }
                 for (var e : literals.entrySet()) {
                     Query q = e.getKey();
-                    for (String method : METHODS) {
+                    for (String method : methods()) {
                         if (b > 1 && !ANN_METHODS.contains(method)) {
                             continue;
                         }
                         List<Ranked> ranked = switch (method) {
                             case "keyword" -> keyword(conn, q.query, translationToLog);
                             case "keyword-ranked" -> keywordRanked(conn, q.query, translationToLog);
+                            case "unit-oracle", "unit-oracle-exact", "unit-parsed", "unit-boost" ->
+                                    unitMethod(conn, method, q, e.getValue(), translationToLog, logMachine);
                             default -> vector(conn, method, e.getValue(), translationToLog);
                         };
                         results.add(new Result(q, method, ranked, labels.get(q.qid), b));
@@ -779,8 +808,161 @@ class SearchQualityEvalTest extends ContainerTestSupport {
                         s.getKey(), lang, pos.length, neg.length, auroc(pos, neg), rejected * 100));
             }
         }
+        if (unitFilter()) {
+            sb.append(unitSection(results, answerable));
+        }
         sb.append("\n질문별 원 결과: `build/search-eval/per_query.tsv`\n");
         return sb.toString();
+    }
+
+    /**
+     * 호기 필터 실험의 결과 절. 호기 질문(정답 조건에 호기가 있는 것)과 나머지를 나눠 {@code ann-decided}와 짝지어 뺀다.
+     * 나머지 질문에서 차이가 0이 아니면 필터가 엉뚱한 질문에 걸렸다는 뜻이다(파서 오탐).
+     */
+    private String unitSection(List<Result> results, Predicate<Result> answerable) {
+        StringBuilder sb = new StringBuilder("\n## 호기 필터 실험 — `ann-decided` 대비 Hit@5 차이 [95% 구간] / MRR@10 / P@5\n\n");
+        sb.append("| 질문 | 방식 | 언어 | n | ann-decided | 방식 | 차이 [구간] | MRR@10 | P@5 | 받은 일지 수 (평균) |\n");
+        sb.append("|---|---|---|---|---|---|---|---|---|---|\n");
+        for (String group : List.of("호기 질문", "나머지")) {
+            Predicate<Result> inGroup = r -> group.equals("호기 질문") == !r.q.unit.isEmpty();
+            for (String m : UNIT_METHODS) {
+                for (String lang : List.of("ko", "en", "vi")) {
+                    Predicate<Result> cell = answerable.and(inGroup);
+                    Map<String, Double> a = byQid(results, "ann-decided", lang, cell);
+                    Map<String, Double> b = byQid(results, m, lang, cell);
+                    List<String> common = a.keySet().stream().filter(b::containsKey).sorted().toList();
+                    if (common.isEmpty()) {
+                        continue;
+                    }
+                    double[] diff = common.stream().mapToDouble(q -> b.get(q) - a.get(q)).toArray();
+                    double[] ci = bootstrap(diff);
+                    List<Result> mine = results.stream().filter(cell)
+                            .filter(r -> r.method.equals(m) && r.q.lang.equals(lang)).toList();
+                    double docs = mine.stream().mapToInt(r -> r.ranked.size()).average().orElse(0);
+                    sb.append(String.format(Locale.ROOT, "| %s | %s | %s | %d | %.2f | %.2f | %+.2f [%+.2f, %+.2f] | %.2f | %.2f | %.1f |%n",
+                            group, m, lang, common.size(),
+                            common.stream().mapToDouble(a::get).average().orElse(0),
+                            common.stream().mapToDouble(b::get).average().orElse(0),
+                            mean(diff), ci[0], ci[1],
+                            mine.stream().mapToDouble(Result::rr10).average().orElse(0),
+                            mine.stream().mapToDouble(Result::p5).average().orElse(0), docs));
+                }
+            }
+        }
+        sb.append("\n\"받은 일지 수\"는 후보 청크 20개를 일지 단위로 묶은 뒤의 수다. `unit-oracle`이 `unit-oracle-exact`보다 ")
+                .append("눈에 띄게 적으면 HNSW가 좁은 필터(≈ 1/108)를 못 채운 것이다(ADR-0006 8-4의 선택도 문제).\n");
+        return sb.toString();
+    }
+
+    // ------------------------------------------------------------------
+    // 호기 필터 실험
+    // ------------------------------------------------------------------
+
+    /** 설비 이름 12종. 원문 첫 문장 틀 {@code {설비} {호기}호기}에서 뽑는 데 쓴다. */
+    private static final String MACHINE_PATTERN = "(CO2 용접기|겐트리 크레인|무인 도장설비|플라즈마 절단기|고소작업대|유압 프레스"
+            + "|블라스팅 장비|이송 컨베이어|공기압축기|집진 설비|지게차|발전기) ([0-9]+)호기";
+
+    /**
+     * 청크마다 "설비#호기"를 단다 — 측정용 컬럼 {@code eval_machine}을 테스트 컨테이너의 {@code document_chunks}에 더한다.
+     *
+     * <p>왜 별도 테이블 조인이 아니라 같은 테이블의 컬럼인가: 운영의 권한 선필터가 그렇게 한다(구역을 청크에 비정규화, ADR-0012).
+     * HNSW 탐색 중에 같은 행에서 거르는 것이 운영에 넣을 때의 모양이고, 그래야 8-4의 선택도 문제를 같은 조건으로 본다.
+     *
+     * <p>왜 본문에서 뽑나: 생성기는 {@code work_logs.equipment_id}를 본문과 상관없이 1~5로 넣는다. 운영에서는 QR/NFC로
+     * 찍은 설비가 곧 {@code equipment_id}(호기 단위)라 이 추출이 필요 없다 — 여기서는 그 상태를 본문 틀로 흉내 낸다.
+     * 캐시에는 남기지 않는다(덤프는 색인 직후, 이 컬럼보다 먼저).
+     *
+     * @return 일지 → "설비#호기"
+     */
+    Map<Long, String> tagMachines(Connection conn) throws SQLException {
+        Map<Long, String> logMachine = new HashMap<>();
+        try (Statement st = conn.createStatement()) {
+            st.execute("ALTER TABLE document_chunks ADD COLUMN IF NOT EXISTS eval_machine varchar(64)");
+            st.execute("DROP TABLE IF EXISTS eval_log_machine");
+            st.execute("""
+                    CREATE TABLE eval_log_machine AS
+                    SELECT log_id, m[1] || '#' || m[2] AS machine
+                    FROM work_logs, regexp_match(log_text, '%s') AS m
+                    """.formatted(MACHINE_PATTERN));
+            st.executeUpdate("""
+                    UPDATE document_chunks c SET eval_machine = l.machine
+                    FROM eval_log_machine l
+                    WHERE c.source_type = 'WORK_LOG' AND c.source_id = l.log_id
+                    """);
+            st.executeUpdate("""
+                    UPDATE document_chunks c SET eval_machine = l.machine
+                    FROM work_log_translations t JOIN eval_log_machine l ON l.log_id = t.log_id
+                    WHERE c.source_type = 'WORK_LOG_TRANSLATION' AND c.source_id = t.translation_id
+                    """);
+            st.execute("ANALYZE document_chunks");
+            try (ResultSet rs = st.executeQuery("SELECT log_id, machine FROM eval_log_machine")) {
+                while (rs.next()) {
+                    logMachine.put(rs.getLong(1), rs.getString(2));
+                }
+            }
+            try (ResultSet rs = st.executeQuery("""
+                    SELECT count(*) FILTER (WHERE eval_machine IS NULL), count(*)
+                    FROM document_chunks WHERE source_type IN ('WORK_LOG', 'WORK_LOG_TRANSLATION')
+                    """)) {
+                rs.next();
+                if (rs.getLong(1) > 0) {
+                    throw new IllegalStateException("호기를 못 단 일지 청크 " + rs.getLong(1) + " / " + rs.getLong(2)
+                            + " — 본문 틀이 바뀌었는지 MACHINE_PATTERN을 본다");
+                }
+            }
+        }
+        return logMachine;
+    }
+
+    private List<Ranked> unitMethod(Connection conn, String method, Query q, String literal,
+                                    Map<Long, Long> translationToLog, Map<Long, String> logMachine) throws SQLException {
+        String machine = switch (method) {
+            case "unit-oracle", "unit-oracle-exact" -> q.unit.isEmpty() ? null : q.equipment + "#" + q.unit;
+            default -> UnitQueryParser.parse(q.query).map(m -> m.equipment() + "#" + m.unit()).orElse(null);
+        };
+        if (machine == null) {
+            return vector(conn, "ann-decided", literal, translationToLog);   // 호기를 모르면 운영 경로 그대로
+        }
+        if (method.equals("unit-boost")) {
+            List<Ranked> base = vector(conn, "ann-decided", literal, translationToLog);
+            List<Ranked> boosted = new ArrayList<>();
+            base.stream().filter(r -> machine.equals(logMachine.get(r.logId))).forEach(boosted::add);
+            base.stream().filter(r -> !machine.equals(logMachine.get(r.logId))).forEach(boosted::add);
+            return boosted;
+        }
+        boolean wasAuto = conn.getAutoCommit();
+        conn.setAutoCommit(false);
+        try (Statement st = conn.createStatement()) {
+            if (method.equals("unit-oracle-exact")) {
+                st.execute("SET LOCAL enable_indexscan = off");
+            } else {
+                st.execute("SET LOCAL hnsw.ef_search = 100");
+                st.execute("SET LOCAL hnsw.iterative_scan = relaxed_order");
+            }
+            List<Ranked> chunks = new ArrayList<>();
+            try (PreparedStatement ps = conn.prepareStatement("""
+                    SELECT source_type, source_id, embedding <=> CAST(? AS vector) AS distance
+                    FROM document_chunks
+                    WHERE embedding_model = ? AND eval_machine = ?
+                    ORDER BY embedding <=> CAST(? AS vector)
+                    LIMIT ?
+                    """)) {
+                ps.setString(1, literal);
+                ps.setString(2, MODEL);
+                ps.setString(3, machine);
+                ps.setString(4, literal);
+                ps.setInt(5, CANDIDATES);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        chunks.add(toRanked(rs.getString(1), rs.getLong(2), 1.0 - rs.getDouble(3), translationToLog));
+                    }
+                }
+            }
+            conn.commit();
+            return byDocument(chunks);
+        } finally {
+            conn.setAutoCommit(wasAuto);
+        }
     }
 
     /**
