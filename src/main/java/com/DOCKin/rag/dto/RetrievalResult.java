@@ -17,6 +17,8 @@ public record RetrievalResult(RetrievalMode mode, List<RetrievedChunk> chunks) {
         VECTOR,
         /** 폴백 - 임베딩 서버 장애로 키워드(LIKE) 검색 */
         KEYWORD,
+        /** 벡터 후보와 키워드 후보를 순위로 합친 검색({@code rag.search.hybrid.enabled}) */
+        HYBRID,
         /** 근거를 찾지 못함. 챗봇은 근거 없이 답한다 */
         NONE
     }
