@@ -128,33 +128,41 @@ class CorpusSeedGeneratorTest {
         }
 
         try (Connection conn = DriverManager.getConnection(URL, "root", password)) {
-            assertEquipmentExists(conn);
-
-            long start = System.currentTimeMillis();
-            Removed removed = removePreviouslyGenerated(conn);
-            List<String> owners = generateUsers(conn);
-            Generated generated = generate(conn, size, owners);
-            int translations = generateTranslations(conn, generated.pendingTranslations());
-            int orphans = removeOrphanChunks(conn);
-
-            System.out.println();
-            System.out.println("=== 코퍼스 생성 완료 ===");
-            System.out.printf("이전 생성분 삭제 : 번역 %,d / 일지 %,d / 사용자 %,d%n",
-                    removed.translations(), removed.workLogs(), removed.users());
-            System.out.printf("생성 사용자      : %,d명 (소유자당 %.2f%%)%n",
-                    owners.size(), 100.0 / owners.size());
-            System.out.printf("생성 작업일지    : %,d건%n", generated.workLogs());
-            System.out.printf("생성 번역본      : %,d건 (%s, 목표 %d%%)%n",
-                    translations, TRANSLATION_LANGUAGE, TRANSLATION_PERCENT);
-            System.out.printf("고아 청크 정리   : %,d건%n", orphans);
-            System.out.printf("소요             : %,dms%n", System.currentTimeMillis() - start);
-            System.out.println();
+            seed(conn, size);
             System.out.println("다음 단계 - 임베딩을 만들려면 색인을 돌려야 합니다:");
             System.out.println("  docker compose -f compose.yaml -f compose.gc.yaml up -d dockin-app");
             System.out.println();
         } catch (SQLException e) {
             Assumptions.abort("PostgreSQL(localhost:5432)에 접속할 수 없어 건너뜁니다: " + e.getMessage());
         }
+    }
+
+    /**
+     * 주어진 커넥션에 코퍼스를 만든다. 위 테스트와 검색 품질 하네스({@code SearchQualityEvalTest}, #170)가 함께 쓴다 —
+     * 하네스는 사용자의 개발 DB가 아니라 테스트 컨테이너에 같은 코퍼스를 만든다. 시드가 고정이라 같은 {@code size}면 같은 코퍼스다.
+     */
+    void seed(Connection conn, int size) throws SQLException {
+        assertEquipmentExists(conn);
+
+        long start = System.currentTimeMillis();
+        Removed removed = removePreviouslyGenerated(conn);
+        List<String> owners = generateUsers(conn);
+        Generated generated = generate(conn, size, owners);
+        int translations = generateTranslations(conn, generated.pendingTranslations());
+        int orphans = removeOrphanChunks(conn);
+
+        System.out.println();
+        System.out.println("=== 코퍼스 생성 완료 ===");
+        System.out.printf("이전 생성분 삭제 : 번역 %,d / 일지 %,d / 사용자 %,d%n",
+                removed.translations(), removed.workLogs(), removed.users());
+        System.out.printf("생성 사용자      : %,d명 (소유자당 %.2f%%)%n",
+                owners.size(), 100.0 / owners.size());
+        System.out.printf("생성 작업일지    : %,d건%n", generated.workLogs());
+        System.out.printf("생성 번역본      : %,d건 (%s, 목표 %d%%)%n",
+                translations, TRANSLATION_LANGUAGE, TRANSLATION_PERCENT);
+        System.out.printf("고아 청크 정리   : %,d건%n", orphans);
+        System.out.printf("소요             : %,dms%n", System.currentTimeMillis() - start);
+        System.out.println();
     }
 
     /**

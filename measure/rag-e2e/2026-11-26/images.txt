@@ -1,0 +1,6 @@
+/eval-embed ghcr.io/huggingface/text-embeddings-inference:turing-latest sha256:1b2aa2f952ea7379618c93b9183fc3fab5fece57844e32235f48310273fcb61b
+/ollama ollama/ollama:latest sha256:2150ce8563f986d3d4bd9f85c4c1b3e75b19389883863b8f13beb4429b14c28e
+NAME              ID              SIZE      MODIFIED    
+qwen2.5:14b       7cdf5a0187d5    9.0 GB    2 hours ago    
+exaone3.5:7.8b    c7c4e3d1ca22    4.8 GB    2 hours ago    
+qwen2.5:7b        845dbda0ea48    4.7 GB    2 hours ago    

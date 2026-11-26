@@ -102,6 +102,8 @@ dependencies {
 	testImplementation platform('org.testcontainers:testcontainers-bom:1.21.3')
 	testImplementation 'org.testcontainers:postgresql'
 	testImplementation 'org.testcontainers:junit-jupiter'
+	// 검색 품질 하네스가 색인한 코퍼스를 COPY로 저장·복원한다(CopyManager, #170). 운영은 여전히 runtimeOnly다.
+	testImplementation 'org.postgresql:postgresql'
 
 	//s3 upload
 	implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'

@@ -332,8 +332,9 @@ AI 경로는 본문의 `traceId`가 우선한다 — `chat_history.trace_id`와 
 
 정직하게 남긴다. 자세한 내용과 우선순위는 [`docs/WORK-BACKLOG.md`](docs/WORK-BACKLOG.md)에 있다.
 
-- **HNSW 설정이 코드에 없다** — recall을 재고 `ef_search=100` / `iterative_scan=relaxed_order`로
-  결정했으나(ADR-0006 8-4), 세션 변수로 잰 값이라 조회 경로에 `SET`이 아직 들어가지 않았다
+- **HNSW 설정은 반영했지만 반영 뒤 재측정은 아직이다** — ADR-0006 8-4가 정한 `iterative_scan=relaxed_order`(#191)와
+  `ef_search=100`을 커넥션 초기화 SQL로 모든 연결에 건다. 두 값 모두 합성 코퍼스에서 세션 변수로 잰 것이라,
+  서비스 코퍼스에서 플래너가 여전히 HNSW를 고르는지와 지연은 다시 재지 않았다(#180)
 - **recall 수치는 하한선이다** — 생성 코퍼스는 문형이 여섯 개뿐이라 실제보다 조밀하다.
   "켜도 되는가"의 판단에는 쓸 수 있어도 "recall이 몇 퍼센트인가"의 답으로 인용하면 안 된다
 - **배포가 무중단이 아니다** — main 머지가 CI를 거쳐 커밋 해시 태그로 배포되고 헬스 실패 시 되돌아가지만

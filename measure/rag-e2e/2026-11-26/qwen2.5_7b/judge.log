@@ -1,0 +1,135 @@
+[judge] 1/108 q01 ko claims=4 supported=4 not_found=False lang=ko
+[judge] 2/108 q01 en claims=6 supported=6 not_found=False lang=en
+[judge] 3/108 q01 vi claims=8 supported=8 not_found=False lang=vi
+[judge] 4/108 q02 ko claims=8 supported=8 not_found=False lang=ko
+[judge] 5/108 q02 en claims=3 supported=2 not_found=True lang=en
+[judge] 6/108 q02 vi claims=6 supported=6 not_found=False lang=vi
+[judge] 7/108 q03 ko claims=8 supported=8 not_found=False lang=ko
+[judge] 8/108 q03 en claims=7 supported=7 not_found=False lang=en
+[judge] 9/108 q03 vi claims=7 supported=6 not_found=False lang=vi
+[judge] 10/108 q04 ko claims=3 supported=3 not_found=False lang=ko
+[judge] 11/108 q04 en claims=8 supported=8 not_found=False lang=en
+[judge] 12/108 q04 vi claims=5 supported=5 not_found=False lang=vi
+[judge] 13/108 q05 ko claims=5 supported=5 not_found=False lang=ko
+[judge] 14/108 q05 en claims=8 supported=8 not_found=False lang=en
+[judge] 15/108 q05 vi claims=7 supported=7 not_found=False lang=vi
+[judge] 16/108 q06 ko claims=7 supported=7 not_found=False lang=ko
+[judge] 17/108 q06 en claims=8 supported=8 not_found=False lang=en
+[judge] 18/108 q06 vi claims=5 supported=5 not_found=False lang=ko
+[judge] 19/108 q07 ko claims=5 supported=5 not_found=False lang=ko
+[judge] 20/108 q07 en claims=3 supported=3 not_found=True lang=en
+[judge] 21/108 q07 vi claims=5 supported=1 not_found=True lang=vi
+[judge] 22/108 q08 ko claims=3 supported=3 not_found=False lang=ko
+[judge] 23/108 q08 en claims=6 supported=0 not_found=False lang=en
+[judge] 24/108 q08 vi claims=6 supported=6 not_found=False lang=vi
+[judge] 25/108 q09 ko claims=8 supported=8 not_found=False lang=ko
+[judge] 26/108 q09 en claims=6 supported=3 not_found=False lang=en
+[judge] 27/108 q09 vi claims=7 supported=7 not_found=False lang=vi
+[judge] 28/108 q10 ko claims=5 supported=5 not_found=False lang=ko
+[judge] 29/108 q10 en claims=1 supported=1 not_found=True lang=en
+[judge] 30/108 q10 vi claims=3 supported=3 not_found=False lang=vi
+[judge] 31/108 q11 ko claims=4 supported=4 not_found=False lang=ko
+[judge] 32/108 q11 en claims=3 supported=3 not_found=False lang=en
+[judge] 33/108 q11 vi claims=2 supported=2 not_found=False lang=vi
+[judge] 34/108 q12 ko claims=10 supported=10 not_found=False lang=ko
+[judge] 35/108 q12 en claims=7 supported=7 not_found=False lang=en
+[judge] 36/108 q12 vi claims=3 supported=3 not_found=False lang=vi
+[judge] 37/108 q13 ko claims=8 supported=8 not_found=False lang=ko
+[judge] 38/108 q13 en claims=8 supported=8 not_found=False lang=en
+[judge] 39/108 q13 vi claims=5 supported=5 not_found=False lang=vi
+[judge] 40/108 q14 ko claims=8 supported=8 not_found=False lang=ko
+[judge] 41/108 q14 en claims=8 supported=8 not_found=False lang=en
+[judge] 42/108 q14 vi claims=4 supported=4 not_found=False lang=vi
+[judge] 43/108 q15 ko claims=4 supported=4 not_found=False lang=ko
+[judge] 44/108 q15 en claims=6 supported=6 not_found=False lang=en
+[judge] 45/108 q15 vi claims=5 supported=5 not_found=False lang=vi
+[judge] 46/108 q16 ko claims=2 supported=2 not_found=True lang=ko
+[judge] 47/108 q16 en claims=1 supported=0 not_found=True lang=en
+[judge] 48/108 q16 vi claims=6 supported=6 not_found=False lang=vi
+[judge] 49/108 q17 ko claims=7 supported=7 not_found=False lang=ko
+[judge] 50/108 q17 en claims=4 supported=2 not_found=True lang=en
+[judge] 51/108 q17 vi claims=5 supported=5 not_found=False lang=vi
+[judge] 52/108 q18 ko claims=5 supported=5 not_found=False lang=ko
+[judge] 53/108 q18 en claims=6 supported=6 not_found=False lang=en
+[judge] 54/108 q18 vi claims=6 supported=6 not_found=False lang=vi
+[judge] 55/108 q19 ko claims=2 supported=2 not_found=True lang=ko
+[judge] 56/108 q19 en claims=3 supported=3 not_found=True lang=en
+[judge] 57/108 q19 vi claims=2 supported=1 not_found=True lang=vi
+[judge] 58/108 q20 ko claims=4 supported=2 not_found=True lang=ko
+[judge] 59/108 q20 en claims=1 supported=0 not_found=True lang=en
+[judge] 60/108 q20 vi claims=5 supported=5 not_found=False lang=vi
+[judge] 61/108 q21 ko claims=7 supported=7 not_found=False lang=ko
+[judge] 62/108 q21 en claims=1 supported=0 not_found=True lang=en
+[judge] 63/108 q21 vi claims=4 supported=4 not_found=False lang=vi
+[judge] 64/108 q22 ko claims=1 supported=0 not_found=True lang=ko
+[judge] 65/108 q22 en claims=3 supported=2 not_found=True lang=en
+[judge] 66/108 q22 vi claims=3 supported=3 not_found=False lang=vi
+[judge] 67/108 q23 ko claims=8 supported=8 not_found=False lang=ko
+[judge] 68/108 q23 en claims=3 supported=2 not_found=True lang=en
+[judge] 69/108 q23 vi claims=5 supported=5 not_found=True lang=vi
+[judge] 70/108 q24 ko claims=7 supported=6 not_found=True lang=ko
+[judge] 71/108 q24 en claims=6 supported=4 not_found=False lang=en
+[judge] 72/108 q24 vi claims=4 supported=1 not_found=True lang=ko
+[judge] 73/108 q25 ko claims=1 supported=0 not_found=True lang=ko
+[judge] 74/108 q25 en claims=2 supported=2 not_found=True lang=en
+[judge] 75/108 q25 vi claims=2 supported=2 not_found=False lang=vi
+[judge] 76/108 q26 ko claims=2 supported=0 not_found=True lang=ko
+[judge] 77/108 q26 en claims=4 supported=2 not_found=True lang=en
+[judge] 78/108 q26 vi claims=3 supported=2 not_found=True lang=vi
+[judge] 79/108 q27 ko claims=4 supported=4 not_found=False lang=ko
+[judge] 80/108 q27 en claims=4 supported=4 not_found=False lang=en
+[judge] 81/108 q27 vi claims=5 supported=5 not_found=False lang=vi
+[judge] 82/108 q28 ko claims=6 supported=3 not_found=False lang=ko
+[judge] 83/108 q28 en claims=3 supported=1 not_found=True lang=en
+[judge] 84/108 q28 vi claims=4 supported=4 not_found=False lang=vi
+[judge] 85/108 q29 ko claims=3 supported=2 not_found=True lang=ko
+[judge] 86/108 q29 en claims=2 supported=2 not_found=True lang=en
+[judge] 87/108 q29 vi claims=5 supported=5 not_found=False lang=vi
+[judge] 88/108 q30 ko claims=7 supported=7 not_found=False lang=ko
+[judge] 89/108 q30 en claims=8 supported=8 not_found=False lang=en
+[judge] 90/108 q30 vi claims=7 supported=7 not_found=False lang=vi
+[judge] 91/108 n01 ko claims=0 supported=0 not_found=True lang=ko
+[judge] 92/108 n01 en claims=1 supported=1 not_found=True lang=en
+[judge] 93/108 n01 vi claims=1 supported=1 not_found=True lang=ko
+[judge] 94/108 n02 ko claims=1 supported=0 not_found=True lang=ko
+[judge] 95/108 n02 en claims=5 supported=4 not_found=True lang=en
+[judge] 96/108 n02 vi claims=0 supported=0 not_found=True lang=ko
+[judge] 97/108 n03 ko claims=1 supported=0 not_found=True lang=ko
+[judge] 98/108 n03 en claims=0 supported=0 not_found=True lang=en
+[judge] 99/108 n03 vi claims=2 supported=1 not_found=True lang=ko
+[judge] 100/108 n04 ko claims=0 supported=0 not_found=True lang=ko
+[judge] 101/108 n04 en claims=1 supported=0 not_found=True lang=en
+[judge] 102/108 n04 vi claims=1 supported=0 not_found=True lang=ko
+[judge] 103/108 n05 ko claims=1 supported=1 not_found=True lang=ko
+[judge] 104/108 n05 en claims=3 supported=0 not_found=True lang=en
+[judge] 105/108 n05 vi claims=0 supported=0 not_found=True lang=vi
+[judge] 106/108 n06 ko claims=1 supported=0 not_found=True lang=ko
+[judge] 107/108 n06 en claims=3 supported=0 not_found=True lang=en
+[judge] 108/108 n06 vi claims=0 supported=0 not_found=True lang=vi
+# RAG 답변 채점 (qwen2.5_7b, 판정기 qwen2.5:14b)
+
+판정기 값이다. 사람 재채점(human_check.tsv)으로 맞는 비율을 확인하기 전까지 `[미검증]`.
+
+| 언어 | 유형 | n | Hit@5 | 충실도 | 출처 정확도 | 모른다(답 있음) | 모른다(답 없음) | 언어 일치 | p50 ms | p95 ms |
+|---|---|---|---|---|---|---|---|---|---|---|
+| ko | T | 15 | 1.00 | 1.00 | 0.99 | 0.00 | - | 1.00 | 11401 | 15268 |
+| ko | S | 15 | 0.40 | 0.70 | 1.00 | 0.53 | - | 1.00 | 6165 | 17130 |
+| ko | N | 6 | - | - | - | - | 1.00 | 1.00 | 3150 | 3545 |
+| ko | 전체 | 36 | 0.70 | 0.85 | 0.99 | 0.27 | 1.00 | 1.00 | 10061 | 15268 |
+| en | T | 15 | 0.47 | 0.88 | 0.92 | 0.20 | - | 1.00 | 7695 | 14203 |
+| en | S | 15 | 0.20 | 0.62 | 1.00 | 0.73 | - | 1.00 | 4887 | 9323 |
+| en | N | 6 | - | - | - | - | 1.00 | 1.00 | 3515 | 4466 |
+| en | 전체 | 36 | 0.33 | 0.75 | 0.95 | 0.47 | 1.00 | 1.00 | 5990 | 10890 |
+| vi | T | 15 | 0.87 | 0.94 | 0.94 | 0.07 | - | 0.93 | 6286 | 9602 |
+| vi | S | 15 | 0.67 | 0.89 | 0.98 | 0.27 | - | 0.93 | 4815 | 11716 |
+| vi | N | 6 | - | - | - | - | 1.00 | 0.33 | 3470 | 5033 |
+| vi | 전체 | 36 | 0.77 | 0.92 | 0.96 | 0.17 | 1.00 | 0.83 | 5033 | 9602 |
+
+오류(생성 또는 판정): 0건
+
+- 충실도: 답 있는 질문에서 주장 중 근거에 있는 비율의 평균 (목표 ≥ 0.95)
+- 출처 정확도: 자료 번호를 단 주장 중 그 자료가 실제로 담은 비율 (목표 ≥ 0.95)
+- 모른다(답 있음): 답 있는 질문을 거부한 비율 (목표 ≤ 0.10)
+- 모른다(답 없음): 답 없는 질문에 기록을 찾지 못했다고 답한 비율 (목표 ≥ 0.90)
+- 언어 일치: 규칙 판정 (목표 ≥ 0.99)
+

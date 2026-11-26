@@ -81,6 +81,10 @@ public interface AttendanceRepository extends JpaRepository<Attendance,Long> {
      * ClassCastException). 집계는 GROUP BY가 없어 항상 정확히 한 행이다.
      * {@code SUM(CASE ...)}은 조인 상대가 없으면 NULL이 아니라 0이 되도록 ELSE 0을 뒀고, 구역에 사람이 없으면
      * {@code COUNT}가 0이고 {@code SUM}들은 NULL이다 — 서비스가 0으로 받는다.
+     *
+     * <p><b>그날 재직 중이었던 사람만 센다</b>(#100). 탈퇴 회원도 행이 남으므로 거르지 않으면 퇴사자가 인원에 영원히 남는다.
+     * 반대로 "지금 재직 중"으로 거르면 과거 날짜를 다시 볼 때 그때 일한 사람이 빠진다 — 그래서 탈퇴 시각을 그 근무일의
+     * 시작({@code dayStart} = 그날 0시)과 비교한다. 그날 안에 탈퇴했으면 그날까지는 센다.
      */
     @Query("""
             SELECT COUNT(m),
@@ -94,8 +98,10 @@ public interface AttendanceRepository extends JpaRepository<Attendance,Long> {
             LEFT JOIN Attendance a ON a.member = m AND a.workDate = :workDate
             WHERE m.shipYardArea = :shipYardArea
               AND (CAST(:workShift AS String) IS NULL OR m.workShift = :workShift)
+              AND (m.deletedAt IS NULL OR m.deletedAt >= :dayStart)
             """)
     List<Object[]> summarizeByAreaAndDate(@Param("shipYardArea") String shipYardArea,
                                           @Param("workShift") WorkShift workShift,
-                                          @Param("workDate") LocalDate workDate);
+                                          @Param("workDate") LocalDate workDate,
+                                          @Param("dayStart") java.time.LocalDateTime dayStart);
 }
