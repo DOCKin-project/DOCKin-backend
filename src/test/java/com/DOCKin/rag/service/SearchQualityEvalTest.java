@@ -70,6 +70,10 @@ import java.util.stream.Collectors;
  *   ./gradlew test --tests "*SearchQualityEvalTest"
  * </pre>
  * 산출물은 {@code build/search-eval/}. 결과 해석은 계획 문서에 덧붙인다.
+ *
+ * <p>{@code SEARCH_EVAL_HNSW_BUILDS=N}(기본 1)이면 HNSW 인덱스를 N번 다시 지어 ANN 방식만 다시 묻고,
+ * 회차별 분포와 같은 인덱스 안에서 짝지은 #180 차이를 따로 한 절에 쓴다(#187). 인덱스를 한 번만 지은
+ * 결과로 ANN 설정끼리 비교하면, 재구축만으로 생기는 흔들림(로컬 8회에서 en 0.30~0.50)과 구별되지 않는다.
  */
 @SpringBootTest(properties = {
         // 측정 도중 새벽 배치가 끼어들지 않게
@@ -98,6 +102,12 @@ class SearchQualityEvalTest extends ContainerTestSupport {
 
     private static final List<String> METHODS =
             List.of("ann-default", "ann-decided", "exact", "ann-no-translation", "keyword", "keyword-ranked");
+
+    /** HNSW 인덱스를 타는 방식. 재구축마다 다시 묻는 것은 이것뿐이다(#187). */
+    private static final List<String> ANN_METHODS = List.of("ann-default", "ann-decided", "ann-no-translation");
+
+    /** V1 마이그레이션이 만드는 인덱스. */
+    private static final String HNSW_INDEX = "idx_chunk_embedding_hnsw";
 
     @DynamicPropertySource
     static void embedding(DynamicPropertyRegistry registry) {
@@ -172,27 +182,43 @@ class SearchQualityEvalTest extends ContainerTestSupport {
                 }
             }
 
-            // 3. 검색
-            List<Result> results = new ArrayList<>();
+            // 3. 검색. 질의 벡터는 한 번만 만든다 — 재구축마다 같은 벡터로 물어야 인덱스 차이만 남는다.
+            Map<Query, String> literals = new LinkedHashMap<>();
             for (Query q : queries) {
-                if (q.noAnswer && nExcluded.containsKey(q.qid)) {
-                    continue;
+                if (!(q.noAnswer && nExcluded.containsKey(q.qid))) {
+                    literals.put(q, RetrievalService.toVectorLiteral(embeddingClient.embedQuery(q.query)));
                 }
-                float[] vector = embeddingClient.embedQuery(q.query);
-                String literal = RetrievalService.toVectorLiteral(vector);
-                for (String method : METHODS) {
-                    List<Ranked> ranked = switch (method) {
-                        case "keyword" -> keyword(conn, q.query, translationToLog);
-                        case "keyword-ranked" -> keywordRanked(conn, q.query, translationToLog);
-                        default -> vector(conn, method, literal, translationToLog);
-                    };
-                    results.add(new Result(q, method, ranked, labels.get(q.qid)));
+            }
+            // HNSW 재구축 N회(#187). 1이면 불러온(또는 색인하며 쌓인) 인덱스 그대로 한 번.
+            // 2 이상이면 매번 REINDEX로 새로 짓고 ANN 방식만 다시 묻는다. 정확·키워드는 인덱스와 무관해 한 번만.
+            int builds = hnswBuilds();
+            List<Long> reindexMs = new ArrayList<>();
+            List<Result> results = new ArrayList<>();
+            for (int b = 1; b <= builds; b++) {
+                if (builds > 1) {
+                    reindexMs.add(reindexHnsw(conn));
+                }
+                for (var e : literals.entrySet()) {
+                    Query q = e.getKey();
+                    for (String method : METHODS) {
+                        if (b > 1 && !ANN_METHODS.contains(method)) {
+                            continue;
+                        }
+                        List<Ranked> ranked = switch (method) {
+                            case "keyword" -> keyword(conn, q.query, translationToLog);
+                            case "keyword-ranked" -> keywordRanked(conn, q.query, translationToLog);
+                            default -> vector(conn, method, e.getValue(), translationToLog);
+                        };
+                        results.add(new Result(q, method, ranked, labels.get(q.qid), b));
+                    }
                 }
             }
 
-            // 4. 기록
+            // 4. 기록. 본문 표는 1회차 인덱스 기준이고, 재구축 분포는 따로 한 절.
             writePerQuery(results);
-            String summary = summarize(cond, queries, labels, nExcluded, results);
+            List<Result> first = results.stream().filter(r -> r.build == 1).toList();
+            String summary = summarize(cond, queries, labels, nExcluded, first)
+                    + (builds > 1 ? rebuildSection(results, builds, reindexMs) : "");
             Files.writeString(OUT.resolve("summary.md"), summary, StandardCharsets.UTF_8);
             System.out.println(summary);
         }
@@ -244,6 +270,31 @@ class SearchQualityEvalTest extends ContainerTestSupport {
         try (Statement st = conn.createStatement()) {
             st.execute("ANALYZE document_chunks");
         }
+    }
+
+    /** {@code SEARCH_EVAL_HNSW_BUILDS}. 기본 1(재구축 없음). */
+    private static int hnswBuilds() {
+        String v = System.getenv("SEARCH_EVAL_HNSW_BUILDS");
+        return v == null || v.isBlank() ? 1 : Math.max(1, Integer.parseInt(v.trim()));
+    }
+
+    /**
+     * HNSW 인덱스를 처음부터 다시 짓는다. 걸린 밀리초를 돌려준다.
+     *
+     * <p>pgvector는 원소마다 층을 난수로 정하므로 같은 데이터로 지어도 그래프가 달라진다.
+     * 그 난수는 SQL {@code setseed()}로 고정되지 않는다 — 그래서 고정하는 대신 여러 번 지어 분포를 본다.
+     * 병렬 빌드는 끈다: V1 주석대로 Docker /dev/shm 64MB를 넘기고, 직렬이 조건을 하나 줄인다.
+     */
+    private long reindexHnsw(Connection conn) throws SQLException {
+        long t0 = System.currentTimeMillis();
+        try (Statement st = conn.createStatement()) {
+            st.execute("SET maintenance_work_mem = '256MB'");
+            st.execute("SET max_parallel_maintenance_workers = 0");
+            st.execute("REINDEX INDEX " + HNSW_INDEX);
+            st.execute("RESET maintenance_work_mem");
+            st.execute("RESET max_parallel_maintenance_workers");
+        }
+        return System.currentTimeMillis() - t0;
     }
 
     /** 생성기가 요구하는 장비 1~5번. R__seed_sample.sql과 같은 값 — 테스트 컨테이너는 seed 프로파일이 아니라 없다. */
@@ -532,7 +583,8 @@ class SearchQualityEvalTest extends ContainerTestSupport {
     // 지표
     // ------------------------------------------------------------------
 
-    private record Result(Query q, String method, List<Ranked> ranked, Set<Long> relevant) {
+    /** {@code build}는 몇 번째 HNSW 인덱스로 물었는지. 인덱스와 무관한 방식은 1이다. */
+    private record Result(Query q, String method, List<Ranked> ranked, Set<Long> relevant, int build) {
 
         boolean isRelevant(Ranked r) {
             return r.logId() != null && relevant.contains(r.logId());
@@ -571,14 +623,15 @@ class SearchQualityEvalTest extends ContainerTestSupport {
     }
 
     private void writePerQuery(List<Result> results) throws IOException {
-        StringBuilder sb = new StringBuilder("qid\ttype\tlang\tmethod\trank\tdoc\tsimilarity\trelevant\tn_relevant\n");
+        StringBuilder sb = new StringBuilder("qid\ttype\tlang\tmethod\trank\tdoc\tsimilarity\trelevant\tn_relevant\tbuild\n");
         for (Result r : results) {
             for (int i = 0; i < Math.min(10, r.ranked.size()); i++) {
                 Ranked x = r.ranked.get(i);
                 sb.append(r.q.qid).append('\t').append(r.q.type).append('\t').append(r.q.lang).append('\t')
                         .append(r.method).append('\t').append(i + 1).append('\t').append(x.key).append('\t')
                         .append(String.format(Locale.ROOT, "%.4f", x.similarity)).append('\t')
-                        .append(r.isRelevant(x) ? 1 : 0).append('\t').append(r.relevant.size()).append('\n');
+                        .append(r.isRelevant(x) ? 1 : 0).append('\t').append(r.relevant.size())
+                        .append('\t').append(r.build).append('\n');
             }
         }
         Files.writeString(OUT.resolve("per_query.tsv"), sb.toString(), StandardCharsets.UTF_8);
@@ -679,6 +732,70 @@ class SearchQualityEvalTest extends ContainerTestSupport {
         }
         sb.append("\n질문별 원 결과: `build/search-eval/per_query.tsv`\n");
         return sb.toString();
+    }
+
+    /**
+     * 재구축 N회의 분포(#187). 같은 질문·같은 질의 벡터로 인덱스만 바꿔 물은 결과다.
+     * 설정 비교(#180)는 <b>같은 인덱스 안에서</b> 짝지어 빼고, 그 차이가 재구축마다 어떻게 퍼지는지 본다.
+     */
+    private String rebuildSection(List<Result> results, int builds, List<Long> reindexMs) {
+        Predicate<Result> answerable = r -> !r.q.noAnswer && !r.relevant.isEmpty();
+        StringBuilder sb = new StringBuilder();
+        sb.append("\n## HNSW 재구축 ").append(builds).append("회 — 인덱스만 바꿨을 때 Hit@5 (#187)\n\n");
+        sb.append("매번 `REINDEX`(직렬, maintenance_work_mem 256MB). 질의 벡터는 같다. 본문 표는 1회차 인덱스 기준이다. ")
+                .append("재구축 소요(초): ")
+                .append(reindexMs.stream().map(ms -> String.valueOf(ms / 1000)).collect(Collectors.joining(", ")))
+                .append("\n\n");
+        sb.append("| 방식 | 언어 | n | 회차별 Hit@5 | 평균 | 최소 ~ 최대 |\n|---|---|---|---|---|---|\n");
+        for (String m : ANN_METHODS) {
+            for (String lang : List.of("ko", "en", "vi")) {
+                double[] per = new double[builds];
+                int n = 0;
+                for (int b = 1; b <= builds; b++) {
+                    int bb = b;
+                    double[] hit = results.stream().filter(answerable)
+                            .filter(r -> r.build == bb && r.method.equals(m) && r.q.lang.equals(lang))
+                            .mapToDouble(Result::hit5).toArray();
+                    per[b - 1] = mean(hit);
+                    n = hit.length;
+                }
+                sb.append(String.format(Locale.ROOT, "| %s | %s | %d | %s | %.3f | %.2f ~ %.2f |%n",
+                        m, lang, n, joined(per), mean(per),
+                        Arrays.stream(per).min().orElse(0), Arrays.stream(per).max().orElse(0)));
+            }
+        }
+        for (String lang : List.of("ko", "en", "vi")) {
+            double exact = mean(results.stream().filter(answerable)
+                    .filter(r -> r.method.equals("exact") && r.q.lang.equals(lang)).mapToDouble(Result::hit5).toArray());
+            sb.append(String.format(Locale.ROOT, "| exact (기준, 인덱스 무관) | %s | | | %.3f | |%n", lang, exact));
+        }
+
+        sb.append("\n### #180 운영값 → 결정값, 같은 인덱스 안에서 짝지은 Hit@5 차이\n\n");
+        sb.append("| 언어 | 회차별 차이 | 평균 | 최소 ~ 최대 | 차이 > 0인 회차 |\n|---|---|---|---|---|\n");
+        for (String lang : List.of("ko", "en", "vi")) {
+            double[] per = new double[builds];
+            for (int b = 1; b <= builds; b++) {
+                int bb = b;
+                List<Result> inBuild = results.stream().filter(r -> r.build == bb).toList();
+                Map<String, Double> a = byQid(inBuild, "ann-default", lang, answerable);
+                Map<String, Double> d = byQid(inBuild, "ann-decided", lang, answerable);
+                per[b - 1] = a.keySet().stream().filter(d::containsKey)
+                        .mapToDouble(q -> d.get(q) - a.get(q)).average().orElse(0);
+            }
+            sb.append(String.format(Locale.ROOT, "| %s | %s | %+.3f | %+.2f ~ %+.2f | %d / %d |%n",
+                    lang, joinedSigned(per), mean(per),
+                    Arrays.stream(per).min().orElse(0), Arrays.stream(per).max().orElse(0),
+                    Arrays.stream(per).filter(v -> v > 1e-9).count(), builds));
+        }
+        return sb.toString();
+    }
+
+    private static String joined(double[] v) {
+        return Arrays.stream(v).mapToObj(x -> String.format(Locale.ROOT, "%.2f", x)).collect(Collectors.joining(" "));
+    }
+
+    private static String joinedSigned(double[] v) {
+        return Arrays.stream(v).mapToObj(x -> String.format(Locale.ROOT, "%+.2f", x)).collect(Collectors.joining(" "));
     }
 
     private Map<String, Double> byQid(List<Result> results, String method, String lang, Predicate<Result> filter) {
