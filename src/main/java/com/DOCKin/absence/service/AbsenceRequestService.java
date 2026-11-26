@@ -61,8 +61,10 @@ public class AbsenceRequestService {
         return member;
     }
 
+    // 신청 행을 잠그고 읽는다 — 같은 신청을 둘이 동시에 승인하면 둘째는 첫째의 커밋을 기다렸다가
+    // APPROVED를 보고 409로 끝난다. 락 없이 읽으면 둘 다 PENDING을 보고 연차를 두 번 깎았다.
     private AbsenceRequest requirePendingRequest(Integer requestId) {
-        AbsenceRequest request = absenceRequestRepository.findById(requestId)
+        AbsenceRequest request = absenceRequestRepository.findByIdForUpdate(requestId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ABSENCE_REQUEST_NOT_FOUND));
         if (request.getStatus() != AbsenceStatus.PENDING) {
             throw new BusinessException(ErrorCode.ABSENCE_REQUEST_ALREADY_PROCESSED);
@@ -183,7 +185,7 @@ public class AbsenceRequestService {
      */
     @Transactional
     public AbsenceRequestResponseDto cancelRequest(String userId, Integer requestId, String comment) {
-        AbsenceRequest request = absenceRequestRepository.findById(requestId)
+        AbsenceRequest request = absenceRequestRepository.findByIdForUpdate(requestId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ABSENCE_REQUEST_NOT_FOUND));
         if (!request.getMember().getUserId().equals(userId)) {
             throw new BusinessException(ErrorCode.ACCESS_DENIED);
@@ -200,7 +202,7 @@ public class AbsenceRequestService {
     @Transactional
     public AbsenceRequestResponseDto cancelAsAdmin(String adminUserId, Integer requestId, String comment) {
         Member admin = requireAdmin(adminUserId);
-        AbsenceRequest request = absenceRequestRepository.findById(requestId)
+        AbsenceRequest request = absenceRequestRepository.findByIdForUpdate(requestId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ABSENCE_REQUEST_NOT_FOUND));
         if (request.getStatus() != AbsenceStatus.APPROVED) {
             throw new BusinessException(ErrorCode.ABSENCE_NOT_CANCELLABLE);

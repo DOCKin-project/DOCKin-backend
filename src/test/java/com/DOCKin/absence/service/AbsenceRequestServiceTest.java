@@ -164,14 +164,14 @@ class AbsenceRequestServiceTest {
                 () -> absenceRequestService.approveRequest(USER_ID, 1, "ok"));
 
         assertEquals(ErrorCode.ABSENCE_REQUEST_AUTHOR, ex.getErrorCode());
-        verify(absenceRequestRepository, never()).findById(any());
+        verify(absenceRequestRepository, never()).findByIdForUpdate(any());
     }
 
     @Test
     @DisplayName("존재하지 않는 요청을 승인하려 하면 ABSENCE_REQUEST_NOT_FOUND 예외가 발생한다")
     void approveRequest_notFound_throwsException() {
         when(memberRepository.findByUserId(ADMIN_ID)).thenReturn(Optional.of(admin()));
-        when(absenceRequestRepository.findById(1)).thenReturn(Optional.empty());
+        when(absenceRequestRepository.findByIdForUpdate(1)).thenReturn(Optional.empty());
 
         BusinessException ex = assertThrows(BusinessException.class,
                 () -> absenceRequestService.approveRequest(ADMIN_ID, 1, "ok"));
@@ -187,7 +187,7 @@ class AbsenceRequestServiceTest {
                 LocalDate.of(2026, 7, 10), LocalDate.of(2026, 7, 11), applicant);
         approved.setStatus(AbsenceStatus.APPROVED);
         when(memberRepository.findByUserId(ADMIN_ID)).thenReturn(Optional.of(admin()));
-        when(absenceRequestRepository.findById(1)).thenReturn(Optional.of(approved));
+        when(absenceRequestRepository.findByIdForUpdate(1)).thenReturn(Optional.of(approved));
 
         BusinessException ex = assertThrows(BusinessException.class,
                 () -> absenceRequestService.approveRequest(ADMIN_ID, 1, "ok"));
@@ -202,7 +202,7 @@ class AbsenceRequestServiceTest {
         AbsenceRequest request = pendingRequest(AbsenceType.VACATION, MON, WED, applicant); // 근무일 3일 신청
         workingDays(MON, WED, MON, MON.plusDays(1), WED);
         when(memberRepository.findByUserId(ADMIN_ID)).thenReturn(Optional.of(admin()));
-        when(absenceRequestRepository.findById(1)).thenReturn(Optional.of(request));
+        when(absenceRequestRepository.findByIdForUpdate(1)).thenReturn(Optional.of(request));
         // 잔액 갱신은 lost update를 막기 위해 비관적 락으로 다시 조회한 인스턴스에 대해 수행한다.
         when(memberRepository.findByUserIdForUpdate(USER_ID)).thenReturn(Optional.of(applicant));
 
@@ -222,7 +222,7 @@ class AbsenceRequestServiceTest {
         workingDays(MON, WED, MON, MON.plusDays(1), WED);
         when(memberRepository.findByUserId(ADMIN_ID)).thenReturn(Optional.of(admin()));
         when(memberRepository.findByUserIdForUpdate(USER_ID)).thenReturn(Optional.of(applicant));
-        when(absenceRequestRepository.findById(1)).thenReturn(Optional.of(request));
+        when(absenceRequestRepository.findByIdForUpdate(1)).thenReturn(Optional.of(request));
         when(absenceRequestRepository.save(any(AbsenceRequest.class))).thenAnswer(inv -> inv.getArgument(0));
 
         AbsenceRequestResponseDto response = absenceRequestService.approveRequest(ADMIN_ID, 1, "승인합니다");
@@ -240,7 +240,7 @@ class AbsenceRequestServiceTest {
         workingDays(MON, SUN, MON, MON.plusDays(1), WED, WED.plusDays(1), WED.plusDays(2));
         when(memberRepository.findByUserId(ADMIN_ID)).thenReturn(Optional.of(admin()));
         when(memberRepository.findByUserIdForUpdate(USER_ID)).thenReturn(Optional.of(applicant));
-        when(absenceRequestRepository.findById(1)).thenReturn(Optional.of(request));
+        when(absenceRequestRepository.findByIdForUpdate(1)).thenReturn(Optional.of(request));
         when(absenceRequestRepository.save(any(AbsenceRequest.class))).thenAnswer(inv -> inv.getArgument(0));
 
         absenceRequestService.approveRequest(ADMIN_ID, 1, "ok");
@@ -299,7 +299,7 @@ class AbsenceRequestServiceTest {
         Member applicant = applicant(15);
         AbsenceRequest request = pendingRequest(AbsenceType.VACATION, MON, WED, applicant);
         when(memberRepository.findByUserId(ADMIN_ID)).thenReturn(Optional.of(admin()));
-        when(absenceRequestRepository.findById(1)).thenReturn(Optional.of(request));
+        when(absenceRequestRepository.findByIdForUpdate(1)).thenReturn(Optional.of(request));
         when(absenceRequestRepository.existsOverlapping(eq(USER_ID), eq(MON), eq(WED),
                 eq(List.of(AbsenceStatus.APPROVED)), eq(1))).thenReturn(true);
 
@@ -319,7 +319,7 @@ class AbsenceRequestServiceTest {
         AbsenceRequest request = pendingRequest(AbsenceType.SICK,
                 LocalDate.of(2026, 7, 10), LocalDate.of(2026, 7, 12), applicant);
         when(memberRepository.findByUserId(ADMIN_ID)).thenReturn(Optional.of(admin()));
-        when(absenceRequestRepository.findById(1)).thenReturn(Optional.of(request));
+        when(absenceRequestRepository.findByIdForUpdate(1)).thenReturn(Optional.of(request));
         when(absenceRequestRepository.save(any(AbsenceRequest.class))).thenAnswer(inv -> inv.getArgument(0));
 
         AbsenceRequestResponseDto response = absenceRequestService.approveRequest(ADMIN_ID, 1, null);
@@ -335,7 +335,7 @@ class AbsenceRequestServiceTest {
         AbsenceRequest request = pendingRequest(AbsenceType.VACATION,
                 LocalDate.of(2026, 7, 10), LocalDate.of(2026, 7, 12), applicant);
         when(memberRepository.findByUserId(ADMIN_ID)).thenReturn(Optional.of(admin()));
-        when(absenceRequestRepository.findById(1)).thenReturn(Optional.of(request));
+        when(absenceRequestRepository.findByIdForUpdate(1)).thenReturn(Optional.of(request));
         when(absenceRequestRepository.save(any(AbsenceRequest.class))).thenAnswer(inv -> inv.getArgument(0));
 
         AbsenceRequestResponseDto response = absenceRequestService.rejectRequest(ADMIN_ID, 1, "사유 불충분");
@@ -352,7 +352,7 @@ class AbsenceRequestServiceTest {
     void cancelRequest_pending_becomesCancelled() {
         Member applicant = applicant(15);
         AbsenceRequest request = pendingRequest(AbsenceType.VACATION, MON, WED, applicant);
-        when(absenceRequestRepository.findById(1)).thenReturn(Optional.of(request));
+        when(absenceRequestRepository.findByIdForUpdate(1)).thenReturn(Optional.of(request));
         when(absenceRequestRepository.save(any(AbsenceRequest.class))).thenAnswer(inv -> inv.getArgument(0));
 
         AbsenceRequestResponseDto response = absenceRequestService.cancelRequest(USER_ID, 1, "일정 변경");
@@ -368,7 +368,7 @@ class AbsenceRequestServiceTest {
     @DisplayName("남의 신청은 403 - 존재 여부와 무관하게")
     void cancelRequest_notOwner_forbidden() {
         AbsenceRequest request = pendingRequest(AbsenceType.VACATION, MON, WED, applicant(15));
-        when(absenceRequestRepository.findById(1)).thenReturn(Optional.of(request));
+        when(absenceRequestRepository.findByIdForUpdate(1)).thenReturn(Optional.of(request));
 
         BusinessException ex = assertThrows(BusinessException.class,
                 () -> absenceRequestService.cancelRequest("someone-else", 1, null));
@@ -383,7 +383,7 @@ class AbsenceRequestServiceTest {
         Member applicant = applicant(15);
         AbsenceRequest rejected = pendingRequest(AbsenceType.VACATION, MON, WED, applicant);
         rejected.setStatus(AbsenceStatus.REJECTED);
-        when(absenceRequestRepository.findById(1)).thenReturn(Optional.of(rejected));
+        when(absenceRequestRepository.findByIdForUpdate(1)).thenReturn(Optional.of(rejected));
 
         BusinessException ex = assertThrows(BusinessException.class,
                 () -> absenceRequestService.cancelRequest(USER_ID, 1, null));
@@ -408,7 +408,7 @@ class AbsenceRequestServiceTest {
         AbsenceRequest request = pendingRequest(AbsenceType.VACATION, MON, WED, applicant);
         workingDays(MON, WED, MON, MON.plusDays(1), WED);
         when(memberRepository.findByUserId(ADMIN_ID)).thenReturn(Optional.of(admin()));
-        when(absenceRequestRepository.findById(1)).thenReturn(Optional.of(request));
+        when(absenceRequestRepository.findByIdForUpdate(1)).thenReturn(Optional.of(request));
         when(absenceRequestRepository.existsOverlapping(any(), any(), any(), any(), anyInt())).thenReturn(false);
         when(memberRepository.findByUserIdForUpdate(USER_ID)).thenReturn(Optional.of(applicant));
         when(absenceRequestRepository.save(any(AbsenceRequest.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -424,7 +424,7 @@ class AbsenceRequestServiceTest {
     void cancelRequest_approvedFuture_refundsAndPublishes() {
         Member applicant = applicant(12);
         AbsenceRequest request = approvedRequest(AbsenceType.VACATION, MON, WED, applicant, 3);
-        when(absenceRequestRepository.findById(1)).thenReturn(Optional.of(request));
+        when(absenceRequestRepository.findByIdForUpdate(1)).thenReturn(Optional.of(request));
         when(memberRepository.findByUserIdForUpdate(USER_ID)).thenReturn(Optional.of(applicant));
         when(absenceRequestRepository.save(any(AbsenceRequest.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -447,7 +447,7 @@ class AbsenceRequestServiceTest {
         Member applicant = applicant(12);
         AbsenceRequest request = approvedRequest(AbsenceType.VACATION, MON, WED, applicant, null);
         workingDays(MON, WED, MON, MON.plusDays(1), WED);
-        when(absenceRequestRepository.findById(1)).thenReturn(Optional.of(request));
+        when(absenceRequestRepository.findByIdForUpdate(1)).thenReturn(Optional.of(request));
         when(memberRepository.findByUserIdForUpdate(USER_ID)).thenReturn(Optional.of(applicant));
         when(absenceRequestRepository.save(any(AbsenceRequest.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -462,7 +462,7 @@ class AbsenceRequestServiceTest {
         Member applicant = applicant(12);
         LocalDate today = LocalDate.of(2026, 7, 1);
         AbsenceRequest request = approvedRequest(AbsenceType.VACATION, today, today.plusDays(2), applicant, 3);
-        when(absenceRequestRepository.findById(1)).thenReturn(Optional.of(request));
+        when(absenceRequestRepository.findByIdForUpdate(1)).thenReturn(Optional.of(request));
 
         BusinessException ex = assertThrows(BusinessException.class,
                 () -> absenceRequestService.cancelRequest(USER_ID, 1, null));
@@ -479,7 +479,7 @@ class AbsenceRequestServiceTest {
     void cancelRequest_approvedSick_noRefund() {
         Member applicant = applicant(12);
         AbsenceRequest request = approvedRequest(AbsenceType.SICK, MON, WED, applicant, null);
-        when(absenceRequestRepository.findById(1)).thenReturn(Optional.of(request));
+        when(absenceRequestRepository.findByIdForUpdate(1)).thenReturn(Optional.of(request));
         when(absenceRequestRepository.save(any(AbsenceRequest.class))).thenAnswer(inv -> inv.getArgument(0));
 
         absenceRequestService.cancelRequest(USER_ID, 1, null);
@@ -495,7 +495,7 @@ class AbsenceRequestServiceTest {
         Member applicant = applicant(12);
         AbsenceRequest approved = approvedRequest(AbsenceType.VACATION, MON, WED, applicant, 3);
         when(memberRepository.findByUserId(ADMIN_ID)).thenReturn(Optional.of(admin()));
-        when(absenceRequestRepository.findById(1)).thenReturn(Optional.of(approved));
+        when(absenceRequestRepository.findByIdForUpdate(1)).thenReturn(Optional.of(approved));
         when(memberRepository.findByUserIdForUpdate(USER_ID)).thenReturn(Optional.of(applicant));
         when(absenceRequestRepository.save(any(AbsenceRequest.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -506,7 +506,7 @@ class AbsenceRequestServiceTest {
         assertEquals(15, applicant.getRemainingLeaveDays());
 
         AbsenceRequest pending = pendingRequest(AbsenceType.VACATION, MON, WED, applicant);
-        when(absenceRequestRepository.findById(2)).thenReturn(Optional.of(pending));
+        when(absenceRequestRepository.findByIdForUpdate(2)).thenReturn(Optional.of(pending));
         assertEquals(ErrorCode.ABSENCE_NOT_CANCELLABLE,
                 assertThrows(BusinessException.class, () -> absenceRequestService.cancelAsAdmin(ADMIN_ID, 2, null)).getErrorCode());
 

@@ -4,13 +4,16 @@ import com.DOCKin.absence.model.AbsenceRequest;
 import com.DOCKin.absence.model.AbsenceStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.Optional;
 
 @Repository
 public interface AbsenceRequestRepository extends JpaRepository<AbsenceRequest, Integer> {
@@ -21,6 +24,21 @@ public interface AbsenceRequestRepository extends JpaRepository<AbsenceRequest, 
     boolean existsByDocumentUrlEndingWith(String suffix);
 
     boolean existsByMember_UserIdAndDocumentUrlEndingWith(String userId, String suffix);
+
+    /**
+     * 상태를 바꿀 신청 행에 비관적 쓰기 락({@code SELECT ... FOR UPDATE})을 건다.
+     *
+     * <p>승인·거절·취소는 모두 "지금 PENDING(또는 APPROVED)인가"를 읽고 그에 따라 상태를 바꾼다.
+     * 락 없이 읽으면 관리자 둘이 <b>같은 신청</b>을 동시에 승인할 때 둘 다 PENDING을 보고 통과하고,
+     * 신청자 행 락({@code MemberRepository.findByUserIdForUpdate})에서 차례로 줄을 선 뒤 <b>연차를 두 번 깎는다.</b>
+     * 신청자 행 락은 잔액 갱신을 직렬화할 뿐 "이 신청이 이미 처리됐는가"를 다시 보게 하지 않는다.
+     * 승인 재검사({@link #existsOverlapping})는 자기 자신을 빼고, V11 EXCLUDE도 같은 행끼리는 걸리지 않는다.
+     *
+     * <p>락 순서는 언제나 <b>신청 행 → 신청자 행</b>이다. 승인과 취소가 같은 순서로 잡으므로 서로 교착하지 않는다.
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT a FROM AbsenceRequest a WHERE a.id = :requestId")
+    Optional<AbsenceRequest> findByIdForUpdate(@Param("requestId") Integer requestId);
 
     /**
      * 같은 사용자의 기간이 겹치는 신청이 있는가 (#104). 겹침은 {@code start <= other.end AND end >= other.start}.
