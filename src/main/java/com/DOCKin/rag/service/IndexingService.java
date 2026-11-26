@@ -251,9 +251,12 @@ public class IndexingService {
         //
         // 가드를 남겨두면 owner_user_id가 null인 청크를 만들 수 있고, 그건 소유자 기반
         // 접근 제어(Visibility.OWNER)가 걸리지 않는 행이라 조용히 지나가지 않는다.
-        String ownerUserId = workLog.getMember().getUserId();
+        //
+        // 공개 범위는 승인 상태로 정한다(ADR-0012) — 승인되면 같은 구역, 아니면 본인만.
+        // 상태가 바뀌는 순간에도 같은 규칙으로 맞추므로(ChunkIndexWriter.syncWorkLogAccess) 배치는 보정이다.
+        WorkLogChunkAccess access = WorkLogChunkAccess.of(workLog);
         return new IndexTarget(SourceType.WORK_LOG, workLog.getLogId(), text,
-                "ko", Visibility.OWNER, ownerUserId);
+                "ko", access.visibility(), access.ownerUserId(), access.area());
     }
 
     /**
@@ -295,12 +298,15 @@ public class IndexingService {
         // source 자신의 검사는 남긴다 - NOT NULL로 만든 것은 work_logs.user_id 하나이고,
         // work_log_translations.log_id는 여전히 nullable이다. 그 근거(NULL 0건, 생성 경로가
         // 전부 필수로 요구함)를 이 FK에 대해서는 확인한 적이 없다.
-        String ownerUserId = source == null ? null : source.getMember().getUserId();
+        // 원본이 없으면 소유자도 구역도 없는 OWNER — 관리자만 본다. 번역본만 따로 공개되지 않는다(ADR-0012 4절).
+        WorkLogChunkAccess access = source == null
+                ? new WorkLogChunkAccess(Visibility.OWNER, null, null)
+                : WorkLogChunkAccess.of(source);
 
         // sourceId는 번역본 자신의 PK다. 원본 작업일지(WORK_LOG)와 source_type이 달라 충돌하지 않으며,
         // 원본 추적은 language_code와 함께 work_log_translations를 거쳐 가능하다.
         return new IndexTarget(SourceType.WORK_LOG_TRANSLATION, translation.getId(), text,
-                translation.getLanguageCode(), Visibility.OWNER, ownerUserId);
+                translation.getLanguageCode(), access.visibility(), access.ownerUserId(), access.area());
     }
 
     /** 안전교육은 전 근로자가 봐야 하는 내용이므로 {@link Visibility#PUBLIC}이다. */
@@ -317,7 +323,7 @@ public class IndexingService {
                     .map(c -> new IndexTarget(SourceType.SAFETY_COURSE,
                             c.getCourseId().longValue(),
                             c.getTitle() + "\n" + c.getDescription(),
-                            "ko", Visibility.PUBLIC, null))
+                            "ko", Visibility.PUBLIC, null, null))
                     .toList();
             progress.embedded += chunkIndexWriter.writePage(targets);
 

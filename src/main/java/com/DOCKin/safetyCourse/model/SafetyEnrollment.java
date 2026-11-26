@@ -9,7 +9,9 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "safety_enrollments")
+// (user_id, course_id) 유니크는 V19가 만든다(#141). 여기 적는 것은 스키마를 읽는 사람을 위해서다 — validate는 유니크를 보지 않는다.
+@Table(name = "safety_enrollments", uniqueConstraints = @UniqueConstraint(
+        name = "uk_safety_enrollment_user_course", columnNames = {"user_id", "course_id"}))
 @Getter
 @Setter
 @Builder
@@ -26,7 +28,7 @@ public class SafetyEnrollment {
     private Member userId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "course_id")
+    @JoinColumn(name = "course_id", nullable = false)
     private SafetyCourse courseId;
 
     @Enumerated(EnumType.STRING)

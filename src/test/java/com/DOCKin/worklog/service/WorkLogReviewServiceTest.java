@@ -5,6 +5,8 @@ import com.DOCKin.global.error.ErrorCode;
 import com.DOCKin.member.model.Member;
 import com.DOCKin.member.model.UserRole;
 import com.DOCKin.member.repository.MemberRepository;
+import com.DOCKin.ai.repository.TranslateRepository;
+import com.DOCKin.rag.service.ChunkIndexWriter;
 import com.DOCKin.worklog.dto.WorkLogDto;
 import com.DOCKin.worklog.model.WorkLog;
 import com.DOCKin.worklog.model.WorkLogStatus;
@@ -32,6 +34,10 @@ class WorkLogReviewServiceTest {
     private WorkLogRepository workLogsRepository;
     @Mock
     private MemberRepository memberRepository;
+    @Mock
+    private TranslateRepository translateRepository;
+    @Mock
+    private ChunkIndexWriter chunkIndexWriter;
 
     @InjectMocks
     private WorkLogReviewService service;

@@ -155,6 +155,16 @@ public class DocumentChunk {
     @Column(name = "owner_user_id", length = 50)
     private String ownerUserId;
 
+    /**
+     * 권한 필터용 비정규화 컬럼. {@link Visibility#AREA}일 때만 채운다 — 작성자의 구역(ADR-0012).
+     *
+     * <p>앱은 작성자의 <b>현재</b> 구역을 조인으로 보지만, 벡터 검색 SQL에 {@code users} 조인을 넣으면
+     * HNSW 탐색 중 필터가 행마다 조인을 탄다. {@link #ownerUserId}와 같은 이유로 복사해 둔다.
+     * 대가로 작성자의 구역이 바뀌면 이 값을 맞춰야 한다(지금은 구역을 바꾸는 API가 없다).
+     */
+    @Column(name = "area", length = 100)
+    private String area;
+
     @CreatedDate
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -167,7 +177,7 @@ public class DocumentChunk {
     public DocumentChunk(SourceType sourceType, Long sourceId, Integer chunkIndex,
                          String languageCode, String content, String contentHash,
                          float[] embedding, Integer embeddingDim, String embeddingModel,
-                         Visibility visibility, String ownerUserId) {
+                         Visibility visibility, String ownerUserId, String area) {
         this.sourceType = sourceType;
         this.sourceId = sourceId;
         this.chunkIndex = chunkIndex == null ? 0 : chunkIndex;
@@ -179,6 +189,7 @@ public class DocumentChunk {
         this.embeddingModel = embeddingModel;
         this.visibility = visibility == null ? Visibility.PUBLIC : visibility;
         this.ownerUserId = ownerUserId;
+        this.area = area;
     }
 
     /**
@@ -192,9 +203,10 @@ public class DocumentChunk {
         this.embeddingDim = embeddingDim;
     }
 
-    /** 원본 권한 정보가 바뀐 경우(예: 작성자 변경) 비정규화 컬럼을 맞춘다. */
-    public void updateVisibility(Visibility visibility, String ownerUserId) {
+    /** 원본 권한 정보가 바뀐 경우(승인·반려·수정, 작성자 변경) 비정규화 컬럼을 맞춘다. */
+    public void updateVisibility(Visibility visibility, String ownerUserId, String area) {
         this.visibility = visibility;
         this.ownerUserId = ownerUserId;
+        this.area = area;
     }
 }

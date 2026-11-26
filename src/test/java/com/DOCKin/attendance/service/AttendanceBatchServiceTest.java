@@ -50,7 +50,7 @@ class AttendanceBatchServiceTest {
         when(workCalendarService.isWorkingDay(WEDNESDAY)).thenReturn(true);
         when(attendanceRepository.findUserIdsByWorkDate(WEDNESDAY))
                 .thenReturn(List.of("10001"));   // 10001은 출근했다
-        when(memberRepository.findByRole(UserRole.USER))
+        when(memberRepository.findByRoleAndDeletedAtIsNull(UserRole.USER))
                 .thenReturn(List.of(member("10001"), member("10002"), member("10003")));
 
         int created = service.markAbsentFor(WEDNESDAY);
@@ -70,7 +70,7 @@ class AttendanceBatchServiceTest {
         // 휴가 승인 리스너가 이미 VACATION 기록을 만들어 둔 상태.
         when(attendanceRepository.findUserIdsByWorkDate(WEDNESDAY))
                 .thenReturn(List.of("10002"));
-        when(memberRepository.findByRole(UserRole.USER))
+        when(memberRepository.findByRoleAndDeletedAtIsNull(UserRole.USER))
                 .thenReturn(List.of(member("10001"), member("10002")));
 
         service.markAbsentFor(WEDNESDAY);
@@ -87,7 +87,7 @@ class AttendanceBatchServiceTest {
         AttendanceBatchService service = service(WEDNESDAY);
         when(workCalendarService.isWorkingDay(WEDNESDAY)).thenReturn(true);
         when(attendanceRepository.findUserIdsByWorkDate(WEDNESDAY)).thenReturn(List.of());
-        when(memberRepository.findByRole(UserRole.USER)).thenReturn(List.of(member("10001")));
+        when(memberRepository.findByRoleAndDeletedAtIsNull(UserRole.USER)).thenReturn(List.of(member("10001")));
 
         service.markAbsentFor(WEDNESDAY);
 
@@ -128,7 +128,7 @@ class AttendanceBatchServiceTest {
         when(workCalendarService.isWorkingDay(WEDNESDAY)).thenReturn(true);
         when(attendanceRepository.findUserIdsByWorkDate(WEDNESDAY))
                 .thenReturn(List.of("10001", "10002"));
-        when(memberRepository.findByRole(UserRole.USER))
+        when(memberRepository.findByRoleAndDeletedAtIsNull(UserRole.USER))
                 .thenReturn(List.of(member("10001"), member("10002")));
 
         assertEquals(0, service.markAbsentFor(WEDNESDAY));
@@ -141,11 +141,11 @@ class AttendanceBatchServiceTest {
         AttendanceBatchService service = service(WEDNESDAY);
         when(workCalendarService.isWorkingDay(WEDNESDAY)).thenReturn(true);
         when(attendanceRepository.findUserIdsByWorkDate(WEDNESDAY)).thenReturn(List.of());
-        when(memberRepository.findByRole(UserRole.USER)).thenReturn(List.of(member("10001")));
+        when(memberRepository.findByRoleAndDeletedAtIsNull(UserRole.USER)).thenReturn(List.of(member("10001")));
 
         assertEquals(1, service.markAbsentFor(WEDNESDAY));
 
-        verify(memberRepository).findByRole(UserRole.USER);
+        verify(memberRepository).findByRoleAndDeletedAtIsNull(UserRole.USER);
         verify(memberRepository, never()).findAll();
     }
 
