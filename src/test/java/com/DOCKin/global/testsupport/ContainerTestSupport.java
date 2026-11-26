@@ -155,7 +155,10 @@ public abstract class ContainerTestSupport {
                 "dGVzdG9ubHl0ZXN0b25seXRlc3Rvbmx5dGVzdG9ubHl0ZXN0b25seXRlc3Rvbmx5");
         registry.add("jwt.expiration_time", () -> "3600000");
         registry.add("jwt.refresh_expiration_time", () -> "86400000");
-        registry.add("external-api.fastapi.base-url", () -> "http://localhost:9999");
+        // 실제 AI 서버에 붙는 측정(RagAnswerEvalTest)만 TEST_AI_SERVER_URL로 바꾼다. 하위 클래스의
+        // @DynamicPropertySource로 같은 키를 덮으면 이 값이 이긴다(실측) — 그래서 여기서 읽는다.
+        registry.add("external-api.fastapi.base-url",
+                () -> System.getenv().getOrDefault("TEST_AI_SERVER_URL", "http://localhost:9999"));
 
         // S3Config는 @DataJpaTest 슬라이스에는 안 뜨지만 @SpringBootTest 전체 컨텍스트에는 뜬다.
         // 자격증명은 빈 생성 시점에 검증되지 않으므로 아무 값이나 되지만,

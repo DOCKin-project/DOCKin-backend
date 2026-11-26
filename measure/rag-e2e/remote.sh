@@ -32,7 +32,8 @@ sudo usermod -aG docker "$USER"
 
 say "저장소"
 [[ -d DOCKin-spring ]] || git clone -q --depth 1 -b "$BRANCH" https://github.com/DOCKin-project/DOCKin-backend.git DOCKin-spring
-[[ -d pylab ]] || git clone -q --depth 1 https://github.com/Khyojae/pylab.git pylab
+# pylab은 비공개 저장소라 인스턴스에서 clone하지 않는다. 로컬에서 git archive로 올려 ~/pylab에 푼다(.env가 섞이지 않는다).
+[[ -d pylab ]] || { say "~/pylab이 없다 — 로컬에서 git archive로 올려야 한다"; finish 7; }
 git -C DOCKin-spring log --oneline -1; git -C pylab log --oneline -1
 
 say "TEI ($TEI_IMAGE)"
@@ -56,7 +57,7 @@ export PATH="$HOME/.local/bin:$PATH"
 
 serve() { # $1 생성 모델
   pkill -f "bin/aiserver" || true; sleep 2
-  (cd pylab && AISERVER_PRELOAD='[]' AISERVER_STT_PRELOAD=false \
+  (cd "$HOME/pylab" && AISERVER_PRELOAD='[]' AISERVER_STT_PRELOAD=false \
      AISERVER_CHAT_MODEL="$1" AISERVER_CHAT_BASE_URL=http://127.0.0.1:11434/v1 AISERVER_CHAT_API_KEY=ollama \
      AISERVER_CHAT_TIMEOUT_SECONDS=120 nohup uv run aiserver > "$HOME/aiserver-${1//[:\/]/_}.log" 2>&1 &)
   for i in $(seq 1 60); do curl -sf http://127.0.0.1:8000/health >/dev/null && break; sleep 2; done
@@ -74,7 +75,7 @@ for m in $GEN_MODELS; do
   say "수집 — $m"
   serve "$m"
   sg docker -c "RUN_RAG_EVAL=1 SEARCH_EVAL_EMBED_URL=http://localhost:58081 SEARCH_EVAL_CORPUS=$CORPUS \
-      RAG_EVAL_AI_URL=http://127.0.0.1:8000 RAG_EVAL_TAG=${m//[:\/]/_} \
+      TEST_AI_SERVER_URL=http://127.0.0.1:8000 RAG_EVAL_TAG=${m//[:\/]/_} \
       ./gradlew test --tests '*RagAnswerEvalTest' --no-daemon -q" || code=$?
   cp "$HOME/aiserver-${m//[:\/]/_}.log" "build/rag-e2e/${m//[:\/]/_}/" 2>/dev/null
 done

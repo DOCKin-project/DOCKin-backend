@@ -50,7 +50,7 @@ import java.util.Set;
  * <pre>
  * # TEI(임베딩)와 pylab aiserver(챗봇, /api/chatbot)가 떠 있어야 한다
  * RUN_RAG_EVAL=1 SEARCH_EVAL_EMBED_URL=http://localhost:58081 SEARCH_EVAL_CORPUS=20000 \
- *   RAG_EVAL_AI_URL=http://localhost:8000 RAG_EVAL_TAG=qwen2.5-7b \
+ *   TEST_AI_SERVER_URL=http://localhost:8000 RAG_EVAL_TAG=qwen2.5-7b \
  *   ./gradlew test --tests "*RagAnswerEvalTest"
  * # 하네스만 확인할 때: RAG_EVAL_STUB=1 (모델 없이 근거 목록을 답 자리에)
  * </pre>
@@ -73,12 +73,11 @@ class RagAnswerEvalTest extends ContainerTestSupport {
     @DynamicPropertySource
     static void endpoints(DynamicPropertyRegistry registry) {
         registry.add("external-api.embedding.base-url", SearchQualityEvalTest::embedUrl);
-        registry.add("external-api.fastapi.base-url", RagAnswerEvalTest::aiUrl);
         registry.add("ai.chatbot.stub", () -> System.getenv("RAG_EVAL_STUB") != null ? "true" : "false");
     }
 
     private static String aiUrl() {
-        String v = System.getenv("RAG_EVAL_AI_URL");
+        String v = System.getenv("TEST_AI_SERVER_URL");   // ContainerTestSupport가 이 값으로 챗봇 서버 주소를 건다
         return v == null || v.isBlank() ? "http://localhost:8000" : v.trim();
     }
 
