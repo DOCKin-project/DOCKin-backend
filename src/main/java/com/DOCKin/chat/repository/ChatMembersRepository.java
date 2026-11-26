@@ -20,6 +20,9 @@ boolean existsByChatRoomsAndMemberUserId(ChatRooms chatRooms, String userId);
 
     long countByChatRooms(ChatRooms rooms);
 
+    /** 방장 승계 대상 — 가장 먼저 들어온 멤버(#106). 같은 시각이면 id가 작은 쪽. */
+    Optional<ChatMembers> findFirstByChatRoomsOrderByJoinedAtAscIdAsc(ChatRooms rooms);
+
     Optional<ChatMembers> findByChatRoomsRoomIdAndMemberUserId(Integer roomId, String userId);
 
     boolean existsByChatRoomsRoomIdAndMemberUserId(Integer roomId, String userId);

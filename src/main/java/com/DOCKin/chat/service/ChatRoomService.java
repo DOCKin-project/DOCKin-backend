@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import org.springframework.data.domain.PageImpl;
 import com.DOCKin.chat.dto.ChatRoomListRow;
 import com.DOCKin.chat.repository.ChatJdbcRepository;
@@ -121,8 +122,8 @@ public class ChatRoomService {
         ChatRooms rooms = chatRoomsRepository.findById(chatRoomId)
                 .orElseThrow(()->new BusinessException(ErrorCode.CHATROOM_NOT_FOUND));
 
-        // 권한 확인
-        if(!rooms.getCreatorId().equals(creatorId)){
+        // 권한 확인 — creator_id는 nullable이라 equals를 null 쪽에서 부르지 않는다(#102)
+        if(!Objects.equals(rooms.getCreatorId(), creatorId)){
             throw new BusinessException(ErrorCode.CHATROOM_AUTHOR);
         }
 
@@ -156,7 +157,8 @@ public class ChatRoomService {
 
         long finalMemberCount = chatMembersRepository.countByChatRooms(rooms);
         if(finalMemberCount<2){
-            throw new IllegalArgumentException("채팅방에서는 최소 2명의 참가자가 있어야 합니다.");
+            // 트랜잭션이 롤백되므로 앞의 이름 변경·멤버 변경도 함께 취소된다(#102)
+            throw new BusinessException(ErrorCode.CHATROOM_MIN_MEMBERS);
         }
         chatMembersRepository.flush();
         ChatRooms updatedRoom = chatRoomsRepository.findById(chatRoomId)
@@ -171,7 +173,7 @@ public class ChatRoomService {
         ChatRooms chatRooms = chatRoomsRepository.findById(chatRoomId)
                 .orElseThrow(()->new BusinessException(ErrorCode.CHATROOM_NOT_FOUND));
 
-        if(!chatRooms.getCreatorId().equals(userId)){
+        if(!Objects.equals(chatRooms.getCreatorId(), userId)){
             throw new BusinessException(ErrorCode.CHATROOM_AUTHOR);
         }
         chatRoomsRepository.delete(chatRooms);
@@ -182,10 +184,24 @@ public class ChatRoomService {
     public void leaveChatRoom(Integer chatRoomId, String userId){
         ChatRooms room = chatRoomsRepository.findById(chatRoomId)
                 .orElseThrow(()->new BusinessException(ErrorCode.CHATROOM_NOT_FOUND));
+        // 멤버가 아니면 거절한다 — 전에는 0건 삭제여도 204였다(#106)
+        if(!chatMembersRepository.existsByChatRoomsAndMemberUserId(room,userId)){
+            throw new BusinessException(ErrorCode.CHATROOM_AUTHOR);
+        }
         chatMembersRepository.deleteByChatRoomsAndMemberUserId(room,userId);
+        room.removeMember(userId);
+        chatMembersRepository.flush();
+
         long memberCount = chatMembersRepository.countByChatRooms(room);
         if(memberCount==0){
             chatRoomsRepository.delete(room);
+            return;
+        }
+        // 방장이 나가면 가장 먼저 들어온 멤버에게 넘긴다. 안 넘기면 creator_id가 비멤버를 가리켜
+        // 남은 사람 누구도 방을 수정·삭제할 수 없다(#106).
+        if(Objects.equals(room.getCreatorId(), userId)){
+            chatMembersRepository.findFirstByChatRoomsOrderByJoinedAtAscIdAsc(room)
+                    .ifPresent(next -> room.transferOwnership(next.getMember().getUserId()));
         }
     }
 
