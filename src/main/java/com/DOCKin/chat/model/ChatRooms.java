@@ -1,5 +1,7 @@
 package com.DOCKin.chat.model;
 
+import com.DOCKin.global.error.BusinessException;
+import com.DOCKin.global.error.ErrorCode;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -58,9 +60,15 @@ public class ChatRooms {
 
     public void updateRoomName(String room_name){
         if(room_name==null || room_name.isBlank()){
-            throw new IllegalArgumentException("방 이름은 필수입니다.");
+            // 클라이언트 입력 오류다 — IllegalArgumentException이면 캐치올에 걸려 500이 된다(#102).
+            throw new BusinessException(ErrorCode.CHATROOM_NAME_REQUIRED);
         }
         this.roomName=room_name;
+    }
+
+    /** 방장이 나갈 때 남은 멤버에게 넘긴다(#106). 안 넘기면 아무도 방을 수정·삭제할 수 없다. */
+    public void transferOwnership(String newCreatorId){
+        this.creatorId=newCreatorId;
     }
 
     public void removeMember(String userId){
