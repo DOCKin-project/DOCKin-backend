@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.PositiveOrZero;
 import com.DOCKin.chat.dto.ChatReadRequestDto;
 import lombok.RequiredArgsConstructor;
@@ -137,7 +138,7 @@ public class ChatRoomController {
     @Operation(summary ="채팅방에서 특정 키워드 조회")
     @GetMapping("/room/{roomId}/messages/search")
     public ResponseEntity<Slice<ChatMessageResponseDto>> searchMessages(@PathVariable Integer roomId,
-                                                                        @RequestParam String keyword,
+                                                                        @RequestParam @NotBlank String keyword,
                                                                         @AuthenticationPrincipal CustomUserDetails customUserDetails,
                                                                         @PageableDefault(sort = "roomSeq", direction = Sort.Direction.DESC) Pageable pageable){
 

@@ -31,6 +31,8 @@ public enum ErrorCode {
     CHATROOM_NOT_FOUND(400, "CT001", "존재하지 않는 채팅입니다."),
     CHATMEMBER_NOT_FOUND(400, "CT002", "존재하지 않는 채팅방 멤버입니다."),
     CHATROOM_AUTHOR(400, "CT003", "채팅방의 권한이 없습니다."),
+    CHATROOM_MIN_MEMBERS(400, "CT004", "채팅방에는 최소 2명의 참가자가 있어야 합니다."),
+    CHATROOM_NAME_REQUIRED(400, "CT005", "방 이름은 비워 둘 수 없습니다."),
 
     //SafetyCourse
     SAFETYCOURSE_NOT_FOUND(404, "S001", "존재하지 않는 안전교육입니다."),
