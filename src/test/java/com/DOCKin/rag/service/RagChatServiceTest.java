@@ -140,6 +140,43 @@ class RagChatServiceTest {
     }
 
     @Test
+    @DisplayName("답에 옮겨 적힌 자료 태그는 [n]으로 바꾸고 닫는 태그는 지운다 - 내용은 그대로 (#201)")
+    void 자료_태그_정리() {
+        // 측정(2026-11-26)에서 실제로 나온 모양들
+        assertEquals("원인은 베어링 마모입니다 [3].",
+                RagPrompt.cleanReply("원인은 베어링 마모입니다 <자료 번호=\"3\">."));
+        assertEquals("Reference: [1], [4]).",
+                RagPrompt.cleanReply("Reference: <자료 번호=\"1\">, <자료 번호=\"4\">)."));
+        assertEquals("tham khảo [2] (Nhật ký #12)",
+                RagPrompt.cleanReply("tham khảo <자료 번호=\"2\" 출처=\"작업일지 #12\"> (Nhật ký #12)"));
+        assertEquals("필터 교체 1", RagPrompt.cleanReply("필터 교체 1</자료>"));
+        assertEquals("[5] 참고", RagPrompt.cleanReply("< 자료 번호 = 5 > 참고"));
+
+        assertEquals("자료 번호 2를 보면 됩니다", RagPrompt.cleanReply("자료 번호 2를 보면 됩니다"), "태그가 아니면 손대지 않는다");
+        assertEquals("답 [1]", RagPrompt.cleanReply("답 [1]"));
+        assertEquals(null, RagPrompt.cleanReply(null));
+    }
+
+    @Test
+    @DisplayName("모델이 태그를 옮겨 적어도 응답과 대화 기록에는 지운 답이 간다, 지시는 [n]만 쓰라고 한다 (#201)")
+    void 응답_태그_정리() {
+        RetrievalResult found = new RetrievalResult(RetrievalResult.RetrievalMode.VECTOR, List.of(chunk(11, 1, 0.8)));
+        when(retrievalService.retrieve(anyString(), eq(USER), eq(false), anyInt())).thenReturn(found);
+        when(chatGenerator.generate(any(), eq(found), eq(USER)))
+                .thenReturn(new ChatDomain.Response.Result("송급 롤러 교체 <자료 번호=\"1\" 출처=\"작업일지 #1\">"));
+
+        ChatDomain.Response response = ragChatService.chat(ask("롤러 진동?"), USER, false);
+
+        assertEquals("송급 롤러 교체 [1]", response.result().reply());
+        verify(fastApiService).saveChatLog(eq("롤러 진동?"), eq(response), eq(USER), eq(TRACE), eq(found));
+
+        ArgumentCaptor<ChatDomain.Request> sent = ArgumentCaptor.forClass(ChatDomain.Request.class);
+        verify(chatGenerator).generate(sent.capture(), eq(found), eq(USER));
+        String system = sent.getValue().messages().get(0).content();
+        assertTrue(system.contains("[1], [2]처럼"), "출처는 대괄호 번호로만 쓰라고 한다");
+    }
+
+    @Test
     @DisplayName("일지 본문에 태그를 닫고 지시를 적어도 태그 밖으로 못 나간다 - 본문 안의 <자료 모양을 무력화 (#177)")
     void 인젝션_태그_탈출() {
         RetrievedChunk evil = new RetrievedChunk(21L, SourceType.WORK_LOG, 9L, 0,
