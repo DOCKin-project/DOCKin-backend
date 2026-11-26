@@ -92,13 +92,30 @@ class SearchQualityEvalTest extends ContainerTestSupport {
     /**
      * 답 없는 질문(N)이 정말 답이 없는지 확인할 핵심 단어. 한국어 원문에 하나라도 나오면 그 질문은 N에서 뺀다(README "N 유형 확인").
      */
-    static final Map<String, List<String>> N_ABSENT_TERMS = Map.of(
-            "n01", List.of("로봇", "티칭"),
-            "n02", List.of("비계"),
-            "n03", List.of("방독", "마스크"),
-            "n04", List.of("단가", "구매"),
-            "n05", List.of("정격", "하중"),
-            "n06", List.of("자격", "면허"));
+    static final Map<String, List<String>> N_ABSENT_TERMS = Map.ofEntries(
+            // 파일럿(E0)
+            Map.entry("n01", List.of("로봇", "티칭")),
+            Map.entry("n02", List.of("비계")),
+            Map.entry("n03", List.of("방독", "마스크")),
+            Map.entry("n04", List.of("단가", "구매")),
+            Map.entry("n05", List.of("정격", "하중")),
+            Map.entry("n06", List.of("자격", "면허")),
+            // E1 확장 — N1 범위 밖
+            Map.entry("n07", List.of("탑재")),
+            Map.entry("n08", List.of("밀폐", "산소")),
+            Map.entry("n09", List.of("신호수", "수신호")),
+            Map.entry("n10", List.of("안전모")),
+            Map.entry("n11", List.of("소화기")),
+            Map.entry("n12", List.of("도막", "두께")),
+            Map.entry("n13", List.of("수당")),
+            // E1 확장 — N2 있는 설비의 없는 정보
+            Map.entry("n14", List.of("전력")),
+            Map.entry("n15", List.of("연료")),
+            Map.entry("n16", List.of("제조사")),
+            Map.entry("n17", List.of("보증")),
+            Map.entry("n18", List.of("설치")),
+            Map.entry("n19", List.of("처리량")),
+            Map.entry("n20", List.of("미세먼지", "농도")));
 
     private static final List<String> METHODS =
             List.of("ann-default", "ann-decided", "exact", "ann-no-translation", "keyword", "keyword-ranked");
@@ -240,17 +257,43 @@ class SearchQualityEvalTest extends ContainerTestSupport {
     static final List<String> CORPUS_TABLES =
             List.of("equipment", "users", "work_logs", "work_log_translations", "document_chunks");
 
-    /** 테이블을 PostgreSQL {@code COPY} 텍스트 형식으로 파일에 쓴다. 벡터도 텍스트 표현 그대로 왕복한다. */
+    /**
+     * 테이블을 PostgreSQL {@code COPY} 텍스트 형식으로 파일에 쓴다. 벡터도 텍스트 표현 그대로 왕복한다.
+     *
+     * <p><b>컬럼 이름을 같이 남긴다</b>({@code <table>.columns}). 컬럼 목록 없이 {@code COPY table}로 쓰면
+     * 캐시를 만든 뒤 마이그레이션이 컬럼을 하나만 더해도(V20 {@code users.deleted_at}) 복원이
+     * "missing data for column"으로 죽는다 — 2026-11-26 E1 첫 실행이 그랬다. 이름을 알면 새 컬럼은 기본값으로 채워진다.
+     */
     void dump(Connection conn, Path dir) throws SQLException, IOException {
         Path tmp = dir.resolveSibling(dir.getFileName() + ".tmp");
         Files.createDirectories(tmp);
         org.postgresql.copy.CopyManager copy = conn.unwrap(org.postgresql.PGConnection.class).getCopyAPI();
         for (String table : CORPUS_TABLES) {
+            List<String> columns = columnsOf(conn, table);
+            Files.writeString(tmp.resolve(table + ".columns"), String.join(",", columns), StandardCharsets.UTF_8);
             try (var out = Files.newOutputStream(tmp.resolve(table + ".copy"))) {
-                copy.copyOut("COPY " + table + " TO STDOUT", out);
+                copy.copyOut("COPY " + table + " (" + String.join(", ", columns) + ") TO STDOUT", out);
             }
         }
         Files.move(tmp, dir);   // 다 쓴 뒤에만 이름을 바꾼다 — 중간에 죽으면 반쪽 캐시를 쓰지 않는다
+    }
+
+    /** 테이블의 컬럼 이름, 정의 순서대로. */
+    private static List<String> columnsOf(Connection conn, String table) throws SQLException {
+        List<String> columns = new ArrayList<>();
+        try (PreparedStatement ps = conn.prepareStatement("""
+                SELECT column_name FROM information_schema.columns
+                WHERE table_schema = current_schema() AND table_name = ?
+                ORDER BY ordinal_position
+                """)) {
+            ps.setString(1, table);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    columns.add(rs.getString(1));
+                }
+            }
+        }
+        return columns;
     }
 
     /**
@@ -263,8 +306,14 @@ class SearchQualityEvalTest extends ContainerTestSupport {
             st.execute("TRUNCATE " + String.join(", ", CORPUS_TABLES) + " CASCADE");
         }
         for (String table : CORPUS_TABLES) {
+            Path columns = dir.resolve(table + ".columns");
+            if (!Files.exists(columns)) {
+                throw new IllegalStateException("코퍼스 캐시 " + dir + "가 컬럼 목록 없이 만들어진 옛 형식이다. "
+                        + "그 뒤 마이그레이션이 컬럼을 더했으면 복원이 깨진다. 캐시 디렉터리를 옮기거나 지우고 다시 돌리면 새로 만든다(색인 15분 안팎).");
+            }
+            String list = Files.readString(columns, StandardCharsets.UTF_8).trim();
             try (var in = Files.newInputStream(dir.resolve(table + ".copy"))) {
-                copy.copyIn("COPY " + table + " FROM STDIN", in);
+                copy.copyIn("COPY " + table + " (" + list + ") FROM STDIN", in);
             }
         }
         try (Statement st = conn.createStatement()) {
