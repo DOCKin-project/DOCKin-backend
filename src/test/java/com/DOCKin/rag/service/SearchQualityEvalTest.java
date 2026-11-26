@@ -57,6 +57,9 @@ import java.util.stream.Collectors;
  *   <li>{@code exact} — 인덱스를 끈 정확 최근접 (E3)</li>
  *   <li>{@code ann-no-translation} — {@code ann-decided}에서 번역본 청크를 뺀 것 (E2)</li>
  *   <li>{@code keyword} — 임베딩 장애 시 폴백과 같은 LIKE 검색 (E4)</li>
+ *   <li>{@code svc-*} — 하네스 SQL이 아니라 <b>운영 코드 {@code RetrievalService.search}를 그대로</b> 부른다(관리자 경로).
+ *       플래그만 바꿔 가며: {@code svc-vector}(둘 다 끔), {@code svc-hybrid}(#210), {@code svc-rerank}·{@code svc-hybrid-rerank}(#213).
+ *       재순위는 {@code SEARCH_EVAL_RERANK_URL}이 있을 때만 돈다. {@code svc-vector}와 {@code ann-decided}가 같은지가 경로 검증이다</li>
  * </ul>
  * 벡터 SQL은 {@code NearestChunkJdbcRepository.findNearestAll}과 같은 꼴이고 후보 수도 운영과 같다(topK 5 × 4 = 20).
  * 청크를 원본 일지 단위로 묶어(번역본은 원문 일지로) 순위를 매긴다.
@@ -68,6 +71,11 @@ import java.util.stream.Collectors;
  *   ghcr.io/huggingface/text-embeddings-inference:cpu-latest --model-id=intfloat/multilingual-e5-small --auto-truncate
  * RUN_SEARCH_EVAL=1 SEARCH_EVAL_EMBED_URL=http://localhost:58081 SEARCH_EVAL_CORPUS=20000 \
  *   ./gradlew test --tests "*SearchQualityEvalTest"
+ *
+ * # 재순위까지 재려면(#213). 모델은 compose.rerank.yaml과 같다.
+ * docker run -d --name eval-rerank -p 127.0.0.1:58082:80 -v dockin-spring_reranker_cache:/data \
+ *   ghcr.io/huggingface/text-embeddings-inference:cpu-latest --model-id=BAAI/bge-reranker-v2-m3 --auto-truncate
+ * SEARCH_EVAL_RERANK_URL=http://localhost:58082 (위 명령에 더한다)
  * </pre>
  * 산출물은 {@code build/search-eval/}. 결과 해석은 계획 문서에 덧붙인다.
  *
@@ -118,7 +126,15 @@ class SearchQualityEvalTest extends ContainerTestSupport {
             Map.entry("n20", List.of("미세먼지", "농도")));
 
     private static final List<String> METHODS =
-            List.of("ann-default", "ann-decided", "exact", "ann-no-translation", "keyword", "keyword-ranked");
+            List.of("ann-default", "ann-decided", "exact", "ann-no-translation", "keyword", "keyword-ranked",
+                    "svc-vector", "svc-hybrid", "svc-rerank", "svc-hybrid-rerank");
+
+    /** 운영 코드 경로({@code RetrievalService.search}). 이름 → {하이브리드, 재순위}. */
+    private static final Map<String, boolean[]> SVC_METHODS = Map.of(
+            "svc-vector", new boolean[]{false, false},
+            "svc-hybrid", new boolean[]{true, false},
+            "svc-rerank", new boolean[]{false, true},
+            "svc-hybrid-rerank", new boolean[]{true, true});
 
     /** HNSW 인덱스를 타는 방식. 재구축마다 다시 묻는 것은 이것뿐이다(#187). */
     private static final List<String> ANN_METHODS = List.of("ann-default", "ann-decided", "ann-no-translation");
@@ -129,6 +145,16 @@ class SearchQualityEvalTest extends ContainerTestSupport {
     @DynamicPropertySource
     static void embedding(DynamicPropertyRegistry registry) {
         registry.add("external-api.embedding.base-url", SearchQualityEvalTest::embedUrl);
+        registry.add("external-api.reranker.base-url",
+                () -> rerankUrl() == null ? "http://localhost:1" : rerankUrl());
+        // 재순위 20개가 CPU에서 5초를 넘을 수 있다. 측정에서는 타임아웃으로 조용히 재순위가 빠지면 안 된다.
+        registry.add("external-api.reranker.response-timeout-ms", () -> "60000");
+    }
+
+    /** 재순위 서버. 없으면 svc-rerank·svc-hybrid-rerank를 건너뛴다. */
+    static String rerankUrl() {
+        String v = System.getenv("SEARCH_EVAL_RERANK_URL");
+        return v == null || v.isBlank() ? null : v.trim();
     }
 
     static String embedUrl() {
@@ -139,6 +165,8 @@ class SearchQualityEvalTest extends ContainerTestSupport {
     @Autowired private DataSource dataSource;
     @Autowired private IndexingService indexingService;
     @Autowired private EmbeddingClient embeddingClient;
+    @Autowired private RetrievalService retrievalService;
+    @Autowired private RerankClient rerankClient;
 
     // ------------------------------------------------------------------
 
@@ -211,6 +239,10 @@ class SearchQualityEvalTest extends ContainerTestSupport {
             int builds = hnswBuilds();
             List<Long> reindexMs = new ArrayList<>();
             List<Result> results = new ArrayList<>();
+            latencyMs.clear();
+            if (rerankUrl() != null && rerankClient.score("warmup", List.of("warmup")).isEmpty()) {
+                throw new IllegalStateException("재순위 서버(" + rerankUrl() + ")가 응답하지 않습니다.");
+            }
             for (int b = 1; b <= builds; b++) {
                 if (builds > 1) {
                     reindexMs.add(reindexHnsw(conn));
@@ -221,11 +253,19 @@ class SearchQualityEvalTest extends ContainerTestSupport {
                         if (b > 1 && !ANN_METHODS.contains(method)) {
                             continue;
                         }
+                        if (SVC_METHODS.containsKey(method) && SVC_METHODS.get(method)[1] && rerankUrl() == null) {
+                            continue;
+                        }
+                        long t0 = System.nanoTime();
                         List<Ranked> ranked = switch (method) {
                             case "keyword" -> keyword(conn, q.query, translationToLog);
                             case "keyword-ranked" -> keywordRanked(conn, q.query, translationToLog);
+                            case "svc-vector", "svc-hybrid", "svc-rerank", "svc-hybrid-rerank" ->
+                                    service(method, q.query, translationToLog);
                             default -> vector(conn, method, e.getValue(), translationToLog);
                         };
+                        latencyMs.computeIfAbsent(method, k -> new ArrayList<>())
+                                .add((System.nanoTime() - t0) / 1_000_000.0);
                         results.add(new Result(q, method, ranked, labels.get(q.qid), b));
                     }
                 }
@@ -493,6 +533,32 @@ class SearchQualityEvalTest extends ContainerTestSupport {
     /** 일지 단위로 묶은 순위 항목. {@code logId}가 null이면 일지가 아닌 원본(안전교육 등)이다. */
     private record Ranked(String key, Long logId, double similarity) {}
 
+    /** 방식별 검색 한 번의 시간(ms). 운영 경로는 질의 임베딩·재순위 호출까지 포함한다. */
+    private final Map<String, List<Double>> latencyMs = new LinkedHashMap<>();
+
+    /**
+     * 운영 코드 그대로({@code RetrievalService.search}, 관리자 경로). 플래그만 방식마다 바꾼다.
+     *
+     * <p>{@code topK}는 {@link #CANDIDATES}(20)로 묻는다 — MRR@10을 내려면 일지 10개 이상이 필요하다.
+     * 운영(topK 5)과 달리 벡터 후보가 80개가 되지만, 상위 순서는 거리순이라 같고 재순위는 어느 쪽이든 앞 20개만 본다.
+     */
+    private List<Ranked> service(String method, String query, Map<Long, Long> translationToLog) {
+        boolean[] flags = SVC_METHODS.get(method);
+        Object target = org.springframework.test.util.AopTestUtils.getTargetObject(retrievalService);
+        org.springframework.test.util.ReflectionTestUtils.setField(target, "hybridEnabled", flags[0]);
+        org.springframework.test.util.ReflectionTestUtils.setField(target, "rerankEnabled", flags[1]);
+        try {
+            List<Ranked> chunks = new ArrayList<>();
+            for (var c : retrievalService.search(query, "eval", true, CANDIDATES)) {
+                chunks.add(toRanked(c.sourceType().name(), c.sourceId(), c.score(), translationToLog));
+            }
+            return byDocument(chunks);
+        } finally {
+            org.springframework.test.util.ReflectionTestUtils.setField(target, "hybridEnabled", false);
+            org.springframework.test.util.ReflectionTestUtils.setField(target, "rerankEnabled", false);
+        }
+    }
+
     private List<Ranked> vector(Connection conn, String method, String literal,
                                 Map<Long, Long> translationToLog) throws SQLException {
         boolean wasAuto = conn.getAutoCommit();
@@ -740,12 +806,20 @@ class SearchQualityEvalTest extends ContainerTestSupport {
                 {"ann-no-translation", "ann-decided", "E2 번역본 없음 → 있음"},
                 {"ann-decided", "keyword", "E4 벡터 → 키워드 폴백"},
                 {"keyword", "keyword-ranked", "#186 키워드 최신순 → 맞은 개수순"},
+                {"ann-decided", "svc-vector", "경로 검증: 하네스 SQL → 운영 코드 (같아야 한다)"},
+                {"svc-vector", "svc-hybrid", "#210 벡터 → 하이브리드"},
+                {"svc-vector", "svc-rerank", "#213 벡터 → 재순위"},
+                {"svc-vector", "svc-hybrid-rerank", "벡터 → 하이브리드+재순위"},
+                {"svc-hybrid", "svc-hybrid-rerank", "하이브리드 → +재순위"},
         };
         for (String[] p : pairs) {
             for (String lang : List.of("ko", "en", "vi")) {
                 Map<String, Double> a = byQid(results, p[0], lang, answerable);
                 Map<String, Double> b = byQid(results, p[1], lang, answerable);
                 List<String> common = a.keySet().stream().filter(b::containsKey).sorted().toList();
+                if (common.isEmpty()) {
+                    continue;
+                }
                 double[] diff = common.stream().mapToDouble(q -> b.get(q) - a.get(q)).toArray();
                 double[] ci = bootstrap(diff);
                 sb.append(String.format(Locale.ROOT, "| %s | %s | %d | %.2f | %.2f | %+.2f [%+.2f, %+.2f] |%n",
@@ -755,6 +829,17 @@ class SearchQualityEvalTest extends ContainerTestSupport {
                         mean(diff), ci[0], ci[1]));
             }
         }
+
+        // 지연
+        sb.append("\n## 방식별 지연 — 검색 한 번(ms)\n\n");
+        sb.append("`svc-*`는 질의 임베딩·재순위 호출을 포함한 운영 경로 전체다. 하네스 SQL 방식은 질의 벡터를 미리 만들어 SQL만 잰다 — 둘을 직접 비교하지 않는다.\n\n");
+        sb.append("| 방식 | n | p50 | p95 | 최대 |\n|---|---|---|---|---|\n");
+        latencyMs.forEach((m, xs) -> {
+            double[] v = xs.stream().mapToDouble(Double::doubleValue).sorted().toArray();
+            sb.append(String.format(Locale.ROOT, "| %s | %d | %.1f | %.1f | %.1f |%n",
+                    m, v.length, v[(int) Math.floor(0.50 * (v.length - 1))],
+                    v[(int) Math.floor(0.95 * (v.length - 1))], v[v.length - 1]));
+        });
 
         // 답 없는 질문
         sb.append("\n## 답 없는 질문 — 근거 없음을 가를 수 있는가 (ann-decided)\n\n");
