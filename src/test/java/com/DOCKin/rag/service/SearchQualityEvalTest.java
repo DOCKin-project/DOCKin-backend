@@ -78,7 +78,7 @@ import java.util.stream.Collectors;
 @DisplayName("검색 품질 하네스 (#170) - RUN_SEARCH_EVAL이 있을 때만")
 class SearchQualityEvalTest extends ContainerTestSupport {
 
-    private static final Path QUERIES = Path.of("docs/eval/search-quality/queries.tsv");
+    static final Path QUERIES = Path.of("docs/eval/search-quality/queries.tsv");
     private static final Path OUT = Path.of("build/search-eval");
     private static final String MODEL = "intfloat/multilingual-e5-small";
     private static final int TOP_K = 5;
@@ -88,7 +88,7 @@ class SearchQualityEvalTest extends ContainerTestSupport {
     /**
      * 답 없는 질문(N)이 정말 답이 없는지 확인할 핵심 단어. 한국어 원문에 하나라도 나오면 그 질문은 N에서 뺀다(README "N 유형 확인").
      */
-    private static final Map<String, List<String>> N_ABSENT_TERMS = Map.of(
+    static final Map<String, List<String>> N_ABSENT_TERMS = Map.of(
             "n01", List.of("로봇", "티칭"),
             "n02", List.of("비계"),
             "n03", List.of("방독", "마스크"),
@@ -104,7 +104,7 @@ class SearchQualityEvalTest extends ContainerTestSupport {
         registry.add("external-api.embedding.base-url", SearchQualityEvalTest::embedUrl);
     }
 
-    private static String embedUrl() {
+    static String embedUrl() {
         String v = System.getenv("SEARCH_EVAL_EMBED_URL");
         return v == null || v.isBlank() ? "http://localhost:58081" : v.trim();
     }
@@ -203,7 +203,7 @@ class SearchQualityEvalTest extends ContainerTestSupport {
     // ------------------------------------------------------------------
 
     /** 코퍼스 캐시 위치. {@code build/} 밖이 기본이다 — {@code gradlew clean}에 몇 시간짜리 색인이 지워지지 않게. */
-    private static Path cacheDir() {
+    static Path cacheDir() {
         String v = System.getenv("SEARCH_EVAL_CACHE");
         return v == null || v.isBlank()
                 ? Path.of(System.getProperty("user.home"), ".dockin-search-eval")
@@ -211,11 +211,11 @@ class SearchQualityEvalTest extends ContainerTestSupport {
     }
 
     /** 코퍼스를 이루는 테이블. 복원은 이 순서대로 — FK 부모가 먼저다. */
-    private static final List<String> CORPUS_TABLES =
+    static final List<String> CORPUS_TABLES =
             List.of("equipment", "users", "work_logs", "work_log_translations", "document_chunks");
 
     /** 테이블을 PostgreSQL {@code COPY} 텍스트 형식으로 파일에 쓴다. 벡터도 텍스트 표현 그대로 왕복한다. */
-    private void dump(Connection conn, Path dir) throws SQLException, IOException {
+    void dump(Connection conn, Path dir) throws SQLException, IOException {
         Path tmp = dir.resolveSibling(dir.getFileName() + ".tmp");
         Files.createDirectories(tmp);
         org.postgresql.copy.CopyManager copy = conn.unwrap(org.postgresql.PGConnection.class).getCopyAPI();
@@ -231,7 +231,7 @@ class SearchQualityEvalTest extends ContainerTestSupport {
      * 캐시를 빈 테스트 컨테이너에 붓는다. 같은 JVM의 다른 테스트가 남긴 행과 섞이지 않게 비우고 넣는다 —
      * 이 하네스는 단독 실행({@code --tests "*SearchQualityEvalTest"})을 전제로 한다.
      */
-    private void restore(Connection conn, Path dir) throws SQLException, IOException {
+    void restore(Connection conn, Path dir) throws SQLException, IOException {
         org.postgresql.copy.CopyManager copy = conn.unwrap(org.postgresql.PGConnection.class).getCopyAPI();
         try (Statement st = conn.createStatement()) {
             st.execute("TRUNCATE " + String.join(", ", CORPUS_TABLES) + " CASCADE");
@@ -247,7 +247,7 @@ class SearchQualityEvalTest extends ContainerTestSupport {
     }
 
     /** 생성기가 요구하는 장비 1~5번. R__seed_sample.sql과 같은 값 — 테스트 컨테이너는 seed 프로파일이 아니라 없다. */
-    private void seedEquipment(Connection conn) throws SQLException {
+    void seedEquipment(Connection conn) throws SQLException {
         try (Statement st = conn.createStatement()) {
             st.executeUpdate("""
                     INSERT INTO equipment (equipment_id, name, qr_code, nfc_tag) VALUES
@@ -261,7 +261,7 @@ class SearchQualityEvalTest extends ContainerTestSupport {
         }
     }
 
-    private boolean embeddingUp() {
+    boolean embeddingUp() {
         try {
             HttpRequest req = HttpRequest.newBuilder(URI.create(embedUrl() + "/health"))
                     .timeout(Duration.ofSeconds(3)).GET().build();
@@ -299,7 +299,7 @@ class SearchQualityEvalTest extends ContainerTestSupport {
         return new Conditions(sb.toString());
     }
 
-    private Map<Long, Long> translationToLog(Connection conn) throws SQLException {
+    Map<Long, Long> translationToLog(Connection conn) throws SQLException {
         Map<Long, Long> map = new HashMap<>();
         try (Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery("SELECT translation_id, log_id FROM work_log_translations")) {
@@ -314,11 +314,11 @@ class SearchQualityEvalTest extends ContainerTestSupport {
     // 질문과 정답
     // ------------------------------------------------------------------
 
-    private record Query(String qid, String type, String lang, String query,
+    record Query(String qid, String type, String lang, String query,
                          String equipment, String unit, String part, String symptom,
                          String cause, String action, boolean noAnswer) {}
 
-    private List<Query> loadQueries() throws IOException {
+    List<Query> loadQueries() throws IOException {
         List<String> lines = Files.readAllLines(QUERIES, StandardCharsets.UTF_8);
         List<Query> out = new ArrayList<>();
         for (String line : lines.subList(1, lines.size())) {
@@ -336,7 +336,7 @@ class SearchQualityEvalTest extends ContainerTestSupport {
      * 정답 일지. 원문 첫 문장 틀 {@code {설비} {호기}호기 {부품}에서 {증상}.}로 맞춘다(README "정답 조건").
      * 부품과 증상을 따로 LIKE로 걸지 않는다 — 긴 본문은 (부품1,증상1)(부품2,증상2)를 함께 담는다.
      */
-    private Set<Long> relevant(Connection conn, Query q) throws SQLException {
+    Set<Long> relevant(Connection conn, Query q) throws SQLException {
         List<String> likes = new ArrayList<>();
         if (!q.part.isEmpty()) {
             String unit = q.unit.isEmpty() ? "%" : q.unit;
@@ -370,7 +370,7 @@ class SearchQualityEvalTest extends ContainerTestSupport {
     }
 
     /** 단어 중 하나라도 한국어 원문(제목·본문)에 있으면 그 단어를, 없으면 null. */
-    private String presentTerm(Connection conn, List<String> terms) throws SQLException {
+    String presentTerm(Connection conn, List<String> terms) throws SQLException {
         for (String term : terms) {
             try (PreparedStatement ps = conn.prepareStatement(
                     "SELECT 1 FROM work_logs WHERE log_text LIKE ? OR title LIKE ? LIMIT 1")) {
