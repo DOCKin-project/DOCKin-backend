@@ -62,10 +62,11 @@ public class JwtBlacklist {
     }
 
     private RBucket<String> bucket(String token) {
-        return redissonClient.getBucket(KEY_PREFIX + sha256(token));
+        return redissonClient.getBucket(KEY_PREFIX + fingerprint(token));
     }
 
-    private static String sha256(String value) {
+    /** 토큰 원문 대신 들고 다닐 값(SHA-256 hex). 블랙리스트 키와 WebSocket 세션의 토큰 표시가 같은 값을 쓴다. */
+    public static String fingerprint(String value) {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
             return HexFormat.of().formatHex(md.digest(value.getBytes(StandardCharsets.UTF_8)));

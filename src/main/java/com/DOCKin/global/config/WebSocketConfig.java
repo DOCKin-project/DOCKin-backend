@@ -12,6 +12,8 @@ import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+import org.springframework.web.socket.config.annotation.WebSocketTransportRegistration;
+import com.DOCKin.global.websocket.StompSessions;
 
 @Slf4j
 @Configuration
@@ -20,6 +22,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     private final StompHandler stompHandler;
     private final StompExceptionHandler stompExceptionHandler;
+    private final StompSessions stompSessions;
 
     /**
      * 허용 오리진. {@link WebConfig}와 같은 설정값을 공유한다.
@@ -70,5 +73,11 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration){
         registration.interceptors(stompHandler);
+    }
+
+    /** 열린 세션을 모은다 — 권한이 사라졌을 때 서버가 먼저 끊으려면 세션을 쥐고 있어야 한다({@link StompSessions}). */
+    @Override
+    public void configureWebSocketTransport(WebSocketTransportRegistration registration){
+        registration.addDecoratorFactory(stompSessions);
     }
 }

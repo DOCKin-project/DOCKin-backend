@@ -52,6 +52,10 @@ class StompHandlerSubscribeAuthorizationTest {
     @Mock
     private Presence presence;
     @Mock
+    private com.DOCKin.global.security.jwt.JwtBlacklist jwtBlacklist;
+    @Mock
+    private com.DOCKin.member.repository.MemberRepository memberRepository;
+    @Mock
     private MessageChannel channel;
 
     @InjectMocks

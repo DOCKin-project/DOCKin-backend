@@ -45,7 +45,8 @@ class MemberServiceLoginTest {
     private final LoginAttempts loginAttempts = mock(LoginAttempts.class);
 
     private final MemberService service = new MemberService(jwtUtil, memberRepository, refreshTokenRepository,
-            passwordEncoder, mock(JwtBlacklist.class), loginAttempts);
+            passwordEncoder, mock(JwtBlacklist.class), loginAttempts,
+            mock(org.springframework.context.ApplicationEventPublisher.class));
 
     private static final Member U1 = Member.builder().userId("u1").name("홍길동").password("$hash").role(UserRole.USER).build();
 

@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter;
@@ -39,8 +40,16 @@ class PresenceWebSocketTest extends ContainerTestSupport {
     @LocalServerPort private int port;
     @Autowired private JwtUtil jwtUtil;
     @Autowired private Presence presence;
+    @Autowired private JdbcClient jdbc;
 
+    /** CONNECT가 회원을 확인하므로(탈퇴·없는 사용자 거부) 실제 행이 있어야 붙는다. */
     private String token(String userId) {
+        jdbc.sql("""
+                INSERT INTO users (user_id, created_at, language_code, name, password,
+                                   remaining_leave_days, role, ship_yard_area, tts_enabled)
+                VALUES (:u, now(), 'ko', 'p', 'x', 15, 'USER', 'A', false)
+                ON CONFLICT (user_id) DO NOTHING
+                """).param("u", userId).update();
         return "Bearer " + jwtUtil.createAccessToken(
                 CustomUserInfoDto.builder().userId(userId).name(userId).password("x").role(UserRole.USER).build());
     }

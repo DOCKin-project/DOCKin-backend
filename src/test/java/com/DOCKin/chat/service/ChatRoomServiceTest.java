@@ -40,6 +40,7 @@ class ChatRoomServiceTest {
     @Mock private MemberRepository memberRepository;
     @Mock private ChatMessagesRepository chatMessagesRepository;
     @Mock private ChatJdbcRepository chatJdbcRepository;
+    @Mock private org.springframework.context.ApplicationEventPublisher eventPublisher;
 
     @InjectMocks private ChatRoomService chatRoomService;
 
