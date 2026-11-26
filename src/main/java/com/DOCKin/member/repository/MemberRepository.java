@@ -16,8 +16,11 @@ import java.util.Optional;
 public interface MemberRepository extends JpaRepository<Member,String> {
     Optional<Member> findByUserId(String userId);
 
-    /** 결근 배치의 대상 — 근무자만. {@code findAll()}은 ADMIN까지 결근으로 만들었다(#105). */
-    List<Member> findByRole(UserRole role);
+    /**
+     * 결근 배치의 대상 — 재직 중인 근무자만. {@code findAll()}은 ADMIN까지 결근으로 만들었고(#105),
+     * 탈퇴 회원을 빼지 않으면 퇴사자가 매일 결근 행을 얻는다(#100).
+     */
+    List<Member> findByRoleAndDeletedAtIsNull(UserRole role);
 
     /**
      * 잔여 연차를 갱신하기 위해 사용자 행에 비관적 쓰기 락({@code SELECT ... FOR UPDATE})을 건다.

@@ -212,7 +212,8 @@ public class AttendanceService {
         LocalDate day = date != null ? date : LocalDate.now(clock);
         String area = shipYardArea != null ? shipYardArea : admin.getShipYardArea();
 
-        Object[] row = attendanceRepository.summarizeByAreaAndDate(area, workShift, day).get(0);
+        Object[] row = attendanceRepository.summarizeByAreaAndDate(area, workShift, day,
+                day.atStartOfDay()).get(0);
         return new AttendanceDailySummaryDto(day, area, workShift,
                 count(row[0]), count(row[1]), count(row[2]), count(row[3]), count(row[4]), count(row[5]), count(row[6]));
     }

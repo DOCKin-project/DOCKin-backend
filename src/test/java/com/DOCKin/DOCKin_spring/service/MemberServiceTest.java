@@ -27,6 +27,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -56,23 +57,18 @@ public class MemberServiceTest {
     private MemberService memberService; // 위 가짜 객체들을 주입받은 서비스
 
     @Test
-    @DisplayName("회원 탈퇴 시 회원 정보와 리프레시 토큰이 모두 삭제되어야 한다")
+    @DisplayName("회원 탈퇴 시 행은 지우지 않고 익명화·비활성화하고, 리프레시 토큰은 삭제한다 (#100)")
     void deleteAccountTest() {
-        // 1. 준비 (given)
         String userId = "testUser";
-        Member member = Member.builder().userId(userId).build();
-
-        // memberRepository가 해당 ID를 찾으면 가짜 member 객체를 반환하도록 설정
+        Member member = Member.builder().userId(userId).name("홍길동").password("$2a$10$hash").build();
         when(memberRepository.findByUserId(userId)).thenReturn(Optional.of(member));
 
-        // 2. 실행 (when) - 본인이 본인을 지운다
         memberService.deleteAccount(userId, userId);
 
-        // 3. 검증 (then)
-        // memberRepository의 delete 메서드가 한 번 호출되었는지 확인
-        verify(memberRepository, times(1)).delete(any(Member.class));
-
-        // refreshTokenRepository의 deleteByUserId 메서드가 해당 ID로 호출되었는지 확인
+        // 근태·일지가 FK로 붙잡고 있어 행 삭제는 500이었다 — 이제 delete를 부르지 않는다.
+        verify(memberRepository, never()).delete(any(Member.class));
+        assertTrue(member.isDeleted());
+        assertEquals(Member.WITHDRAWN_NAME, member.getName());
         verify(refreshTokenRepository, times(1)).deleteByUserId(userId);
     }
 

@@ -88,7 +88,7 @@ public class AttendanceBatchService {
 
         // 대상은 근무자(USER)다. findAll()이었을 때는 관리자 계정이 매일 결근 행을 얻었다(#105) —
         // 관리자는 출근을 찍지 않으므로 "기록 없음"이 곧 결근이 아니다.
-        List<Attendance> absentees = memberRepository.findByRole(UserRole.USER).stream()
+        List<Attendance> absentees = memberRepository.findByRoleAndDeletedAtIsNull(UserRole.USER).stream()
                 .filter(member -> !recorded.contains(member.getUserId()))
                 .map(member -> Attendance.ofAbsent(member, workDate))
                 .toList();
