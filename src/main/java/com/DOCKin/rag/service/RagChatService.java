@@ -92,25 +92,31 @@ public class RagChatService {
     static final int MAX_MESSAGES = 30;
 
     /**
-     * {@code system} 지시를 앞에 두고, 마지막 user 메시지를 "자료 태그 + 질문"으로 바꾼다(#177).
-     * 근거가 없으면 원본 요청을 그대로 돌려준다.
+     * {@code system} 지시를 앞에 두고, 근거가 있으면 마지막 user 메시지를 "자료 태그 + 질문"으로 바꾼다(#177).
      *
      * <p>"자료에 없으면 모른다고 하라"는 지시가 중요하다. 이것이 없으면 모델이 근거를 무시하고
      * 자체 지식으로 답해버려, 근거를 붙인 의미가 사라지고 환각을 거르지 못한다.
      * 그 지시를 자료와 다른 메시지({@code system})에 두는 이유는 {@link RagPrompt} 참고.
+     *
+     * <p><b>근거가 없어도 답변 언어 지시는 붙인다</b>(#178). 전에는 근거가 없으면 요청을 그대로 보냈는데,
+     * 언어 지시는 근거와 무관하다. 근거 지시("자료를 근거로…")는 붙이지 않는다 — 자료가 없다.
      */
     private ChatDomain.Request augment(ChatDomain.Request request, String question,
                                        RetrievalResult retrieval) {
-        if (retrieval.isEmpty()) {
+        if (request.messages() == null || request.messages().isEmpty()) {
             return request;
         }
         List<ChatDomain.Request.Message> conversation = new ArrayList<>(request.messages());
-        int last = conversation.size() - 1;
-        conversation.set(last, new ChatDomain.Request.Message(conversation.get(last).role(),
-                RagPrompt.userContent(question, retrieval.chunks())));
+        String rules = RagPrompt.languageRule(request.lang());
+        if (!retrieval.isEmpty()) {
+            int last = conversation.size() - 1;
+            conversation.set(last, new ChatDomain.Request.Message(conversation.get(last).role(),
+                    RagPrompt.userContent(question, retrieval.chunks())));
+            rules = RagPrompt.groundingRules() + "\n" + rules;
+        }
 
         List<ChatDomain.Request.Message> messages = new ArrayList<>();
-        messages.add(new ChatDomain.Request.Message("system", RagPrompt.groundingRules()));
+        messages.add(new ChatDomain.Request.Message("system", rules));
         // 오래된 대화부터 버린다. 질문(마지막)은 항상 남는다.
         messages.addAll(conversation.subList(Math.max(0, conversation.size() - (MAX_MESSAGES - 1)),
                 conversation.size()));
