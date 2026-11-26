@@ -2,7 +2,7 @@ package com.DOCKin.rag.repository;
 
 import com.DOCKin.rag.model.DocumentChunk;
 import com.DOCKin.rag.model.SourceType;
-import org.springframework.data.domain.Pageable;
+import com.DOCKin.rag.model.Visibility;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.Modifying;
@@ -37,6 +37,23 @@ public interface DocumentChunkRepository extends JpaRepository<DocumentChunk, Lo
     @Query("DELETE FROM DocumentChunk c WHERE c.sourceType = :sourceType AND c.sourceId IN :sourceIds")
     int deleteBySource(@Param("sourceType") SourceType sourceType, @Param("sourceIds") Collection<Long> sourceIds);
 
+    /**
+     * 원본의 승인 상태가 바뀔 때 그 청크들의 공개 범위만 바꾼다(모델 불문, ADR-0012). 임베딩은 건드리지 않는다.
+     * {@link #deleteBySource}와 같은 이유로 벌크 JPQL이고, 원본 상태를 바꾸는 쪽의 트랜잭션에서 부른다.
+     */
+    @Modifying
+    @Query("""
+            UPDATE DocumentChunk c
+            SET c.visibility = :visibility, c.ownerUserId = :ownerUserId, c.area = :area,
+                c.updatedAt = CURRENT_TIMESTAMP
+            WHERE c.sourceType = :sourceType AND c.sourceId IN :sourceIds
+            """)
+    int updateAccess(@Param("sourceType") SourceType sourceType,
+                     @Param("sourceIds") Collection<Long> sourceIds,
+                     @Param("visibility") Visibility visibility,
+                     @Param("ownerUserId") String ownerUserId,
+                     @Param("area") String area);
+
     /*
      * 최근접 검색(pgvector <=>)은 여기 없다. 엔티티를 다루지 않는 순수 SQL이라
      * NearestChunkJdbcRepository가 JdbcClient로 친다. 이 인터페이스에는 엔티티를 오가는
@@ -59,39 +76,5 @@ public interface DocumentChunkRepository extends JpaRepository<DocumentChunk, Lo
             """)
     List<ChunkVector> findAllSearchTargets(@Param("model") String embeddingModel);
 
-    /**
-     * 임베딩 서버 장애 시 사용하는 키워드 폴백.
-     *
-     * <p><b>같은 테이블에 LIKE를 거는 이유는 권한 모델을 재사용하기 위해서다.</b>
-     * 기존 {@code WorkLogRepository.searchWorkLogs}는 소유자 필터가 없어 그대로 폴백에 쓰면
-     * 남의 작업일지가 챗봇 근거로 새어 나간다. 벡터 검색과 폴백이 동일한 선필터를 공유해야
-     * 장애 상황에서만 권한이 느슨해지는 사고를 막을 수 있다.
-     *
-     * <p>양쪽 와일드카드 LIKE라 인덱스를 타지 못한다(ADR-0002 2-2와 동일한 한계).
-     * 장애 시에만 도는 경로이고 {@code Pageable}로 건수를 제한하므로 Phase 1에서는 감수한다.
-     * ADR-0003 3-1의 ngram FULLTEXT를 도입하면 이 쿼리가 그 대상이 된다.
-     */
-    @Query("""
-            SELECT c FROM DocumentChunk c
-            WHERE c.embeddingModel = :model
-              AND (c.visibility = com.DOCKin.rag.model.Visibility.PUBLIC
-                   OR c.ownerUserId = :userId)
-              AND c.content LIKE %:keyword%
-            ORDER BY c.chunkId DESC
-            """)
-    List<DocumentChunk> searchByKeyword(@Param("model") String embeddingModel,
-                                        @Param("userId") String userId,
-                                        @Param("keyword") String keyword,
-                                        Pageable pageable);
-
-    /** 관리자용 키워드 폴백. 권한 필터 없이 전체를 대상으로 한다. */
-    @Query("""
-            SELECT c FROM DocumentChunk c
-            WHERE c.embeddingModel = :model
-              AND c.content LIKE %:keyword%
-            ORDER BY c.chunkId DESC
-            """)
-    List<DocumentChunk> searchAllByKeyword(@Param("model") String embeddingModel,
-                                           @Param("keyword") String keyword,
-                                           Pageable pageable);
+    // 키워드 폴백은 KeywordChunkJdbcRepository로 옮겼다 — 맞은 키워드 수로 순위를 매긴다(#186).
 }
