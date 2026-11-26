@@ -52,7 +52,7 @@ public class RagChatService {
     public ChatDomain.Response chat(ChatDomain.Request request, String userId, boolean admin) {
         String question = extractQuestion(request);
 
-        RetrievalResult retrieval = retrievalService.retrieve(question, userId, admin, topK);
+        RetrievalResult retrieval = retrievalService.retrieve(searchQuery(request, question), userId, admin, topK);
         if (retrieval.isEmpty()) {
             // traceId를 인자로 붙이지 않는다 -- 로그 패턴의 %X{traceId}가 모든 줄에 이미 찍는다(P2-11-3).
             // 줄마다 손으로 붙이면 빠뜨린 줄만 추적이 끊기고, 그 사실이 드러나지도 않는다.
@@ -83,6 +83,38 @@ public class RagChatService {
             return "";
         }
         return messages.get(messages.size() - 1).content();
+    }
+
+    /** 검색어에 붙이는 앞 user 메시지 수 (#198). */
+    static final int CONTEXT_TURNS = 2;
+
+    /**
+     * 검색어를 만든다 (#198). 현재 질문 뒤에 앞 user 메시지를 최근 것부터 {@link #CONTEXT_TURNS}개 붙인다.
+     *
+     * <p>전에는 마지막 메시지만 검색했다. "크레인 3호기 누유 기록 있어?" 다음의 "그거 누가 고쳤어?"는
+     * 크레인을 모른 채 검색되어 엉뚱한 일지가 근거로 들어갔다. LLM은 앞 대화를 받지만 검색은 못 받았다.
+     *
+     * <p><b>현재 질문을 맨 앞에 둔다.</b> 임베딩 모델(e5-small)은 512토큰을 넘으면 뒤를 자른다.
+     * 앞 대화를 앞에 두면 긴 대화에서 정작 지금 질문이 잘려 나간다.
+     *
+     * <p>LLM으로 질의를 다시 쓰는 방법도 있지만 호출이 하나 늘고 자체 호스팅에서는 몇 초가 붙는다.
+     * 붙이기만으로 모자란지 먼저 잰다(ADR-0013 D4).
+     */
+    static String searchQuery(ChatDomain.Request request, String question) {
+        List<ChatDomain.Request.Message> messages = request.messages();
+        if (messages == null || messages.size() < 2) {
+            return question;
+        }
+        StringBuilder sb = new StringBuilder(question);
+        int added = 0;
+        for (int i = messages.size() - 2; i >= 0 && added < CONTEXT_TURNS; i--) {
+            ChatDomain.Request.Message m = messages.get(i);
+            if ("user".equals(m.role()) && m.content() != null && !m.content().isBlank()) {
+                sb.append('\n').append(m.content());
+                added++;
+            }
+        }
+        return sb.toString();
     }
 
     /**

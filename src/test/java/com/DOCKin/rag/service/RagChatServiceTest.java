@@ -181,6 +181,42 @@ class RagChatServiceTest {
         assertTrue(messages.get(messages.size() - 1).content().endsWith("m29"), "질문은 남는다");
     }
 
+    @Test
+    @DisplayName("후속 질문은 앞 user 메시지를 붙여 검색한다 - 현재 질문이 맨 앞, 저장되는 질문은 현재 질문 그대로 (#198)")
+    void 후속_질문_검색어() {
+        RetrievalResult found = new RetrievalResult(RetrievalResult.RetrievalMode.VECTOR, List.of(chunk(11, 1, 0.8)));
+        when(retrievalService.retrieve(anyString(), eq(USER), eq(false), anyInt())).thenReturn(found);
+        when(chatGenerator.generate(any(), eq(found), eq(USER))).thenReturn(new ChatDomain.Response.Result("답"));
+        ChatDomain.Request followUp = new ChatDomain.Request(List.of(
+                new ChatDomain.Request.Message("user", "겐트리 크레인 3호기 유압 실린더 누유 기록 있어?"),
+                new ChatDomain.Request.Message("assistant", "네, 2건 있습니다."),
+                new ChatDomain.Request.Message("user", "그거 누가 고쳤어?")), "ko", TRACE);
+
+        ChatDomain.Response response = ragChatService.chat(followUp, USER, false);
+
+        ArgumentCaptor<String> query = ArgumentCaptor.forClass(String.class);
+        verify(retrievalService).retrieve(query.capture(), eq(USER), eq(false), anyInt());
+        assertTrue(query.getValue().startsWith("그거 누가 고쳤어?"), "현재 질문이 맨 앞 - 임베딩이 뒤를 잘라도 남는다");
+        assertTrue(query.getValue().contains("겐트리 크레인 3호기"), "앞 질문의 맥락이 검색어에 들어간다");
+        assertFalse(query.getValue().contains("2건 있습니다"), "assistant 답은 검색어에 넣지 않는다");
+        verify(fastApiService).saveChatLog(eq("그거 누가 고쳤어?"), eq(response), eq(USER), eq(TRACE), eq(found));
+    }
+
+    @Test
+    @DisplayName("검색어에 붙이는 앞 질문은 최근 2개까지, 첫 질문은 질문 그대로 (#198)")
+    void 검색어_맥락_상한() {
+        assertEquals("첫 질문", RagChatService.searchQuery(ask("첫 질문"), "첫 질문"));
+
+        List<ChatDomain.Request.Message> four = List.of(
+                new ChatDomain.Request.Message("user", "q1"),
+                new ChatDomain.Request.Message("user", "q2"),
+                new ChatDomain.Request.Message("user", "q3"),
+                new ChatDomain.Request.Message("user", "q4"));
+        String query = RagChatService.searchQuery(new ChatDomain.Request(four, "ko", TRACE), "q4");
+
+        assertEquals(List.of("q4", "q3", "q2"), List.of(query.split("\n")), "현재 + 최근 2개, 오래된 q1은 빠진다");
+    }
+
     private static int count(String text, String needle) {
         int n = 0;
         for (int i = text.indexOf(needle); i >= 0; i = text.indexOf(needle, i + 1)) {
