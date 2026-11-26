@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * 질의와 가장 가까운 근거 청크를 찾는다. RAG의 R(Retrieval)에 해당한다.
@@ -86,6 +87,8 @@ public class RetrievalService {
     /** SQL 경로(벡터 검색). 둘을 나눈 이유는 {@link NearestChunkJdbcRepository} 참고. */
     private final NearestChunkJdbcRepository nearestChunkJdbcRepository;
     private final EmbeddingClient embeddingClient;
+    /** 재순위 모델 서버. {@code rag.search.rerank.enabled}일 때만 부른다. */
+    private final RerankClient rerankClient;
     /** 같은 구역 승인분(ADR-0012)을 고르려고 조회자의 구역을 읽는다. */
     private final MemberRepository memberRepository;
 
@@ -122,6 +125,21 @@ public class RetrievalService {
      */
     @Value("${rag.search.hybrid.rrf-k:60}")
     private int rrfK;
+
+    /**
+     * 재순위(cross-encoder). 기본은 꺼짐 — 켜면 검색마다 재순위 서버 호출이 하나 붙는다.
+     * 모델·지연·품질은 평가셋으로 잰 뒤에 켠다 `[미측정]`.
+     */
+    @Value("${rag.search.rerank.enabled:false}")
+    private boolean rerankEnabled;
+
+    /** 재순위에 넘길 후보 수. 많을수록 정확하고 느리다. */
+    @Value("${rag.search.rerank.candidates:20}")
+    private int rerankCandidates;
+
+    /** 재순위 점수(0~1) 하한. 0.0이면 거르지 않는다. 근거 없음 판정(#203)의 수단 — 분포를 본 뒤 정한다. */
+    @Value("${rag.search.rerank.min-score:0.0}")
+    private double rerankMinScore;
 
     /**
      * 근거를 찾되, 임베딩 서버 장애 시 키워드 검색으로 떨어진다.
@@ -199,10 +217,42 @@ public class RetrievalService {
                 candidates.addAll(nearestChunkJdbcRepository.findNearestInArea(model, area, literal, limit));
             }
         }
-        if (!hybridEnabled) {
-            return selectTopK(candidates, topK);
+        List<Fused> pool = hybridEnabled
+                ? fusedPool(candidates, lexicalCandidates(query, model, userId, area, admin, limit))
+                : vectorPool(candidates);
+        if (rerankEnabled) {
+            pool = rerank(query, pool);
         }
-        return fuse(candidates, lexicalCandidates(query, model, userId, area, admin, limit), topK);
+        return cap(pool, topK);
+    }
+
+    /**
+     * 후보 상위 {@code rerankCandidates}개를 재순위 모델로 다시 줄 세운다(ADR-0013 2단계 4).
+     *
+     * <ul>
+     *   <li>재순위는 <b>문서당 상한을 걸기 전</b>에 한다. 상한을 먼저 걸면 재순위가 올려 줄 청크가 이미 빠져 있다.</li>
+     *   <li>{@code rerank.min-score}보다 낮은 후보는 버린다 — 전부 낮으면 근거 없음이 되고, 챗봇은 "찾지 못했다"고 답한다(#203).
+     *       기본은 꺼짐(0.0). 값은 평가셋의 답 있음/답 없음 점수 분포를 보고 정한다.</li>
+     *   <li>서버가 실패하면 재순위 전 순서를 그대로 쓴다.</li>
+     * </ul>
+     */
+    private List<Fused> rerank(String query, List<Fused> pool) {
+        if (pool.isEmpty()) {
+            return pool;
+        }
+        List<Fused> head = new ArrayList<>(pool.subList(0, Math.min(rerankCandidates, pool.size())));
+        Optional<double[]> scores = rerankClient.score(query, head.stream().map(f -> f.content).toList());
+        if (scores.isEmpty()) {
+            return pool;
+        }
+        double[] values = scores.get();
+        for (int i = 0; i < head.size(); i++) {
+            head.get(i).rerankScore = values[i];
+        }
+        List<Fused> kept = new ArrayList<>(head.stream().filter(f -> f.rerankScore >= rerankMinScore).toList());
+        // 정렬은 안정적이라 점수가 같으면 재순위 전 순서가 남는다.
+        kept.sort(Comparator.comparingDouble((Fused f) -> f.rerankScore).reversed());
+        return kept;
     }
 
     /**
@@ -241,6 +291,10 @@ public class RetrievalService {
      * </ul>
      */
     List<RetrievedChunk> fuse(List<NearestChunk> vector, List<KeywordChunk> lexical, int topK) {
+        return cap(fusedPool(vector, lexical), topK);
+    }
+
+    private List<Fused> fusedPool(List<NearestChunk> vector, List<KeywordChunk> lexical) {
         List<NearestChunk> sortedVector = new ArrayList<>(vector);
         sortedVector.sort(Comparator.comparingDouble(NearestChunk::distance));
 
@@ -252,8 +306,7 @@ public class RetrievalService {
                 break;
             }
             rank++;
-            Fused f = fused.computeIfAbsent(c.chunkId(), id -> new Fused(
-                    c.chunkId(), c.sourceType(), c.sourceId(), c.chunkIndex(), c.content()));
+            Fused f = fused.computeIfAbsent(c.chunkId(), id -> Fused.of(c));
             f.similarity = similarity;
             f.score += 1.0 / (rrfK + rank);
         }
@@ -269,7 +322,35 @@ public class RetrievalService {
         ordered.sort(Comparator.comparingDouble((Fused f) -> f.score).reversed()
                 .thenComparing(Comparator.comparingDouble((Fused f) -> f.similarity).reversed())
                 .thenComparing(Comparator.comparingLong((Fused f) -> f.chunkId).reversed()));
+        return ordered;
+    }
 
+    /**
+     * 벡터 후보만의 순서. 거리 오름차순(=유사도 내림차순)이고 {@code min-score} 아래는 자른다.
+     *
+     * <p>DB가 이미 정렬해 보냈지만 여기서 다시 정렬하는 이유는 <b>일반 사용자 경로에서 여러 목록을
+     * 합치기 때문</b>이다. 각각은 정렬되어 있어도 합친 결과는 아니다.
+     */
+    private List<Fused> vectorPool(List<NearestChunk> candidates) {
+        List<NearestChunk> sorted = new ArrayList<>(candidates);
+        sorted.sort(Comparator.comparingDouble(NearestChunk::distance));
+        List<Fused> pool = new ArrayList<>(sorted.size());
+        for (NearestChunk c : sorted) {
+            // pgvector의 <=> 는 코사인 "거리"다. 유사도로 쓰려면 뒤집어야 한다.
+            double similarity = 1.0 - c.distance();
+            if (similarity < minScore) {
+                // 거리 오름차순이므로 이후는 모두 더 낮다.
+                break;
+            }
+            Fused f = Fused.of(c);
+            f.similarity = similarity;
+            pool.add(f);
+        }
+        return pool;
+    }
+
+    /** 순서대로 훑으며 원본 문서당 {@link #MAX_PER_SOURCE}개까지, 모두 {@code topK}개까지 취한다. */
+    private List<RetrievedChunk> cap(List<Fused> ordered, int topK) {
         List<RetrievedChunk> selected = new ArrayList<>(topK);
         Map<String, Integer> perSource = new HashMap<>();
         for (Fused f : ordered) {
@@ -288,7 +369,7 @@ public class RetrievalService {
         return selected;
     }
 
-    /** RRF 누적용. 키워드로만 온 청크는 {@code similarity}가 -1로 남는다. */
+    /** 후보 하나. 키워드로만 온 청크는 {@code similarity}가 -1로 남는다. */
     private static final class Fused {
         final Long chunkId;
         final SourceType sourceType;
@@ -297,6 +378,11 @@ public class RetrievalService {
         final String content;
         double similarity = -1;
         double score;
+        double rerankScore;
+
+        static Fused of(NearestChunk c) {
+            return new Fused(c.chunkId(), c.sourceType(), c.sourceId(), c.chunkIndex(), c.content());
+        }
 
         Fused(Long chunkId, SourceType sourceType, Long sourceId, Integer chunkIndex, String content) {
             this.chunkId = chunkId;
@@ -305,47 +391,6 @@ public class RetrievalService {
             this.chunkIndex = chunkIndex;
             this.content = content;
         }
-    }
-
-    /**
-     * 거리 오름차순(=유사도 내림차순)으로 정렬한 뒤, 원본 문서당 {@link #MAX_PER_SOURCE}개까지만 취한다.
-     *
-     * <p>DB가 이미 정렬해 보냈지만 여기서 다시 정렬하는 이유는 <b>일반 사용자 경로에서 두 목록을
-     * 합치기 때문</b>이다. 각각은 정렬되어 있어도 합친 결과는 아니다.
-     */
-    private List<RetrievedChunk> selectTopK(List<NearestChunk> candidates, int topK) {
-        List<NearestChunk> sorted = new ArrayList<>(candidates);
-        sorted.sort(Comparator.comparingDouble(NearestChunk::distance));
-
-        List<RetrievedChunk> selected = new ArrayList<>(topK);
-        Map<String, Integer> perSource = new HashMap<>();
-
-        for (NearestChunk candidate : sorted) {
-            // pgvector의 <=> 는 코사인 "거리"다. 유사도로 쓰려면 뒤집어야 한다.
-            double similarity = 1.0 - candidate.distance();
-            if (similarity < minScore) {
-                // 거리 오름차순이므로 이후는 모두 더 낮다.
-                break;
-            }
-            String sourceKey = candidate.sourceType() + ":" + candidate.sourceId();
-            int used = perSource.getOrDefault(sourceKey, 0);
-            if (used >= MAX_PER_SOURCE) {
-                continue;
-            }
-            perSource.put(sourceKey, used + 1);
-            selected.add(new RetrievedChunk(
-                    candidate.chunkId(),
-                    candidate.sourceType(),
-                    candidate.sourceId(),
-                    candidate.chunkIndex(),
-                    candidate.content(),
-                    similarity));
-
-            if (selected.size() >= topK) {
-                break;
-            }
-        }
-        return selected;
     }
 
     /**
