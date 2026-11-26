@@ -61,7 +61,11 @@ public class RagChatService {
 
         ChatDomain.Request augmented = augment(request, question, retrieval);
 
-        ChatDomain.Response.Result result = chatGenerator.generate(augmented, retrieval, userId);
+        ChatDomain.Response.Result generated = chatGenerator.generate(augmented, retrieval, userId);
+        // 작은 모델이 자료 태그를 답에 옮겨 적으면 화면에 그대로 나간다(#201). 대화 기록에도 지운 답을 남긴다.
+        ChatDomain.Response.Result result = generated == null
+                ? null
+                : new ChatDomain.Response.Result(RagPrompt.cleanReply(generated.reply()));
         ChatDomain.Response response = new ChatDomain.Response(request.traceId(), result, describe(retrieval));
 
         fastApiService.saveChatLog(question, response, userId, request.traceId(), retrieval);
