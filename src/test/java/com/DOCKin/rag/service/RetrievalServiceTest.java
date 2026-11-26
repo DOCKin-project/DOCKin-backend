@@ -46,6 +46,8 @@ class RetrievalServiceTest {
     /** 구역 조회(ADR-0012). 스텁하지 않으면 Optional.empty — 구역 승인분 조회를 건너뛴다. */
     @Mock
     private MemberRepository memberRepository;
+    @Mock
+    private RerankClient rerankClient;
 
     @InjectMocks
     private RetrievalService retrievalService;
@@ -276,6 +278,80 @@ class RetrievalServiceTest {
         RetrievalResult result = retrievalService.retrieve("용접기 롤러", USER, false, 5);
 
         assertEquals(List.of(1L), result.chunks().stream().map(RetrievedChunk::chunkId).toList());
+    }
+
+    @Test
+    @DisplayName("재순위: 재순위 점수 순으로 다시 줄 세운다 - 응답 score는 여전히 코사인 유사도")
+    void 재순위_순서() {
+        rerank(0.0);
+        stubQuery();
+        when(nearestChunkJdbcRepository.findNearestPublic(eq(MODEL), anyString(), anyInt())).thenReturn(List.of(
+                chunk(1L, SourceType.WORK_LOG, 10L, "가까움", 0.10),
+                chunk(2L, SourceType.WORK_LOG, 20L, "정답", 0.20),
+                chunk(3L, SourceType.WORK_LOG, 30L, "중간", 0.30)));
+        when(rerankClient.score(eq("롤러 진동"), eq(List.of("가까움", "정답", "중간"))))
+                .thenReturn(java.util.Optional.of(new double[]{0.10, 0.90, 0.50}));
+
+        RetrievalResult result = retrievalService.retrieve("롤러 진동", USER, false, 5);
+
+        assertEquals(List.of(2L, 3L, 1L), result.chunks().stream().map(RetrievedChunk::chunkId).toList());
+        assertEquals(0.80, result.chunks().get(0).score(), 1e-9);
+    }
+
+    @Test
+    @DisplayName("재순위: 하한보다 낮은 후보는 버리고, 전부 낮으면 근거 없음(NONE)이다 (#203)")
+    void 재순위_하한() {
+        rerank(0.30);
+        stubQuery();
+        when(nearestChunkJdbcRepository.findNearestPublic(eq(MODEL), anyString(), anyInt())).thenReturn(List.of(
+                chunk(1L, SourceType.WORK_LOG, 10L, "a", 0.10),
+                chunk(2L, SourceType.WORK_LOG, 20L, "b", 0.20)));
+        when(rerankClient.score(anyString(), any())).thenReturn(java.util.Optional.of(new double[]{0.05, 0.40}));
+
+        assertEquals(List.of(2L), retrievalService.retrieve("q", USER, false, 5).chunks().stream()
+                .map(RetrievedChunk::chunkId).toList());
+
+        when(rerankClient.score(anyString(), any())).thenReturn(java.util.Optional.of(new double[]{0.05, 0.10}));
+        assertEquals(RetrievalResult.RetrievalMode.NONE, retrievalService.retrieve("q", USER, false, 5).mode());
+    }
+
+    @Test
+    @DisplayName("재순위: 서버가 실패하면 재순위 전 순서로 답한다")
+    void 재순위_실패() {
+        rerank(0.30);
+        stubQuery();
+        when(nearestChunkJdbcRepository.findNearestPublic(eq(MODEL), anyString(), anyInt())).thenReturn(List.of(
+                chunk(1L, SourceType.WORK_LOG, 10L, "a", 0.10),
+                chunk(2L, SourceType.WORK_LOG, 20L, "b", 0.20)));
+        when(rerankClient.score(anyString(), any())).thenReturn(java.util.Optional.empty());
+
+        assertEquals(List.of(1L, 2L), retrievalService.retrieve("q", USER, false, 5).chunks().stream()
+                .map(RetrievedChunk::chunkId).toList());
+    }
+
+    @Test
+    @DisplayName("재순위: 후보는 candidates개까지만 넘기고, 문서당 상한은 재순위 뒤에 건다")
+    void 재순위_후보수와_상한() {
+        rerank(0.0);
+        org.springframework.test.util.ReflectionTestUtils.setField(retrievalService, "rerankCandidates", 3);
+        stubQuery();
+        when(nearestChunkJdbcRepository.findNearestPublic(eq(MODEL), anyString(), anyInt())).thenReturn(List.of(
+                chunk(1L, SourceType.WORK_LOG, 10L, "a", 0.10),
+                chunk(2L, SourceType.WORK_LOG, 10L, "b", 0.11),
+                chunk(3L, SourceType.WORK_LOG, 10L, "c", 0.12),
+                chunk(4L, SourceType.WORK_LOG, 40L, "d", 0.13)));
+        when(rerankClient.score(anyString(), eq(List.of("a", "b", "c"))))
+                .thenReturn(java.util.Optional.of(new double[]{0.2, 0.9, 0.8}));
+
+        // 재순위 순서 2,3,1 → 문서 10은 두 개까지라 1이 빠진다. 4는 후보 3개 밖이라 버려진다
+        assertEquals(List.of(2L, 3L), retrievalService.retrieve("q", USER, false, 5).chunks().stream()
+                .map(RetrievedChunk::chunkId).toList());
+    }
+
+    private void rerank(double minScore) {
+        org.springframework.test.util.ReflectionTestUtils.setField(retrievalService, "rerankEnabled", true);
+        org.springframework.test.util.ReflectionTestUtils.setField(retrievalService, "rerankCandidates", 20);
+        org.springframework.test.util.ReflectionTestUtils.setField(retrievalService, "rerankMinScore", minScore);
     }
 
     private void hybrid() {

@@ -120,6 +120,27 @@ public class WebClientConfig {
                 .build();
     }
 
+    @Value("${external-api.reranker.base-url:http://localhost:8082}")
+    private String rerankerBaseUrl;
+
+    @Value("${external-api.reranker.response-timeout-ms:5000}")
+    private long rerankerResponseTimeoutMs;
+
+    /**
+     * 재순위 모델 서버(TEI {@code /rerank}) 클라이언트. 임베딩 서버와 별도 컨테이너다 — 한 TEI는 모델 하나만 싣는다.
+     *
+     * <p>응답 타임아웃을 짧게(기본 5초) 둔다. 재순위는 사용자가 기다리는 검색 경로 안에 있고, 늦으면
+     * 재순위 없이 답하는 편이 낫다({@code RerankClient}).
+     */
+    @Bean
+    public WebClient rerankWebClient() {
+        return WebClient.builder()
+                .baseUrl(rerankerBaseUrl)
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .clientConnector(connector(rerankerResponseTimeoutMs))
+                .build();
+    }
+
     /**
      * 연결 타임아웃과 응답 타임아웃을 건 커넥터.
      *

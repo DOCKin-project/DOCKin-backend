@@ -1,0 +1,43 @@
+# 재순위 모델 서버(TEI /rerank, cross-encoder)를 붙이는 오버레이. ADR-0013 2단계 4.
+#
+#   docker compose -f compose.yaml -f compose.rerank.yaml up -d dockin-reranker dockin-app
+#
+# 앱에서 실제로 쓰려면 RAG_SEARCH_RERANK_ENABLED=true도 준다(기본 false). 아래 environment에 넣지 않은 이유:
+# 서버만 띄워 두고 평가 하네스로 먼저 재기 위해서다. 켜는 결정은 품질·지연을 잰 뒤에 한다 `[미측정]`.
+#
+# [운영 compose.yaml에 넣지 않은 이유]
+# 배포 스크립트(scripts/deploy/deploy.sh)가 마지막에 `compose up -d`로 전체를 올린다. 서비스를 compose.yaml에
+# 넣으면 profiles로 묶어도 호스트가 compose v1(1.28 미만)이면 profiles 키를 몰라 배포가 깨질 수 있다.
+# 호스트 compose 버전은 아직 확인 전이다(OPERATIONS-DEPLOY.md 2절).
+#
+# [모델] BAAI/bge-reranker-v2-m3 — 다국어(한·베·영) cross-encoder, 568M 파라미터.
+# 임베딩(e5-small, 118M)의 약 5배라 이 하드웨어(i3-6100)에서 후보 20개 재순위가 얼마나 걸리는지 모른다.
+# 느리면 rag.search.rerank.candidates를 줄이거나 GPU 호스트로 옮긴다.
+services:
+  dockin-reranker:
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-latest
+    container_name: dockin-reranker
+    command:
+      - --model-id=BAAI/bge-reranker-v2-m3
+      - --auto-truncate
+    environment:
+      - TZ=Asia/Seoul
+    ports:
+      - "8082:80"
+    volumes:
+      - reranker_cache:/data # 모델 가중치 캐시. 최초 1회만 다운로드한다.
+    restart: unless-stopped
+    networks:
+      - dockin-network
+    deploy:
+      resources:
+        limits:
+          memory: 3G
+          cpus: '2.0'
+
+  dockin-app:
+    environment:
+      - RERANKER_SERVER_URL=http://dockin-reranker:80
+
+volumes:
+  reranker_cache:
