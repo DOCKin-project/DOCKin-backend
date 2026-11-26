@@ -89,6 +89,216 @@ q29	S	vi	Lỗi do nhập sai cài đặt trên máy hàn	CO2 용접기				제어
 q30	S	ko	프레스 압이 안 잡혀	유압 프레스			압력이 유지되지 않았다			0	-
 q30	S	en	The press won't build up pressure	유압 프레스			압력이 유지되지 않았다			0	claude-opus-5-5(미검수)
 q30	S	vi	Máy ép không lên áp	유압 프레스			압력이 유지되지 않았다			0	claude-opus-5-5(미검수)
+q31	T	ko	무인 도장설비 송급 롤러 누유	무인 도장설비		송급 롤러	누유가 확인되었다			0	-
+q31	T	en	Automated painting equipment feed roller oil leak	무인 도장설비		송급 롤러	누유가 확인되었다			0	claude-opus-5-5(미검수)
+q31	T	vi	Con lăn cấp liệu thiết bị sơn tự động rò rỉ dầu	무인 도장설비		송급 롤러	누유가 확인되었다			0	claude-opus-5-5(미검수)
+q32	T	ko	플라즈마 절단기 4호기 냉각 팬	플라즈마 절단기	4	냉각 팬				0	-
+q32	T	en	Plasma cutter No. 4 cooling fan	플라즈마 절단기	4	냉각 팬				0	claude-opus-5-5(미검수)
+q32	T	vi	Quạt làm mát máy cắt plasma số 4	플라즈마 절단기	4	냉각 팬				0	claude-opus-5-5(미검수)
+q33	T	ko	고소작업대 유압 실린더 동작 지연	고소작업대		유압 실린더	동작이 지연되었다			0	-
+q33	T	en	Aerial work platform hydraulic cylinder delayed operation	고소작업대		유압 실린더	동작이 지연되었다			0	claude-opus-5-5(미검수)
+q33	T	vi	Xi lanh thủy lực xe nâng người làm việc trên cao thao tác chậm trễ	고소작업대		유압 실린더	동작이 지연되었다			0	claude-opus-5-5(미검수)
+q34	T	ko	유압 프레스 배관 플랜지 누유	유압 프레스		배관 플랜지	누유가 확인되었다			0	-
+q34	T	en	Hydraulic press pipe flange oil leak	유압 프레스		배관 플랜지	누유가 확인되었다			0	claude-opus-5-5(미검수)
+q34	T	vi	Mặt bích đường ống máy ép thủy lực rò rỉ dầu	유압 프레스		배관 플랜지	누유가 확인되었다			0	claude-opus-5-5(미검수)
+q35	T	ko	블라스팅 장비 6호기 감속기	블라스팅 장비	6	감속기				0	-
+q35	T	en	Blasting equipment No. 6 reducer	블라스팅 장비	6	감속기				0	claude-opus-5-5(미검수)
+q35	T	vi	Hộp giảm tốc thiết bị phun cát số 6	블라스팅 장비	6	감속기				0	claude-opus-5-5(미검수)
+q36	T	ko	이송 컨베이어 베어링부 이상 진동	이송 컨베이어		베어링부	이상 진동이 발생했다			0	-
+q36	T	en	Transfer conveyor bearing abnormal vibration	이송 컨베이어		베어링부	이상 진동이 발생했다			0	claude-opus-5-5(미검수)
+q36	T	vi	Bộ phận vòng bi băng tải vận chuyển rung động bất thường	이송 컨베이어		베어링부	이상 진동이 발생했다			0	claude-opus-5-5(미검수)
+q37	T	ko	공기압축기 안전 스위치 경보 반복	공기압축기		안전 스위치	경보가 반복 발생했다			0	-
+q37	T	en	Air compressor safety switch repeated alarms	공기압축기		안전 스위치	경보가 반복 발생했다			0	claude-opus-5-5(미검수)
+q37	T	vi	Công tắc an toàn máy nén khí cảnh báo lặp lại	공기압축기		안전 스위치	경보가 반복 발생했다			0	claude-opus-5-5(미검수)
+q38	T	ko	집진 설비 필터 막힘 필터 교체	집진 설비				필터 막힘	필터를 교체했다	0	-
+q38	T	en	Dust collector clogged filter, filter replaced	집진 설비				필터 막힘	필터를 교체했다	0	claude-opus-5-5(미검수)
+q38	T	vi	Thiết bị hút bụi tắc bộ lọc, đã thay bộ lọc	집진 설비				필터 막힘	필터를 교체했다	0	claude-opus-5-5(미검수)
+q39	T	ko	지게차 전동기 축 과전류 차단	지게차		전동기 축	과전류로 차단되었다			0	-
+q39	T	en	Forklift motor shaft overcurrent trip	지게차		전동기 축	과전류로 차단되었다			0	claude-opus-5-5(미검수)
+q39	T	vi	Trục động cơ điện xe nâng bị ngắt do quá dòng	지게차		전동기 축	과전류로 차단되었다			0	claude-opus-5-5(미검수)
+q40	T	ko	발전기 8호기 제어 패널	발전기	8	제어 패널				0	-
+q40	T	en	Generator No. 8 control panel	발전기	8	제어 패널				0	claude-opus-5-5(미검수)
+q40	T	vi	Bảng điều khiển máy phát điện số 8	발전기	8	제어 패널				0	claude-opus-5-5(미검수)
+q41	T	ko	CO2 용접기 윤활 부족	CO2 용접기				윤활 부족		0	-
+q41	T	en	CO2 welder lack of lubrication	CO2 용접기				윤활 부족		0	claude-opus-5-5(미검수)
+q41	T	vi	Máy hàn CO2 thiếu bôi trơn	CO2 용접기				윤활 부족		0	claude-opus-5-5(미검수)
+q42	T	ko	겐트리 크레인 감속기 소음 증가	겐트리 크레인		감속기	소음이 평소보다 커졌다			0	-
+q42	T	en	Gantry crane reducer increased noise	겐트리 크레인		감속기	소음이 평소보다 커졌다			0	claude-opus-5-5(미검수)
+q42	T	vi	Hộp giảm tốc cần trục giàn tiếng ồn lớn hơn bình thường	겐트리 크레인		감속기	소음이 평소보다 커졌다			0	claude-opus-5-5(미검수)
+q43	T	ko	무인 도장설비 제어 파라미터 오설정 파라미터 기준값 복원	무인 도장설비				제어 파라미터 오설정	파라미터를 기준값으로 되돌렸다	0	-
+q43	T	en	Automated painting equipment wrong control parameter setting, parameters reset to standard values	무인 도장설비				제어 파라미터 오설정	파라미터를 기준값으로 되돌렸다	0	claude-opus-5-5(미검수)
+q43	T	vi	Thiết bị sơn tự động cài đặt sai tham số điều khiển, đã đưa tham số về giá trị chuẩn	무인 도장설비				제어 파라미터 오설정	파라미터를 기준값으로 되돌렸다	0	claude-opus-5-5(미검수)
+q44	T	ko	플라즈마 절단기 케이블 그랜드 출력 불안정	플라즈마 절단기		케이블 그랜드	출력이 불안정했다			0	-
+q44	T	en	Plasma cutter cable gland unstable output	플라즈마 절단기		케이블 그랜드	출력이 불안정했다			0	claude-opus-5-5(미검수)
+q44	T	vi	Ốc siết cáp máy cắt plasma công suất đầu ra không ổn định	플라즈마 절단기		케이블 그랜드	출력이 불안정했다			0	claude-opus-5-5(미검수)
+q45	T	ko	고소작업대 1호기 베어링부	고소작업대	1	베어링부				0	-
+q45	T	en	Aerial work platform No. 1 bearing	고소작업대	1	베어링부				0	claude-opus-5-5(미검수)
+q45	T	vi	Bộ phận vòng bi xe nâng người làm việc trên cao số 1	고소작업대	1	베어링부				0	claude-opus-5-5(미검수)
+q46	T	ko	유압 프레스 온도 초과 냉각수 부족	유압 프레스			온도가 규정치를 넘었다	냉각수 부족		0	-
+q46	T	en	Hydraulic press over temperature, low coolant	유압 프레스			온도가 규정치를 넘었다	냉각수 부족		0	claude-opus-5-5(미검수)
+q46	T	vi	Máy ép thủy lực nhiệt độ vượt mức quy định, thiếu nước làm mát	유압 프레스			온도가 규정치를 넘었다	냉각수 부족		0	claude-opus-5-5(미검수)
+q47	T	ko	블라스팅 장비 유압 실린더 기동 실패	블라스팅 장비		유압 실린더	기동에 실패했다			0	-
+q47	T	en	Blasting equipment hydraulic cylinder failed to start	블라스팅 장비		유압 실린더	기동에 실패했다			0	claude-opus-5-5(미검수)
+q47	T	vi	Xi lanh thủy lực thiết bị phun cát không khởi động được	블라스팅 장비		유압 실린더	기동에 실패했다			0	claude-opus-5-5(미검수)
+q48	T	ko	이송 컨베이어 체결 볼트 이완	이송 컨베이어				체결 볼트 이완		0	-
+q48	T	en	Transfer conveyor loose fastening bolts	이송 컨베이어				체결 볼트 이완		0	claude-opus-5-5(미검수)
+q48	T	vi	Băng tải vận chuyển bu lông siết bị lỏng	이송 컨베이어				체결 볼트 이완		0	claude-opus-5-5(미검수)
+q49	T	ko	공기압축기 9호기 감속기	공기압축기	9	감속기				0	-
+q49	T	en	Air compressor No. 9 reducer	공기압축기	9	감속기				0	claude-opus-5-5(미검수)
+q49	T	vi	Hộp giảm tốc máy nén khí số 9	공기압축기	9	감속기				0	claude-opus-5-5(미검수)
+q50	T	ko	집진 설비 송급 롤러 간헐적 정지	집진 설비		송급 롤러	간헐적으로 정지했다			0	-
+q50	T	en	Dust collector feed roller intermittent stop	집진 설비		송급 롤러	간헐적으로 정지했다			0	claude-opus-5-5(미검수)
+q50	T	vi	Con lăn cấp liệu thiết bị hút bụi dừng gián đoạn	집진 설비		송급 롤러	간헐적으로 정지했다			0	claude-opus-5-5(미검수)
+q51	T	ko	지게차 센서 접점 불량 접점 청소 재결선	지게차				센서 접점 불량	접점을 청소하고 재결선했다	0	-
+q51	T	en	Forklift bad sensor contact, contacts cleaned and rewired	지게차				센서 접점 불량	접점을 청소하고 재결선했다	0	claude-opus-5-5(미검수)
+q51	T	vi	Xe nâng tiếp điểm cảm biến kém, đã vệ sinh tiếp điểm và đấu lại dây	지게차				센서 접점 불량	접점을 청소하고 재결선했다	0	claude-opus-5-5(미검수)
+q52	T	ko	발전기 냉각 팬 온도 초과	발전기		냉각 팬	온도가 규정치를 넘었다			0	-
+q52	T	en	Generator cooling fan over temperature	발전기		냉각 팬	온도가 규정치를 넘었다			0	claude-opus-5-5(미검수)
+q52	T	vi	Quạt làm mát máy phát điện nhiệt độ vượt mức quy định	발전기		냉각 팬	온도가 규정치를 넘었다			0	claude-opus-5-5(미검수)
+q53	T	ko	CO2 용접기 배관 플랜지 압력 유지 안 됨	CO2 용접기		배관 플랜지	압력이 유지되지 않았다			0	-
+q53	T	en	CO2 welder pipe flange not holding pressure	CO2 용접기		배관 플랜지	압력이 유지되지 않았다			0	claude-opus-5-5(미검수)
+q53	T	vi	Mặt bích đường ống máy hàn CO2 áp suất không được duy trì	CO2 용접기		배관 플랜지	압력이 유지되지 않았다			0	claude-opus-5-5(미검수)
+q54	T	ko	겐트리 크레인 6호기 안전 스위치	겐트리 크레인	6	안전 스위치				0	-
+q54	T	en	Gantry crane No. 6 safety switch	겐트리 크레인	6	안전 스위치				0	claude-opus-5-5(미검수)
+q54	T	vi	Công tắc an toàn cần trục giàn số 6	겐트리 크레인	6	안전 스위치				0	claude-opus-5-5(미검수)
+q55	T	ko	무인 도장설비 감속기 동작 지연	무인 도장설비		감속기	동작이 지연되었다			0	-
+q55	T	en	Automated painting equipment reducer delayed operation	무인 도장설비		감속기	동작이 지연되었다			0	claude-opus-5-5(미검수)
+q55	T	vi	Hộp giảm tốc thiết bị sơn tự động thao tác chậm trễ	무인 도장설비		감속기	동작이 지연되었다			0	claude-opus-5-5(미검수)
+q56	T	ko	플라즈마 절단기 이물질 유입 내부 분해 청소	플라즈마 절단기				이물질 유입	내부를 분해 청소했다	0	-
+q56	T	en	Plasma cutter foreign matter ingress, disassembled and cleaned inside	플라즈마 절단기				이물질 유입	내부를 분해 청소했다	0	claude-opus-5-5(미검수)
+q56	T	vi	Máy cắt plasma dị vật lọt vào, đã tháo và vệ sinh bên trong	플라즈마 절단기				이물질 유입	내부를 분해 청소했다	0	claude-opus-5-5(미검수)
+q57	T	ko	고소작업대 간헐적 정지 센서 접점 불량	고소작업대			간헐적으로 정지했다	센서 접점 불량		0	-
+q57	T	en	Aerial work platform intermittent stop, bad sensor contact	고소작업대			간헐적으로 정지했다	센서 접점 불량		0	claude-opus-5-5(미검수)
+q57	T	vi	Xe nâng người làm việc trên cao dừng gián đoạn, tiếp điểm cảm biến kém	고소작업대			간헐적으로 정지했다	센서 접점 불량		0	claude-opus-5-5(미검수)
+q58	T	ko	유압 프레스 전동기 축 이상 진동	유압 프레스		전동기 축	이상 진동이 발생했다			0	-
+q58	T	en	Hydraulic press motor shaft abnormal vibration	유압 프레스		전동기 축	이상 진동이 발생했다			0	claude-opus-5-5(미검수)
+q58	T	vi	Trục động cơ điện máy ép thủy lực rung động bất thường	유압 프레스		전동기 축	이상 진동이 발생했다			0	claude-opus-5-5(미검수)
+q59	T	ko	블라스팅 장비 제어 패널 표시값 튐	블라스팅 장비		제어 패널	표시값이 튀는 현상이 있었다			0	-
+q59	T	en	Blasting equipment control panel display value jumping	블라스팅 장비		제어 패널	표시값이 튀는 현상이 있었다			0	claude-opus-5-5(미검수)
+q59	T	vi	Bảng điều khiển thiết bị phun cát giá trị hiển thị nhảy	블라스팅 장비		제어 패널	표시값이 튀는 현상이 있었다			0	claude-opus-5-5(미검수)
+q60	T	ko	이송 컨베이어 2호기 케이블 그랜드	이송 컨베이어	2	케이블 그랜드				0	-
+q60	T	en	Transfer conveyor No. 2 cable gland	이송 컨베이어	2	케이블 그랜드				0	claude-opus-5-5(미검수)
+q60	T	vi	Ốc siết cáp băng tải vận chuyển số 2	이송 컨베이어	2	케이블 그랜드				0	claude-opus-5-5(미검수)
+q61	T	ko	공기압축기 베어링 마모 베어링 교체 정렬	공기압축기				베어링 마모	베어링을 교체하고 정렬을 재조정했다	0	-
+q61	T	en	Air compressor bearing wear, bearing replaced and realigned	공기압축기				베어링 마모	베어링을 교체하고 정렬을 재조정했다	0	claude-opus-5-5(미검수)
+q61	T	vi	Máy nén khí vòng bi bị mòn, đã thay vòng bi và căn chỉnh lại	공기압축기				베어링 마모	베어링을 교체하고 정렬을 재조정했다	0	claude-opus-5-5(미검수)
+q62	T	ko	집진 설비 절연 저하	집진 설비				절연 저하		0	-
+q62	T	en	Dust collector insulation degradation	집진 설비				절연 저하		0	claude-opus-5-5(미검수)
+q62	T	vi	Thiết bị hút bụi suy giảm cách điện	집진 설비				절연 저하		0	claude-opus-5-5(미검수)
+q63	T	ko	지게차 유압 실린더 누유	지게차		유압 실린더	누유가 확인되었다			0	-
+q63	T	en	Forklift hydraulic cylinder oil leak	지게차		유압 실린더	누유가 확인되었다			0	claude-opus-5-5(미검수)
+q63	T	vi	Xi lanh thủy lực xe nâng rò rỉ dầu	지게차		유압 실린더	누유가 확인되었다			0	claude-opus-5-5(미검수)
+q64	T	ko	발전기 출력 불안정 절연 저하	발전기			출력이 불안정했다	절연 저하		0	-
+q64	T	en	Generator unstable output, insulation degradation	발전기			출력이 불안정했다	절연 저하		0	claude-opus-5-5(미검수)
+q64	T	vi	Máy phát điện công suất đầu ra không ổn định, suy giảm cách điện	발전기			출력이 불안정했다	절연 저하		0	claude-opus-5-5(미검수)
+q65	T	ko	CO2 용접기 과전류 차단 이물질 유입	CO2 용접기			과전류로 차단되었다	이물질 유입		0	-
+q65	T	en	CO2 welder overcurrent trip, foreign matter ingress	CO2 용접기			과전류로 차단되었다	이물질 유입		0	claude-opus-5-5(미검수)
+q65	T	vi	Máy hàn CO2 bị ngắt do quá dòng, dị vật lọt vào	CO2 용접기			과전류로 차단되었다	이물질 유입		0	claude-opus-5-5(미검수)
+q66	S	ko	도장 로봇 쪽에서 기름이 새어 나와	무인 도장설비			누유가 확인되었다			0	-
+q66	S	en	Oil is leaking out of the painting robot	무인 도장설비			누유가 확인되었다			0	claude-opus-5-5(미검수)
+q66	S	vi	Robot sơn bị rỉ dầu ra ngoài	무인 도장설비			누유가 확인되었다			0	claude-opus-5-5(미검수)
+q67	S	ko	절단기 바람 불어주는 팬이 시끄러워	플라즈마 절단기		냉각 팬	소음이 평소보다 커졌다			0	-
+q67	S	en	The fan that blows air on the cutter is noisy	플라즈마 절단기		냉각 팬	소음이 평소보다 커졌다			0	claude-opus-5-5(미검수)
+q67	S	vi	Cái quạt thổi gió ở máy cắt kêu ồn quá	플라즈마 절단기		냉각 팬	소음이 평소보다 커졌다			0	claude-opus-5-5(미검수)
+q68	S	ko	높은 데 올라가는 리프트가 올라가다 덜컹거려	고소작업대			이상 진동이 발생했다			0	-
+q68	S	en	The lift for working up high jolts on the way up	고소작업대			이상 진동이 발생했다			0	claude-opus-5-5(미검수)
+q68	S	vi	Xe nâng lên cao bị giật giật khi đang đi lên	고소작업대			이상 진동이 발생했다			0	claude-opus-5-5(미검수)
+q69	S	ko	프레스 기름 파이프 이음새에서 샌다	유압 프레스		배관 플랜지	누유가 확인되었다			0	-
+q69	S	en	It's leaking at the oil pipe joint on the press	유압 프레스		배관 플랜지	누유가 확인되었다			0	claude-opus-5-5(미검수)
+q69	S	vi	Chỗ nối ống dầu của máy ép bị rỉ	유압 프레스		배관 플랜지	누유가 확인되었다			0	claude-opus-5-5(미검수)
+q70	S	ko	샌드블라스터 바람이 약해졌을 때 뭐 했어?	블라스팅 장비			압력이 유지되지 않았다			0	-
+q70	S	en	What did you do when the sandblaster air got weak?	블라스팅 장비			압력이 유지되지 않았다			0	claude-opus-5-5(미검수)
+q70	S	vi	Máy phun cát bị yếu hơi thì đã làm gì?	블라스팅 장비			압력이 유지되지 않았다			0	claude-opus-5-5(미검수)
+q71	S	ko	컨베이어 벨트가 가다 서다 해	이송 컨베이어			간헐적으로 정지했다			0	-
+q71	S	en	The conveyor belt keeps stopping and going	이송 컨베이어			간헐적으로 정지했다			0	claude-opus-5-5(미검수)
+q71	S	vi	Băng chuyền cứ chạy rồi lại dừng	이송 컨베이어			간헐적으로 정지했다			0	claude-opus-5-5(미검수)
+q72	S	ko	컴프레서 고무 패킹이 딱딱해져서 바람 샌 기록	공기압축기				개스킷 경화		0	-
+q72	S	en	Records of the compressor leaking air because the rubber packing went hard	공기압축기				개스킷 경화		0	claude-opus-5-5(미검수)
+q72	S	vi	Ghi chép máy nén khí bị xì hơi vì miếng đệm cao su bị cứng	공기압축기				개스킷 경화		0	claude-opus-5-5(미검수)
+q73	S	ko	집진기 모터가 자꾸 전기가 끊겨	집진 설비			과전류로 차단되었다			0	-
+q73	S	en	The dust collector motor keeps cutting out	집진 설비			과전류로 차단되었다			0	claude-opus-5-5(미검수)
+q73	S	vi	Động cơ máy hút bụi cứ bị nhảy điện	집진 설비			과전류로 차단되었다			0	claude-opus-5-5(미검수)
+q74	S	ko	지게차 모터 돌아가는 축에서 쇳소리가 나	지게차		전동기 축	소음이 평소보다 커졌다			0	-
+q74	S	en	There's a grinding metal sound from the forklift motor's spinning shaft	지게차		전동기 축	소음이 평소보다 커졌다			0	claude-opus-5-5(미검수)
+q74	S	vi	Trục quay mô tơ xe nâng kêu tiếng kim loại	지게차		전동기 축	소음이 평소보다 커졌다			0	claude-opus-5-5(미검수)
+q75	S	ko	발전기 돌리는데 경고가 계속 떠	발전기			경보가 반복 발생했다			0	-
+q75	S	en	The generator keeps throwing warnings while running	발전기			경보가 반복 발생했다			0	claude-opus-5-5(미검수)
+q75	S	vi	Máy phát điện đang chạy mà cứ hiện cảnh báo liên tục	발전기			경보가 반복 발생했다			0	claude-opus-5-5(미검수)
+q76	S	ko	용접기 와이어 밀어주는 롤러 볼트가 헐거워진 거	CO2 용접기		송급 롤러		체결 볼트 이완		0	-
+q76	S	en	When the bolts on the roller that pushes the welding wire came loose	CO2 용접기		송급 롤러		체결 볼트 이완		0	claude-opus-5-5(미검수)
+q76	S	vi	Bu lông ở con lăn đẩy dây hàn bị lỏng	CO2 용접기		송급 롤러		체결 볼트 이완		0	claude-opus-5-5(미검수)
+q77	S	ko	크레인 조작반 화면 숫자가 이상하게 왔다갔다 해	겐트리 크레인		제어 패널	표시값이 튀는 현상이 있었다			0	-
+q77	S	en	The numbers on the crane control box screen jump around strangely	겐트리 크레인		제어 패널	표시값이 튀는 현상이 있었다			0	claude-opus-5-5(미검수)
+q77	S	vi	Số trên màn hình hộp điều khiển cần cẩu nhảy lung tung	겐트리 크레인		제어 패널	표시값이 튀는 현상이 있었다			0	claude-opus-5-5(미검수)
+q78	S	ko	도장기 안에 먼지 같은 게 들어가서 뜯어서 닦은 거	무인 도장설비				이물질 유입	내부를 분해 청소했다	0	-
+q78	S	en	When dirt got inside the painting machine and it was opened up and wiped clean	무인 도장설비				이물질 유입	내부를 분해 청소했다	0	claude-opus-5-5(미검수)
+q78	S	vi	Bụi bẩn lọt vào máy sơn nên đã mở ra lau chùi	무인 도장설비				이물질 유입	내부를 분해 청소했다	0	claude-opus-5-5(미검수)
+q79	S	ko	절단기가 켜지질 않아	플라즈마 절단기			기동에 실패했다			0	-
+q79	S	en	The cutter won't turn on	플라즈마 절단기			기동에 실패했다			0	claude-opus-5-5(미검수)
+q79	S	vi	Máy cắt không bật lên được	플라즈마 절단기			기동에 실패했다			0	claude-opus-5-5(미검수)
+q80	S	ko	리프트 비상 멈춤 스위치가 말을 안 들어	고소작업대		안전 스위치				0	-
+q80	S	en	The lift's emergency stop switch isn't responding	고소작업대		안전 스위치				0	claude-opus-5-5(미검수)
+q80	S	vi	Công tắc dừng khẩn cấp của xe nâng không ăn	고소작업대		안전 스위치				0	claude-opus-5-5(미검수)
+q81	S	ko	프레스에 기름칠 다시 해 준 기록	유압 프레스					그리스를 보충했다	0	-
+q81	S	en	Records of oiling the press again	유압 프레스					그리스를 보충했다	0	claude-opus-5-5(미검수)
+q81	S	vi	Ghi chép tra dầu mỡ lại cho máy ép	유압 프레스					그리스를 보충했다	0	claude-opus-5-5(미검수)
+q82	S	ko	블라스팅 기계가 과열돼	블라스팅 장비			온도가 규정치를 넘었다			0	-
+q82	S	en	The blasting machine is overheating	블라스팅 장비			온도가 규정치를 넘었다			0	claude-opus-5-5(미검수)
+q82	S	vi	Máy phun cát bị nóng quá	블라스팅 장비			온도가 규정치를 넘었다			0	claude-opus-5-5(미검수)
+q83	S	ko	컨베이어 기어박스 기름이 말라서 생긴 문제	이송 컨베이어		감속기		윤활 부족		0	-
+q83	S	en	Problems from the conveyor gearbox running dry	이송 컨베이어		감속기		윤활 부족		0	claude-opus-5-5(미검수)
+q83	S	vi	Hộp số băng chuyền bị khô dầu gây ra lỗi	이송 컨베이어		감속기		윤활 부족		0	claude-opus-5-5(미검수)
+q84	S	ko	컴프레서 켜면 퓨즈 나가듯 툭 꺼져	공기압축기			과전류로 차단되었다			0	-
+q84	S	en	The compressor cuts out like a blown fuse when switched on	공기압축기			과전류로 차단되었다			0	claude-opus-5-5(미검수)
+q84	S	vi	Bật máy nén lên là bị cúp như nổ cầu chì	공기압축기			과전류로 차단되었다			0	claude-opus-5-5(미검수)
+q85	S	ko	집진기 거름망 새 걸로 바꾼 기록	집진 설비					필터를 교체했다	0	-
+q85	S	en	Records of putting a new strainer in the dust collector	집진 설비					필터를 교체했다	0	claude-opus-5-5(미검수)
+q85	S	vi	Ghi chép thay lưới lọc mới cho máy hút bụi	집진 설비					필터를 교체했다	0	claude-opus-5-5(미검수)
+q86	S	ko	지게차 화면에 에러가 계속 떠	지게차			경보가 반복 발생했다			0	-
+q86	S	en	Errors keep popping up on the forklift display	지게차			경보가 반복 발생했다			0	claude-opus-5-5(미검수)
+q86	S	vi	Màn hình xe nâng cứ hiện lỗi liên tục	지게차			경보가 반복 발생했다			0	claude-opus-5-5(미검수)
+q87	S	ko	발전기 전선 껍데기가 상해서 선 바꾼 거	발전기					절연 저항을 측정하고 케이블을 교체했다	0	-
+q87	S	en	When the generator wire covering was damaged and the wire was swapped	발전기					절연 저항을 측정하고 케이블을 교체했다	0	claude-opus-5-5(미검수)
+q87	S	vi	Vỏ dây điện máy phát bị hỏng nên đã thay dây	발전기					절연 저항을 측정하고 케이블을 교체했다	0	claude-opus-5-5(미검수)
+q88	S	ko	용접기 열이 너무 올라가	CO2 용접기			온도가 규정치를 넘었다			0	-
+q88	S	en	The welder gets way too hot	CO2 용접기			온도가 규정치를 넘었다			0	claude-opus-5-5(미검수)
+q88	S	vi	Máy hàn nóng lên quá mức	CO2 용접기			온도가 규정치를 넘었다			0	claude-opus-5-5(미검수)
+q89	S	ko	크레인이 버튼 누르고 한참 있다가 움직여	겐트리 크레인			동작이 지연되었다			0	-
+q89	S	en	The crane only moves a good while after pressing the button	겐트리 크레인			동작이 지연되었다			0	claude-opus-5-5(미검수)
+q89	S	vi	Bấm nút một lúc lâu cần cẩu mới chạy	겐트리 크레인			동작이 지연되었다			0	claude-opus-5-5(미검수)
+q90	S	ko	도장 로봇이 일하다 말고 섰다 갔다 해	무인 도장설비			간헐적으로 정지했다			0	-
+q90	S	en	The painting robot keeps stopping and starting mid-job	무인 도장설비			간헐적으로 정지했다			0	claude-opus-5-5(미검수)
+q90	S	vi	Robot sơn đang làm thì cứ dừng rồi lại chạy	무인 도장설비			간헐적으로 정지했다			0	claude-opus-5-5(미검수)
+q91	S	ko	절단기 볼트 풀려서 다시 꽉 조인 거	플라즈마 절단기				체결 볼트 이완	규정 토크로 재체결했다	0	-
+q91	S	en	When the cutter bolts came loose and were tightened back up	플라즈마 절단기				체결 볼트 이완	규정 토크로 재체결했다	0	claude-opus-5-5(미검수)
+q91	S	vi	Bu lông máy cắt bị lỏng nên đã siết chặt lại	플라즈마 절단기				체결 볼트 이완	규정 토크로 재체결했다	0	claude-opus-5-5(미검수)
+q92	S	ko	리프트에 전깃줄 들어가는 구멍 부분	고소작업대		케이블 그랜드				0	-
+q92	S	en	The spot where the power cable goes into the lift	고소작업대		케이블 그랜드				0	claude-opus-5-5(미검수)
+q92	S	vi	Chỗ lỗ dây điện đi vào xe nâng người	고소작업대		케이블 그랜드				0	claude-opus-5-5(미검수)
+q93	S	ko	프레스 설정 숫자가 잘못 들어가 있었던 거	유압 프레스				제어 파라미터 오설정		0	-
+q93	S	en	When the press had the wrong setting numbers in it	유압 프레스				제어 파라미터 오설정		0	claude-opus-5-5(미검수)
+q93	S	vi	Máy ép bị nhập sai số cài đặt	유압 프레스				제어 파라미터 오설정		0	claude-opus-5-5(미검수)
+q94	S	ko	블라스팅 기계 돌아가는 부품이 닳아서 생긴 문제	블라스팅 장비				베어링 마모		0	-
+q94	S	en	Problems from a spinning part of the blasting machine wearing out	블라스팅 장비				베어링 마모		0	claude-opus-5-5(미검수)
+q94	S	vi	Bộ phận quay của máy phun cát bị mòn gây ra lỗi	블라스팅 장비				베어링 마모		0	claude-opus-5-5(미검수)
+q95	S	ko	컨베이어 감지기 연결이 엉터리라서 생긴 문제	이송 컨베이어				센서 접점 불량		0	-
+q95	S	en	Problems caused by a bad connection on the conveyor detector	이송 컨베이어				센서 접점 불량		0	claude-opus-5-5(미검수)
+q95	S	vi	Lỗi do đầu dò của băng chuyền tiếp xúc không tốt	이송 컨베이어				센서 접점 불량		0	claude-opus-5-5(미검수)
+q96	S	ko	컴프레서 식힘물 채우고 새는 데 없나 본 기록	공기압축기					냉각수를 보충하고 누설 여부를 확인했다	0	-
+q96	S	en	Records of topping up the compressor's cooling water and checking for leaks	공기압축기					냉각수를 보충하고 누설 여부를 확인했다	0	claude-opus-5-5(미검수)
+q96	S	vi	Ghi chép châm thêm nước làm mát máy nén và xem có chỗ rò không	공기압축기					냉각수를 보충하고 누설 여부를 확인했다	0	claude-opus-5-5(미검수)
+q97	S	ko	집진기 켜면 움직이기까지 한참 걸려	집진 설비			동작이 지연되었다			0	-
+q97	S	en	The dust collector takes ages to get moving after switching on	집진 설비			동작이 지연되었다			0	claude-opus-5-5(미검수)
+q97	S	vi	Máy hút bụi bật lên phải rất lâu mới chạy	집진 설비			동작이 지연되었다			0	claude-opus-5-5(미검수)
+q98	S	ko	지게차 일단 땜빵하고 정비하는 사람들한테 넘긴 거	지게차					임시 조치 후 정비팀에 이관했다	0	-
+q98	S	en	When the forklift got a quick patch and was handed over to the maintenance crew	지게차					임시 조치 후 정비팀에 이관했다	0	claude-opus-5-5(미검수)
+q98	S	vi	Xe nâng được sửa tạm rồi giao cho đội sửa chữa	지게차					임시 조치 후 정비팀에 이관했다	0	claude-opus-5-5(미검수)
+q99	S	ko	발전기가 부르르 떨려	발전기			이상 진동이 발생했다			0	-
+q99	S	en	The generator is shuddering	발전기			이상 진동이 발생했다			0	claude-opus-5-5(미검수)
+q99	S	vi	Máy phát điện bị rung bần bật	발전기			이상 진동이 발생했다			0	claude-opus-5-5(미검수)
+q100	S	ko	용접기 고장 난 거 여분 부품으로 바꿔 끼운 거	CO2 용접기					예비품으로 교체했다	0	-
+q100	S	en	When the broken welder part was swapped with a spare	CO2 용접기					예비품으로 교체했다	0	claude-opus-5-5(미검수)
+q100	S	vi	Máy hàn hỏng đã được thay bằng linh kiện dự phòng	CO2 용접기					예비품으로 교체했다	0	claude-opus-5-5(미검수)
 n01	N	ko	용접 로봇 티칭 오류							1	-
 n01	N	en	Welding robot teaching error							1	claude-opus-5-5(미검수)
 n01	N	vi	Lỗi dạy lệnh cho robot hàn							1	claude-opus-5-5(미검수)
@@ -107,3 +317,45 @@ n05	N	vi	Tải trọng định mức của cần trục giàn							1	claude-opu
 n06	N	ko	지게차 운전 자격 요건							1	-
 n06	N	en	Forklift operator license requirements							1	claude-opus-5-5(미검수)
 n06	N	vi	Điều kiện chứng chỉ lái xe nâng							1	claude-opus-5-5(미검수)
+n07	N	ko	블록 탑재 일정							1	-
+n07	N	en	Block erection schedule							1	claude-opus-5-5(미검수)
+n07	N	vi	Lịch cẩu lắp block							1	claude-opus-5-5(미검수)
+n08	N	ko	밀폐공간 산소 농도 측정							1	-
+n08	N	en	Measuring oxygen levels in confined spaces							1	claude-opus-5-5(미검수)
+n08	N	vi	Đo nồng độ oxy trong không gian kín							1	claude-opus-5-5(미검수)
+n09	N	ko	크레인 신호수 수신호 방법							1	-
+n09	N	en	Hand signals for the crane signalman							1	claude-opus-5-5(미검수)
+n09	N	vi	Cách ra hiệu tay của người xi nhan cần cẩu							1	claude-opus-5-5(미검수)
+n10	N	ko	안전모 착용 규정							1	-
+n10	N	en	Hard hat wearing rules							1	claude-opus-5-5(미검수)
+n10	N	vi	Quy định đội mũ bảo hộ							1	claude-opus-5-5(미검수)
+n11	N	ko	소화기 비치 위치							1	-
+n11	N	en	Where the fire extinguishers are kept							1	claude-opus-5-5(미검수)
+n11	N	vi	Vị trí đặt bình chữa cháy							1	claude-opus-5-5(미검수)
+n12	N	ko	도막 두께 측정 기준							1	-
+n12	N	en	Paint film thickness measurement standard							1	claude-opus-5-5(미검수)
+n12	N	vi	Tiêu chuẩn đo độ dày màng sơn							1	claude-opus-5-5(미검수)
+n13	N	ko	야간 작업 수당 계산							1	-
+n13	N	en	How night work allowance is calculated							1	claude-opus-5-5(미검수)
+n13	N	vi	Cách tính phụ cấp làm ca đêm							1	claude-opus-5-5(미검수)
+n14	N	ko	공기압축기 소비 전력							1	-
+n14	N	en	Air compressor power consumption							1	claude-opus-5-5(미검수)
+n14	N	vi	Điện năng tiêu thụ của máy nén khí							1	claude-opus-5-5(미검수)
+n15	N	ko	지게차 연료 소모량							1	-
+n15	N	en	Forklift fuel consumption							1	claude-opus-5-5(미검수)
+n15	N	vi	Mức tiêu hao nhiên liệu của xe nâng							1	claude-opus-5-5(미검수)
+n16	N	ko	발전기 제조사							1	-
+n16	N	en	Generator manufacturer							1	claude-opus-5-5(미검수)
+n16	N	vi	Hãng sản xuất máy phát điện							1	claude-opus-5-5(미검수)
+n17	N	ko	플라즈마 절단기 보증 기간							1	-
+n17	N	en	Plasma cutter warranty period							1	claude-opus-5-5(미검수)
+n17	N	vi	Thời hạn bảo hành máy cắt plasma							1	claude-opus-5-5(미검수)
+n18	N	ko	유압 프레스 설치 연도							1	-
+n18	N	en	Year the hydraulic press was installed							1	claude-opus-5-5(미검수)
+n18	N	vi	Năm lắp đặt máy ép thủy lực							1	claude-opus-5-5(미검수)
+n19	N	ko	이송 컨베이어 하루 처리량							1	-
+n19	N	en	Daily throughput of the transfer conveyor							1	claude-opus-5-5(미검수)
+n19	N	vi	Sản lượng xử lý mỗi ngày của băng tải vận chuyển							1	claude-opus-5-5(미검수)
+n20	N	ko	집진 설비 미세먼지 농도 허용 기준							1	-
+n20	N	en	Dust collector allowable fine dust concentration							1	claude-opus-5-5(미검수)
+n20	N	vi	Tiêu chuẩn cho phép nồng độ bụi mịn của thiết bị hút bụi							1	claude-opus-5-5(미검수)

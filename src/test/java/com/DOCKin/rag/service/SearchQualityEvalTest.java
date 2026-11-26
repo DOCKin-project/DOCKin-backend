@@ -92,13 +92,30 @@ class SearchQualityEvalTest extends ContainerTestSupport {
     /**
      * 답 없는 질문(N)이 정말 답이 없는지 확인할 핵심 단어. 한국어 원문에 하나라도 나오면 그 질문은 N에서 뺀다(README "N 유형 확인").
      */
-    static final Map<String, List<String>> N_ABSENT_TERMS = Map.of(
-            "n01", List.of("로봇", "티칭"),
-            "n02", List.of("비계"),
-            "n03", List.of("방독", "마스크"),
-            "n04", List.of("단가", "구매"),
-            "n05", List.of("정격", "하중"),
-            "n06", List.of("자격", "면허"));
+    static final Map<String, List<String>> N_ABSENT_TERMS = Map.ofEntries(
+            // 파일럿(E0)
+            Map.entry("n01", List.of("로봇", "티칭")),
+            Map.entry("n02", List.of("비계")),
+            Map.entry("n03", List.of("방독", "마스크")),
+            Map.entry("n04", List.of("단가", "구매")),
+            Map.entry("n05", List.of("정격", "하중")),
+            Map.entry("n06", List.of("자격", "면허")),
+            // E1 확장 — N1 범위 밖
+            Map.entry("n07", List.of("탑재")),
+            Map.entry("n08", List.of("밀폐", "산소")),
+            Map.entry("n09", List.of("신호수", "수신호")),
+            Map.entry("n10", List.of("안전모")),
+            Map.entry("n11", List.of("소화기")),
+            Map.entry("n12", List.of("도막", "두께")),
+            Map.entry("n13", List.of("수당")),
+            // E1 확장 — N2 있는 설비의 없는 정보
+            Map.entry("n14", List.of("전력")),
+            Map.entry("n15", List.of("연료")),
+            Map.entry("n16", List.of("제조사")),
+            Map.entry("n17", List.of("보증")),
+            Map.entry("n18", List.of("설치")),
+            Map.entry("n19", List.of("처리량")),
+            Map.entry("n20", List.of("미세먼지", "농도")));
 
     private static final List<String> METHODS =
             List.of("ann-default", "ann-decided", "exact", "ann-no-translation", "keyword", "keyword-ranked");
