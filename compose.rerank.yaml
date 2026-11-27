@@ -2,8 +2,10 @@
 #
 #   docker compose -f compose.yaml -f compose.rerank.yaml up -d dockin-reranker dockin-app
 #
-# 앱에서 실제로 쓰려면 RAG_SEARCH_RERANK_ENABLED=true도 준다(기본 false). 아래 environment에 넣지 않은 이유:
-# 서버만 띄워 두고 평가 하네스로 먼저 재기 위해서다. 켜는 결정은 품질·지연을 잰 뒤에 한다 `[미측정]`.
+# 이 오버레이를 읽으면 재순위가 켜진다 — 서버를 띄우고 앱의 RAG_SEARCH_RERANK_ENABLED=true를 준다.
+# 운영에서는 손으로 이 명령을 치지 않고 호스트 .env에 RERANK=on을 두면 deploy.sh가 이 파일을 같이 읽는다
+# (docs/OPERATIONS-DEPLOY.md 7절). 켜는 근거: measure/search-eval/modes-2026-11-27 — 세 언어 모두 Hit@5·P@5가
+# 오르고 나빠진 칸이 없다(#220).
 #
 # [운영 compose.yaml에 넣지 않은 이유]
 # 배포 스크립트(scripts/deploy/deploy.sh)가 마지막에 `compose up -d`로 전체를 올린다. 서비스를 compose.yaml에
@@ -11,8 +13,8 @@
 # 호스트 compose 버전은 아직 확인 전이다(OPERATIONS-DEPLOY.md 2절).
 #
 # [모델] BAAI/bge-reranker-v2-m3 — 다국어(한·베·영) cross-encoder, 568M 파라미터.
-# 임베딩(e5-small, 118M)의 약 5배라 이 하드웨어(i3-6100)에서 후보 20개 재순위가 얼마나 걸리는지 모른다.
-# 느리면 rag.search.rerank.candidates를 줄이거나 GPU 호스트로 옮긴다.
+# [CPU에서는 켜지 않는다] CPU 2개(m7i)에서 후보 20개가 p50 8.4초다 — 검색 SLO 2초·답변 10초를 혼자 넘는다.
+# i3-6100은 더 느리다. GPU(T4)에서는 0.2~0.35초였다(#220). GPU 호스트나 더 작은 모델을 정하기 전까지 운영 RERANK는 끈다.
 services:
   dockin-reranker:
     image: ghcr.io/huggingface/text-embeddings-inference:cpu-latest
@@ -20,10 +22,14 @@ services:
     command:
       - --model-id=BAAI/bge-reranker-v2-m3
       - --auto-truncate
+      # 기본값(16384)이면 기동 예열이 최대 13.8GB를 잡아 3~6G 상한에서 전부 OOMKilled였다. 4096이면 최대 4.9GB,
+      # 평소 2.45GiB, 지연은 같다(measure/search-eval/rerank-cpu-2026-11-28). 운영 요청은 후보 20개 ≈ 3천 토큰이다.
+      - --max-batch-tokens=4096
     environment:
       - TZ=Asia/Seoul
     ports:
-      - "8082:80"
+      # 호스트 밖으로 열지 않는다 — 앱은 dockin-network로 붙는다. 호스트에서 curl로 볼 때만 쓴다.
+      - "127.0.0.1:8082:80"
     volumes:
       - reranker_cache:/data # 모델 가중치 캐시. 최초 1회만 다운로드한다.
     restart: unless-stopped
@@ -32,12 +38,13 @@ services:
     deploy:
       resources:
         limits:
-          memory: 3G
+          memory: 5G   # 최대 4.9GB(위 --max-batch-tokens=4096에서). 3G로는 기동하지 못했다
           cpus: '2.0'
 
   dockin-app:
     environment:
       - RERANKER_SERVER_URL=http://dockin-reranker:80
+      - RAG_SEARCH_RERANK_ENABLED=true
 
 volumes:
   reranker_cache:

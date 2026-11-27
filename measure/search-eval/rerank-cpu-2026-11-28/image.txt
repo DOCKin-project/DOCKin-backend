@@ -1,0 +1,2 @@
+sha256:4bf431072e1bba2c215d56d0245ce364ed80fe520817f17875e4bb78b5944f8b
+ghcr.io/huggingface/text-embeddings-inference   cpu-latest   sha256:f0a4bb206b9d4877746b5b9f638e138fe683eeb9787c14d541a12c993b562d86   4bf431072e1b   2 days ago   687MB

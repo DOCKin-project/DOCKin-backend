@@ -1,0 +1,14 @@
+rr-free: healthy, 382-44s 걸림 338s
+rr-free 기동 뒤 memory.peak: 13792882688 bytes
+rr-free 측정 뒤 memory.peak: 13792882688 bytes
+rr-free 지금 2.451GiB / 15.34GiB
+rr-3g: 죽음 OOMKilled=true
+rr-3g memory.peak: ? bytes
+rr-4g: 죽음 OOMKilled=true
+rr-4g memory.peak: ? bytes
+rr-5g: 죽음 OOMKilled=true
+rr-5g memory.peak: ? bytes
+rr-6g: 죽음 OOMKilled=true
+rr-6g memory.peak: ? bytes
+rr-b4096: healthy, 809-743s 걸림 66s
+rr-b4096 memory.peak: 4889714688 bytes
