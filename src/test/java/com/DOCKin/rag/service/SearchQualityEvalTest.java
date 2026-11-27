@@ -433,33 +433,26 @@ class SearchQualityEvalTest extends ContainerTestSupport {
     }
 
     /**
-     * 정답 일지. 원문 첫 문장 틀 {@code {설비} {호기}호기 {부품}에서 {증상}.}로 맞춘다(README "정답 조건").
-     * 부품과 증상을 따로 LIKE로 걸지 않는다 — 긴 본문은 (부품1,증상1)(부품2,증상2)를 함께 담는다.
+     * 정답 일지 — <b>한 사건이 질문 조건을 모두 갖춘 일지</b>(#219, README "정답 조건").
+     *
+     * <p>생성 본문에는 사건이 하나 또는 둘이다({@code CorpusSeedGeneratorTest.bodyKo}).
+     * <pre>
+     *   첫 사건  : 본문 맨 앞  {설비} {호기}호기 {부품}에서 {증상}. 점검 결과 {원인}이(가) 원인으로 확인되었다. {조치}.
+     *   둘째 사건: 긴 본문만   {설비} {호기}호기 {부품}에서도 {증상}. 이쪽은 {원인}이(가) 원인으로 확인되었다. {조치}.
+     * </pre>
+     * 사건마다 정규식 하나로 맞추고, 조건이 빈 슬롯은 마침표 없는 아무 글자({@code [^.]+})로 둔다 — 그래야 빈 슬롯이
+     * 다음 문장으로 넘어가 다른 사건의 슬롯과 섞이지 않는다.
+     *
+     * <p>2026-11-27까지는 부품·증상을 첫 사건 문장에서만, 원인·조치를 본문 어디서든 LIKE로 찾았다.
+     * 둘째 사건이 딱 맞는 일지는 오답으로, 원인은 첫 사건·조치는 둘째 사건에 있는 일지는 정답으로 셌다 —
+     * 답 있는 100문항 중 64문항의 정답 집합이 달랐다(#219).
      */
     Set<Long> relevant(Connection conn, Query q) throws SQLException {
-        List<String> likes = new ArrayList<>();
-        if (!q.part.isEmpty()) {
-            String unit = q.unit.isEmpty() ? "%" : q.unit;
-            likes.add("%" + q.equipment + " " + unit + "호기 " + q.part + "에서"
-                    + (q.symptom.isEmpty() ? "" : " " + q.symptom) + "%");
-        } else {
-            likes.add("%" + q.equipment + " %호기%");
-            if (!q.symptom.isEmpty()) {
-                likes.add("%에서 " + q.symptom + "%");
-            }
-        }
-        if (!q.cause.isEmpty()) {
-            likes.add("%" + q.cause + "%");
-        }
-        if (!q.action.isEmpty()) {
-            likes.add("%" + q.action + "%");
-        }
-        String where = likes.stream().map(l -> "log_text LIKE ?").collect(Collectors.joining(" AND "));
         Set<Long> ids = new LinkedHashSet<>();
-        try (PreparedStatement ps = conn.prepareStatement("SELECT log_id FROM work_logs WHERE " + where)) {
-            for (int i = 0; i < likes.size(); i++) {
-                ps.setString(i + 1, likes.get(i));
-            }
+        try (PreparedStatement ps = conn.prepareStatement(
+                "SELECT log_id FROM work_logs WHERE log_text ~ ? OR log_text ~ ?")) {
+            ps.setString(1, EventLabelPattern.of(q.equipment, q.unit, q.part, q.symptom, q.cause, q.action, true));
+            ps.setString(2, EventLabelPattern.of(q.equipment, q.unit, q.part, q.symptom, q.cause, q.action, false));
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     ids.add(rs.getLong(1));
