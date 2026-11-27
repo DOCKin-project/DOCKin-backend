@@ -66,8 +66,12 @@ class RetrievalModeEvalTest extends ContainerTestSupport {
 
     private static final int TOP_K = 5;
     private static final int BOOTSTRAP = 2000;
-    private static final Path OUT = Path.of("build/search-eval-modes");
-    private static final List<String> MODES = List.of("vector", "hybrid", "rerank", "hybrid+rerank");
+    /** 재순위 모델을 바꿔 가며 잴 때 결과가 섞이지 않게 {@code MODE_EVAL_TAG}(모델 이름 등)로 하위 폴더를 나눈다. */
+    private static final Path OUT = Path.of("build/search-eval-modes",
+            System.getenv().getOrDefault("MODE_EVAL_TAG", "default").replaceAll("[^A-Za-z0-9._-]", "_"));
+    /** {@code MODE_EVAL_MODES=vector,rerank}처럼 고른다. 근거 없음 신호 표에는 {@code vector}가 있어야 코사인 줄이 나온다. */
+    private static final List<String> MODES = List.of(System.getenv()
+            .getOrDefault("MODE_EVAL_MODES", "vector,hybrid,rerank,hybrid+rerank").split(","));
 
     @DynamicPropertySource
     static void endpoints(DynamicPropertyRegistry registry) {
