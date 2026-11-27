@@ -1,0 +1,90 @@
+
+2026-11-27T10:29:14Z == 하드 watchdog — 2시간 뒤 꺼진다(stop. terminate는 로컬이 한다)
+Shutdown scheduled for Fri 2026-11-27 12:29:14 UTC, use 'shutdown -c' to cancel.
+
+2026-11-27T10:29:14Z == 환경
+4
+               total        used        free      shared  buff/cache   available
+Mem:              15           0          14           0           0          14
+Tesla T4, 15360 MiB
+
+2026-11-27T10:30:05Z == 저장소 (measure/retrieval-modes)
+1b3539e measure: 검색 방식 비교 하네스 — 운영 RetrievalService의 플래그만 바꿔 벡터/하이브리드/재순위/둘 다, 근거 없음 신호(코사인 vs 재순위) (#210, #213, #203)
+
+2026-11-27T10:30:08Z == TEI 임베딩·재순위
+Unable to find image 'ghcr.io/huggingface/text-embeddings-inference:turing-latest' locally
+turing-latest: Pulling from huggingface/text-embeddings-inference
+32f112e3802c: Pulling fs layer
+644e9b203583: Pulling fs layer
+02559cd4bc8d: Pulling fs layer
+2cd52cbb1ebe: Pulling fs layer
+6e8af4fd0a07: Pulling fs layer
+15a17189b2df: Pulling fs layer
+02cb0e091e33: Pulling fs layer
+9c3d619183d2: Pulling fs layer
+7f7602a82106: Pulling fs layer
+e13a02810fb8: Pulling fs layer
+dbad076670c4: Pulling fs layer
+9668cadfba45: Pulling fs layer
+2cd52cbb1ebe: Waiting
+6e8af4fd0a07: Waiting
+15a17189b2df: Waiting
+02cb0e091e33: Waiting
+9c3d619183d2: Waiting
+7f7602a82106: Waiting
+e13a02810fb8: Waiting
+dbad076670c4: Waiting
+9668cadfba45: Waiting
+644e9b203583: Verifying Checksum
+644e9b203583: Download complete
+2cd52cbb1ebe: Download complete
+6e8af4fd0a07: Verifying Checksum
+6e8af4fd0a07: Download complete
+32f112e3802c: Verifying Checksum
+32f112e3802c: Download complete
+9c3d619183d2: Verifying Checksum
+9c3d619183d2: Download complete
+32f112e3802c: Pull complete
+7f7602a82106: Verifying Checksum
+7f7602a82106: Download complete
+644e9b203583: Pull complete
+e13a02810fb8: Verifying Checksum
+e13a02810fb8: Download complete
+dbad076670c4: Verifying Checksum
+dbad076670c4: Download complete
+02559cd4bc8d: Verifying Checksum
+02559cd4bc8d: Download complete
+02559cd4bc8d: Pull complete
+2cd52cbb1ebe: Pull complete
+6e8af4fd0a07: Pull complete
+9668cadfba45: Verifying Checksum
+9668cadfba45: Download complete
+15a17189b2df: Verifying Checksum
+15a17189b2df: Download complete
+15a17189b2df: Pull complete
+02cb0e091e33: Pull complete
+9c3d619183d2: Pull complete
+7f7602a82106: Pull complete
+e13a02810fb8: Pull complete
+dbad076670c4: Pull complete
+9668cadfba45: Pull complete
+Digest: sha256:844ffce8b8505f08fa2c18de74f3e951c84efd6a924c3802818770c228f49f02
+Status: Downloaded newer image for ghcr.io/huggingface/text-embeddings-inference:turing-latest
+/eval-embed ghcr.io/huggingface/text-embeddings-inference:turing-latest sha256:1b2aa2f952ea7379618c93b9183fc3fab5fece57844e32235f48310273fcb61b
+/eval-rerank ghcr.io/huggingface/text-embeddings-inference:turing-latest sha256:1b2aa2f952ea7379618c93b9183fc3fab5fece57844e32235f48310273fcb61b
+[{"index":0,"score":0.7208598},{"index":1,"score":0.000017917988}]
+
+2026-11-27T10:35:37Z == 측정 (SEARCH_EVAL_CORPUS=20000)
+Downloading https://services.gradle.org/distributions/gradle-9.2.1-bin.zip
+............10%.............20%.............30%.............40%.............50%.............60%.............70%.............80%.............90%.............100%
+Note: /home/ec2-user/DOCKin-spring/src/main/java/com/DOCKin/global/security/jwt/JwtBlacklist.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Note: /home/ec2-user/DOCKin-spring/src/test/java/com/DOCKin/ai/service/FastApiContractTest.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+2026-11-27T10:47:44.916Z  INFO [] 5862 --- [DOCKin-spring] [ionShutdownHook] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-11-27T10:47:44.919Z  INFO [] 5862 --- [DOCKin-spring] [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2026-11-27T10:47:44.922Z  INFO [] 5862 --- [DOCKin-spring] [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+<testsuite name="검색 방식 비교 (#210, #213) - RUN_MODE_EVAL이 있을 때만" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-27T10:38:46.218Z" hostname="ip-172-31-2-207.ap-northeast-2.compute.internal" time="538.628">
+
+2026-11-27T10:47:45Z == 끝 (exit 0)

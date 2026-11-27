@@ -1,0 +1,2 @@
+/eval-embed ghcr.io/huggingface/text-embeddings-inference:turing-latest sha256:1b2aa2f952ea7379618c93b9183fc3fab5fece57844e32235f48310273fcb61b
+/eval-rerank ghcr.io/huggingface/text-embeddings-inference:turing-latest sha256:1b2aa2f952ea7379618c93b9183fc3fab5fece57844e32235f48310273fcb61b
