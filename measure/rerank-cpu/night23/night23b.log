@@ -1,0 +1,12 @@
+
+2026-11-27T15:57:05Z == 3G + max-batch-tokens 4096
+oom=true
+
+2026-11-27T15:59:16Z == 3G + max-batch-tokens 2048
+oom=true
+
+2026-11-27T16:01:27Z == 3G + max-batch-tokens 1024
+뜸
+워밍업 뒤 메모리: 2.615GiB / 3GiB
+
+2026-11-27T16:04:04Z == 측정 — 3G, max-batch-tokens 1024 (전체)

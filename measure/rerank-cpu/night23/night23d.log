@@ -1,0 +1,6 @@
+status=running oom=false peak=4.574GiB / 6GiB
+  File "<stdin>", line 12
+    print(f"{r[\"qid\"]}\t{r[\"lang\"]}\t{r[\"type\"]}\t{n}\t1\t{call(r[\"query\"], r[\"texts\"][:n]):.1f}", flush=True)
+                                                                                                           ^
+SyntaxError: f-string expression part cannot include a backslash
+peak during=4.574GiB / 6GiB

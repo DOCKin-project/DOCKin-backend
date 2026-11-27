@@ -1,0 +1,4 @@
+[  190.967431] Memory cgroup out of memory: Killed process 28627 (text-embeddings) total-vm:7900256kB, anon-rss:3132704kB, file-rss:33868kB, shmem-rss:0kB, UID:0 pgtables:6568kB oom_score_adj:0
+[  460.236138] Memory cgroup out of memory: Killed process 29661 (text-embeddings) total-vm:4751988kB, anon-rss:3132648kB, file-rss:33560kB, shmem-rss:0kB, UID:0 pgtables:6660kB oom_score_adj:0
+[  591.123319] Memory cgroup out of memory: Killed process 31385 (text-embeddings) total-vm:4133536kB, anon-rss:3131628kB, file-rss:33628kB, shmem-rss:0kB, UID:0 pgtables:6584kB oom_score_adj:0
+[ 2523.185146] Memory cgroup out of memory: Killed process 58868 (text-embeddings) total-vm:7967364kB, anon-rss:6272216kB, file-rss:33800kB, shmem-rss:0kB, UID:0 pgtables:12744kB oom_score_adj:0
