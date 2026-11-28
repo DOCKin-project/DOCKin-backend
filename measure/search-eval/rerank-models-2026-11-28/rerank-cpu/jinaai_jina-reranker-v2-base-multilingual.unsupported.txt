@@ -1,0 +1,15 @@
+[2m2026-11-28T06:02:01.721197Z[0m [32m INFO[0m [1mdownload_artifacts[0m[2m:[0m [2mtext_embeddings_core::download[0m[2m:[0m [2mcore/src/download.rs[0m[2m:[0m[2m18:[0m Downloading `sentence_roberta_config.json`
+[2m2026-11-28T06:02:01.914189Z[0m [32m INFO[0m [1mdownload_artifacts[0m[2m:[0m [2mtext_embeddings_core::download[0m[2m:[0m [2mcore/src/download.rs[0m[2m:[0m[2m18:[0m Downloading `sentence_distilbert_config.json`
+[2m2026-11-28T06:02:02.104954Z[0m [32m INFO[0m [1mdownload_artifacts[0m[2m:[0m [2mtext_embeddings_core::download[0m[2m:[0m [2mcore/src/download.rs[0m[2m:[0m[2m18:[0m Downloading `sentence_camembert_config.json`
+[2m2026-11-28T06:02:02.291553Z[0m [32m INFO[0m [1mdownload_artifacts[0m[2m:[0m [2mtext_embeddings_core::download[0m[2m:[0m [2mcore/src/download.rs[0m[2m:[0m[2m18:[0m Downloading `sentence_albert_config.json`
+[2m2026-11-28T06:02:02.488429Z[0m [32m INFO[0m [1mdownload_artifacts[0m[2m:[0m [2mtext_embeddings_core::download[0m[2m:[0m [2mcore/src/download.rs[0m[2m:[0m[2m18:[0m Downloading `sentence_xlm-roberta_config.json`
+[2m2026-11-28T06:02:02.679610Z[0m [32m INFO[0m [1mdownload_artifacts[0m[2m:[0m [2mtext_embeddings_core::download[0m[2m:[0m [2mcore/src/download.rs[0m[2m:[0m[2m18:[0m Downloading `sentence_xlnet_config.json`
+[2m2026-11-28T06:02:02.877641Z[0m [32m INFO[0m [1mdownload_artifacts[0m[2m:[0m [2mtext_embeddings_core::download[0m[2m:[0m [2mcore/src/download.rs[0m[2m:[0m[2m18:[0m Downloading `config_sentence_transformers.json`
+[2m2026-11-28T06:02:03.079297Z[0m [33m WARN[0m [1mdownload_artifacts[0m[2m:[0m [2mtext_embeddings_core::download[0m[2m:[0m [2mcore/src/download.rs[0m[2m:[0m[2m65:[0m Download failed: request error: HTTP status client error (404 Not Found) for url (https://huggingface.co/jinaai/jina-reranker-v2-base-multilingual/resolve/main/config_sentence_transformers.json)
+[2m2026-11-28T06:02:03.079317Z[0m [32m INFO[0m [1mdownload_artifacts[0m[2m:[0m [2mtext_embeddings_core::download[0m[2m:[0m [2mcore/src/download.rs[0m[2m:[0m[2m18:[0m Downloading `config.json`
+[2m2026-11-28T06:02:03.501478Z[0m [32m INFO[0m [1mdownload_artifacts[0m[2m:[0m [2mtext_embeddings_core::download[0m[2m:[0m [2mcore/src/download.rs[0m[2m:[0m[2m18:[0m Downloading `tokenizer.json`
+[2m2026-11-28T06:02:04.219554Z[0m [32m INFO[0m [1mdownload_artifacts[0m[2m:[0m [2mtext_embeddings_core::download[0m[2m:[0m [2mcore/src/download.rs[0m[2m:[0m[2m72:[0m Model artifacts downloaded in 2.89309037s
+Error: Failed to parse `config.json`
+
+Caused by:
+    missing field `model_type` at line 39 column 1

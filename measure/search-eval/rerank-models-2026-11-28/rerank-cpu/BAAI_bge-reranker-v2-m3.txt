@@ -1,0 +1,9 @@
+model: BAAI/bge-reranker-v2-m3
+Model name:                              Intel(R) Xeon(R) Platinum 8259CL CPU @ 2.50GHz
+후보 길이: 평균 141자
+질문 10 × 3회 = 30건, 후보 20개씩
+p50 10731ms  p95 11969ms  max 12346ms
+후보 10개: p50 5827ms  max 6225ms
+후보 5개: p50 2616ms  max 3082ms
+memory.peak: 4889858048 bytes
+now 2.395GiB / 15.42GiB
