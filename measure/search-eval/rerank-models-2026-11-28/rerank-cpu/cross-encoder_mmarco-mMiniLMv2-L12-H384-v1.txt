@@ -1,0 +1,9 @@
+model: cross-encoder/mmarco-mMiniLMv2-L12-H384-v1
+Model name:                              Intel(R) Xeon(R) Platinum 8259CL CPU @ 2.50GHz
+후보 길이: 평균 141자
+질문 10 × 3회 = 30건, 후보 20개씩
+p50 558ms  p95 641ms  max 799ms
+후보 10개: p50 286ms  max 369ms
+후보 5개: p50 139ms  max 192ms
+memory.peak: 1661448192 bytes
+now 879.7MiB / 15.42GiB

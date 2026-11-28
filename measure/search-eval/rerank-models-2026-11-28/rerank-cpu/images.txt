@@ -1,0 +1,2 @@
+ghcr.io/huggingface/text-embeddings-inference   cpu-latest      sha256:f0a4bb206b9d4877746b5b9f638e138fe683eeb9787c14d541a12c993b562d86   4bf431072e1b   2 days ago      687MB
+ghcr.io/huggingface/text-embeddings-inference   turing-latest   sha256:844ffce8b8505f08fa2c18de74f3e951c84efd6a924c3802818770c228f49f02   1b2aa2f952ea   2 days ago      4.82GB
