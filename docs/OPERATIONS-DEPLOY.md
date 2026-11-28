@@ -89,3 +89,43 @@ bash scripts/deploy/deploy.sh 1a2b3c4       # 특정 태그로
 | "복구도 실패" | 직전 이미지도 안 뜬다 — 대개 DB·Redis 쪽 | `docs/db/incident-response.md`. `docker compose -f compose.yaml ps`부터 |
 
 이력은 호스트의 `deploy-history.log`에 한 줄씩 남는다.
+
+## 7. 재순위 켜기·끄기 (ADR-0013 2단계 4)
+
+**모델: `cross-encoder/mmarco-mMiniLMv2-L12-H384-v1`(118M).** 운영이 CPU라 고른 모델이다.
+
+| | 값 | 근거 |
+|---|---|---|
+| 품질 (vector 대비 Hit@5) | ko +0.08 · en +0.02 · vi +0.05, P@5 +0.10 · +0.05 · +0.12 | `measure/search-eval/rerank-models-2026-11-28`(#227) |
+| CPU 지연 (CPU 2개, 후보 20개) | p50 0.56초, 최대 0.8초 | 같은 측정. 검색 SLO 2초(SLO 3-5) 안 |
+| 메모리 | 최대 1.66GB, 평소 0.86GiB → 상한 2G | 같은 측정(`memory.peak`) |
+
+- 더 큰 `BAAI/bge-reranker-v2-m3`(568M)는 품질이 조금 낫지만(ko +0.11, #220) CPU에서 후보 20개 8.4~10.7초라 쓰지 않는다(#223). GPU 호스트가 생기면 다시 본다.
+- 영어는 거의 안 오른다(+0.02). 영어는 번역본 색인(ADR-0015)으로 푼다.
+- 합성 코퍼스·검수 없는 질문으로 잰 값이다. 켠 뒤 실제 사용에서 `chat_history`로 확인한다.
+
+**스위치는 호스트 `.env`의 한 줄이다.** 코드 기본값은 꺼짐이다 — 로컬·CI·재순위 서버가 없는 호스트에서는 그대로 꺼져 있다.
+
+```
+RERANK=on
+```
+
+있으면 `deploy.sh`가 `compose.rerank.yaml`을 같이 읽는다. 재순위 서버(`dockin-reranker`, TEI CPU, mMiniLM)를 띄우고 앱에 `RAG_SEARCH_RERANK_ENABLED=true`를 준다. 다음 배포 때 적용되고, 바로 적용하려면 현재 태그로 한 번 더 부른다.
+
+```bash
+bash scripts/deploy/deploy.sh "$(grep ^IMAGE_TAG= .env | cut -d= -f2)"   # 같은 태그면 "할 일 없음" — 그때는:
+docker compose -f compose.yaml -f compose.rerank.yaml up -d dockin-reranker dockin-app
+bash scripts/deploy/deploy.sh --status    # "재순위: 켜짐"
+```
+
+**켜기 전에 호스트에서 볼 것**
+
+1. **메모리.** 재순위 서버 상한이 2G다(최대 1.66GB). 지금 상한 합(앱 1G·DB 1G·임베딩 2G·nginx·Redis 각 100M ≈ 4.2G)에 더하면 약 6.2G다. `free -g`로 총량을 보고, 모자라면 켜지 않는다 — 같은 호스트의 DB가 같이 죽는다. 호스트 사양은 2026-02 이후 아무도 확인하지 않았다(2절).
+2. **디스크.** 모델 가중치가 약 0.5G(`reranker_cache` 볼륨). 처음 한 번 받는다.
+3. **compose v2.** v1이면 `deploy.resources` 상한이 무시되어 3G 상한도 없다(2절 1번).
+
+**재순위 서버가 없거나 느리면:** `RerankClient`가 빈 값을 주고 `RetrievalService`가 재순위 전 순서로 답한다. 예외는 없다. 처음 기동해 모델을 받는 몇 분 동안도 그렇다. 응답 타임아웃은 5초(`external-api.reranker.response-timeout-ms`)라 서버가 멈춰 있으면 질문마다 최대 5초가 붙는다 — 그때는 끈다.
+
+**지연:** 질문당 약 0.6초가 검색에 더해진다(위 표, CPU 2개 기준 — 운영 i3-6100에서는 다시 본다). 켠 뒤에는 챗봇 지연을 SLO 표와 대조한다.
+
+**끄기:** `.env`에서 `RERANK=on` 줄을 지우고 `docker compose -f compose.yaml up -d dockin-app`(앱 설정만 다시 읽어 플래그가 꺼진다). 재순위 컨테이너는 남으므로 `docker stop dockin-reranker && docker rm dockin-reranker`.

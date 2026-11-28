@@ -2,28 +2,35 @@
 #
 #   docker compose -f compose.yaml -f compose.rerank.yaml up -d dockin-reranker dockin-app
 #
-# 앱에서 실제로 쓰려면 RAG_SEARCH_RERANK_ENABLED=true도 준다(기본 false). 아래 environment에 넣지 않은 이유:
-# 서버만 띄워 두고 평가 하네스로 먼저 재기 위해서다. 켜는 결정은 품질·지연을 잰 뒤에 한다 `[미측정]`.
+# 이 오버레이를 읽으면 재순위가 켜진다 — 서버를 띄우고 앱의 RAG_SEARCH_RERANK_ENABLED=true를 준다.
+# 운영에서는 손으로 이 명령을 치지 않고 호스트 .env에 RERANK=on을 두면 deploy.sh가 이 파일을 같이 읽는다
+# (docs/OPERATIONS-DEPLOY.md 7절).
 #
 # [운영 compose.yaml에 넣지 않은 이유]
 # 배포 스크립트(scripts/deploy/deploy.sh)가 마지막에 `compose up -d`로 전체를 올린다. 서비스를 compose.yaml에
 # 넣으면 profiles로 묶어도 호스트가 compose v1(1.28 미만)이면 profiles 키를 몰라 배포가 깨질 수 있다.
 # 호스트 compose 버전은 아직 확인 전이다(OPERATIONS-DEPLOY.md 2절).
 #
-# [모델] BAAI/bge-reranker-v2-m3 — 다국어(한·베·영) cross-encoder, 568M 파라미터.
-# 임베딩(e5-small, 118M)의 약 5배라 이 하드웨어(i3-6100)에서 후보 20개 재순위가 얼마나 걸리는지 모른다.
-# 느리면 rag.search.rerank.candidates를 줄이거나 GPU 호스트로 옮긴다.
+# [모델] cross-encoder/mmarco-mMiniLMv2-L12-H384-v1 — 다국어 cross-encoder, 118M. 운영이 CPU라 고른 모델이다(#223, #227).
+#   CPU 2개(Xeon)에서 후보 20개 p50 0.56초, 최대 메모리 1.7GB. Hit@5 vector 대비 ko +0.08 · en +0.02 · vi +0.05,
+#   P@5 +0.10 · +0.05 · +0.12 (measure/search-eval/rerank-models-2026-11-28).
+#   더 큰 BAAI/bge-reranker-v2-m3(568M)는 품질이 조금 낫지만(ko +0.11) CPU에서 8.4~10.7초라 못 쓴다 — GPU 호스트가 생기면 다시 본다.
+#   영어는 거의 안 오른다. 영어는 번역본 색인(ADR-0015)으로 푼다.
 services:
   dockin-reranker:
     image: ghcr.io/huggingface/text-embeddings-inference:cpu-latest
     container_name: dockin-reranker
     command:
-      - --model-id=BAAI/bge-reranker-v2-m3
+      - --model-id=cross-encoder/mmarco-mMiniLMv2-L12-H384-v1
       - --auto-truncate
+      # 기본값(16384)이면 기동 예열이 큰 모델(bge)에서 13.8GB까지 잡아 OOMKilled였다. 4096이면 메모리가 크게 줄고
+      # 지연은 같다(measure/search-eval/rerank-cpu-2026-11-28). 운영 요청은 후보 20개 ≈ 3천 토큰이다.
+      - --max-batch-tokens=4096
     environment:
       - TZ=Asia/Seoul
     ports:
-      - "8082:80"
+      # 호스트 밖으로 열지 않는다 — 앱은 dockin-network로 붙는다. 호스트에서 curl로 볼 때만 쓴다.
+      - "127.0.0.1:8082:80"
     volumes:
       - reranker_cache:/data # 모델 가중치 캐시. 최초 1회만 다운로드한다.
     restart: unless-stopped
@@ -32,12 +39,13 @@ services:
     deploy:
       resources:
         limits:
-          memory: 3G
+          memory: 2G   # 최대 1.66GB(memory.peak, --max-batch-tokens=4096), 평소 0.86GiB
           cpus: '2.0'
 
   dockin-app:
     environment:
       - RERANKER_SERVER_URL=http://dockin-reranker:80
+      - RAG_SEARCH_RERANK_ENABLED=true
 
 volumes:
   reranker_cache:

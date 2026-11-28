@@ -143,12 +143,12 @@ jobs:
             ssh-keyscan -T 10 "$EC2_HOST" > ~/.ssh/known_hosts
           fi
 
-      # 앱 이미지 말고 호스트에 있어야 하는 파일: compose.yaml, nginx 설정, 배포 스크립트.
+      # 앱 이미지 말고 호스트에 있어야 하는 파일: compose.yaml, 재순위 오버레이(.env RERANK=on일 때만 읽힌다), nginx 설정, 배포 스크립트.
       # .env는 보내지 않는다 — 비밀값은 호스트에만 있다(문서 3절).
       - name: 배포 파일 복사
         if: steps.target.outputs.enabled == 'true'
         run: |
-          tar -czf - compose.yaml nginx scripts/deploy/deploy.sh \
+          tar -czf - compose.yaml compose.rerank.yaml nginx scripts/deploy/deploy.sh \
             | ssh -i ~/.ssh/deploy_key "$EC2_USERNAME@$EC2_HOST" \
                 "mkdir -p '$DEPLOY_DIR' && tar -xzf - -C '$DEPLOY_DIR'"
 

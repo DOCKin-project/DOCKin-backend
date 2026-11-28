@@ -43,11 +43,19 @@ elif command -v docker-compose >/dev/null 2>&1; then
 else
   die "docker compose가 없다"
 fi
-# compose.override.yaml은 머신별 로컬 설정이라 운영에서는 읽지 않는다.
-compose() { $COMPOSE -f compose.yaml "$@"; }
-
 [ -f .env ] || die "$DEPLOY_DIR/.env가 없다"
 env_get() { grep -E "^$1=" .env | tail -1 | cut -d= -f2- || true; }
+
+# compose.override.yaml은 머신별 로컬 설정이라 운영에서는 읽지 않는다.
+# 재순위(ADR-0013 2단계 4): .env에 RERANK=on이면 compose.rerank.yaml을 같이 읽는다 — 재순위 서버(메모리 3G)를 띄우고
+# 앱의 RAG_SEARCH_RERANK_ENABLED를 켠다. 호스트 메모리를 확인한 사람이 켠다(docs/OPERATIONS-DEPLOY.md 7절).
+# 재순위 서버가 아직 모델을 받는 중이거나 죽어 있어도 앱은 재순위 전 순서로 답한다(RerankClient 실패 = 빈 값).
+COMPOSE_FILES="-f compose.yaml"
+if [ "$(env_get RERANK)" = "on" ]; then
+  [ -f compose.rerank.yaml ] || die ".env가 RERANK=on인데 compose.rerank.yaml이 없다"
+  COMPOSE_FILES="$COMPOSE_FILES -f compose.rerank.yaml"
+fi
+compose() { $COMPOSE $COMPOSE_FILES "$@"; }
 env_set() {
   if grep -qE "^$1=" .env; then sed -i "s|^$1=.*|$1=$2|" .env; else printf '%s=%s\n' "$1" "$2" >> .env; fi
 }
@@ -82,6 +90,7 @@ case "${1:-}" in
     echo "현재 태그:  $(env_get IMAGE_TAG)"
     echo "직전 태그:  $(env_get PREVIOUS_IMAGE_TAG)"
     echo "컨테이너:   $(health)"
+    echo "재순위:     $([ "$(env_get RERANK)" = "on" ] && echo "켜짐 (compose.rerank.yaml)" || echo "꺼짐")"
     [ -f "$HISTORY" ] && tail -5 "$HISTORY"
     exit 0 ;;
   --rollback)

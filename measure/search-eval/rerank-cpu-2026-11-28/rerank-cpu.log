@@ -1,0 +1,107 @@
+Shutdown scheduled for Fri 2026-11-27 17:51:26 UTC, use 'shutdown -c' to cancel.
+
+2026-11-27T16:21:27Z == 환경
+4
+               total        used        free      shared  buff/cache   available
+Mem:              15           0          14           0           0          14
+Model name:                              Intel(R) Xeon(R) Platinum 8488C
+Created symlink /etc/systemd/system/multi-user.target.wants/docker.service → /usr/lib/systemd/system/docker.service.
+
+2026-11-27T16:21:55Z == 1. 상한 없이 — 모델 받기·적재·예열의 최대 메모리
+Unable to find image 'ghcr.io/huggingface/text-embeddings-inference:cpu-latest' locally
+cpu-latest: Pulling from huggingface/text-embeddings-inference
+b1dd3d113aab: Pulling fs layer
+5ca94f5fa90b: Pulling fs layer
+45eb8c6bac40: Pulling fs layer
+a71a912a78a6: Pulling fs layer
+3aaa65362d9c: Pulling fs layer
+971f0fc61206: Pulling fs layer
+444f9a6a524a: Pulling fs layer
+b1ae64ee0e5f: Pulling fs layer
+7943a702603f: Pulling fs layer
+6ffd47f3c487: Pulling fs layer
+d9f0d1107033: Pulling fs layer
+3b3d51c08b20: Pulling fs layer
+988157e5651a: Pulling fs layer
+971f0fc61206: Waiting
+444f9a6a524a: Waiting
+b1ae64ee0e5f: Waiting
+7943a702603f: Waiting
+6ffd47f3c487: Waiting
+d9f0d1107033: Waiting
+3b3d51c08b20: Waiting
+988157e5651a: Waiting
+a71a912a78a6: Waiting
+3aaa65362d9c: Waiting
+45eb8c6bac40: Verifying Checksum
+45eb8c6bac40: Download complete
+a71a912a78a6: Verifying Checksum
+a71a912a78a6: Download complete
+b1dd3d113aab: Download complete
+971f0fc61206: Verifying Checksum
+971f0fc61206: Download complete
+b1dd3d113aab: Pull complete
+444f9a6a524a: Verifying Checksum
+444f9a6a524a: Download complete
+3aaa65362d9c: Verifying Checksum
+3aaa65362d9c: Download complete
+b1ae64ee0e5f: Verifying Checksum
+b1ae64ee0e5f: Download complete
+7943a702603f: Verifying Checksum
+7943a702603f: Download complete
+6ffd47f3c487: Verifying Checksum
+6ffd47f3c487: Download complete
+3b3d51c08b20: Verifying Checksum
+3b3d51c08b20: Download complete
+d9f0d1107033: Verifying Checksum
+d9f0d1107033: Download complete
+5ca94f5fa90b: Verifying Checksum
+5ca94f5fa90b: Download complete
+5ca94f5fa90b: Pull complete
+45eb8c6bac40: Pull complete
+a71a912a78a6: Pull complete
+3aaa65362d9c: Pull complete
+971f0fc61206: Pull complete
+444f9a6a524a: Pull complete
+b1ae64ee0e5f: Pull complete
+7943a702603f: Pull complete
+988157e5651a: Verifying Checksum
+988157e5651a: Download complete
+6ffd47f3c487: Pull complete
+d9f0d1107033: Pull complete
+3b3d51c08b20: Pull complete
+988157e5651a: Pull complete
+Digest: sha256:f0a4bb206b9d4877746b5b9f638e138fe683eeb9787c14d541a12c993b562d86
+Status: Downloaded newer image for ghcr.io/huggingface/text-embeddings-inference:cpu-latest
+rr-free: healthy, 382-44s 걸림 338s
+rr-free 기동 뒤 memory.peak: 13792882688 bytes
+
+2026-11-27T16:27:48Z == 2. 지연 — 질문 10개 × 3회, 후보 20개 (운영 rag.search.rerank.candidates)
+후보 길이: 평균 141자
+질문 10 × 3회 = 30건, 후보 20개씩
+p50 8350ms  p95 9216ms  max 9221ms
+후보 10개: p50 4298ms  max 4441ms
+후보 5개: p50 2113ms  max 2348ms
+rr-free 측정 뒤 memory.peak: 13792882688 bytes
+rr-free 지금 2.451GiB / 15.34GiB
+
+2026-11-27T16:33:06Z == 3. 상한을 걸고 뜨는가 — 3G(지금 설정) / 4G / 5G / 6G
+rr-3g: 죽음 OOMKilled=true
+rr-3g memory.peak: ? bytes
+rr-4g: 죽음 OOMKilled=true
+rr-4g memory.peak: ? bytes
+rr-5g: 죽음 OOMKilled=true
+rr-5g memory.peak: ? bytes
+rr-6g: 죽음 OOMKilled=true
+rr-6g memory.peak: ? bytes
+
+2026-11-27T16:33:49Z == 4. 배치 상한을 줄이면 — --max-batch-tokens 4096, 상한 없이
+rr-b4096: healthy, 809-743s 걸림 66s
+rr-b4096 memory.peak: 4889714688 bytes
+후보 길이: 평균 141자
+질문 10 × 1회 = 10건, 후보 20개씩
+p50 8412ms  p95 9152ms  max 9152ms
+후보 10개: p50 4367ms  max 4626ms
+후보 5개: p50 2150ms  max 2285ms
+
+2026-11-27T16:37:26Z == 끝 (exit 0)
